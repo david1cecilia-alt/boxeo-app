@@ -1,0 +1,30 @@
+{
+  "_nota": "Generado por herramientas/extraer_revisar.py: no editar a mano.",
+  "puntos": [
+    {
+      "id": "reglas-dbd1d8ab",
+      "origen": "motor/reglas.py",
+      "texto": "tras \"parada\" (para el jab) no impongo ningún golpe concreto"
+    },
+    {
+      "id": "reglas-611a5023",
+      "origen": "motor/reglas.py",
+      "texto": "rodar a la izquierda deja el peso a la izquierda → gancho de izquierda"
+    },
+    {
+      "id": "acciones-635f79cf",
+      "origen": "data/acciones.json",
+      "texto": "peso_despues de cada golpe"
+    },
+    {
+      "id": "acciones-f07f6dc2",
+      "origen": "data/acciones.json",
+      "texto": "'poder' = todos los golpes menos el jab"
+    },
+    {
+      "id": "acciones-1b487d27",
+      "origen": "data/acciones.json",
+      "texto": "rodar a un lado deja el peso en ese mismo lado"
+    }
+  ]
+}

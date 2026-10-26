@@ -17,10 +17,9 @@ SOLTAR_TRAS = {
 }
 # REVISAR CON ENTRENADOR: tras "parada" (para el jab) no impongo ningún golpe concreto.
 
-# Acciones válidas para cerrar tras un golpe de poder en nivel 2 y 3.
-# Pediste "pivote, paso lateral, esquiva"; añado rodar, paso atrás y salir.
-# REVISAR CON ENTRENADOR: ¿rodar y paso atrás valen como salida? ¿y la parada?
-FAMILIAS_SALIDA = {"pivote", "paso_lateral", "esquiva", "rodar", "paso_atras", "salir"}
+# Acciones válidas para cerrar tras un golpe de poder en nivel 2 y 3 (confirmado por David).
+# Rodar ya es de nivel 2 por su nivel_minimo; "salir" se dice "sal en ángulo".
+FAMILIAS_SALIDA = {"pivote", "paso_lateral", "esquiva", "rodar", "salir"}
 
 
 def _regla_longitud(combo, nivel):

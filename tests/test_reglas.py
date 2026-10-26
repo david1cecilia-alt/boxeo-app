@@ -55,9 +55,16 @@ def test_paso_atras_va_con_directo_de_contra():
 
 
 def test_rodar_gancho_del_lado_cargado():
-    assert es_valida(combo("rodar_izq", "gancho_izq"), 1)
-    assert es_valida(combo("rodar_der", "gancho_der"), 1)
-    assert not es_valida(combo("rodar_izq", "gancho_der"), 1)
+    assert es_valida(combo("rodar_izq", "gancho_izq", "pivote"), 2)
+    assert es_valida(combo("rodar_der", "gancho_der", "pivote"), 2)
+    assert not es_valida(combo("rodar_izq", "gancho_der", "pivote"), 2)
+
+
+def test_rodar_solo_desde_nivel_2():
+    for lado in ("izq", "der"):
+        assert catalogo()[f"rodar_{lado}"].nivel_minimo == 2
+    assert not es_valida(combo("rodar_izq", "gancho_izq"), 1)
+    assert not es_valida(combo("jab", "rodar_izq"), 1)
 
 
 # --- Bloquear y devolver ---
@@ -84,6 +91,19 @@ def test_nivel_2_y_3_salen_tras_golpe_de_poder():
     assert not es_valida(combo("jab", "directo", "gancho_izq"), 2)
     assert es_valida(combo("jab", "directo", "gancho_izq", "pivote"), 2)
     assert es_valida(combo("directo", "gancho_izq", "directo", "jab"), 2)  # termina en jab: no es de poder
+
+
+def test_salidas_validas_tras_golpe_de_poder():
+    base = ("jab", "directo", "gancho_izq")
+    for salida in ("pivote", "paso_lateral_izq", "paso_lateral_der", "esquiva_der",
+                   "esquiva_izq", "rodar_izq", "rodar_der", "salir"):
+        assert es_valida(combo(*base, salida), 2), salida
+    assert not es_valida(combo(*base, "paso_atras"), 2)
+    assert not es_valida(combo(*base, "parada"), 2)
+
+
+def test_salir_se_dice_sal_en_angulo():
+    assert catalogo()["salir"].nombre_hablado == "sal en ángulo"
 
 
 def test_ultimo_golpe_ignora_la_salida():

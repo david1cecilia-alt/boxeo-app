@@ -17,6 +17,12 @@ def test_config_incluye_preset_amateur(cliente):
     assert datos["perfil"]["guardia"] == "ortodoxa"
 
 
+def test_sirve_los_datos_para_el_motor_js(cliente):
+    for nombre in ("acciones", "combos", "perfil", "presets"):
+        assert cliente.get(f"/data/{nombre}.json").status_code == 200
+    assert cliente.get("/motor/temporizador.js").status_code == 200
+
+
 def test_guion_devuelve_eventos(cliente):
     r = cliente.post("/api/sesion/guion", json={"asaltos": 2, "duracion_asalto": 60, "descanso": 30,
                                                  "nivel": 2, "modo_reaccion": True})

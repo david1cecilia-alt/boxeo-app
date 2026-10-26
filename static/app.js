@@ -1,21 +1,25 @@
-// Reproductor del guion. No contiene reglas de boxeo: solo pide el guion
-// al backend y lanza cada evento cuando llega su segundo.
-import { crearVoz } from "./voz.js";
+// Reproductor del guion. No contiene reglas de boxeo: el guion lo genera el motor
+// (static/motor/) y aquí solo se lanza cada evento cuando llega su segundo.
+import { crearHistorial } from "./historial.js";
+import { crearAzar, semillaAleatoria } from "./motor/azar.js";
+import { cargarDatos } from "./motor/datos.js";
+import { PAUSA_POR_NIVEL } from "./motor/ritmo.js";
+import { construirGuion, validarConfig } from "./motor/temporizador.js";
 import { activarSonido, campana, tablillas, pitido } from "./sonido.js";
+import { crearVoz } from "./voz.js";
 
 const $ = (id) => document.getElementById(id);
 const voz = crearVoz();
+const historial = crearHistorial(); // promesa: decide servidor o localStorage
 
 let presets = [];
-let pausaPorNivel = {};
 let estado = null; // datos de la sesión en curso, o null si no hay ninguna
 
 // ---------- Configuración ----------
 
 async function cargarConfig() {
-  const datos = await (await fetch("/api/config")).json();
-  presets = datos.presets;
-  pausaPorNivel = datos.pausa_por_nivel;
+  const datos = await cargarDatos();
+  presets = datos.presets.presets;
   $("preset").innerHTML =
     presets.map((p) => `<option value="${p.id}">${p.nombre}</option>`).join("") +
     `<option value="">Personalizado</option>`;
@@ -33,7 +37,7 @@ function aplicarPreset(p) {
 }
 
 function actualizarPausa() {
-  $("pausa").placeholder = `${pausaPorNivel[$("nivel").value]} (por nivel)`;
+  $("pausa").placeholder = `${PAUSA_POR_NIVEL[$("nivel").value]} (por nivel)`;
 }
 
 function leerConfig() {
@@ -51,18 +55,15 @@ function leerConfig() {
 
 // ---------- Reproducción ----------
 
-async function empezar() {
+function empezar() {
   activarSonido(); // tiene que ser dentro del clic
-  const r = await fetch("/api/sesion/guion", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(leerConfig()),
-  });
-  if (!r.ok) {
-    alert("Configuración no válida:\n" + (await r.text()));
+  const config = leerConfig();
+  const errores = validarConfig(config);
+  if (errores.length) {
+    alert("Configuración no válida:\n" + errores.join("\n"));
     return;
   }
-  const { config, eventos } = await r.json();
+  const eventos = construirGuion(config, crearAzar(semillaAleatoria()));
   estado = {
     config, eventos,
     siguiente: 0,              // índice del próximo evento a lanzar
@@ -158,17 +159,13 @@ function parar() {
 }
 
 async function guardar(s) {
-  await fetch("/api/sesiones", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      asaltos: s.asaltosCompletados,
-      nivel: s.config.nivel,
-      zurdo: s.config.zurdo,
-      duracion_asalto: s.config.duracion_asalto,
-      descanso: s.config.descanso,
-      combinaciones: s.dictadas,
-    }),
+  await (await historial).guardar({
+    asaltos: s.asaltosCompletados,
+    nivel: s.config.nivel,
+    zurdo: s.config.zurdo,
+    duracion_asalto: s.config.duracion_asalto,
+    descanso: s.config.descanso,
+    combinaciones: s.dictadas,
   });
 }
 
@@ -179,6 +176,8 @@ function formatear(segundos) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
+// Wake Lock: que la pantalla no se apague durante la sesión. El navegador lo suelta
+// al cambiar de app o bloquear el móvil, así que se vuelve a pedir al volver.
 let bloqueoPantalla = null;
 async function pedirPantallaEncendida() {
   try { bloqueoPantalla = await navigator.wakeLock?.request("screen"); } catch { /* no soportado */ }
@@ -187,9 +186,14 @@ function liberarPantalla() {
   bloqueoPantalla?.release();
   bloqueoPantalla = null;
 }
+document.addEventListener("visibilitychange", () => {
+  if (estado && document.visibilityState === "visible") pedirPantallaEncendida();
+});
 
 async function cargarHistorial() {
-  const sesiones = await (await fetch("/api/sesiones")).json();
+  const h = await historial;
+  const sesiones = await h.listar();
+  $("titulo-historial").title = `Guardado ${h.descripcion}`;
   $("historial").innerHTML = sesiones.slice(0, 5).map((s) =>
     `<li>${s.fecha.replace("T", " ")} · nivel ${s.nivel} · ${s.asaltos} asaltos · ${s.num_combinaciones} combinaciones</li>`
   ).join("") || "<li>Aún no hay sesiones</li>";
@@ -207,5 +211,10 @@ for (const id of ["asaltos", "duracion", "descanso"]) {
 }
 $("nivel").addEventListener("change", actualizarPausa);
 
-cargarConfig();
+cargarConfig().catch((e) => ($("combo").textContent = `Error al cargar los datos: ${e.message}`));
 cargarHistorial();
+
+// Service worker (uso offline). En localhost no, para no servir ficheros viejos al desarrollar.
+if ("serviceWorker" in navigator && !["localhost", "127.0.0.1"].includes(location.hostname)) {
+  navigator.serviceWorker.register("sw.js");
+}

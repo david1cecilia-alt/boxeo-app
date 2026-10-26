@@ -50,8 +50,10 @@ def crear_app(ruta_db: Path = RUTA_DB) -> FastAPI:
             raise HTTPException(404, "Sesión no encontrada")
         return combos
 
+    # El motor JS del navegador lee los mismos JSON que el de Python.
+    app.mount("/data", StaticFiles(directory=RAIZ / "data"), name="data")
     # Se monta al final para que no tape las rutas /api.
-    app.mount("/", StaticFiles(directory=RAIZ / "static", html=True), name="static")
+    app.mount("/",StaticFiles(directory=RAIZ / "static", html=True), name="static")
     return app
 # Sin "app = crear_app()" a nivel de módulo: importar no crea la base de datos.
 # Se arranca con: uvicorn app.main:crear_app --factory

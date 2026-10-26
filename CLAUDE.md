@@ -9,8 +9,12 @@
 ## Arquitectura
 - `motor/` es lógica pura en Python: sin FastAPI, sin I/O salvo leer `data/`. Todo testeable.
 - `app/` solo traduce HTTP ⇄ motor y guarda en SQLite (`sqlite3` de la stdlib).
-- `static/` solo presenta: reproduce el **guion** que genera el backend. Nada de reglas de boxeo en JS
-  (se migrará a Tauri + React).
+- `motor/` (Python) es la **referencia**. `static/motor/` es un port fiel que debe pasar los tests de
+  equivalencia (`tests/test_equivalencia_js.py`). Las reglas nuevas se escriben primero en Python.
+- El guion de la sesión lo genera siempre el motor JS en el navegador (funciona sin servidor, PWA).
+  El resto de `static/` solo presenta (se migrará a Tauri + React).
+- Historial: SQLite vía FastAPI si hay servidor; si no, `localStorage` (`static/historial.js`).
+- Nada de datos personales en `data/`: se publica tal cual con la web.
 - La voz va detrás de la interfaz de `static/voz.js` (`decir`, `callar`). Hoy Web Speech API, mañana Piper.
 
 ## Datos
@@ -24,4 +28,5 @@
 
 ## Tests
 - `.venv\Scripts\python -m pytest -q` debe pasar antes de cada commit.
-- Aleatoriedad siempre con `random.Random(semilla)` inyectado.
+- Aleatoriedad siempre con `random.Random(semilla)` inyectado (en JS, `crearAzar(semilla)` de `static/motor/azar.js`).
+- `node` (18+) hace falta para los tests de equivalencia; sin él se saltan.

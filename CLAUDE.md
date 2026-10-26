@@ -13,8 +13,14 @@
   equivalencia (`tests/test_equivalencia_js.py`). Las reglas nuevas se escriben primero en Python.
 - El guion de la sesión lo genera siempre el motor JS en el navegador (funciona sin servidor, PWA).
   El resto de `static/` solo presenta (se migrará a Tauri + React).
-- Historial: SQLite vía FastAPI si hay servidor; si no, `localStorage` (`static/historial.js`).
-- Nada de datos personales en `data/`: se publica tal cual con la web.
+- Historial: SQLite vía FastAPI si hay servidor; si no, el almacén (`static/historial.js`).
+- Perfil, valoraciones, notas y revisiones: SIEMPRE en el almacén del navegador (`static/almacen.js`),
+  nunca en el repo ni en `data/`. Nada de datos personales en `data/`: se publica tal cual con la web.
+- El almacén tiene esquema versionado: si cambia, sube `VERSION` y añade una migración en `MIGRACIONES`
+  con su test. Las sesiones locales usan `crypto.randomUUID()`.
+- `static/vistas/` solo presenta; `reproductor.js` lleva el tiempo de sesión; `ajustes.js` une perfil y motor.
+- Todo fichero nuevo de `static/` o `data/` va al precache de `static/sw.js` (lo comprueba `tests/test_pwa.py`).
+- Si cambia un `# REVISAR CON ENTRENADOR`, regenera `data/revisar.json` con `herramientas/extraer_revisar.py`.
 - La voz va detrás de la interfaz de `static/voz.js` (`decir`, `callar`). Hoy Web Speech API, mañana Piper.
 
 ## Datos
@@ -29,4 +35,5 @@
 ## Tests
 - `.venv\Scripts\python -m pytest -q` debe pasar antes de cada commit.
 - Aleatoriedad siempre con `random.Random(semilla)` inyectado (en JS, `crearAzar(semilla)` de `static/motor/azar.js`).
-- `node` (18+) hace falta para los tests de equivalencia; sin él se saltan.
+- `node` (18+) hace falta para los tests de JS (`tests/js/*.test.mjs`, con `node:test`) y los de equivalencia;
+  pytest los lanza todos. Sin Node se saltan en local; en CI fallan.

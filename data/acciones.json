@@ -1,5 +1,5 @@
 {
-  "_nota": "Todo en guardia ORTODOXA (izquierda adelante). El zurdo se calcula con motor.acciones.espejo(). nombre_hablado es una plantilla: {mano} y {lado} se rellenan con 'izquierda'/'derecha'. peso_despues de cada golpe: REVISAR CON ENTRENADOR.",
+  "_nota": "Todo en guardia ORTODOXA (izquierda adelante). El zurdo se calcula con motor.acciones.espejo(). nombre_hablado es una plantilla: {mano} y {lado} se rellenan con 'izquierda'/'derecha'. REVISAR CON ENTRENADOR: (1) peso_despues de cada golpe; (2) 'poder' = todos los golpes menos el jab; (3) rodar a un lado deja el peso en ese mismo lado.",
   "acciones": [
     {"id": "jab",               "familia": "jab",      "nombre_hablado": "jab",                     "tipo": "golpe",  "mano": "izq", "objetivo": "cabeza", "peso_despues": "centro",  "nivel_minimo": 1, "poder": false},
     {"id": "directo",           "familia": "directo",  "nombre_hablado": "directo",                 "tipo": "golpe",  "mano": "der", "objetivo": "cabeza", "peso_despues": "delante", "nivel_minimo": 1, "poder": true},

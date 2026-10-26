@@ -44,6 +44,7 @@ def _regla_cargar_y_soltar(combo, nivel):
         if siguiente.tipo != "golpe":
             continue  # solo obliga si después viene un golpe
         if defensa.familia == "rodar":
+            # REVISAR CON ENTRENADOR: rodar a la izquierda deja el peso a la izquierda → gancho de izquierda.
             permitidos = {("gancho", defensa.peso_despues)}
         else:
             permitidos = SOLTAR_TRAS.get(defensa.id)

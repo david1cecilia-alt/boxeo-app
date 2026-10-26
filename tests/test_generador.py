@@ -54,7 +54,7 @@ def _frecuencia(combos, condicion):
     return sum(1 for c in combos if condicion(c)) / len(combos)
 
 
-def test_el_perfil_de_david_aumenta_bloqueo_gancho_y_jab():
+def test_el_perfil_aumenta_bloqueo_gancho_y_jab():
     perfil, neutro = cargar_perfil(), PERFIL_NEUTRO
     con_perfil = _generar(1, perfil=perfil, semilla=1)
     sin_perfil = _generar(1, perfil=neutro, semilla=1)

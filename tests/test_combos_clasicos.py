@@ -1,6 +1,6 @@
 """Todas las combinaciones de data/combos.json deben pasar las reglas.
 
-Si alguna falla, NO se cambia la regla: se avisa a David.
+Si alguna falla, NO se cambia la regla: se avisa al usuario.
 """
 import pytest
 

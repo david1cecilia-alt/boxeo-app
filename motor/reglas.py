@@ -17,7 +17,7 @@ SOLTAR_TRAS = {
 }
 # REVISAR CON ENTRENADOR: tras "parada" (para el jab) no impongo ningún golpe concreto.
 
-# Acciones válidas para cerrar tras un golpe de poder en nivel 2 y 3 (confirmado por David).
+# Acciones válidas para cerrar tras un golpe de poder en nivel 2 y 3 (confirmado por el usuario).
 # Rodar ya es de nivel 2 por su nivel_minimo; "salir" se dice "sal en ángulo".
 FAMILIAS_SALIDA = {"pivote", "paso_lateral", "esquiva", "rodar", "salir"}
 

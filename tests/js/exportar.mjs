@@ -1,6 +1,6 @@
 // Genera con el motor JS lo que valida tests/test_equivalencia_js.py:
 // combinaciones por nivel, guiones de varias configuraciones y el espejo del catálogo.
-// Uso: node tests/js/exportar.mjs salida.json
+// Uso: node tests/js/exportar.mjs salida.json [combinaciones_por_nivel]
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,7 +15,7 @@ const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const leer = (nombre) => JSON.parse(readFileSync(join(RAIZ, "data", `${nombre}.json`), "utf-8"));
 usarDatos({ acciones: leer("acciones"), combos: leer("combos"), perfil: leer("perfil"), presets: leer("presets") });
 
-const N = 1000;
+const N = Number(process.argv[3] ?? 5000); // combinaciones por nivel y guardia
 const NIVELES = [1, 2, 3];
 
 // Una acción con los mismos campos que la dataclass Accion de Python.

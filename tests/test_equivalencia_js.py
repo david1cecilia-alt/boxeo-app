@@ -24,8 +24,9 @@ from motor.temporizador import (AVISO_ANTES_FIN, DURACION_AVISO, DURACION_REACCI
 RAIZ = Path(__file__).resolve().parent.parent
 SCRIPT = RAIZ / "tests" / "js" / "exportar.mjs"
 NIVELES = [1, 2, 3]
-# Con 1.000 muestras el ruido de la diferencia ya es de ~2 puntos (σ). Si falla tras cambiar
-# datos, comparar con 20.000 muestras antes de dar por hecho que el port está mal.
+MUESTRAS = 5000  # combinaciones por nivel (y por guardia) en cada motor
+# Con 5.000 muestras el ruido de la diferencia es de ~1 punto (σ): 5 puntos solo se
+# superan si el port genera de verdad otra distribución.
 TOLERANCIA_PROPORCION = 0.05
 REDONDEO = 0.011  # los tiempos se redondean a centésimas
 
@@ -34,7 +35,7 @@ pytestmark = pytest.mark.skipif(NODE is None, reason="node no está instalado")
 
 
 def _exportar(destino: Path) -> Path:
-    subprocess.run([NODE, str(SCRIPT), str(destino)], check=True, cwd=RAIZ)
+    subprocess.run([NODE, str(SCRIPT), str(destino), str(MUESTRAS)], check=True, cwd=RAIZ)
     return destino
 
 
@@ -58,7 +59,7 @@ def _acciones(lista: list[dict]) -> list[Accion]:
 @pytest.mark.parametrize("guardia", ["ortodoxo", "zurdo"])
 def test_combinaciones_js_pasan_las_reglas_de_python(js, nivel, guardia):
     combos = js["combos"][str(nivel)][guardia]
-    assert len(combos) == 1000
+    assert len(combos) == MUESTRAS
     for c in combos:
         acciones = _acciones(c["acciones"])
         errores = validar(acciones, nivel, zurdo=guardia == "zurdo")
@@ -106,7 +107,7 @@ def _proporcion(muestra: list[list[Accion]], condicion) -> float:
 @pytest.mark.parametrize("condicion", CONDICIONES, ids=str)
 def test_proporciones_del_perfil_iguales_en_js_y_python(js, nivel, condicion):
     gen = GeneradorCombos(nivel, rng=random.Random(nivel))  # perfil de data/perfil.json
-    python = [list(gen.siguiente().acciones) for _ in range(1000)]
+    python = [list(gen.siguiente().acciones) for _ in range(MUESTRAS)]
     javascript = [_acciones(c["acciones"]) for c in js["combos"][str(nivel)]["ortodoxo"]]
     p_py = _proporcion(python, CONDICIONES[condicion])
     p_js = _proporcion(javascript, CONDICIONES[condicion])

@@ -19,8 +19,10 @@ Lo que funciona hoy:
   **modo zurdo** como espejo automático.
 - **Ritmo** por nivel: la siguiente combinación espera a que dé tiempo a ejecutar la anterior.
 - **Voz** del navegador (Web Speech API) detrás de una interfaz intercambiable.
-- **Historial** de sesiones en SQLite (fecha, asaltos, nivel, combinaciones dictadas).
-- 138 tests con pytest.
+- **Historial** de sesiones: en SQLite si hay servidor; en `localStorage` del móvil si no.
+- **PWA**: el motor está portado a JS (`static/motor/`), así que la web funciona sin servidor
+  y sin conexión. Se puede instalar en el móvil y mantiene la pantalla encendida (Wake Lock).
+- 173 tests con pytest, incluidos los de equivalencia entre el motor Python y el JS.
 
 Pendiente: revisar con entrenador los puntos marcados `REVISAR CON ENTRENADOR`.
 Fuera de alcance por ahora: IA local, análisis de vídeo, voz por micrófono, Tauri + React.
@@ -51,6 +53,22 @@ Abre <http://127.0.0.1:8000>. Funciona sin internet.
 .venv\Scripts\python -m pytest -q
 ```
 
+Los tests de equivalencia (`tests/test_equivalencia_js.py`) necesitan **Node 18+**: ejecutan
+`tests/js/exportar.mjs`, que genera combinaciones y guiones con el motor JS, y los validan con
+el de Python. Sin Node se saltan.
+
+## Web estática (PWA)
+
+```powershell
+.venv\Scripts\python herramientas\construir_sitio.py _site
+```
+
+Monta `static/` + `data/` en `_site/`, lista para cualquier hosting estático. Sin servidor, el
+historial se guarda en el propio dispositivo. Los iconos se regeneran desde `static/iconos/guante.svg`
+con `herramientas\generar_iconos.py` (usa Edge headless).
+
+Sin conexión, la voz depende de que el móvil tenga instalada una voz en español.
+
 ## Estructura
 
 | Carpeta   | Qué contiene |
@@ -58,5 +76,6 @@ Abre <http://127.0.0.1:8000>. Funciona sin internet.
 | `app/`    | API FastAPI y acceso a SQLite |
 | `motor/`  | Lógica pura: acciones, reglas, generador, ritmo, temporizador |
 | `data/`   | Vocabulario, combos clásicos, perfil y presets (JSON) |
-| `static/` | Interfaz HTML + CSS + JS sin framework |
+| `static/` | Interfaz HTML + CSS + JS sin framework; `static/motor/` es el port JS del motor |
+| `herramientas/` | Montar la web estática y generar iconos |
 | `tests/`  | Tests con pytest |

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#111317"/>
+  <g id="guante">
+    <!-- puño -->
+    <path d="M178 318 C 120 270 118 160 190 118 C 255 80 352 92 382 170 C 404 232 388 292 342 318 Z" fill="#e63946"/>
+    <!-- separación de los dedos -->
+    <path d="M222 132 C 270 120 330 132 352 182" fill="none" stroke="#b82a36" stroke-width="12" stroke-linecap="round"/>
+    <!-- pulgar -->
+    <path d="M196 214 C 150 204 132 252 156 284 C 176 310 220 304 232 276 C 240 254 226 220 196 214 Z" fill="#c92f3c"/>
+    <!-- puño de la manopla con cinta -->
+    <rect x="184" y="304" width="164" height="112" rx="22" fill="#e63946"/>
+    <rect x="184" y="336" width="164" height="28" fill="#eef0f3"/>
+  </g>
+</svg>

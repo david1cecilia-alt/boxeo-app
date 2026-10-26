@@ -16,3 +16,6 @@ __pycache__/
 # Editor / sistema
 .vscode/
 Thumbs.db
+
+# Web estática montada
+_site/

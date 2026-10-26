@@ -1,0 +1,12 @@
+{
+  "presets": [
+    {"id": "amateur", "nombre": "Amateur 3×3 min", "asaltos": 3, "duracion_asalto": 180, "descanso": 60},
+    {"id": "prueba",  "nombre": "Prueba rápida 2×30 s", "asaltos": 2, "duracion_asalto": 30, "descanso": 10}
+  ],
+  "reacciones": [
+    {"id": "esquiva", "texto": "¡esquiva!"},
+    {"id": "contra",  "texto": "¡contra!"},
+    {"id": "cubrete", "texto": "¡cúbrete y devuelve!"},
+    {"id": "sal",     "texto": "¡sal!"}
+  ]
+}

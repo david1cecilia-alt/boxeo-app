@@ -18,7 +18,7 @@ py -3.12 -m venv .venv
 ## Arrancar
 
 ```powershell
-.venv\Scripts\python -m uvicorn app.main:app --reload
+.venv\Scripts\python -m uvicorn app.main:crear_app --factory --reload
 ```
 
 Abre <http://127.0.0.1:8000>. Funciona sin internet.

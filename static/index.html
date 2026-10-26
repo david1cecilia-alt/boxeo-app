@@ -2,9 +2,10 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Boxeo</title>
   <meta name="theme-color" content="#111317">
+  <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
@@ -13,53 +14,92 @@
   <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
+  <p id="aviso-almacen" class="aviso fijo" role="alert" hidden></p>
+
   <main>
-    <section id="config" class="tarjeta">
-      <h1>Entrenamiento</h1>
-      <div class="rejilla">
-        <label>Preset
+    <!-- ============ Entrenar ============ -->
+    <section id="vista-entrenar" class="vista" aria-labelledby="t-entrenar">
+      <form id="config" class="tarjeta formulario">
+        <h1 id="t-entrenar" tabindex="-1">Entrenar</h1>
+
+        <label class="campo">Preset
           <select id="preset"></select>
         </label>
-        <label>Asaltos
-          <input id="asaltos" type="number" min="1" max="20">
-        </label>
-        <label>Asalto (s)
-          <input id="duracion" type="number" min="20" max="600" step="10">
-        </label>
-        <label>Descanso (s)
-          <input id="descanso" type="number" min="0" max="300" step="5">
-        </label>
-        <label>Nivel
-          <select id="nivel">
-            <option value="1">1 · principiante</option>
-            <option value="2">2 · intermedio</option>
-            <option value="3">3 · avanzado</option>
-          </select>
-        </label>
-        <label>Pausa entre combos (s)
-          <input id="pausa" type="number" min="0" max="30" step="0.5">
-        </label>
-        <label class="check"><input id="zurdo" type="checkbox"> Zurdo</label>
-        <label class="check"><input id="reaccion" type="checkbox"> Modo reacción</label>
-      </div>
-      <p id="info-voz" class="nota"></p>
+
+        <fieldset class="segmentado">
+          <legend>Nivel</legend>
+          <label><input type="radio" name="nivel" value="1"><span>1<small>Principiante</small></span></label>
+          <label><input type="radio" name="nivel" value="2"><span>2<small>Intermedio</small></span></label>
+          <label><input type="radio" name="nivel" value="3"><span>3<small>Avanzado</small></span></label>
+        </fieldset>
+
+        <label class="interruptor"><input type="checkbox" id="zurdo">
+          <span>Zurdo<small>Todo en espejo: derecha delante</small></span></label>
+        <label class="interruptor"><input type="checkbox" id="reaccion">
+          <span>Modo reacción<small>Señales al azar: esquiva, contra, sal…</small></span></label>
+
+        <details class="avanzados">
+          <summary>Ajustes avanzados</summary>
+          <div class="rejilla">
+            <label class="campo">Asaltos <input id="asaltos" type="number" inputmode="numeric" min="1" max="20"></label>
+            <label class="campo">Asalto (s) <input id="duracion" type="number" inputmode="numeric" min="20" max="600" step="10"></label>
+            <label class="campo">Descanso (s) <input id="descanso" type="number" inputmode="numeric" min="0" max="300" step="5"></label>
+            <label class="campo">Pausa entre combos (s) <input id="pausa" type="number" inputmode="decimal" min="0" max="30" step="0.5"></label>
+          </div>
+        </details>
+
+        <p id="resumen-config" class="resumen-config"></p>
+        <button id="empezar" type="submit" class="boton principal enorme">Empezar</button>
+        <p id="info-voz" class="nota"></p>
+      </form>
+
+      <section id="pantalla" data-fase="asalto" hidden aria-label="Sesión en curso">
+        <div class="marcador">
+          <span id="asalto">Asalto 1 / 1</span>
+          <span id="fase">Asalto</span>
+        </div>
+        <div id="tiempo" role="timer" aria-live="off">0:00</div>
+        <p id="combo"></p>
+        <p id="anterior"></p>
+        <div class="controles">
+          <button id="pausa" type="button" class="boton secundario enorme" aria-pressed="false">Pausa</button>
+          <button id="parar" type="button" class="boton peligro enorme">Parar</button>
+        </div>
+        <p class="nota atajos">Teclado: espacio = pausa · Esc = parar</p>
+      </section>
     </section>
 
-    <section id="pantalla" class="tarjeta">
-      <div class="marcador">
-        <span id="asalto">Asalto –</span>
-        <span id="fase">Listo</span>
-      </div>
-      <div id="tiempo">0:00</div>
-      <div id="combo">Pulsa empezar</div>
-      <button id="boton" type="button">Empezar</button>
+    <!-- ============ Historial ============ -->
+    <section id="vista-historial" class="vista" aria-labelledby="t-historial" hidden>
+      <h1 id="t-historial" tabindex="-1">Historial</h1>
+      <div id="historial-contenido"></div>
     </section>
 
-    <section class="tarjeta">
-      <h2 id="titulo-historial">Últimas sesiones</h2>
-      <ul id="historial"></ul>
+    <!-- ============ Perfil ============ -->
+    <section id="vista-perfil" class="vista" aria-labelledby="t-perfil" hidden>
+      <h1 id="t-perfil" tabindex="-1">Perfil</h1>
+      <div id="perfil-contenido"></div>
     </section>
   </main>
+
+  <nav id="pestanas" aria-label="Secciones">
+    <a href="#entrenar">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 13V9M9 2h6M12 2v3"/></svg>
+      <span>Entrenar</span>
+    </a>
+    <a href="#historial">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      <span>Historial</span>
+    </a>
+    <a href="#perfil">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+      <span>Perfil</span>
+    </a>
+  </nav>
+
+  <dialog id="postsesion"></dialog>
+  <div id="estado" class="solo-lectores" role="status" aria-live="polite"></div>
+
   <script type="module" src="app.js"></script>
 </body>
 </html>

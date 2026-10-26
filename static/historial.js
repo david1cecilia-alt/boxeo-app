@@ -1,64 +1,97 @@
-// Historial de sesiones. Cualquier implementación debe ofrecer:
-//   guardar(sesion) -> guarda { asaltos, nivel, zurdo, duracion_asalto, descanso, combinaciones }
-//   listar()        -> sesiones, la más reciente primero, con fecha y num_combinaciones
-// HistorialServidor: SQLite vía FastAPI (en local). HistorialLocal: localStorage (PWA sin servidor).
-
-const CLAVE = "boxeo.historial";
-const MAX_SESIONES = 100;
+// Fuente de las sesiones. Cualquier implementación debe ofrecer:
+//   origen                -> "servidor" | "local" (forma la clave de la valoración: "local:<id>")
+//   guardar(sesion)       -> id de la sesión guardada
+//   listar()              -> sesiones, la más reciente primero, con `clave` y num_combinaciones
+//   combinaciones(id)     -> [{ asalto, texto, ids }]
+//   borrar(id)            -> borra la sesión y su valoración
+//   copia()               -> sesiones completas para la copia de seguridad (solo servidor)
+// HistorialServidor: SQLite vía FastAPI (en local). HistorialLocal: el almacén (PWA sin servidor).
+// Las valoraciones, el perfil y las notas van SIEMPRE al almacén (un solo camino).
+import { claveSesion } from "./almacen.js";
 
 class HistorialServidor {
+  origen = "servidor";
   descripcion = "en el servidor (SQLite)";
 
+  constructor(almacen) {
+    this.almacen = almacen;
+  }
+
   async guardar(sesion) {
-    await fetch("api/sesiones", {
+    const r = await fetch("api/sesiones", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(sesion),
     });
+    if (!r.ok) throw new Error(`El servidor no guardó la sesión (${r.status})`);
+    return (await r.json()).id;
   }
 
   async listar() {
-    return (await fetch("api/sesiones")).json();
+    const sesiones = await (await fetch("api/sesiones")).json();
+    return sesiones.map((s) => ({ ...s, zurdo: Boolean(s.zurdo), clave: claveSesion(this.origen, s.id) }));
+  }
+
+  async combinaciones(id) {
+    const r = await fetch(`api/sesiones/${id}/combinaciones`);
+    return r.ok ? r.json() : [];
+  }
+
+  async borrar(id) {
+    const r = await fetch(`api/sesiones/${id}`, { method: "DELETE" });
+    if (!r.ok && r.status !== 404) throw new Error(`El servidor no borró la sesión (${r.status})`);
+    this.almacen.borrarValoracion(claveSesion(this.origen, id));
+  }
+
+  async copia() {
+    const sesiones = await this.listar();
+    return Promise.all(sesiones.map(async ({ clave, ...s }) => ({ ...s, combinaciones: await this.combinaciones(s.id) })));
   }
 }
 
 class HistorialLocal {
+  origen = "local";
   descripcion = "en este dispositivo";
 
-  _leer() {
-    try {
-      return JSON.parse(localStorage.getItem(CLAVE)) ?? [];
-    } catch {
-      return []; // sin almacenamiento (modo privado) o datos corruptos
-    }
+  constructor(almacen) {
+    this.almacen = almacen;
   }
 
   async guardar(sesion) {
-    const sesiones = this._leer();
-    const id = sesiones.reduce((m, s) => Math.max(m, s.id), 0) + 1;
-    sesiones.unshift({ id, fecha: fechaLocal(), ...sesion, num_combinaciones: sesion.combinaciones.length });
-    try {
-      localStorage.setItem(CLAVE, JSON.stringify(sesiones.slice(0, MAX_SESIONES)));
-    } catch { /* almacenamiento lleno o bloqueado: la sesión no se guarda */ }
+    return this.almacen.anadirSesion({ fecha: fechaLocal(), ...sesion });
   }
 
   async listar() {
-    return this._leer();
+    return this.almacen.datos.sesiones.map((s) => ({
+      ...s, num_combinaciones: s.combinaciones.length, clave: claveSesion(this.origen, s.id),
+    }));
+  }
+
+  async combinaciones(id) {
+    return this.almacen.datos.sesiones.find((s) => s.id === id)?.combinaciones ?? [];
+  }
+
+  async borrar(id) {
+    this.almacen.borrarSesion(id); // borra también su valoración
+  }
+
+  async copia() {
+    return null; // las sesiones locales ya van dentro del almacén
   }
 }
 
 // Misma forma que datetime.now().isoformat(timespec="seconds") del servidor.
-function fechaLocal(d = new Date()) {
+export function fechaLocal(d = new Date()) {
   const dos = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}` +
     `T${dos(d.getHours())}:${dos(d.getMinutes())}:${dos(d.getSeconds())}`;
 }
 
-// Si responde la API de FastAPI se usa SQLite; si no (GitHub Pages, sin conexión), localStorage.
-export async function crearHistorial() {
+// Si responde la API de FastAPI se usa SQLite; si no (GitHub Pages, sin conexión), el almacén.
+export async function crearHistorial(almacen) {
   try {
     const r = await fetch("api/sesiones", { signal: AbortSignal.timeout(2000) });
-    if (r.ok && r.headers.get("content-type")?.includes("application/json")) return new HistorialServidor();
+    if (r.ok && r.headers.get("content-type")?.includes("application/json")) return new HistorialServidor(almacen);
   } catch { /* sin servidor */ }
-  return new HistorialLocal();
+  return new HistorialLocal(almacen);
 }

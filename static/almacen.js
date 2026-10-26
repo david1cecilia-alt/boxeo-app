@@ -87,6 +87,7 @@ export function crearAlmacen({
   storage = globalThis.localStorage,
   crearId = () => crypto.randomUUID(),
   ahora = () => new Date().toISOString(),
+  alFallar = () => {}, // la app muestra el aviso
 } = {}) {
   let datos = vacio();
   let persistente = true;
@@ -95,6 +96,7 @@ export function crearAlmacen({
   function fallo(texto) {
     persistente = false;
     aviso = texto;
+    alFallar(texto);
   }
 
   function guardar() {

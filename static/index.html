@@ -1,0 +1,59 @@
+﻿<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Boxeo</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <main>
+    <section id="config" class="tarjeta">
+      <h1>Entrenamiento</h1>
+      <div class="rejilla">
+        <label>Preset
+          <select id="preset"></select>
+        </label>
+        <label>Asaltos
+          <input id="asaltos" type="number" min="1" max="20">
+        </label>
+        <label>Asalto (s)
+          <input id="duracion" type="number" min="20" max="600" step="10">
+        </label>
+        <label>Descanso (s)
+          <input id="descanso" type="number" min="0" max="300" step="5">
+        </label>
+        <label>Nivel
+          <select id="nivel">
+            <option value="1">1 · principiante</option>
+            <option value="2">2 · intermedio</option>
+            <option value="3">3 · avanzado</option>
+          </select>
+        </label>
+        <label>Pausa entre combos (s)
+          <input id="pausa" type="number" min="0" max="30" step="0.5">
+        </label>
+        <label class="check"><input id="zurdo" type="checkbox"> Zurdo</label>
+        <label class="check"><input id="reaccion" type="checkbox"> Modo reacción</label>
+      </div>
+      <p id="info-voz" class="nota"></p>
+    </section>
+
+    <section id="pantalla" class="tarjeta">
+      <div class="marcador">
+        <span id="asalto">Asalto –</span>
+        <span id="fase">Listo</span>
+      </div>
+      <div id="tiempo">0:00</div>
+      <div id="combo">Pulsa empezar</div>
+      <button id="boton" type="button">Empezar</button>
+    </section>
+
+    <section class="tarjeta">
+      <h2>Últimas sesiones</h2>
+      <ul id="historial"></ul>
+    </section>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

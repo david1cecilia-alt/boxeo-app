@@ -9,6 +9,7 @@ const FICHEROS = [
   "index.html",
   "estilos.css",
   "app.js",
+  "ajustes.js",
   "almacen.js",
   "historial.js",
   "reproductor.js",

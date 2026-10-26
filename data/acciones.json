@@ -17,8 +17,8 @@
 
     {"id": "esquiva_der",       "familia": "esquiva",    "nombre_hablado": "esquiva a la {lado}",  "tipo": "defensa", "mano": "ninguna", "lado": "der", "objetivo": "ninguno", "peso_despues": "der",    "nivel_minimo": 1},
     {"id": "esquiva_izq",       "familia": "esquiva",    "nombre_hablado": "esquiva a la {lado}",  "tipo": "defensa", "mano": "ninguna", "lado": "izq", "objetivo": "ninguno", "peso_despues": "izq",    "nivel_minimo": 1},
-    {"id": "rodar_der",         "familia": "rodar",      "nombre_hablado": "rueda a la {lado}",    "tipo": "defensa", "mano": "ninguna", "lado": "der", "objetivo": "ninguno", "peso_despues": "der",    "nivel_minimo": 2},
-    {"id": "rodar_izq",         "familia": "rodar",      "nombre_hablado": "rueda a la {lado}",    "tipo": "defensa", "mano": "ninguna", "lado": "izq", "objetivo": "ninguno", "peso_despues": "izq",    "nivel_minimo": 2},
+    {"id": "rodar_der",         "familia": "rodar",      "nombre_hablado": "rueda a la {lado}",    "tipo": "defensa", "mano": "ninguna", "lado": "der", "objetivo": "ninguno", "peso_despues": "der",    "nivel_minimo": 1},
+    {"id": "rodar_izq",         "familia": "rodar",      "nombre_hablado": "rueda a la {lado}",    "tipo": "defensa", "mano": "ninguna", "lado": "izq", "objetivo": "ninguno", "peso_despues": "izq",    "nivel_minimo": 1},
     {"id": "paso_atras",        "familia": "paso_atras", "nombre_hablado": "paso atrás",           "tipo": "defensa", "mano": "ninguna", "objetivo": "ninguno", "peso_despues": "detras", "nivel_minimo": 1},
     {"id": "bloqueo",           "familia": "bloqueo",    "nombre_hablado": "cúbrete",              "tipo": "defensa", "mano": "ninguna", "objetivo": "ninguno", "peso_despues": "centro", "nivel_minimo": 1},
     {"id": "parada",            "familia": "parada",     "nombre_hablado": "para el jab",          "tipo": "defensa", "mano": "der",     "objetivo": "ninguno", "peso_despues": "centro", "nivel_minimo": 1},

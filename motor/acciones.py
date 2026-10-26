@@ -61,6 +61,22 @@ def acciones_por_ids(ids: list[str]) -> list[Accion]:
     return [cat[i] for i in ids]
 
 
+@dataclass(frozen=True)
+class ComboClasico:
+    nombre: str
+    nivel: int
+    acciones: tuple[Accion, ...]
+
+
+@lru_cache
+def combos_clasicos() -> tuple[ComboClasico, ...]:
+    """Biblioteca de combinaciones escritas a mano (data/combos.json)."""
+    with open(RUTA_DATOS / "combos.json", encoding="utf-8") as f:
+        datos = json.load(f)
+    return tuple(ComboClasico(c["nombre"], c["nivel"], tuple(acciones_por_ids(c["ids"])))
+                 for c in datos["combos"])
+
+
 def _contrario(valor: str) -> str:
     return _LADO_CONTRARIO.get(valor, valor)
 

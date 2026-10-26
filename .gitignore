@@ -1,0 +1,14 @@
+# Entorno virtual
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Base de datos local (datos personales, no se versionan)
+*.db
+
+# Editor / sistema
+.vscode/
+Thumbs.db

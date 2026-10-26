@@ -8,12 +8,25 @@ es una PWA instalable y todo se calcula en el dispositivo.
 
 **▶ Pruébalo: <https://david1cecilia-alt.github.io/boxeo-app/>** (en el móvil: menú → *Instalar app*)
 
-| Configuración | Combinación dictada | Modo reacción | Descanso |
+| Entrenar | Asalto en curso | Últimos 10 s | Modo reacción |
 |:---:|:---:|:---:|:---:|
-| <img src="docs/capturas/configuracion.png" width="190" alt="Pantalla de configuración con presets, nivel, zurdo y modo reacción"> | <img src="docs/capturas/combinacion.png" width="190" alt="Asalto en curso dictando 'uppercut de derecha, cúbrete, jab'"> | <img src="docs/capturas/reaccion.png" width="190" alt="Señal de reacción '¡sal!' en amarillo"> | <img src="docs/capturas/descanso.png" width="190" alt="Pantalla de descanso en verde"> |
+| <img src="docs/capturas/entrenar.png" width="190" alt="Pestaña Entrenar: preset, nivel en tres botones grandes, zurdo, modo reacción y botón Empezar"> | <img src="docs/capturas/sesion.png" width="190" alt="Asalto en curso: reloj enorme, combinación actual en grande, la anterior en pequeño y botones Pausa y Parar"> | <img src="docs/capturas/final.png" width="190" alt="Últimos 10 segundos: el fondo pasa a rojo"> | <img src="docs/capturas/reaccion.png" width="190" alt="Señal de reacción: fondo amarillo con texto negro"> |
+
+| Valoración | Historial | Perfil |
+|:---:|:---:|:---:|
+| <img src="docs/capturas/postsesion.png" width="190" alt="Formulario post-sesión con RPE del 1 al 10, sensación del 1 al 5 y notas"> | <img src="docs/capturas/historial.png" width="190" alt="Historial: resumen de la semana y del mes, asaltos por semana en barras y RPE medio en línea"> | <img src="docs/capturas/perfil.png" width="190" alt="Perfil: guardia, nivel, fecha de inicio y medidas opcionales"> |
+
+<sub>Capturas con datos de ejemplo.</sub>
 
 ## Qué hace
 
+- **Tres pestañas** con barra inferior: *Entrenar*, *Historial* y *Perfil*. Rutas por hash
+  (`#historial`), así que funcionan en GitHub Pages y sin conexión.
+- **Pensada para usar con guantes a 1–2 m del móvil**: reloj enorme, combinación en grande,
+  botones de 76 px y un color por fase (asalto, últimos 10 s, descanso, reacción, pausa).
+  Durante la sesión solo se ve lo esencial.
+- **Pausa y Reanudar** separados de **Parar**: la pausa congela el reloj, la voz y el guion, y
+  reanuda en el mismo punto. La pantalla sigue encendida (Wake Lock).
 - **Asaltos configurables** (preset amateur 3×3 min con 1 min de descanso): campana al empezar y
   acabar, tablillas y aviso por voz a los 10 s del final.
 - **Combinaciones con sentido técnico**, siempre por su nombre ("esquiva a la derecha, directo,
@@ -22,10 +35,26 @@ es una PWA instalable y todo se calcula en el dispositivo.
 - **Ritmo realista**: la siguiente combinación no llega hasta que da tiempo a ejecutar la anterior.
 - **Modo reacción**: señales aleatorias ("¡esquiva!", "¡sal!") que nunca pisan una combinación.
 - **Modo zurdo**: todo se define en guardia ortodoxa y el zurdo es su espejo exacto.
-- **Perfil de entrenamiento**: pesos para insistir en lo que hay que mejorar (más
-  bloquear-y-devolver, más finales en gancho…).
-- **Sin conexión**: service worker con la app entera en caché, Wake Lock para que no se apague
-  la pantalla e historial de sesiones en el propio móvil.
+- **Valoración tras cada sesión**: la app no puede saber si la técnica sale bien, así que la
+  valoración es manual: esfuerzo percibido (RPE 1–10), cómo me he sentido, qué ha salido bien,
+  qué corregir y qué combinaciones han costado. Se puede saltar y rellenar después.
+- **Historial** con resumen semanal y mensual, dos gráficos SVG hechos a mano (asaltos por
+  semana y RPE medio, con el mismo eje de semanas), detalle de cada sesión, notas editables y
+  borrado.
+- **Perfil**: guardia, nivel, estilo (cada pregunta admite «No lo sé»), focos de trabajo, notas del
+  entrenador y los puntos marcados `REVISAR CON ENTRENADOR` en el motor para apuntar su respuesta.
+  Los **pesos del generador** (más finales en gancho, más bloquear-y-devolver, más entradas con
+  jab) se ajustan con deslizadores y sustituyen a los de `data/perfil.json`.
+- **Sin conexión**: service worker con la app entera en caché.
+
+## Tus datos
+
+Perfil, notas y valoraciones se guardan **solo en el navegador** (`localStorage`); nunca van al
+repositorio ni a `data/`. El almacén (`static/almacen.js`) tiene esquema versionado con
+migraciones: las sesiones guardadas con versiones anteriores siguen apareciendo. Si el navegador
+no deja guardar, la app sigue funcionando en memoria y avisa. Como `localStorage` se borra al
+limpiar el navegador, el historial permite **exportar e importar** todo en un JSON. Con el servidor
+local (FastAPI), las sesiones siguen en SQLite y la copia las incluye como referencia.
 
 ## Arquitectura
 
@@ -38,13 +67,16 @@ flowchart LR
     end
     subgraph Navegador["Navegador / PWA"]
         motorjs["static/motor/<br>port JS del motor"]
-        ui["app.js<br>reproduce el guion<br>voz · sonido · Wake Lock"]
-        hist["historial.js<br>SQLite o localStorage"]
+        repro["reproductor.js<br>tiempo de sesión · pausa"]
+        vistas["vistas/<br>entrenar · historial · perfil"]
+        almacen[("almacen.js<br>localStorage versionado")]
+        hist["historial.js<br>SQLite o almacén"]
     end
     tests{{"tests de equivalencia<br>(pytest + Node)"}}
     datos --> motor & motorjs
-    motorjs -- "guion: eventos con su segundo" --> ui
-    ui --> hist
+    almacen -- "pesos del perfil" --> motorjs
+    motorjs -- "guion: eventos con su segundo" --> repro --> vistas
+    vistas --> hist & almacen
     hist -. "si hay servidor" .-> api
     motorjs -- "5.000 combinaciones/nivel,<br>35 guiones, espejo" --> tests
     motor -- "valida" --> tests
@@ -61,8 +93,11 @@ flowchart LR
 - **El guion es un dato**: el motor genera una lista de eventos con su segundo exacto
   (`combo`, `reaccion`, `aviso`, `descanso`…) y la interfaz solo la reproduce. La interfaz no
   sabe nada de boxeo, así que cambiarla (Tauri + React está en el horizonte) no toca las reglas.
+- **Vistas, estado y motor separados**, sin frameworks: las vistas (`static/vistas/`) solo
+  presentan; el estado del usuario vive en el almacén; `reproductor.js` lleva el tiempo de sesión
+  (con pausa) sin saber nada de pantallas; `ajustes.js` une perfil y motor.
 - **Interfaces intercambiables**: la voz (`voz.js`, hoy Web Speech API, mañana Piper) y el
-  historial (`historial.js`: SQLite si responde FastAPI, `localStorage` si no).
+  historial (`historial.js`: SQLite si responde FastAPI, el almacén si no).
 
 ### Cómo se comprueba que los dos motores coinciden
 
@@ -83,11 +118,25 @@ Los invariantes de guion se aplican también a los guiones de Python: así se co
 describen de verdad al motor de referencia. Además, se probó a meter errores a propósito en el
 port (pausa, margen, espejo, pesos, longitud, validación) y en cada caso falló al menos un test.
 
-En CI los tests se ejecutan en cada push (**173 tests**), y solo si pasan se despliega en GitHub Pages.
+### Tests de la interfaz y los datos
+
+Tests unitarios de JS con `node:test` (`tests/js/*.test.mjs`), lanzados desde pytest para que un
+solo comando lo cubra todo:
+
+| Qué se comprueba | Cómo |
+|---|---|
+| Pausa y reanudación | Con un reloj falso y pausas en mitad de combos y descansos, cada evento del guion se lanza una sola vez, en orden y en su segundo de sesión |
+| Los pesos del perfil llegan al generador | Subir cada peso aumenta la proporción de esas combinaciones en el guion; los pesos sustituyen a los de `perfil.json` |
+| Migración del almacén | El historial anterior (v0) pasa a v1 conservando las sesiones; migrar dos veces no cambia nada; datos dañados o de una versión más nueva no se sobrescriben |
+| Copia de seguridad | Exportar → JSON → importar da exactamente los mismos datos |
+| Ids sin colisiones | Las sesiones locales usan UUID: borrar o importar no mezcla valoraciones |
+| Contraste | Los colores de `estilos.css` cumplen AA (texto 4,5:1; bordes, foco y gráficos 3:1) |
+
+En CI los tests se ejecutan en cada push (**183 tests**), y solo si pasan se despliega en GitHub Pages.
 
 ## Probarlo en local
 
-Requisitos: **Python 3.12** y **Node 18+** (solo para los tests de equivalencia).
+Requisitos: **Python 3.12** y **Node 18+** (solo para los tests de JS y de equivalencia).
 
 ```powershell
 py -3.12 -m venv .venv
@@ -96,7 +145,7 @@ py -3.12 -m venv .venv
 # App con servidor (historial en SQLite): http://127.0.0.1:8000
 .venv\Scripts\python -m uvicorn app.main:crear_app --factory --reload
 
-# Tests (sin Node, los de equivalencia se saltan)
+# Tests (sin Node, los de JS y equivalencia se saltan)
 .venv\Scripts\python -m pytest -q
 
 # Web estática, igual que la publicada
@@ -113,11 +162,12 @@ Los iconos se regeneran desde `static/iconos/guante.svg` con `herramientas\gener
 |---|---|
 | `motor/` | Lógica pura en Python: acciones y espejo, reglas, generador, ritmo, temporizador |
 | `static/motor/` | Port JS del motor |
-| `static/` | Interfaz HTML + CSS + JS sin framework, service worker y manifest |
+| `static/vistas/` | Las tres pestañas, el formulario post-sesión y el gráfico SVG |
+| `static/` | Arranque, rutas, almacén, reproductor, voz, sonido, estilos, service worker y manifest |
 | `app/` | API FastAPI y acceso a SQLite |
-| `data/` | Vocabulario, combos clásicos, perfil y presets (JSON): fuente única para los dos motores |
-| `tests/` | pytest; `tests/js/` genera los datos de equivalencia con Node |
-| `herramientas/` | Montar la web estática y generar iconos |
+| `data/` | Vocabulario, combos clásicos, perfil por defecto, presets y puntos a revisar (JSON): fuente única para los dos motores |
+| `tests/` | pytest; `tests/js/` tiene los tests de JS y genera los datos de equivalencia |
+| `herramientas/` | Montar la web estática, generar iconos y extraer los puntos a revisar |
 | `.github/workflows/` | Tests y despliegue en GitHub Pages |
 
 ## Límites conocidos

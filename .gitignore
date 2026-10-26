@@ -6,6 +6,10 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
+# Variables de entorno y secretos
+.env
+.env.*
+
 # Base de datos local (datos personales, no se versionan)
 *.db
 

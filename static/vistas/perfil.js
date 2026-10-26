@@ -180,6 +180,8 @@ export function iniciarPerfil({ almacen }) {
       contenedor.innerHTML = `<p class="aviso">No se pudo cargar la lista de puntos.</p>`;
       return;
     }
+    // Si mientras se cargaba se repintó la pestaña, este contenedor ya no está en la página.
+    if (!contenedor.isConnected) return;
     const respuestas = almacen.datos.revisiones;
     contenedor.innerHTML = `<ul class="lista-revisar">${revisar.map((r) => {
       const resp = respuestas[r.id] ?? { respuesta: "", confirmado: false };
@@ -193,18 +195,17 @@ export function iniciarPerfil({ almacen }) {
       </li>`;
     }).join("")}</ul>`;
     for (const r of revisar) {
+      const respuesta = $(`[data-revision="${r.id}"]`, contenedor);
+      const confirmado = $(`[data-confirmado="${r.id}"]`, contenedor);
       const guardarRevision = () => {
-        almacen.guardarRevision(r.id, {
-          respuesta: $(`[data-revision="${r.id}"]`).value.trim(),
-          confirmado: $(`[data-confirmado="${r.id}"]`).checked,
-        });
+        almacen.guardarRevision(r.id, { respuesta: respuesta.value.trim(), confirmado: confirmado.checked });
         anunciar("Guardado");
       };
-      $(`[data-revision="${r.id}"]`).addEventListener("change", guardarRevision);
-      $(`[data-confirmado="${r.id}"]`).addEventListener("change", async () => {
+      respuesta.addEventListener("change", guardarRevision);
+      confirmado.addEventListener("change", async () => {
         guardarRevision();
         await pintarRevisar();
-        $(`[data-confirmado="${r.id}"]`).focus(); // el repintado no debe perder el foco
+        $(`[data-confirmado="${r.id}"]`)?.focus(); // el repintado no debe perder el foco
       });
     }
   }

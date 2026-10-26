@@ -50,6 +50,11 @@ def crear_app(ruta_db: Path = RUTA_DB) -> FastAPI:
             raise HTTPException(404, "Sesión no encontrada")
         return combos
 
+    @app.delete("/api/sesiones/{sesion_id}", status_code=204)
+    def borrar(sesion_id: int):
+        if not db.borrar_sesion(ruta_db, sesion_id):
+            raise HTTPException(404, "Sesión no encontrada")
+
     # El motor JS del navegador lee los mismos JSON que el de Python.
     app.mount("/data", StaticFiles(directory=RAIZ / "data"), name="data")
     # Se monta al final para que no tape las rutas /api.

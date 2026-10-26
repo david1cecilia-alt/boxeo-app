@@ -1,6 +1,9 @@
+from contextlib import closing
+
 import pytest
 from fastapi.testclient import TestClient
 
+from app import db
 from app.main import crear_app
 
 
@@ -51,6 +54,19 @@ def test_guardar_y_listar_sesion(cliente):
 
     combos = cliente.get(f"/api/sesiones/{sesion_id}/combinaciones").json()
     assert combos[1]["ids"] == ["bloqueo", "gancho_izq"]
+
+
+def test_borrar_sesion_borra_tambien_sus_combinaciones(cliente, tmp_path):
+    sesion = {"asaltos": 1, "nivel": 1, "duracion_asalto": 60, "descanso": 30,
+              "combinaciones": [{"asalto": 1, "texto": "jab, directo", "ids": ["jab", "directo"]}]}
+    otra = cliente.post("/api/sesiones", json=sesion).json()["id"]
+    borrar = cliente.post("/api/sesiones", json=sesion).json()["id"]
+
+    assert cliente.delete(f"/api/sesiones/{borrar}").status_code == 204
+    assert [s["id"] for s in cliente.get("/api/sesiones").json()] == [otra]
+    with closing(db.conectar(tmp_path / "test.db")) as c:
+        assert c.execute("SELECT COUNT(*) FROM combinaciones WHERE sesion_id = ?", (borrar,)).fetchone()[0] == 0
+    assert cliente.delete(f"/api/sesiones/{borrar}").status_code == 404
 
 
 def test_sesion_inexistente_da_404(cliente):

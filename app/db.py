@@ -61,6 +61,12 @@ def listar_sesiones(ruta: Path) -> list[dict]:
         return [dict(f) for f in filas]
 
 
+def borrar_sesion(ruta: Path, sesion_id: int) -> bool:
+    """Borra la sesión y sus combinaciones (ON DELETE CASCADE). False si no existía."""
+    with closing(conectar(ruta)) as c, c:
+        return c.execute("DELETE FROM sesiones WHERE id = ?", (sesion_id,)).rowcount > 0
+
+
 def combinaciones_de(ruta: Path, sesion_id: int) -> list[dict]:
     with closing(conectar(ruta)) as c:
         filas = c.execute("SELECT asalto, texto, ids FROM combinaciones WHERE sesion_id = ? ORDER BY orden",

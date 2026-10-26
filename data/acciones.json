@@ -1,0 +1,35 @@
+{
+  "_nota": "Todo en guardia ORTODOXA (izquierda adelante). El zurdo se calcula con motor.acciones.espejo(). nombre_hablado es una plantilla: {mano} y {lado} se rellenan con 'izquierda'/'derecha'. peso_despues de cada golpe: REVISAR CON ENTRENADOR.",
+  "acciones": [
+    {"id": "jab",               "familia": "jab",      "nombre_hablado": "jab",                     "tipo": "golpe",  "mano": "izq", "objetivo": "cabeza", "peso_despues": "centro",  "nivel_minimo": 1, "poder": false},
+    {"id": "directo",           "familia": "directo",  "nombre_hablado": "directo",                 "tipo": "golpe",  "mano": "der", "objetivo": "cabeza", "peso_despues": "delante", "nivel_minimo": 1, "poder": true},
+    {"id": "gancho_izq",        "familia": "gancho",   "nombre_hablado": "gancho de {mano}",        "tipo": "golpe",  "mano": "izq", "objetivo": "cabeza", "peso_despues": "der",     "nivel_minimo": 1, "poder": true},
+    {"id": "gancho_der",        "familia": "gancho",   "nombre_hablado": "gancho de {mano}",        "tipo": "golpe",  "mano": "der", "objetivo": "cabeza", "peso_despues": "izq",     "nivel_minimo": 1, "poder": true},
+    {"id": "uppercut_izq",      "familia": "uppercut", "nombre_hablado": "uppercut de {mano}",      "tipo": "golpe",  "mano": "izq", "objetivo": "cabeza", "peso_despues": "der",     "nivel_minimo": 2, "poder": true},
+    {"id": "uppercut_der",      "familia": "uppercut", "nombre_hablado": "uppercut de {mano}",      "tipo": "golpe",  "mano": "der", "objetivo": "cabeza", "peso_despues": "izq",     "nivel_minimo": 2, "poder": true},
+
+    {"id": "jab_cuerpo",        "familia": "jab",      "nombre_hablado": "jab al cuerpo",           "tipo": "golpe",  "mano": "izq", "objetivo": "cuerpo", "peso_despues": "centro",  "nivel_minimo": 2, "poder": false},
+    {"id": "directo_cuerpo",    "familia": "directo",  "nombre_hablado": "directo al cuerpo",       "tipo": "golpe",  "mano": "der", "objetivo": "cuerpo", "peso_despues": "delante", "nivel_minimo": 2, "poder": true},
+    {"id": "gancho_izq_cuerpo", "familia": "gancho",   "nombre_hablado": "gancho de {mano} al cuerpo",   "tipo": "golpe", "mano": "izq", "objetivo": "cuerpo", "peso_despues": "der", "nivel_minimo": 2, "poder": true},
+    {"id": "gancho_der_cuerpo", "familia": "gancho",   "nombre_hablado": "gancho de {mano} al cuerpo",   "tipo": "golpe", "mano": "der", "objetivo": "cuerpo", "peso_despues": "izq", "nivel_minimo": 2, "poder": true},
+    {"id": "uppercut_izq_cuerpo", "familia": "uppercut", "nombre_hablado": "uppercut de {mano} al cuerpo", "tipo": "golpe", "mano": "izq", "objetivo": "cuerpo", "peso_despues": "der", "nivel_minimo": 2, "poder": true},
+    {"id": "uppercut_der_cuerpo", "familia": "uppercut", "nombre_hablado": "uppercut de {mano} al cuerpo", "tipo": "golpe", "mano": "der", "objetivo": "cuerpo", "peso_despues": "izq", "nivel_minimo": 2, "poder": true},
+
+    {"id": "esquiva_der",       "familia": "esquiva",    "nombre_hablado": "esquiva a la {lado}",  "tipo": "defensa", "mano": "ninguna", "lado": "der", "objetivo": "ninguno", "peso_despues": "der",    "nivel_minimo": 1},
+    {"id": "esquiva_izq",       "familia": "esquiva",    "nombre_hablado": "esquiva a la {lado}",  "tipo": "defensa", "mano": "ninguna", "lado": "izq", "objetivo": "ninguno", "peso_despues": "izq",    "nivel_minimo": 1},
+    {"id": "rodar_der",         "familia": "rodar",      "nombre_hablado": "rueda a la {lado}",    "tipo": "defensa", "mano": "ninguna", "lado": "der", "objetivo": "ninguno", "peso_despues": "der",    "nivel_minimo": 2},
+    {"id": "rodar_izq",         "familia": "rodar",      "nombre_hablado": "rueda a la {lado}",    "tipo": "defensa", "mano": "ninguna", "lado": "izq", "objetivo": "ninguno", "peso_despues": "izq",    "nivel_minimo": 2},
+    {"id": "paso_atras",        "familia": "paso_atras", "nombre_hablado": "paso atrás",           "tipo": "defensa", "mano": "ninguna", "objetivo": "ninguno", "peso_despues": "detras", "nivel_minimo": 1},
+    {"id": "bloqueo",           "familia": "bloqueo",    "nombre_hablado": "cúbrete",              "tipo": "defensa", "mano": "ninguna", "objetivo": "ninguno", "peso_despues": "centro", "nivel_minimo": 1},
+    {"id": "parada",            "familia": "parada",     "nombre_hablado": "para el jab",          "tipo": "defensa", "mano": "der",     "objetivo": "ninguno", "peso_despues": "centro", "nivel_minimo": 1},
+
+    {"id": "paso_lateral_izq",  "familia": "paso_lateral", "nombre_hablado": "paso lateral a la {lado}", "tipo": "movimiento", "mano": "ninguna", "lado": "izq", "objetivo": "ninguno", "peso_despues": "centro", "nivel_minimo": 1},
+    {"id": "paso_lateral_der",  "familia": "paso_lateral", "nombre_hablado": "paso lateral a la {lado}", "tipo": "movimiento", "mano": "ninguna", "lado": "der", "objetivo": "ninguno", "peso_despues": "centro", "nivel_minimo": 1},
+    {"id": "pivote",            "familia": "pivote",       "nombre_hablado": "pivota",                   "tipo": "movimiento", "mano": "ninguna", "objetivo": "ninguno", "peso_despues": "centro", "nivel_minimo": 1},
+    {"id": "salir",             "familia": "salir",        "nombre_hablado": "sal",                      "tipo": "movimiento", "mano": "ninguna", "objetivo": "ninguno", "peso_despues": "centro", "nivel_minimo": 1}
+  ],
+  "repeticiones_permitidas": [
+    {"nombre": "doble jab",                          "ids": ["jab", "jab"]},
+    {"nombre": "gancho de izquierda arriba y abajo", "ids": ["gancho_izq", "gancho_izq_cuerpo"]}
+  ]
+}

@@ -62,9 +62,10 @@ class HistorialLocal {
   }
 
   async listar() {
-    return this.almacen.datos.sesiones.map((s) => ({
-      ...s, num_combinaciones: s.combinaciones.length, clave: claveSesion(this.origen, s.id),
-    }));
+    // Por fecha, como el servidor: tras importar, el orden de inserción no vale.
+    return this.almacen.datos.sesiones
+      .map((s) => ({ ...s, num_combinaciones: s.combinaciones.length, clave: claveSesion(this.origen, s.id) }))
+      .sort((a, b) => b.fecha.localeCompare(a.fecha));
   }
 
   async combinaciones(id) {

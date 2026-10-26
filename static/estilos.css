@@ -295,7 +295,7 @@ body.entrenando main { padding: 0; max-width: none; }
 }
 .capa-semanas .semana:focus-visible { outline-offset: -3px; }
 .tooltip {
-  position: absolute; top: 24px; width: 140px; z-index: 2; pointer-events: none;
+  position: absolute; top: 24px; width: 170px; z-index: 2; pointer-events: none;
   background: #0b0c0f; border: 1px solid var(--borde); border-radius: 8px;
   padding: 6px 8px; font-size: 0.85rem; line-height: 1.35;
 }

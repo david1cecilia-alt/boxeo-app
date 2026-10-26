@@ -130,7 +130,7 @@ export function activarGrafico(raiz, semanas) {
       ${s.asaltos} asaltos · ${s.sesiones} sesiones<br>${s.rpe == null ? "Sin RPE" : `RPE medio ${fmt(s.rpe)}`}`;
     tooltip.hidden = false;
     const izq = ((escalaX(semanas.length).centro(i)) / ANCHO) * 100;
-    tooltip.style.left = `clamp(0px, calc(${izq}% - 70px), calc(100% - 140px))`;
+    tooltip.style.left = `clamp(0px, calc(${izq}% - 85px), calc(100% - 170px))`;
   }
   function ocultar() {
     figura.querySelectorAll(".activa").forEach((el) => el.classList.remove("activa"));

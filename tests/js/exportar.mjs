@@ -1,19 +1,15 @@
 // Genera con el motor JS lo que valida tests/test_equivalencia_js.py:
 // combinaciones por nivel, guiones de varias configuraciones y el espejo del catálogo.
 // Uso: node tests/js/exportar.mjs salida.json [combinaciones_por_nivel]
-import { readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { writeFileSync } from "node:fs";
 
 import { catalogo, espejo } from "../../static/motor/acciones.js";
 import { crearAzar } from "../../static/motor/azar.js";
-import { usarDatos } from "../../static/motor/datos.js";
 import { GeneradorCombos } from "../../static/motor/generador.js";
 import { construirGuion } from "../../static/motor/temporizador.js";
+import { cargarDatosDeDisco } from "./datos.mjs";
 
-const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const leer = (nombre) => JSON.parse(readFileSync(join(RAIZ, "data", `${nombre}.json`), "utf-8"));
-usarDatos({ acciones: leer("acciones"), combos: leer("combos"), perfil: leer("perfil"), presets: leer("presets") });
+cargarDatosDeDisco();
 
 const N = Number(process.argv[3] ?? 5000); // combinaciones por nivel y guardia
 const NIVELES = [1, 2, 3];

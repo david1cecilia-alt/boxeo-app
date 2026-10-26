@@ -1,0 +1,55 @@
+# Tests (Python + equivalencia con el motor JS) y, solo si pasan, despliegue de la PWA en GitHub Pages.
+name: Tests y despliegue
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Un solo despliegue a la vez; si llega otro push, el que está en marcha termina.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Instalar dependencias
+        run: python -m pip install -r requirements.txt
+      - name: Tests
+        run: python -m pytest -q
+
+  desplegar:
+    needs: tests
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Montar la web (static/ + data/)
+        run: python herramientas/construir_sitio.py _site "${{ github.sha }}"
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+      - id: despliegue
+        uses: actions/deploy-pages@v4

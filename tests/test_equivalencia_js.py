@@ -5,6 +5,7 @@ catálogo, y aquí se validan con motor/. No se exige la misma secuencia aleator
 (cada motor tiene su PRNG), sino las mismas reglas, invariantes y proporciones.
 """
 import json
+import os
 import random
 import shutil
 import subprocess
@@ -31,10 +32,12 @@ TOLERANCIA_PROPORCION = 0.05
 REDONDEO = 0.011  # los tiempos se redondean a centésimas
 
 NODE = shutil.which("node")
-pytestmark = pytest.mark.skipif(NODE is None, reason="node no está instalado")
+# En local sin Node se saltan; en CI (GitHub pone CI=true) tienen que ejecutarse siempre.
+pytestmark = pytest.mark.skipif(NODE is None and not os.environ.get("CI"), reason="node no está instalado")
 
 
 def _exportar(destino: Path) -> Path:
+    assert NODE, "Los tests de equivalencia necesitan node en el PATH"
     subprocess.run([NODE, str(SCRIPT), str(destino), str(MUESTRAS)], check=True, cwd=RAIZ)
     return destino
 

@@ -25,6 +25,10 @@ const FICHEROS = [
   "vistas/perfil.js",
   "vistas/postsesion.js",
   "vistas/resumen.js",
+  "maniqui/escena.js",
+  "maniqui/lienzo.js",
+  "maniqui/maniqui.js",
+  "maniqui/posturas.js",
   "motor/acciones.js",
   "motor/azar.js",
   "motor/datos.js",
@@ -35,6 +39,7 @@ const FICHEROS = [
   "data/acciones.json",
   "data/combos.json",
   "data/perfil.json",
+  "data/posturas.json",
   "data/presets.json",
   "data/revisar.json",
   "data/tecnica.json",
@@ -48,6 +53,9 @@ const FICHEROS = [
   "iconos/icono-512.png",
   "iconos/icono-maskable-512.png",
   "iconos/apple-touch-icon.png",
+  // Three.js se precachea para ir sin conexión, pero solo se ejecuta al abrir una ficha.
+  "vendor/three/three.module.min.js",
+  "vendor/three/LICENSE",
 ];
 
 self.addEventListener("install", (evento) => {

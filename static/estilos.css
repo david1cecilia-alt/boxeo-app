@@ -48,6 +48,7 @@
   --aviso-fondo: #3d2e06;
   --velo: rgba(0, 0, 0, 0.7);
   --resalte: rgba(255, 255, 255, 0.06);
+  --resplandor: rgba(255, 59, 48, 0.16); /* halo rojo detrás del maniquí */
 
   /* Fases de la sesión: fondo y texto */
   --fase-asalto: #0b0b0b;
@@ -443,6 +444,42 @@ dialog::backdrop { background: var(--velo); }
 .grupo-combos { margin-top: 8px; }
 .grupo-combos legend { font-weight: 600; }
 .costosas { margin: 0; }
+
+/* ---------- Maniquí 3D (Aprende) ---------- */
+.maniqui { display: grid; gap: 12px; }
+.maniqui-escena {
+  position: relative; aspect-ratio: 3 / 4; max-height: 72vh; overflow: hidden;
+  border: 1px solid var(--linea); border-radius: var(--radio);
+  background: radial-gradient(circle at 78% 35%, var(--resplandor), transparent 60%), var(--fondo);
+}
+.maniqui-escena canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; cursor: grab; }
+.maniqui-escena canvas:active { cursor: grabbing; }
+.maniqui-escena canvas:focus-visible { outline-offset: -4px; }
+.maniqui-paso {
+  position: absolute; left: 16px; top: 12px; margin: 0; pointer-events: none;
+  font-family: var(--letra-titular); text-transform: uppercase; letter-spacing: 0.06em; color: var(--suave);
+}
+.maniqui-controles { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.boton.redondo { width: 52px; min-height: 52px; padding: 0; border-radius: 50%; }
+.boton.redondo svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.boton[data-play] svg path { fill: currentColor; stroke: none; }
+.boton[data-play][aria-pressed="true"] .icono-play, .boton[data-play][aria-pressed="false"] .icono-pausa { display: none; }
+.maniqui-velocidad { display: flex; align-items: center; gap: 8px; margin-left: auto; color: var(--suave); font-size: 0.95rem; }
+.maniqui-velocidad select { width: auto; min-height: 44px; padding: 8px 12px; }
+.maniqui-vistas { display: flex; gap: 8px; }
+.chip-vista {
+  min-height: 44px; padding: 0 18px; font: inherit; font-weight: 600; cursor: pointer;
+  color: var(--suave); background: transparent; border: 1px solid var(--linea); border-radius: 999px;
+}
+.chip-vista[aria-pressed="true"] { color: var(--texto); border-color: var(--acento); }
+.maniqui-secuencia {
+  list-style: none; margin: 12px 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;
+}
+.maniqui-secuencia li { display: grid; gap: 6px; text-align: center; color: var(--suave); font-size: 0.9rem; }
+.maniqui-secuencia canvas {
+  width: 100%; aspect-ratio: 3 / 4; border: 1px solid var(--linea); border-radius: 12px; background: var(--fondo);
+}
 
 /* ---------- Escritorio (≥ 1024 px) ---------- */
 /* Barra lateral izquierda en vez de la píldora y contenido con ancho máximo centrado. */

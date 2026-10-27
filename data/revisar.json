@@ -27,6 +27,21 @@
       "texto": "rodar a un lado deja el peso en ese mismo lado"
     },
     {
+      "id": "posturas-6bd9574e",
+      "origen": "data/posturas.json",
+      "texto": "maniquí, guardia: separación y giro de los pies, altura de las manos y giro del tronco"
+    },
+    {
+      "id": "posturas-9b6f108b",
+      "origen": "data/posturas.json",
+      "texto": "maniquí, jab a medio camino: trayectoria recta del puño y codo abajo"
+    },
+    {
+      "id": "posturas-0c8950e0",
+      "origen": "data/posturas.json",
+      "texto": "maniquí, jab al impacto: hombro arriba tapando la barbilla, giro del puño y extensión del brazo"
+    },
+    {
       "id": "tecnica-704f08d7",
       "origen": "data/tecnica.json",
       "texto": "jab, paso 3: puño girado al final (nudillos arriba) o puño vertical"

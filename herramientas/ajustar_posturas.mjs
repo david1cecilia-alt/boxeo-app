@@ -129,7 +129,8 @@ export function calcular(datos, objetivos) {
       Object.assign(postura, dosHuesos(esqueleto, postura, `hombro_${lado}`, `codo_${lado}`,
         `muneca_${lado}`, b.puno, b.polo, -1, largo(esqueleto[`puno_${lado}`].desde)));
       const p = o.piernas[lado];
-      const polo = rotar(cuaternion([0, p.rumbo, 0]), [0, 0, 1]);
+      // La rodilla apunta a `rodilla` (grados, como `rumbo`); si no se da, hacia la punta del pie.
+      const polo = rotar(cuaternion([0, p.rodilla ?? p.rumbo, 0]), [0, 0, 1]);
       Object.assign(postura, dosHuesos(esqueleto, postura, `cadera_${lado}`, `rodilla_${lado}`,
         `tobillo_${lado}`, p.tobillo, polo, 1));
       postura[`tobillo_${lado}`] = pie(esqueleto, postura, `tobillo_${lado}`, p.rumbo, p.talon ?? 0);
@@ -145,7 +146,8 @@ function formatear(datos) {
   const posturas = Object.entries(datos.posturas).map(([id, p]) =>
     `    ${JSON.stringify(id)}: {\n${Object.entries(p).map(([k, v]) => linea(k, v)).join(",\n")}\n    }`);
   const esqueleto = Object.entries(datos.esqueleto).map(([k, v]) =>
-    `    ${JSON.stringify(k)}: {"padre": ${JSON.stringify(v.padre)}, "desde": ${JSON.stringify(v.desde)}}`);
+    `    ${JSON.stringify(k)}: {"padre": ${JSON.stringify(v.padre)}, "desde": ${JSON.stringify(v.desde)}`
+    + `${v.hueso ? `, "hueso": ${JSON.stringify(v.hueso)}` : ""}}`);
   return `{\n  "_nota": ${JSON.stringify(datos._nota)},\n  "esqueleto": {\n${esqueleto.join(",\n")}\n  },\n`
     + `  "posturas": {\n${posturas.join(",\n")}\n  }\n}\n`;
 }

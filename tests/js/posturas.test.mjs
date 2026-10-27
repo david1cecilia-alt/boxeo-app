@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 
 import { contenido } from "../../herramientas/ajustar_posturas.mjs";
+import { medidas } from "../../herramientas/medidas_posturas.mjs";
 import {
   cinematica, espejoPostura, interpolar, prepararPosturas, resolver, slerp,
 } from "../../static/maniqui/posturas.js";
@@ -99,7 +100,42 @@ test("en el jab el puño izquierdo llega más lejos y el derecho no se mueve", (
   const guardia = cinematica(esqueleto, P.guardia);
   const impacto = cinematica(esqueleto, P.jab_impacto);
   assert.ok(impacto.puno_izq.pos[2] > guardia.puno_izq.pos[2] + 0.4);
-  assert.ok(cerca(impacto.puno_der.pos, guardia.puno_der.pos, 0.02), "la mano derecha se queda en la cara");
+  // La mano derecha se queda en la cara: donde estaba respecto a los ojos (la cara gira algo).
+  const enLaCara = (m) => m.puno_der.pos.map((v, i) => v - m.ojos.pos[i]);
+  assert.ok(cerca(enLaCara(impacto), enLaCara(guardia), 0.02), "la mano derecha se queda en la cara");
+});
+
+// Técnica de las tres posturas (guardia, jab_salida, jab_impacto). Las medidas, en
+// herramientas/medidas_posturas.mjs. REVISAR CON ENTRENADOR: los márgenes.
+const tecnicaDe = Object.entries(prepararPosturas(datos)).map(([id, r]) => [id, medidas(esqueleto, r)]);
+
+test("el tronco va 8–10° hacia delante, sin arquear la espalda y con la cadera atrás", () => {
+  for (const [id, m] of tecnicaDe) {
+    assert.ok(m.tronco >= 8 && m.tronco <= 10, `${id}: tronco a ${m.tronco.toFixed(1)}°`);
+    assert.ok(m.lumbar >= 0, `${id}: la zona lumbar se va ${m.lumbar.toFixed(1)}° hacia atrás`);
+    assert.ok(m.espalda_alta >= 0, `${id}: la espalda alta se va hacia atrás`);
+    assert.ok(m.cadera_atras >= 0.04, `${id}: la cadera solo va ${m.cadera_atras.toFixed(3)} m atrás`);
+  }
+});
+
+test("la barbilla va abajo", () => {
+  for (const [id, m] of tecnicaDe) assert.ok(m.barbilla >= 20 && m.barbilla <= 35, `${id}: ${m.barbilla.toFixed(1)}°`);
+});
+
+test("los guantes de guardia van a la altura de los pómulos y dejan ver los ojos de frente", () => {
+  for (const [id, m] of tecnicaDe) {
+    // En el jab, el izquierdo es el que golpea: solo el derecho se queda en la cara.
+    const enGuardia = id === "guardia" ? ["izq", "der"] : ["der"];
+    for (const l of enGuardia) assert.ok(Math.abs(m.guantes[l]) < 0.02, `${id} ${l}: ${m.guantes[l].toFixed(3)} m de los pómulos`);
+    assert.ok(m.ojos_visibles, `${id}: los guantes tapan los ojos`);
+  }
+});
+
+test("los pies van a la anchura de los hombros y las rodillas no se van hacia dentro", () => {
+  for (const [id, m] of tecnicaDe) {
+    assert.ok(m.pies >= 0.9 && m.pies <= 1.1, `${id}: pies a ${m.pies.toFixed(2)} × los hombros`);
+    for (const l of ["izq", "der"]) assert.ok(m.rodillas[l] >= 0, `${id} ${l}: rodilla ${m.rodillas[l].toFixed(3)} m hacia dentro`);
+  }
 });
 
 test("interpolar empieza y acaba en las posturas y da cuaterniones unitarios", () => {

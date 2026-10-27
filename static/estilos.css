@@ -48,7 +48,7 @@
   --aviso-fondo: #3d2e06;
   --velo: rgba(0, 0, 0, 0.7);
   --resalte: rgba(255, 255, 255, 0.06);
-  --resplandor: rgba(255, 59, 48, 0.16); /* halo rojo detrás del maniquí */
+  --resplandor: rgba(255, 59, 48, 0.32); /* halo rojo detrás del maniquí */
 
   /* Fases de la sesión: fondo y texto */
   --fase-asalto: #0b0b0b;
@@ -450,7 +450,7 @@ dialog::backdrop { background: var(--velo); }
 .maniqui-escena {
   position: relative; aspect-ratio: 3 / 4; max-height: 72vh; overflow: hidden;
   border: 1px solid var(--linea); border-radius: var(--radio);
-  background: radial-gradient(circle at 78% 35%, var(--resplandor), transparent 60%), var(--fondo);
+  background: radial-gradient(ellipse 70% 60% at 75% 40%, var(--resplandor), transparent 70%), var(--fondo);
 }
 .maniqui-escena canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; cursor: grab; }
 .maniqui-escena canvas:active { cursor: grabbing; }
@@ -472,14 +472,12 @@ dialog::backdrop { background: var(--velo); }
   color: var(--suave); background: transparent; border: 1px solid var(--linea); border-radius: 999px;
 }
 .chip-vista[aria-pressed="true"] { color: var(--texto); border-color: var(--acento); }
-.maniqui-secuencia {
-  list-style: none; margin: 12px 0 0; padding: 0;
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;
+/* Sin WebGL: fotos del maniquí (fondo transparente sobre el mismo degradado), con fundido. */
+.maniqui-foto {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+  opacity: 0; transition: opacity 0.35s ease;
 }
-.maniqui-secuencia li { display: grid; gap: 6px; text-align: center; color: var(--suave); font-size: 0.9rem; }
-.maniqui-secuencia canvas {
-  width: 100%; aspect-ratio: 3 / 4; border: 1px solid var(--linea); border-radius: 12px; background: var(--fondo);
-}
+.maniqui-foto.activa { opacity: 1; }
 
 /* ---------- Escritorio (≥ 1024 px) ---------- */
 /* Barra lateral izquierda en vez de la píldora y contenido con ancho máximo centrado. */

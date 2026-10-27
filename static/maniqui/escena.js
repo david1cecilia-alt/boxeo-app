@@ -39,6 +39,24 @@ const ARTICULACIONES = [
   ["cuello", 0.045, 0], ["columna", 0.07, 0],
 ];
 
+// Halo rojo: borde de luz roja (fresnel) en el contorno del lado de la contraluz (derecha de
+// la pantalla) que recorta espalda, hombros y cabeza. Se mezcla después del tone mapping: antes,
+// ACES lleva el rojo intenso a blanco y el borde sale rosa.
+const HALO = { fuerza: 1.8, dureza: 2.0 };
+
+function conHalo(material, color) {
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.colorHalo = { value: color };
+    shader.fragmentShader = `uniform vec3 colorHalo;\n${shader.fragmentShader}`
+      .replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
+      float halo = pow(1.0 - saturate(dot(normal, normalize(vViewPosition))), ${HALO.dureza.toFixed(1)})
+        * smoothstep(-0.1, 0.7, normal.x);`)
+      .replace("#include <tonemapping_fragment>", `#include <tonemapping_fragment>
+      gl_FragColor.rgb = mix(gl_FragColor.rgb, colorHalo, clamp(halo * ${HALO.fuerza.toFixed(1)}, 0.0, 1.0));`);
+  };
+  return material;
+}
+
 export function crearEscena(lienzo, datos) {
   const esqueleto = datos.esqueleto;
   const fondo = new THREE.Color(token("--fondo", "#0b0b0b"));
@@ -63,8 +81,8 @@ export function crearEscena(lienzo, datos) {
   const principal = new THREE.DirectionalLight(0xffffff, 2.2);
   principal.position.set(-2.5, 3.2, 1.5); // delante, arriba a la izquierda
   camara.add(principal);
-  const contraluz = new THREE.DirectionalLight(acento, 26);
-  contraluz.position.set(2.6, 1.4, -6); // detrás del maniquí, a la derecha: dibuja el borde
+  const contraluz = new THREE.DirectionalLight(acento, 30);
+  contraluz.position.set(2.6, 1.4, -6); // detrás del maniquí, a la derecha: tiñe el lado en sombra
   camara.add(contraluz);
   const relleno = new THREE.DirectionalLight(0xffffff, 0.25);
   relleno.position.set(2, 0.5, 2);
@@ -94,8 +112,8 @@ export function crearEscena(lienzo, datos) {
   escena.add(suelo);
 
   // ---------- Maniquí ----------
-  const blanco = new THREE.MeshStandardMaterial({ color: 0xece8e3, roughness: 0.82, metalness: 0 });
-  const venda = new THREE.MeshStandardMaterial({ color: 0xd2cdc6, roughness: 0.95, metalness: 0 });
+  const blanco = conHalo(new THREE.MeshStandardMaterial({ color: 0xece8e3, roughness: 0.82, metalness: 0 }), acento);
+  const venda = conHalo(new THREE.MeshStandardMaterial({ color: 0xd2cdc6, roughness: 0.95, metalness: 0 }), acento);
   const rojo = new THREE.MeshStandardMaterial({ color: acento, roughness: 0.6, emissive: acento, emissiveIntensity: 0.35 });
   const maniqui = new THREE.Group();
   escena.add(maniqui);

@@ -1,6 +1,5 @@
 // Lógica del maniquí sin WebGL: esqueleto, posturas, espejo, interpolación y cinemática
-// directa. La usan la escena 3D (escena.js) y el dibujo 2D sin WebGL (lienzo.js), y se
-// prueba con node (tests/js/posturas.test.mjs).
+// directa. La usa la escena 3D (escena.js), y se prueba con node (tests/js/posturas.test.mjs).
 //
 // Convenciones (data/posturas.json):
 // - Metros. Y arriba. El rival está en +Z. La izquierda del maniquí es +X.

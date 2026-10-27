@@ -27,7 +27,9 @@ jobs:
         with:
           node-version: 24
       - name: Instalar dependencias
-        run: python -m pip install -r requirements.txt
+        run: |
+          python -m pip install -r requirements.txt
+          python -m playwright install --with-deps chromium-headless-shell
       - name: Tests
         run: python -m pytest -q
 
@@ -45,7 +47,12 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - name: Montar la web (static/ + data/)
+          cache: pip
+      - name: Instalar Playwright (pinta las fotos del maniquí sin WebGL)
+        run: |
+          python -m pip install -r requirements.txt
+          python -m playwright install --with-deps chromium-headless-shell
+      - name: Montar la web (static/ + data/ + fotos del maniquí)
         run: python herramientas/construir_sitio.py _site "${{ github.sha }}"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4

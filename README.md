@@ -141,14 +141,15 @@ Requisitos: **Python 3.12** y **Node 18+** (solo para los tests de JS y de equiv
 ```powershell
 py -3.12 -m venv .venv
 .venv\Scripts\python -m pip install -r requirements.txt
+.venv\Scripts\python -m playwright install chromium-headless-shell
 
 # App con servidor (historial en SQLite): http://127.0.0.1:8000
 .venv\Scripts\python -m uvicorn app.main:crear_app --factory --reload
 
-# Tests (sin Node, los de JS y equivalencia se saltan)
+# Tests (sin Node, los de JS y equivalencia se saltan; sin Playwright, los de las fotos del maniquí)
 .venv\Scripts\python -m pytest -q
 
-# Web estática, igual que la publicada
+# Web estática, igual que la publicada (pinta también las fotos del maniquí sin WebGL)
 .venv\Scripts\python herramientas\construir_sitio.py _site
 .venv\Scripts\python -m http.server 8080 --directory _site
 ```

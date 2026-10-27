@@ -2,25 +2,25 @@
   "_nota": "Objetivos de cada postura (ortodoxa) para herramientas/ajustar_posturas.mjs, que calcula los ángulos de data/posturas.json. Metros; Y arriba; rival en +Z; izquierda del maniquí en +X. `angulos`: tronco y cabeza tal cual ([x, y, z] en grados, orden XYZ; x positivo = inclinar hacia delante, y negativo = girar el hombro izquierdo hacia el rival). Brazos: posición del centro del puño y `polo` (hacia dónde apunta el codo). Piernas: posición del tobillo, `rumbo` del pie en grados (0 = hacia el rival, negativo = girado a la derecha) y `talon` (grados, positivo = talón levantado).",
   "posturas": {
     "guardia": {
-      "pelvis": {"pos": [0, 0.94, 0]},
-      "angulos": {"pelvis": [0, -35, 0], "columna": [5, 0, 0], "pecho": [3, -5, 0], "cuello": [-4, 0, 0], "cabeza": [14, 28, 0]},
+      "pelvis": {"pos": [0, 0.9, 0]},
+      "angulos": {"pelvis": [0, -42, 0], "columna": [8, 0, 0], "pecho": [6, -8, 4], "cuello": [6, 0, -8], "cabeza": [22, 40, 0]},
       "brazos": {
-        "izq": {"puno": [0.1, 1.52, 0.3], "polo": [0.3, -1, 0]},
-        "der": {"puno": [-0.1, 1.53, 0.13], "polo": [-0.3, -1, 0]}
+        "izq": {"puno": [0.05, 1.5, 0.34], "polo": [0.3, -1, 0]},
+        "der": {"puno": [-0.14, 1.5, 0.25], "polo": [-0.3, -1, 0]}
       },
       "piernas": {
         "izq": {"tobillo": [0.12, 0.07, 0.28], "rumbo": -20},
         "der": {"tobillo": [-0.17, 0.09, -0.24], "rumbo": -45, "talon": 15}
       },
       "revisar": true,
-      "pendiente": "REVISAR CON ENTRENADOR: maniquí, guardia: separación y giro de los pies, altura de las manos y giro del tronco"
+      "pendiente": "REVISAR CON ENTRENADOR: maniquí, guardia: flexión de rodillas, barbilla detrás del hombro izquierdo, guantes a la altura de los pómulos, separación y giro de los pies"
     },
     "jab_salida": {
-      "pelvis": {"pos": [0, 0.94, 0.01]},
-      "angulos": {"pelvis": [0, -37, 0], "columna": [6, 0, 0], "pecho": [3, -9, 0], "cuello": [-4, 0, 0], "cabeza": [15, 33, 0], "muneca_izq": [0, -45, 0]},
+      "pelvis": {"pos": [0, 0.9, 0.01]},
+      "angulos": {"pelvis": [0, -44, 0], "columna": [8, 0, 0], "pecho": [6, -11, 4], "cuello": [6, 0, -8], "cabeza": [22, 43, 0], "muneca_izq": [0, -45, 0]},
       "brazos": {
-        "izq": {"puno": [0.07, 1.53, 0.5], "polo": [0.2, -1, 0]},
-        "der": {"puno": [-0.1, 1.53, 0.13], "polo": [-0.3, -1, 0]}
+        "izq": {"puno": [0.04, 1.45, 0.73], "polo": [0.05, -1, 0]},
+        "der": {"puno": [-0.14, 1.5, 0.25], "polo": [-0.3, -1, 0]}
       },
       "piernas": {
         "izq": {"tobillo": [0.12, 0.07, 0.28], "rumbo": -20},
@@ -30,11 +30,11 @@
       "pendiente": "REVISAR CON ENTRENADOR: maniquí, jab a medio camino: trayectoria recta del puño y codo abajo"
     },
     "jab_impacto": {
-      "pelvis": {"pos": [0, 0.94, 0.02]},
-      "angulos": {"pelvis": [0, -40, 0], "columna": [7, 0, 0], "pecho": [3, -14, 0], "cuello": [-4, 0, 0], "cabeza": [16, 40, 0], "muneca_izq": [0, -90, 0]},
+      "pelvis": {"pos": [0, 0.9, 0.02]},
+      "angulos": {"pelvis": [0, -47, 0], "columna": [9, 0, 0], "pecho": [6, -15, 5], "cuello": [6, 0, -8], "cabeza": [22, 48, 0], "muneca_izq": [0, -90, 0]},
       "brazos": {
         "izq": {"puno": [0.03, 1.5, 0.84], "polo": [0.1, -1, 0]},
-        "der": {"puno": [-0.1, 1.53, 0.13], "polo": [-0.3, -1, 0]}
+        "der": {"puno": [-0.14, 1.5, 0.25], "polo": [-0.3, -1, 0]}
       },
       "piernas": {
         "izq": {"tobillo": [0.12, 0.07, 0.28], "rumbo": -20},

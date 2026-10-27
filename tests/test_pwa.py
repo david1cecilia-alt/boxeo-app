@@ -9,7 +9,8 @@ from herramientas.construir_sitio import RAIZ, construir
 
 @pytest.fixture(scope="module")
 def sitio(tmp_path_factory):
-    return construir(tmp_path_factory.mktemp("sitio") / "_site", "prueba")
+    # Sin fotos del maniquí (necesitan Playwright): las prueba tests/test_fotos_maniqui.py.
+    return construir(tmp_path_factory.mktemp("sitio") / "_site", "prueba", fotos=False)
 
 
 def _precache(sitio) -> list[str]:

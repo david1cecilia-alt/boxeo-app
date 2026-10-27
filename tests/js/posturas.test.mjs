@@ -120,7 +120,7 @@ test("interpolar empieza y acaba en las posturas y da cuaterniones unitarios", (
 });
 
 test("Three.js solo se carga con import() desde el maniquí", () => {
-  const conThree = ["app.js", "maniqui/maniqui.js", "maniqui/posturas.js", "maniqui/lienzo.js"];
+  const conThree = ["app.js", "maniqui/maniqui.js", "maniqui/posturas.js"];
   for (const f of conThree) assert.ok(!leer("static", f).includes("vendor/three"), f);
   assert.match(leer("static", "maniqui", "maniqui.js"), /await import\("\.\/escena\.js"\)/);
   assert.match(leer("static", "index.html"), /^(?![\s\S]*vendor\/three)/);

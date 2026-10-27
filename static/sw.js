@@ -26,7 +26,6 @@ const FICHEROS = [
   "vistas/postsesion.js",
   "vistas/resumen.js",
   "maniqui/escena.js",
-  "maniqui/lienzo.js",
   "maniqui/maniqui.js",
   "maniqui/posturas.js",
   "motor/acciones.js",
@@ -56,6 +55,7 @@ const FICHEROS = [
   // Three.js se precachea para ir sin conexión, pero solo se ejecuta al abrir una ficha.
   "vendor/three/three.module.min.js",
   "vendor/three/LICENSE",
+  // FOTOS_MANIQUI: construir_sitio.py añade aquí las fotos del maniquí que genera.
 ];
 
 self.addEventListener("install", (evento) => {

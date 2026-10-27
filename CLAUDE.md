@@ -20,6 +20,8 @@
   con su test. Las sesiones locales usan `crypto.randomUUID()`.
 - `static/vistas/` solo presenta; `reproductor.js` lleva el tiempo de sesión; `ajustes.js` une perfil y motor.
 - Todo fichero nuevo de `static/` o `data/` va al precache de `static/sw.js` (lo comprueba `tests/test_pwa.py`).
+- Sin WebGL el maniquí muestra fotos WebP que pinta `herramientas/fotos_maniqui.py` con la propia escena 3D al
+  montar el sitio (Playwright). No se versionan ni se dibujan aparte: cambian solas con `posturas.json`.
 - Si cambia un `# REVISAR CON ENTRENADOR`, regenera `data/revisar.json` con `herramientas/extraer_revisar.py`.
 - La voz va detrás de la interfaz de `static/voz.js` (`decir`, `callar`). Hoy Web Speech API, mañana Piper.
 

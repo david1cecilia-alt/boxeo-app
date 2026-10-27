@@ -2,8 +2,10 @@
 // Controles: play/pausa, paso anterior/siguiente, velocidad 0,25×–1×, girar con el dedo
 // (o con ← → si el lienzo tiene el foco) y vista frente / lado / arriba.
 // Three.js se carga aquí con import(), solo cuando se abre una ficha con postura. Sin WebGL
-// (o si falla la carga) la secuencia se dibuja como imágenes fijas en Canvas 2D.
+// (o si falla la carga) se muestran en secuencia las fotos de cada paso, que se pintan con
+// esta misma escena al montar el sitio (herramientas/fotos_maniqui.py).
 // Con prefers-reduced-motion no se reproduce solo y los pasos cambian sin animación.
+// `?sinwebgl` en la URL fuerza las fotos, para probarlas.
 import { $$ } from "../vistas/dom.js";
 import { interpolar, prepararPosturas, suave } from "./posturas.js";
 
@@ -13,6 +15,7 @@ const VELOCIDADES = [0.25, 0.5, 0.75, 1];
 const NOMBRES_VISTA = { frente: "Frente", lado: "Lado", arriba: "Arriba" };
 
 export function hayWebGL() {
+  if (new URLSearchParams(location.search).has("sinwebgl")) return false;
   try {
     const lienzo = document.createElement("canvas");
     return Boolean(window.WebGLRenderingContext && (lienzo.getContext("webgl2") || lienzo.getContext("webgl")));
@@ -21,6 +24,14 @@ export function hayWebGL() {
   }
 }
 
+const BOTONES_PASO = `
+  <button type="button" class="boton secundario redondo" data-ir="-1" aria-label="Paso anterior">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <button type="button" class="boton principal redondo" data-play aria-pressed="false" aria-label="Reproducir">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path class="icono-play" d="M8 5v14l11-7z"/><path class="icono-pausa" d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg></button>
+  <button type="button" class="boton secundario redondo" data-ir="1" aria-label="Paso siguiente">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>`;
+
 const sinMovimiento = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
 // `pasos`: [{ texto, postura }] (los que no tienen postura no se muestran).
@@ -28,7 +39,7 @@ const sinMovimiento = () => window.matchMedia?.("(prefers-reduced-motion: reduce
 export async function crearManiqui(contenedor, { pasos, datos, zurdo = false, alCambiarPaso = () => {} }) {
   const posturas = prepararPosturas(datos, { zurdo });
   const secuencia = pasos.filter((p) => p.postura in posturas)
-    .map((p) => ({ texto: p.texto, resuelta: posturas[p.postura], indice: pasos.indexOf(p) }));
+    .map((p) => ({ texto: p.texto, postura: p.postura, resuelta: posturas[p.postura], indice: pasos.indexOf(p) }));
   if (!secuencia.length) return { destruir() {} };
 
   let escena = null;
@@ -40,14 +51,7 @@ export async function crearManiqui(contenedor, { pasos, datos, zurdo = false, al
       escena = null;
     }
   }
-  if (!escena) {
-    const { dibujarSecuencia } = await import("./lienzo.js");
-    contenedor.innerHTML = `<div class="maniqui maniqui-fijo">
-      <p class="nota">Este dispositivo no puede mostrar el maniquí en 3D: aquí tienes la secuencia paso a paso.</p>
-      <div class="maniqui-fotos"></div></div>`;
-    dibujarSecuencia(contenedor.querySelector(".maniqui-fotos"), datos.esqueleto, secuencia);
-    return { destruir() {} };
-  }
+  if (!escena) return crearFotos(contenedor, secuencia, { zurdo, alCambiarPaso });
 
   const quieto = sinMovimiento();
   contenedor.innerHTML = `
@@ -57,12 +61,7 @@ export async function crearManiqui(contenedor, { pasos, datos, zurdo = false, al
         <p class="maniqui-paso" aria-live="polite"></p>
       </div>
       <div class="maniqui-controles">
-        <button type="button" class="boton secundario redondo" data-ir="-1" aria-label="Paso anterior">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-        <button type="button" class="boton principal redondo" data-play aria-pressed="false" aria-label="Reproducir">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path class="icono-play" d="M8 5v14l11-7z"/><path class="icono-pausa" d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg></button>
-        <button type="button" class="boton secundario redondo" data-ir="1" aria-label="Paso siguiente">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+        ${BOTONES_PASO}
         <label class="maniqui-velocidad">Velocidad
           <select>${VELOCIDADES.map((v) => `<option value="${v}" ${v === 1 ? "selected" : ""}>${String(v).replace(".", ",")}×</option>`).join("")}</select>
         </label>
@@ -221,3 +220,61 @@ export async function crearManiqui(contenedor, { pasos, datos, zurdo = false, al
   };
 }
 
+
+// Sin WebGL: las fotos de cada paso (vista de lado), una tras otra con un fundido, con los
+// mismos controles de paso y reproducción. Mismo nombre que en herramientas/fotos_maniqui.py.
+export const rutaFoto = (postura, zurdo) =>
+  new URL(`./fotos/${postura}-${zurdo ? "zurda" : "ortodoxa"}.webp`, import.meta.url).href;
+
+function crearFotos(contenedor, secuencia, { zurdo, alCambiarPaso }) {
+  const quieto = sinMovimiento();
+  contenedor.innerHTML = `
+    <div class="maniqui maniqui-fijo">
+      <div class="maniqui-escena" role="img">
+        ${secuencia.map((s) => `<img class="maniqui-foto" src="${rutaFoto(s.postura, zurdo)}" alt="" width="600" height="800">`).join("")}
+        <p class="maniqui-paso" aria-live="polite"></p>
+      </div>
+      <div class="maniqui-controles">${BOTONES_PASO}</div>
+    </div>`;
+  const marco = contenedor.querySelector(".maniqui-escena");
+  const fotos = [...contenedor.querySelectorAll(".maniqui-foto")];
+  const rotulo = contenedor.querySelector(".maniqui-paso");
+  const botonPlay = contenedor.querySelector("[data-play]");
+  let actual = 0;
+  let temporizador = null;
+
+  function irA(indice) {
+    actual = (indice + secuencia.length) % secuencia.length;
+    fotos.forEach((f, i) => f.classList.toggle("activa", i === actual));
+    rotulo.textContent = `Paso ${actual + 1} / ${secuencia.length}`;
+    marco.setAttribute("aria-label", `Maniquí, paso ${actual + 1} de ${secuencia.length}: ${secuencia[actual].texto}`);
+    alCambiarPaso(secuencia[actual].indice);
+  }
+
+  function reproducir(si) {
+    clearInterval(temporizador);
+    temporizador = si ? setInterval(() => irA(actual + 1), (TRANSICION + ESPERA) * 1000) : null;
+    botonPlay.setAttribute("aria-pressed", String(si));
+    botonPlay.setAttribute("aria-label", si ? "Pausa" : "Reproducir");
+  }
+
+  contenedor.querySelectorAll("[data-ir]").forEach((b) => b.addEventListener("click", () => {
+    reproducir(false);
+    irA(actual + Number(b.dataset.ir));
+  }));
+  botonPlay.addEventListener("click", () => reproducir(temporizador === null));
+
+  irA(0);
+  if (!quieto) reproducir(true);
+
+  return {
+    irA: (indicePaso) => {
+      const i = secuencia.findIndex((s) => s.indice === indicePaso);
+      if (i >= 0) { reproducir(false); irA(i); }
+    },
+    destruir() {
+      clearInterval(temporizador);
+      contenedor.innerHTML = "";
+    },
+  };
+}

@@ -25,6 +25,11 @@
       "id": "acciones-1b487d27",
       "origen": "data/acciones.json",
       "texto": "rodar a un lado deja el peso en ese mismo lado"
+    },
+    {
+      "id": "tecnica-704f08d7",
+      "origen": "data/tecnica.json",
+      "texto": "jab, paso 3: puño girado al final (nudillos arriba) o puño vertical"
     }
   ]
 }

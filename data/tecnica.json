@@ -1,5 +1,5 @@
 {
-  "_nota": "Fichas de la pestaña Aprende. Todo en guardia ORTODOXA (izquierda delante); el zurdo se ve en espejo. `acciones` son ids de acciones.json (vacío en estrategia). Cada paso puede llevar una `postura` de posturas.json. Las combinaciones relacionadas NO se escriben: salen de combos.json. `revisar: true` = pendiente de revisar con el entrenador. Textos redactados con palabras propias a partir de las fuentes.",
+  "_nota": "Fichas de la pestaña Aprende. Todo en guardia ORTODOXA (izquierda delante); el zurdo se ve en espejo. `acciones` son ids de acciones.json (vacío en estrategia). Cada paso puede llevar una `postura` de posturas.json. Las combinaciones relacionadas NO se escriben: salen de combos.json. `revisar: true` = pendiente de revisar con el entrenador; `pendiente` dice qué (y sale en Perfil vía herramientas/extraer_revisar.py). Textos redactados con palabras propias a partir de las fuentes.",
   "categorias": [
     {"id": "golpes",     "titulo": "Golpes",        "frase": "Qué lanzar y cómo lanzarlo sin abrirte.",       "imagen": null},
     {"id": "defensas",   "titulo": "Defensas",      "frase": "Que no te den es la mitad del trabajo.",          "imagen": null},
@@ -18,18 +18,19 @@
       "pasos": [
         {"texto": "Parte de la guardia: pie izquierdo delante, manos arriba y barbilla abajo.", "postura": "guardia"},
         {"texto": "Lanza la mano izquierda recta desde donde está, sin echarla atrás antes.", "postura": "jab_salida"},
-        {"texto": "Al final gira el puño (nudillos arriba) y sube el hombro izquierdo para tapar la barbilla.", "postura": "jab_impacto"},
+        {"texto": "Al final gira el puño (nudillos arriba), sube el hombro izquierdo para tapar la barbilla y suelta aire corto. El brazo va suelto en el recorrido; la tensión, solo al tocar.", "postura": "jab_impacto"},
         {"texto": "La mano derecha no se mueve: sigue pegada a la cara durante todo el golpe.", "postura": "jab_impacto"},
         {"texto": "Recoge por el mismo camino, al menos igual de rápido que al salir, hasta la guardia.", "postura": "guardia"}
       ],
       "errores": [
         {"error": "Bajar la mano derecha mientras sale el jab.", "correccion": "Déjala apoyada en la mejilla; al practicar, comprueba que el guante sigue tocándote la cara."},
-        {"error": "Echar la mano atrás antes de golpear (se ve venir).", "correccion": "Sale directo desde la guardia: piensa en empujar el puño hacia delante, no en cargarlo."},
-        {"error": "Dejar el brazo estirado después del golpe.", "correccion": "La vuelta es parte del golpe: recoge en cuanto toques, sin quedarte a mirar."},
-        {"error": "Abrir el codo hacia fuera.", "correccion": "El codo mira al suelo al salir y el puño viaja en línea recta al objetivo."}
+        {"error": "Echar la mano atrás o abrir el codo antes de golpear (se ve venir).", "correccion": "Sale directo desde la guardia, con el codo mirando al suelo: el puño viaja en línea recta al objetivo."},
+        {"error": "Inclinarse hacia delante para llegar (peso en la pierna delantera).", "correccion": "Si no llegas, da un paso: el cuerpo no se estira."},
+        {"error": "Dejar el brazo estirado después del golpe.", "correccion": "La vuelta es parte del golpe: recoge en cuanto toques, sin quedarte a mirar."}
       ],
-      "cuando": "Para medir la distancia, molestar y romper el ritmo del rival, y para abrir combinaciones: casi todas empiezan con él. También sirve de freno: un jab seco corta al rival que entra. Si estás algo lejos, acompáñalo con un paso corto del pie izquierdo.",
-      "revisar": false,
+      "cuando": "Para medir la distancia, molestar y romper el ritmo del rival, y para abrir combinaciones: casi todas empiezan con él. También sirve de freno: un jab seco corta al rival que entra. Si estás algo lejos, acompáñalo con un paso corto del pie izquierdo; el derecho lo sigue enseguida para no perder la guardia.",
+      "revisar": true,
+      "pendiente": "REVISAR CON ENTRENADOR: jab, paso 3: puño girado al final (nudillos arriba) o puño vertical",
       "fuentes": ["ExpertBoxing (artículos sobre el jab)", "Reglamento técnico de World Boxing (golpe válido: con los nudillos del guante cerrado)"]
     }
   ]

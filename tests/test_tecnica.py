@@ -37,6 +37,14 @@ def test_cada_ficha_tiene_su_contenido(tecnica):
         assert f["palabras_clave"], f["id"]
 
 
+def test_lo_pendiente_dice_que_hay_que_revisar(tecnica):
+    for f in tecnica["fichas"]:
+        if f["revisar"]:
+            assert f["pendiente"].startswith("REVISAR CON ENTRENADOR:"), f["id"]
+        else:
+            assert "pendiente" not in f, f["id"]
+
+
 def test_las_acciones_de_las_fichas_existen(tecnica):
     for f in tecnica["fichas"]:
         assert set(f["acciones"]) <= set(catalogo()), f["id"]

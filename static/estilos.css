@@ -20,34 +20,49 @@
   font-display: swap;
 }
 
+/* Todos los colores y letras de la app viven aquí (tokens). Negro + rojo como único acento.
+   El fondo rojo completo se reserva para los últimos 10 s (--fase-final): en el resto de la
+   app el rojo va solo en detalles. Contraste comprobado en tests/js/contraste.test.mjs. */
 :root {
   color-scheme: dark;
-  --fondo: #111317;
-  --tarjeta: #1b1e24;
-  --campo: #0c0d10;
-  --borde: #6b7280;          /* bordes de campos: 3:1 sobre la tarjeta */
-  --rejilla-grafico: #2c313a;
-  --texto: #eef0f3;
-  --suave: #a3aab6;
-  --principal: #c1121f;      /* botón principal y Parar (texto blanco AA) */
-  --principal-hover: #a50f1a;
-  --secundario: #3a404c;
-  --foco: #ffd166;
+  --fondo: #0b0b0b;
+  --superficie: #151515;      /* tarjeta sólida: alternativa al cristal */
+  --superficie-hover: #1f1d1b;
+  --campo: #101010;
+  --cristal: rgba(24, 22, 21, 0.85);  /* tarjetas y barra flotante con backdrop-filter */
+  --desenfoque: blur(16px) saturate(140%);
+  --linea: #2a2724;           /* líneas finas decorativas y rejilla de gráficos */
+  --borde: #6e6862;           /* bordes de campos: 3:1 */
+  --texto: #f5f3f0;
+  --suave: #b5ada4;           /* gris cálido */
+  --acento: #ff3b30;          /* palabra roja, pestaña activa, líneas: texto AA sobre negro */
+  --acento-relleno: #c8102e;  /* botón principal y Parar (texto blanco AA) */
+  --acento-relleno-hover: #a50d26;
+  --sobre-acento: #ffffff;    /* texto de botones */
+  --secundario: #2e2b28;
+  --secundario-hover: #3a3633;
+  --foco: #ffffff;
   --ok: #7ad1a9;
+  --ok-fondo: #12392c;
+  --aviso: #ffe8a3;
+  --aviso-fondo: #3d2e06;
+  --velo: rgba(0, 0, 0, 0.7);
+  --resalte: rgba(255, 255, 255, 0.06);
 
   /* Fases de la sesión: fondo y texto */
-  --fase-asalto: #111317;
-  --fase-final: #8f1220;
+  --fase-asalto: #0b0b0b;
+  --fase-final: #b00012;
   --fase-descanso: #0d4a42;
   --fase-reaccion: #ffb703;
-  --fase-reaccion-texto: #111317;
-  --fase-pausa: #2b3140;
+  --fase-reaccion-texto: #0b0b0b;
+  --fase-pausa: #26231f;
 
-  /* Series de los gráficos (validadas sobre --tarjeta) */
-  --serie-asaltos: #e63946;
-  --serie-rpe: #3d9fd6;
+  /* Series de los gráficos (validadas sobre --superficie) */
+  --serie-asaltos: #ff3b30;
+  --serie-rpe: #e8e2da;
 
   --alto-nav: 64px;
+  --radio: 18px;
 
   /* Tipografía: titulares condensados en mayúsculas y texto legible */
   --letra-titular: "Anton", "Impact", "Arial Narrow", sans-serif;
@@ -82,10 +97,10 @@ h3 { margin: 16px 0 6px; font-size: 1rem; color: var(--suave); }
 h1:focus, h2:focus { outline: none; }
 h1:focus-visible, h2:focus-visible { outline: 3px solid var(--foco); outline-offset: 4px; }
 
-a { color: #8cc8ff; }
+a { color: var(--texto); text-decoration-color: var(--acento); text-underline-offset: 3px; }
 
 .tarjeta {
-  background: var(--tarjeta);
+  background: var(--superficie);
   border-radius: 14px;
   padding: 16px;
   min-width: 0;
@@ -98,7 +113,7 @@ a { color: #8cc8ff; }
 }
 
 .aviso {
-  background: #4a3a05; color: #ffe8a3; border-radius: 10px; padding: 10px 14px; margin: 0;
+  background: var(--aviso-fondo); color: var(--aviso); border-radius: 10px; padding: 10px 14px; margin: 0;
 }
 .aviso.fijo { position: sticky; top: 0; z-index: 20; border-radius: 0; text-align: center; }
 
@@ -119,7 +134,7 @@ input, select, textarea {
   width: 100%;
 }
 textarea { resize: vertical; min-height: 64px; }
-input[type="checkbox"], input[type="radio"] { width: auto; min-height: 0; accent-color: var(--principal); }
+input[type="checkbox"], input[type="radio"] { width: auto; min-height: 0; accent-color: var(--acento-relleno); }
 fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 legend { color: var(--suave); font-size: 0.95rem; padding: 0; margin-bottom: 8px; }
 legend small { display: block; font-size: 0.85rem; }
@@ -138,7 +153,7 @@ legend small { display: block; font-size: 0.85rem; }
 }
 .segmentado small, .chip small { font-size: 0.8rem; font-weight: 400; color: var(--suave); }
 .segmentado input:checked + span, .chip input:checked + span {
-  background: var(--principal); border-color: var(--principal);
+  background: var(--acento-relleno); border-color: var(--acento-relleno);
 }
 .segmentado input:checked + span small, .chip input:checked + span small { color: var(--texto); }
 .segmentado input:focus-visible + span, .chip input:focus-visible + span { outline: 3px solid var(--foco); outline-offset: 2px; }
@@ -177,19 +192,19 @@ details[open] > summary::before { transform: rotate(90deg); }
 .boton {
   display: inline-flex; align-items: center; justify-content: center;
   min-height: 48px; padding: 10px 20px;
-  font: inherit; font-weight: 700; color: #fff;
+  font: inherit; font-weight: 700; color: var(--sobre-acento);
   border: 0; border-radius: 12px; cursor: pointer; text-align: center;
   background: var(--secundario);
 }
-.boton.principal, .boton.peligro { background: var(--principal); }
-.boton.principal:hover, .boton.peligro:hover { background: var(--principal-hover); }
-.boton.secundario:hover { background: #474e5c; }
+.boton.principal, .boton.peligro { background: var(--acento-relleno); }
+.boton.principal:hover, .boton.peligro:hover { background: var(--acento-relleno-hover); }
+.boton.secundario:hover { background: var(--secundario-hover); }
 .boton:disabled { opacity: 0.5; cursor: not-allowed; }
 .boton.enorme { min-height: 76px; font-size: 1.6rem; width: 100%; }
 .boton.pequeno { min-height: 40px; padding: 6px 12px; font-size: 0.9rem; }
 .acciones { display: flex; flex-wrap: wrap; gap: 10px; }
 .acciones .boton { flex: 1 1 140px; }
-label.boton { color: #fff; }
+label.boton { color: var(--sobre-acento); }
 input[type="file"].solo-lectores:focus-visible + *, label.boton:focus-within { outline: 3px solid var(--foco); }
 
 /* ---------- Sesión en curso ---------- */
@@ -212,7 +227,7 @@ body.entrenando main { padding: 0; max-width: none; }
 #pantalla[data-fase="pausa"] { background: var(--fase-pausa); }
 #pantalla[data-fase="reaccion"] {
   background: var(--fase-reaccion); color: var(--fase-reaccion-texto);
-  --foco: var(--fase-reaccion-texto); /* el foco amarillo no se vería sobre amarillo */
+  --foco: var(--fase-reaccion-texto); /* el foco claro no se vería sobre ámbar */
 }
 
 .marcador {
@@ -243,9 +258,9 @@ body.entrenando main { padding: 0; max-width: none; }
 #anterior { margin: 8px 0 16px; min-height: 1.4em; font-size: clamp(1rem, 4vw, 1.4rem); opacity: 0.85; }
 
 .controles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-#pantalla[data-fase="reaccion"] .boton.secundario { background: #111317; }
+#pantalla[data-fase="reaccion"] .boton.secundario { background: var(--fondo); }
 /* Parar se distingue también sobre el fondo rojo de los últimos 10 s. */
-#pantalla .boton.peligro { box-shadow: inset 0 0 0 3px #fff; }
+#pantalla .boton.peligro { box-shadow: inset 0 0 0 3px var(--texto); }
 /* Mismo color que el texto de la fase: se lee en todas. */
 .atajos { margin: 12px 0 0; color: inherit; }
 @media (pointer: coarse) { .atajos { display: none; } }
@@ -256,8 +271,8 @@ body.entrenando main { padding: 0; max-width: none; }
   display: grid; grid-template-columns: repeat(3, 1fr);
   height: calc(var(--alto-nav) + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
-  background: #0b0c0f;
-  border-top: 1px solid #2c313a;
+  background: var(--fondo);
+  border-top: 1px solid var(--linea);
 }
 #pestanas a {
   display: grid; place-items: center; align-content: center; gap: 2px;
@@ -284,7 +299,7 @@ body.entrenando main { padding: 0; max-width: none; }
   display: grid; gap: 2px; padding: 12px 14px; min-height: 56px;
   background: var(--campo); border-radius: 10px; color: var(--texto); text-decoration: none;
 }
-.lista-sesiones a:hover { background: #20242c; }
+.lista-sesiones a:hover { background: var(--superficie-hover); }
 .lista-sesiones .fecha { font-weight: 700; }
 .lista-sesiones .detalle { color: var(--suave); font-size: 0.95rem; }
 
@@ -296,23 +311,23 @@ body.entrenando main { padding: 0; max-width: none; }
 .combos { margin: 0; padding-left: 24px; display: grid; gap: 4px; }
 .etiqueta {
   display: inline-block; font-size: 0.8rem; font-weight: 700; padding: 1px 8px; border-radius: 999px;
-  background: #4a3a05; color: #ffe8a3; vertical-align: middle;
+  background: var(--aviso-fondo); color: var(--aviso); vertical-align: middle;
 }
-.etiqueta.ok { background: #12392c; color: var(--ok); }
+.etiqueta.ok { background: var(--ok-fondo); color: var(--ok); }
 .volver { display: inline-flex; min-height: 44px; align-items: center; }
 
 /* Gráficos semanales */
 .graficos { position: relative; margin: 0; }
 .titulo-grafico { margin: 8px 0 2px; font-size: 0.95rem; color: var(--texto); font-weight: 600; }
 .grafico { display: block; width: 100%; height: auto; overflow: visible; }
-.grafico .rejilla { stroke: var(--rejilla-grafico); stroke-width: 1; }
+.grafico .rejilla { stroke: var(--linea); stroke-width: 1; }
 .grafico .eje { fill: var(--suave); font-size: 10px; font-variant-numeric: tabular-nums; }
 .grafico .valor { fill: var(--texto); font-size: 11px; font-weight: 700; }
 .grafico .barra { fill: var(--serie-asaltos); }
 .grafico .linea { fill: none; stroke: var(--serie-rpe); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
-.grafico .punto { fill: var(--serie-rpe); stroke: var(--tarjeta); stroke-width: 2; }
+.grafico .punto { fill: var(--serie-rpe); stroke: var(--superficie); stroke-width: 2; }
 .grafico .foco-semana { fill: transparent; }
-.grafico .foco-semana.activa { fill: rgba(255, 255, 255, 0.06); }
+.grafico .foco-semana.activa { fill: var(--resalte); }
 .grafico .punto.activa { r: 6; }
 .capa-semanas { position: absolute; inset: 0; }
 .capa-semanas .semana {
@@ -322,12 +337,12 @@ body.entrenando main { padding: 0; max-width: none; }
 .capa-semanas .semana:focus-visible { outline-offset: -3px; }
 .tooltip {
   position: absolute; top: 24px; width: 170px; z-index: 2; pointer-events: none;
-  background: #0b0c0f; border: 1px solid var(--borde); border-radius: 8px;
+  background: var(--fondo); border: 1px solid var(--borde); border-radius: 8px;
   padding: 6px 8px; font-size: 0.85rem; line-height: 1.35;
 }
 .tabla-grafico { margin-top: 8px; }
 .tabla-grafico table { width: 100%; border-collapse: collapse; font-size: 0.92rem; font-variant-numeric: tabular-nums; }
-.tabla-grafico th, .tabla-grafico td { padding: 6px 4px; text-align: right; border-bottom: 1px solid var(--rejilla-grafico); }
+.tabla-grafico th, .tabla-grafico td { padding: 6px 4px; text-align: right; border-bottom: 1px solid var(--linea); }
 .tabla-grafico th:first-child { text-align: left; }
 
 /* ---------- Perfil ---------- */
@@ -346,7 +361,7 @@ body.entrenando main { padding: 0; max-width: none; }
 .deslizador input { padding: 0; min-height: 40px; border: 0; background: transparent; accent-color: var(--serie-asaltos); }
 .deslizador .nota { margin: 0 0 8px; }
 .lista-revisar { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
-.lista-revisar li { border-top: 1px solid var(--rejilla-grafico); padding-top: 12px; display: grid; gap: 8px; }
+.lista-revisar li { border-top: 1px solid var(--linea); padding-top: 12px; display: grid; gap: 8px; }
 .lista-revisar .punto { margin: 0; font-weight: 600; }
 code { font-size: 0.85em; }
 
@@ -354,9 +369,9 @@ code { font-size: 0.85em; }
 dialog {
   width: min(560px, calc(100vw - 24px)); max-height: calc(100dvh - 24px);
   padding: 16px; border: 1px solid var(--borde); border-radius: 16px;
-  background: var(--tarjeta); color: var(--texto);
+  background: var(--superficie); color: var(--texto);
 }
-dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
+dialog::backdrop { background: var(--velo); }
 .chips { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
 .chips legend { grid-column: 1 / -1; }
 .chip span { min-height: 52px; font-size: 1.2rem; }

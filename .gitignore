@@ -22,3 +22,6 @@ _site/
 
 # Referencias visuales privadas (no se publican)
 docs/referencias/
+
+# Capturas y registros de Playwright (MCP)
+.playwright-mcp/

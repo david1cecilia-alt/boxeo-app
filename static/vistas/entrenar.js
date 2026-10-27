@@ -2,7 +2,7 @@
 // guantes a 1–2 m del móvil). No contiene reglas de boxeo: el guion lo genera el motor y
 // el reproductor lo lanza en tiempo de sesión (con pausa).
 import { nuevoGuion, preferencias } from "../ajustes.js";
-import { catalogo } from "../motor/acciones.js";
+import { catalogo, nombreCorto } from "../motor/acciones.js";
 import { crearAzar, semillaAleatoria } from "../motor/azar.js";
 import { datos } from "../motor/datos.js";
 import { PAUSA_POR_NIVEL } from "../motor/ritmo.js";
@@ -208,15 +208,20 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   }
 
   // En grande lo actual, paso a paso y numerado con el tipo de cada acción (golpe, defensa,
-  // pies); en pequeño, la combinación anterior (las señales no cuentan).
+  // pies) y su nombre corto; en pequeño, la combinación anterior (las señales no cuentan).
+  // Los ids ya vienen en espejo para el zurdo y el catálogo tiene las dos versiones.
   function mostrarCombo(texto, ids) {
-    $("#anterior").textContent = estado.ultimoCombo ? `Anterior: ${estado.ultimoCombo}` : "";
-    estado.ultimoCombo = texto;
-    const nombres = texto.split(", ");
-    const tipos = ids.map((id) => catalogo().get(id)?.tipo);
-    if (nombres.length !== ids.length || tipos.includes(undefined)) return mostrarTexto(texto);
-    $("#combo").innerHTML = `<ol class="pasos">${nombres.map((n, i) =>
-      `<li class="paso-${tipos[i]}"><i aria-hidden="true">${i + 1}</i>${esc(n)}</li>`).join("")}</ol>`;
+    const acciones = ids.map((id) => catalogo().get(id));
+    const anterior = estado.ultimoCombo;
+    $("#anterior").textContent = anterior ? `Anterior: ${anterior}` : "";
+    if (acciones.includes(undefined)) {
+      estado.ultimoCombo = texto;
+      return mostrarTexto(texto);
+    }
+    const cortos = acciones.map(nombreCorto);
+    estado.ultimoCombo = cortos.join(" · ");
+    $("#combo").innerHTML = `<ol class="pasos" aria-label="${esc(texto)}">${acciones.map((a, i) =>
+      `<li class="paso-${a.tipo}"><i aria-hidden="true">${i + 1}</i>${esc(cortos[i])}</li>`).join("")}</ol>`;
     $("#leyenda").hidden = false;
   }
 

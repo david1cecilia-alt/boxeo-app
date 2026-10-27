@@ -7,6 +7,7 @@ from pathlib import Path
 RUTA_DATOS = Path(__file__).resolve().parent.parent / "data"
 
 _PALABRA = {"izq": "izquierda", "der": "derecha"}
+_PALABRA_CORTA = {"izq": "izq.", "der": "dcha."}
 _LADO_CONTRARIO = {"izq": "der", "der": "izq"}
 
 
@@ -23,6 +24,8 @@ class Accion:
     nivel_minimo: int
     lado: str = "ninguno"  # lado de defensas/movimientos (izq | der | ninguno)
     poder: bool = False
+    plantilla_corta: str = ""  # nombre para la pantalla de la sesión
+
 
     @property
     def nombre_hablado(self) -> str:
@@ -30,12 +33,19 @@ class Accion:
         return self.plantilla.format(mano=_PALABRA.get(self.mano, ""),
                                      lado=_PALABRA.get(self.lado, ""))
 
+    @property
+    def nombre_corto(self) -> str:
+        # Igual que el hablado pero abreviado ("gancho dcha."): lo que se lee en la sesión.
+        return self.plantilla_corta.format(mano=_PALABRA_CORTA.get(self.mano, ""),
+                                           lado=_PALABRA_CORTA.get(self.lado, ""))
+
 
 def _desde_json(d: dict) -> Accion:
     return Accion(id=d["id"], familia=d["familia"], plantilla=d["nombre_hablado"],
                   tipo=d["tipo"], mano=d["mano"], objetivo=d["objetivo"],
                   peso_despues=d["peso_despues"], nivel_minimo=d["nivel_minimo"],
-                  lado=d.get("lado", "ninguno"), poder=d.get("poder", False))
+                  lado=d.get("lado", "ninguno"), poder=d.get("poder", False),
+                  plantilla_corta=d["nombre_corto"])
 
 
 @lru_cache

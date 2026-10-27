@@ -3,20 +3,26 @@
 import { segunDatos } from "./datos.js";
 
 const PALABRA = { izq: "izquierda", der: "derecha" };
+const PALABRA_CORTA = { izq: "izq.", der: "dcha." };
 const LADO_CONTRARIO = { izq: "der", der: "izq" };
 const CAMPOS = ["id", "familia", "plantilla", "tipo", "mano", "objetivo", "peso_despues",
-  "nivel_minimo", "lado", "poder"];
+  "nivel_minimo", "lado", "poder", "plantilla_corta"];
 
 export function nombreHablado(a) {
   // El nombre se genera a partir de mano/lado, nunca reemplazando texto.
   return a.plantilla.replace("{mano}", PALABRA[a.mano] ?? "").replace("{lado}", PALABRA[a.lado] ?? "");
 }
 
+// Igual que el hablado pero abreviado ("gancho dcha."): lo que se lee en la sesión.
+export function nombreCorto(a) {
+  return a.plantilla_corta.replace("{mano}", PALABRA_CORTA[a.mano] ?? "").replace("{lado}", PALABRA_CORTA[a.lado] ?? "");
+}
+
 function desdeJson(d) {
   return Object.freeze({
     id: d.id, familia: d.familia, plantilla: d.nombre_hablado, tipo: d.tipo, mano: d.mano,
     objetivo: d.objetivo, peso_despues: d.peso_despues, nivel_minimo: d.nivel_minimo,
-    lado: d.lado ?? "ninguno", poder: d.poder ?? false,
+    lado: d.lado ?? "ninguno", poder: d.poder ?? false, plantilla_corta: d.nombre_corto,
   });
 }
 

@@ -4,7 +4,7 @@ import { PESOS } from "../ajustes.js";
 import { datos } from "../motor/datos.js";
 import { NO_SE } from "../almacen.js";
 import { $, $$, anunciar, esc, hoyIso } from "./dom.js";
-import { BASICOS, ESTILO, PESOS_TEXTO, RANGO_PESO } from "./opciones.js";
+import { BASICOS, ESTILO, MI_ESTILO, PESOS_TEXTO, RANGO_PESO } from "./opciones.js";
 
 const MEDIDAS = {
   altura_cm: ["Altura", "cm", 100, 230],
@@ -25,14 +25,20 @@ const DISTANCIA = { corta: "Corta distancia", media: "Media distancia", larga: "
 const DETALLE_ESTILO = { golpe_favorito: "Golpe favorito", presion: "Bajo presión", defensa: "Defensa", iniciativa: "Iniciativa", cardio: "Cardio" };
 const pesoTexto = (n) => `×${n.toLocaleString("es-ES", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
 
-// Resumen provisional del estilo hecho SOLO con las respuestas del usuario: no se clasifica
-// (boxer, puncher…) porque eso es criterio de entrenador.
+// Tarjeta de estilo: el que eligió el usuario ("Mi estilo") más el resumen de sus respuestas.
+// La app nunca clasifica por su cuenta (boxer, fajador…): eso es criterio de entrenador.
 function resumenEstilo(estilo) {
   const respondido = (c) => estilo[c] && estilo[c] !== NO_SE;
-  const texto = (c) => ESTILO[c].opciones.find(([v]) => v === estilo[c])?.[1] ?? "";
-  const titulo = [respondido("distancia") && DISTANCIA[estilo.distancia], respondido("volumen") && texto("volumen")].filter(Boolean);
-  const detalle = Object.entries(DETALLE_ESTILO).filter(([c]) => respondido(c))
-    .map(([c, nombre]) => `${nombre}: ${texto(c).toLowerCase()}`);
+  const texto = (c) => (c === "mi_estilo" ? MI_ESTILO : ESTILO[c]).opciones.find(([v]) => v === estilo[c])?.[1] ?? "";
+  const distancia = respondido("distancia") && DISTANCIA[estilo.distancia];
+  const volumen = respondido("volumen") && texto("volumen");
+  // Con "Mi estilo": "Boxer-puncher / De media distancia" y el volumen pasa al detalle.
+  const titulo = respondido("mi_estilo")
+    ? [texto("mi_estilo"), distancia && `De ${distancia.toLowerCase()}`].filter(Boolean)
+    : [distancia, volumen].filter(Boolean);
+  const detalle = [respondido("mi_estilo") && volumen,
+    ...Object.entries(DETALLE_ESTILO).filter(([c]) => respondido(c)).map(([c, nombre]) => `${nombre}: ${texto(c).toLowerCase()}`)]
+    .filter(Boolean);
   if (!titulo.length && !detalle.length) {
     return { titulo: ["Por definir"], texto: "Responde a las preguntas de abajo y aquí verás el resumen de tu estilo." };
   }
@@ -80,6 +86,7 @@ export function iniciarPerfil({ almacen }) {
       </section>
 
       <form class="grupos-estilo" id="f-estilo" aria-label="Tu estilo">
+        ${chips("estilo", "mi_estilo", MI_ESTILO, p.estilo.mi_estilo)}
         ${Object.entries(ESTILO).map(([c, def]) => chips("estilo", c, def, p.estilo[c])).join("")}
       </form>
 

@@ -9,6 +9,13 @@ export const BASICOS = {
   nivel: { etiqueta: "Nivel actual", opciones: [NO_LO_SE, ["1", "1 · principiante"], ["2", "2 · intermedio"], ["3", "3 · avanzado"]] },
 };
 
+// "Mi estilo": lo elige el usuario (o su entrenador). La app no lo calcula a partir de las respuestas.
+export const MI_ESTILO = {
+  etiqueta: "Mi estilo",
+  opciones: [NO_LO_SE, ["boxer", "Boxer"], ["fajador", "Fajador"], ["contragolpeador", "Contragolpeador"],
+    ["boxer_puncher", "Boxer-puncher"]],
+};
+
 export const ESTILO = {
   distancia: {
     etiqueta: "Distancia cómoda",

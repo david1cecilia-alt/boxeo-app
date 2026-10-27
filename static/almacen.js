@@ -4,7 +4,7 @@
 // Esquema versionado: si cambia, se sube VERSION y se añade una migración en MIGRACIONES.
 // Si el almacenamiento falla, todo sigue funcionando en memoria y `persistente` pasa a false.
 
-export const VERSION = 1;
+export const VERSION = 2;
 const CLAVE = "boxeo";
 const CLAVE_V0 = "boxeo.historial"; // versión 0: un array de sesiones, antes del almacén
 
@@ -14,6 +14,7 @@ export function perfilPorDefecto() {
   return {
     basicos: { guardia: NO_SE, nivel: NO_SE, inicio: null, altura_cm: null, peso_kg: null, alcance_cm: null },
     estilo: {
+      mi_estilo: NO_SE, // el que elige el usuario: la app no clasifica
       distancia: NO_SE, presion: NO_SE, golpe_favorito: NO_SE, volumen: NO_SE,
       cardio: NO_SE, defensa: NO_SE, iniciativa: NO_SE,
     },
@@ -43,6 +44,12 @@ const MIGRACIONES = {
     ...vacio(),
     version: 1,
     sesiones: v0.sesiones.map((s) => ({ ...s, id: crearId() })),
+  }),
+  // v1 → v2: el perfil gana "Mi estilo" (perfil.estilo.mi_estilo), sin elegir.
+  1: (v1) => ({
+    ...v1,
+    version: 2,
+    perfil: { ...v1.perfil, estilo: { ...v1.perfil?.estilo, mi_estilo: NO_SE } },
   }),
 };
 

@@ -45,7 +45,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   }
 
   function leerConfig() {
-    const pausa = $("#pausa").value;
+    const pausa = $("#pausa-combos").value;
     return {
       asaltos: Number($("#asaltos").value),
       duracion_asalto: Number($("#duracion").value),
@@ -60,7 +60,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   function resumir() {
     const c = leerConfigSegura();
     if (!c) return;
-    $("#pausa").placeholder = `${PAUSA_POR_NIVEL[c.nivel]} (la del nivel)`;
+    $("#pausa-combos").placeholder = `${PAUSA_POR_NIVEL[c.nivel]} (la del nivel)`;
     $("#resumen-config").textContent =
       `${c.asaltos} × ${minutos(c.duracion_asalto)} · descanso ${minutos(c.descanso)}`;
   }

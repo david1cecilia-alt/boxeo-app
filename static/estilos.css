@@ -1,5 +1,25 @@
 /* Mobile first, tema oscuro. Pensado para usar con guantes a 1–2 m del móvil:
    botones grandes, reloj enorme y colores por fase claros (contraste AA comprobado). */
+/* Fuentes locales (OFL, ver fuentes/OFL-*.txt): nada de CDN, la app va sin conexión. */
+@font-face {
+  font-family: "Anton";
+  src: url("fuentes/anton-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("fuentes/inter-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("fuentes/inter-latin-600-normal.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+
 :root {
   color-scheme: dark;
   --fondo: #111317;
@@ -28,6 +48,10 @@
   --serie-rpe: #3d9fd6;
 
   --alto-nav: 64px;
+
+  /* Tipografía: titulares condensados en mayúsculas y texto legible */
+  --letra-titular: "Anton", "Impact", "Arial Narrow", sans-serif;
+  --letra-texto: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -38,7 +62,7 @@ body {
   margin: 0;
   background: var(--fondo);
   color: var(--texto);
-  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--letra-texto);
   font-size: 1.05rem;
   line-height: 1.45;
 }

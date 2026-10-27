@@ -27,3 +27,6 @@ docs/diseno/
 
 # Capturas y registros de Playwright (MCP)
 .playwright-mcp/
+
+# Fotos de fondo originales (PNG): solo se versionan sus WebP (herramientas/convertir_imagenes.py)
+static/imagenes/**/*.png

@@ -51,8 +51,8 @@ def test_el_perfil_publicado_no_lleva_datos_personales(sitio):
 
 
 def test_las_fotos_de_fondo_se_publican_en_webp_y_sin_los_originales(sitio):
+    # Los PNG originales no se versionan: solo están en el equipo de quien los generó.
     originales = {p.stem for p in (RAIZ / "static" / "imagenes" / "originales").glob("*.png")}
-    assert originales, "faltan los PNG originales"
     publicadas = {p.stem for p in (sitio / "imagenes").glob("*.webp")}
-    assert originales <= publicadas
+    assert publicadas and originales <= publicadas
     assert not list(sitio.rglob("imagenes/**/*.png"))

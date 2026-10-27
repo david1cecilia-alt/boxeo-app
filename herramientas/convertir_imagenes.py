@@ -1,8 +1,8 @@
 """Pasa las fotos de fondo de static/imagenes/originales/ (PNG) a WebP en static/imagenes/.
 
 En color y a su tamaño (nunca se amplían). Se codifican con el Chromium de Playwright, el mismo
-que pinta las fotos del maniquí, para no añadir dependencias. Los originales no se publican:
-construir_sitio.py se salta la carpeta.
+que pinta las fotos del maniquí, para no añadir dependencias. Los originales ni se versionan
+(.gitignore) ni se publican (construir_sitio.py se salta la carpeta): solo van las WebP.
 
 Uso: python herramientas/convertir_imagenes.py
 """

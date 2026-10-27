@@ -1,8 +1,9 @@
 # Créditos
 
 ## Fotos de fondo
-`static/imagenes/originales/*.png`: generadas con IA por David (autor del proyecto) para esta app.
-Las WebP de `static/imagenes/` salen de ellas con `herramientas/convertir_imagenes.py`.
+Generadas con IA por David (autor del proyecto) para esta app. En el repo solo están las WebP de
+`static/imagenes/`; los PNG originales (`static/imagenes/originales/`, fuera de git) se convierten
+con `herramientas/convertir_imagenes.py`.
 
 | Fichero | Dónde va |
 |---|---|

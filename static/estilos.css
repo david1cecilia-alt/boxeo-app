@@ -71,7 +71,7 @@
 
 * { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; overflow-x: hidden; }
 
 body {
   margin: 0;
@@ -85,25 +85,51 @@ body {
 main {
   max-width: 720px;
   margin: 0 auto;
-  padding: 16px 16px calc(var(--alto-nav) + 24px + env(safe-area-inset-bottom));
+  padding: 0 16px calc(var(--alto-nav) + 40px + env(safe-area-inset-bottom));
 }
 
 .vista { display: grid; gap: 16px; }
 .vista[hidden] { display: none; }
 
-h1 { margin: 4px 0; font-size: 1.6rem; }
-h2 { margin: 0 0 12px; font-size: 1.2rem; }
-h3 { margin: 16px 0 6px; font-size: 1rem; color: var(--suave); }
+h1, h2, .titular {
+  font-family: var(--letra-titular); font-weight: 400; text-transform: uppercase;
+  letter-spacing: 0.01em; line-height: 0.95;
+}
+h1 { margin: 4px 0; font-size: clamp(2.6rem, 12vw, 4rem); }
+h2 { margin: 0 0 14px; font-size: 1.5rem; letter-spacing: 0.02em; }
+h3 { margin: 16px 0 6px; font-size: 0.85rem; font-weight: 600; color: var(--suave); text-transform: uppercase; letter-spacing: 0.08em; }
+.acento { color: var(--acento); }
+
+/* Cabecera: titular grande con una palabra en rojo y una palabra gigante de fondo. */
+.cabecera { position: relative; padding: 28px 0 8px; isolation: isolate; }
+.cabecera::after {
+  content: ""; display: block; width: 48px; height: 3px; margin-top: 14px; background: var(--acento);
+}
+.marca-agua {
+  position: absolute; z-index: -1; right: -8px; top: 10px;
+  font-family: var(--letra-titular); text-transform: uppercase; line-height: 0.8;
+  font-size: clamp(5rem, 30vw, 11rem); color: var(--texto); opacity: 0.05;
+  white-space: nowrap; pointer-events: none; user-select: none;
+}
 h1:focus, h2:focus { outline: none; }
 h1:focus-visible, h2:focus-visible { outline: 3px solid var(--foco); outline-offset: 4px; }
 
 a { color: var(--texto); text-decoration-color: var(--acento); text-underline-offset: 3px; }
 
+/* Tarjetas de cristal oscuro; sin backdrop-filter, fondo sólido. */
 .tarjeta {
   background: var(--superficie);
-  border-radius: 14px;
-  padding: 16px;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  padding: 18px;
   min-width: 0;
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .tarjeta {
+    background: var(--cristal);
+    -webkit-backdrop-filter: var(--desenfoque);
+    backdrop-filter: var(--desenfoque);
+  }
 }
 
 .nota { color: var(--suave); font-size: 0.92rem; margin: 8px 0 0; }
@@ -149,11 +175,12 @@ legend small { display: block; font-size: 0.85rem; }
   display: grid; place-items: center; text-align: center;
   min-height: 64px; padding: 8px 4px;
   border: 2px solid var(--borde); border-radius: 12px;
-  font-size: 1.5rem; font-weight: 700; color: var(--texto);
+  font-size: 1.5rem; font-weight: 600; color: var(--texto);
 }
 .segmentado small, .chip small { font-size: 0.8rem; font-weight: 400; color: var(--suave); }
 .segmentado input:checked + span, .chip input:checked + span {
-  background: var(--acento-relleno); border-color: var(--acento-relleno);
+  background: var(--superficie-hover); border-color: var(--acento);
+  box-shadow: inset 0 -3px 0 var(--acento);
 }
 .segmentado input:checked + span small, .chip input:checked + span small { color: var(--texto); }
 .segmentado input:focus-visible + span, .chip input:focus-visible + span { outline: 3px solid var(--foco); outline-offset: 2px; }
@@ -162,7 +189,7 @@ legend small { display: block; font-size: 0.85rem; }
 .interruptor {
   display: flex; align-items: center; gap: 14px;
   min-height: 64px; padding: 8px 12px;
-  border: 2px solid var(--secundario); border-radius: 12px;
+  border: 1px solid var(--linea); border-radius: 14px;
   cursor: pointer;
 }
 .interruptor input { width: 28px; height: 28px; flex: none; }
@@ -192,15 +219,21 @@ details[open] > summary::before { transform: rotate(90deg); }
 .boton {
   display: inline-flex; align-items: center; justify-content: center;
   min-height: 48px; padding: 10px 20px;
-  font: inherit; font-weight: 700; color: var(--sobre-acento);
-  border: 0; border-radius: 12px; cursor: pointer; text-align: center;
+  font: inherit; font-weight: 600; color: var(--sobre-acento);
+  border: 0; border-radius: 999px; cursor: pointer; text-align: center;
+  transition: background-color 0.15s, transform 0.1s;
   background: var(--secundario);
 }
 .boton.principal, .boton.peligro { background: var(--acento-relleno); }
 .boton.principal:hover, .boton.peligro:hover { background: var(--acento-relleno-hover); }
 .boton.secundario:hover { background: var(--secundario-hover); }
 .boton:disabled { opacity: 0.5; cursor: not-allowed; }
-.boton.enorme { min-height: 76px; font-size: 1.6rem; width: 100%; }
+.boton:active:not(:disabled) { transform: scale(0.98); }
+.boton.enorme {
+  min-height: 76px; width: 100%; border-radius: 20px;
+  font-family: var(--letra-titular); font-weight: 400; font-size: 1.9rem;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
 .boton.pequeno { min-height: 40px; padding: 6px 12px; font-size: 0.9rem; }
 .acciones { display: flex; flex-wrap: wrap; gap: 10px; }
 .acciones .boton { flex: 1 1 140px; }
@@ -208,7 +241,7 @@ label.boton { color: var(--sobre-acento); }
 input[type="file"].solo-lectores:focus-visible + *, label.boton:focus-within { outline: 3px solid var(--foco); }
 
 /* ---------- Sesión en curso ---------- */
-body.entrenando #config, body.entrenando #pestanas { display: none; }
+body.entrenando #config, body.entrenando #pestanas, body.entrenando .cabecera { display: none; }
 body.entrenando main { padding: 0; max-width: none; }
 
 #pantalla {
@@ -232,7 +265,8 @@ body.entrenando main { padding: 0; max-width: none; }
 
 .marcador {
   display: flex; justify-content: space-between; gap: 12px;
-  font-size: clamp(1.3rem, 5vw, 2rem); font-weight: 700;
+  font-size: clamp(1.3rem, 5vw, 2rem); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.04em;
 }
 #fase {
   padding: 2px 12px; border-radius: 999px;
@@ -240,8 +274,9 @@ body.entrenando main { padding: 0; max-width: none; }
 }
 
 #tiempo {
+  /* Inter y no Anton: Anton no tiene cifras tabulares y el reloj bailaría cada segundo. */
   font-size: min(36vw, 34vh);
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
@@ -250,9 +285,12 @@ body.entrenando main { padding: 0; max-width: none; }
 #combo {
   margin: 0;
   min-height: 2.4em;
-  font-size: clamp(2rem, 9vw, 4.5rem);
-  font-weight: 800;
-  line-height: 1.15;
+  font-family: var(--letra-titular);
+  font-size: clamp(2.2rem, 10vw, 5rem);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 1.05;
   text-wrap: balance;
 }
 #anterior { margin: 8px 0 16px; min-height: 1.4em; font-size: clamp(1rem, 4vw, 1.4rem); opacity: 0.85; }
@@ -266,20 +304,31 @@ body.entrenando main { padding: 0; max-width: none; }
 @media (pointer: coarse) { .atajos { display: none; } }
 
 /* ---------- Barra inferior ---------- */
+/* Píldora flotante de cristal oscuro. */
 #pestanas {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
-  display: grid; grid-template-columns: repeat(3, 1fr);
-  height: calc(var(--alto-nav) + env(safe-area-inset-bottom));
-  padding-bottom: env(safe-area-inset-bottom);
-  background: var(--fondo);
-  border-top: 1px solid var(--linea);
+  position: fixed; z-index: 10;
+  left: 50%; transform: translateX(-50%);
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  width: min(460px, calc(100% - 24px)); height: var(--alto-nav);
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: 0 6px;
+  background: var(--superficie);
+  border: 1px solid var(--linea); border-radius: 999px;
+  box-shadow: 0 10px 30px var(--velo);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  #pestanas { background: var(--cristal); -webkit-backdrop-filter: var(--desenfoque); backdrop-filter: var(--desenfoque); }
 }
 #pestanas a {
-  display: grid; place-items: center; align-content: center; gap: 2px;
-  color: var(--suave); text-decoration: none; font-size: 0.85rem; font-weight: 600;
+  position: relative; display: grid; place-items: center; align-content: center; gap: 2px;
+  color: var(--suave); text-decoration: none; font-size: 0.78rem; font-weight: 600;
+  border-radius: 999px;
 }
 #pestanas a[aria-current="page"] { color: var(--texto); }
-#pestanas a[aria-current="page"] svg { stroke: var(--serie-asaltos); }
+#pestanas a[aria-current="page"] svg { stroke: var(--acento); }
+#pestanas a[aria-current="page"]::after {
+  content: ""; position: absolute; bottom: 6px; width: 16px; height: 2px;
+  border-radius: 2px; background: var(--acento);
+}
 #pestanas svg {
   width: 26px; height: 26px; fill: none; stroke: currentColor;
   stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
@@ -288,18 +337,19 @@ body.entrenando main { padding: 0; max-width: none; }
 
 /* ---------- Historial ---------- */
 .cifras { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 16px; }
-.cifras div { background: var(--campo); border-radius: 10px; padding: 10px 12px; }
+.cifras div { background: var(--campo); border: 1px solid var(--linea); border-radius: 12px; padding: 10px 12px; }
 .cifras dt { color: var(--suave); font-size: 0.9rem; }
 .cifras dd { margin: 4px 0 0; }
 .cifras dd span { display: block; }
-.cifras strong { font-size: 1.5rem; }
+.cifras strong { font-family: var(--letra-titular); font-weight: 400; font-size: 1.9rem; }
 
 .lista-sesiones { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .lista-sesiones a {
   display: grid; gap: 2px; padding: 12px 14px; min-height: 56px;
-  background: var(--campo); border-radius: 10px; color: var(--texto); text-decoration: none;
+  background: var(--campo); border: 1px solid var(--linea); border-radius: 12px;
+  color: var(--texto); text-decoration: none; transition: border-color 0.15s;
 }
-.lista-sesiones a:hover { background: var(--superficie-hover); }
+.lista-sesiones a:hover { border-color: var(--borde); }
 .lista-sesiones .fecha { font-weight: 700; }
 .lista-sesiones .detalle { color: var(--suave); font-size: 0.95rem; }
 
@@ -349,7 +399,7 @@ body.entrenando main { padding: 0; max-width: none; }
 .lista-editable { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
 .lista-editable li {
   display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
-  background: var(--campo); border-radius: 10px; padding: 10px 12px;
+  background: var(--campo); border: 1px solid var(--linea); border-radius: 12px; padding: 10px 12px;
 }
 .lista-editable li p { margin: 4px 0 0; white-space: pre-wrap; }
 .notas time { color: var(--suave); font-size: 0.9rem; }
@@ -368,7 +418,7 @@ code { font-size: 0.85em; }
 /* ---------- Diálogo post-sesión ---------- */
 dialog {
   width: min(560px, calc(100vw - 24px)); max-height: calc(100dvh - 24px);
-  padding: 16px; border: 1px solid var(--borde); border-radius: 16px;
+  padding: 18px; border: 1px solid var(--linea); border-radius: var(--radio);
   background: var(--superficie); color: var(--texto);
 }
 dialog::backdrop { background: var(--velo); }
@@ -380,6 +430,19 @@ dialog::backdrop { background: var(--velo); }
 .grupo-combos legend { font-weight: 600; }
 .costosas { margin: 0; }
 
+/* ---------- Animaciones sobrias ---------- */
+/* Al mostrarse una vista (cambio de pestaña) sus bloques entran escalonados. */
+@keyframes entrada {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+.vista > *, #historial-contenido > *, #perfil-contenido > * { animation: entrada 0.28s ease-out both; }
+.vista > :nth-child(2), #historial-contenido > :nth-child(2), #perfil-contenido > :nth-child(2) { animation-delay: 40ms; }
+.vista > :nth-child(3), #historial-contenido > :nth-child(3), #perfil-contenido > :nth-child(3) { animation-delay: 80ms; }
+.vista > :nth-child(n+4), #historial-contenido > :nth-child(n+4), #perfil-contenido > :nth-child(n+4) { animation-delay: 120ms; }
+/* La sesión no anima su entrada: tiene que estar lista al instante. */
+#pantalla { animation: none; }
+
 @media (prefers-reduced-motion: reduce) {
-  #pantalla { transition: none; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }

@@ -21,8 +21,11 @@
   <main>
     <!-- ============ Entrenar ============ -->
     <section id="vista-entrenar" class="vista" aria-labelledby="t-entrenar">
+      <header class="cabecera">
+        <span class="marca-agua" aria-hidden="true">Asalto</span>
+        <h1 id="t-entrenar" tabindex="-1">Sal a <span class="acento">entrenar</span></h1>
+      </header>
       <form id="config" class="tarjeta formulario">
-        <h1 id="t-entrenar" tabindex="-1">Entrenar</h1>
 
         <label class="campo">Preset
           <select id="preset"></select>
@@ -73,13 +76,19 @@
 
     <!-- ============ Historial ============ -->
     <section id="vista-historial" class="vista" aria-labelledby="t-historial" hidden>
-      <h1 id="t-historial" tabindex="-1">Historial</h1>
+      <header class="cabecera">
+        <span class="marca-agua" aria-hidden="true">Rondas</span>
+        <h1 id="t-historial" tabindex="-1">Tu <span class="acento">historial</span></h1>
+      </header>
       <div id="historial-contenido"></div>
     </section>
 
     <!-- ============ Perfil ============ -->
     <section id="vista-perfil" class="vista" aria-labelledby="t-perfil" hidden>
-      <h1 id="t-perfil" tabindex="-1">Perfil</h1>
+      <header class="cabecera">
+        <span class="marca-agua" aria-hidden="true">Guardia</span>
+        <h1 id="t-perfil" tabindex="-1">Tu <span class="acento">perfil</span></h1>
+      </header>
       <div id="perfil-contenido"></div>
     </section>
   </main>

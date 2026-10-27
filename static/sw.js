@@ -37,6 +37,7 @@ const FICHEROS = [
   "data/perfil.json",
   "data/presets.json",
   "data/revisar.json",
+  "data/tecnica.json",
   "fuentes/anton-latin-400-normal.woff2",
   "fuentes/inter-latin-400-normal.woff2",
   "fuentes/inter-latin-600-normal.woff2",

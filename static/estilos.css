@@ -190,6 +190,8 @@ a { color: var(--texto); text-decoration-color: var(--acento); text-underline-of
 
 /* ---------- Foco visible en todo lo interactivo ---------- */
 :focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
+/* Con ratón o dedo no se dibuja el anillo (p. ej. el título que recibe el foco al cambiar de pestaña). */
+:focus:not(:focus-visible) { outline: none; }
 
 /* ---------- Formularios ---------- */
 .formulario { display: grid; gap: 14px; }

@@ -24,7 +24,8 @@
       ],
       "errores": [
         {"error": "Bajar la mano derecha mientras sale el jab.", "correccion": "Déjala apoyada en la mejilla; al practicar, comprueba que el guante sigue tocándote la cara."},
-        {"error": "Echar la mano atrás o abrir el codo antes de golpear (se ve venir).", "correccion": "Sale directo desde la guardia, con el codo mirando al suelo: el puño viaja en línea recta al objetivo."},
+        {"error": "Echar la mano atrás antes de golpear (se ve venir).", "correccion": "Sale directo desde donde está en la guardia: el puño viaja en línea recta al objetivo."},
+        {"error": "Abrir el codo hacia fuera al lanzar (el golpe sale en curva).", "correccion": "El codo mira al suelo durante todo el recorrido, por debajo del puño."},
         {"error": "Inclinarse hacia delante para llegar (peso en la pierna delantera).", "correccion": "Si no llegas, da un paso: el cuerpo no se estira."},
         {"error": "Dejar el brazo estirado después del golpe.", "correccion": "La vuelta es parte del golpe: recoge en cuanto toques, sin quedarte a mirar."}
       ],

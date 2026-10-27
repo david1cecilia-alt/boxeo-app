@@ -30,7 +30,7 @@ def test_cada_ficha_tiene_su_contenido(tecnica):
         assert f["nivel"] in (1, 2, 3), f["id"]
         assert 3 <= len(f["pasos"]) <= 6, f["id"]
         assert all(p["texto"] for p in f["pasos"]), f["id"]
-        assert 2 <= len(f["errores"]) <= 4, f["id"]
+        assert 2 <= len(f["errores"]) <= 5, f["id"]
         assert all(e["error"] and e["correccion"] for e in f["errores"]), f["id"]
         assert isinstance(f["revisar"], bool), f["id"]
         assert f["fuentes"], f["id"]

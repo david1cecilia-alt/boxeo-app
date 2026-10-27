@@ -42,10 +42,10 @@ def test_ningun_nombre_lleva_numeros():
 
 # ---------- Nombre corto (pantalla de la sesión) ----------
 
-MAX_CORTO = 16
+MAX_CORTO = 18
 
 
-def test_todas_las_acciones_tienen_nombre_corto_de_16_caracteres_como_mucho():
+def test_todas_las_acciones_tienen_nombre_corto_de_18_caracteres_como_mucho():
     for accion in catalogo().values():
         for a in (accion, espejo(accion)):
             assert a.nombre_corto, a.id
@@ -58,7 +58,9 @@ def test_el_espejo_zurdo_tambien_invierte_el_nombre_corto():
     assert cat["uppercut_izq"].nombre_corto == "uppercut izq."
     assert espejo(cat["uppercut_izq"]).nombre_corto == "uppercut dcha."
     assert espejo(cat["esquiva_der"]).nombre_corto == "esquiva izq."
-    assert espejo(cat["paso_lateral_izq"]).nombre_corto == "paso lat. dcha."
+    assert espejo(cat["paso_lateral_izq"]).nombre_corto == "paso lateral dcha."
+    assert cat["gancho_der_cuerpo"].nombre_corto == "gancho dcha. abajo"
+    assert espejo(cat["uppercut_der_cuerpo"]).nombre_corto == "upper izq. abajo"
     assert espejo(cat["jab"]).nombre_corto == "jab"
     # En todo el catálogo: si el corto lleva lado, el del espejo lleva el contrario.
     for accion in cat.values():

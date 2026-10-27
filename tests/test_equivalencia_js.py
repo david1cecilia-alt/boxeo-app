@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from motor.acciones import Accion, acciones_por_ids, catalogo, espejo, espejo_combo
-from motor.generador import GeneradorCombos
+from motor.generador import GeneradorCombos, cargar_perfil
 from motor.reglas import ultimo_golpe, validar
 from motor.ritmo import duracion_estimada, pausa_entre_combos
 from motor.temporizador import (AVISO_ANTES_FIN, DURACION_AVISO, DURACION_REACCION, MARGEN,
@@ -116,6 +116,20 @@ def test_proporciones_del_perfil_iguales_en_js_y_python(js, nivel, condicion):
     p_js = _proporcion(javascript, CONDICIONES[condicion])
     assert abs(p_js - p_py) <= TOLERANCIA_PROPORCION, \
         f"nivel {nivel}, {condicion}: JS {p_js:.1%} vs Python {p_py:.1%}"
+
+
+@pytest.mark.parametrize("i", range(5))
+def test_refuerzo_de_practicar_igual_en_js_y_python(js, i):
+    caso = js["refuerzos"][i]
+    perfil = {**cargar_perfil(), "refuerzo": {"acciones": caso["ids"], "factor": 3.0}}
+    gen = GeneradorCombos(2, perfil=perfil, rng=random.Random(200))
+    python = [list(gen.siguiente().acciones) for _ in range(MUESTRAS)]
+    javascript = [_acciones(c["acciones"]) for c in caso["combos"]]
+    for acciones in javascript:
+        assert validar(acciones, 2) == [], acciones
+    def lleva(acciones): return any(a.id in caso["ids"] for a in acciones)
+    p_py, p_js = _proporcion(python, lleva), _proporcion(javascript, lleva)
+    assert abs(p_js - p_py) <= TOLERANCIA_PROPORCION, f"{caso['ids']}: JS {p_js:.1%} vs Python {p_py:.1%}"
 
 
 # ---------- Espejo ----------

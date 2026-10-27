@@ -22,12 +22,15 @@ export function textoCombo(acciones) {
 }
 
 // Multiplica los pesos del perfil que cumple la combinación (ortodoxa).
-export function pesoPerfil(combo, pesos) {
+// `refuerzo` ({ acciones: [ids], factor }) sube las combinaciones que llevan alguna de esas
+// acciones: es el "Practicar" de una ficha, solo para una sesión.
+export function pesoPerfil(combo, pesos, refuerzo = null) {
   let peso = 1.0;
   const ultimo = ultimoGolpe(combo);
   if (ultimo && ultimo.familia === "gancho") peso *= pesos.termina_en_gancho ?? 1.0;
   if (combo.some((a) => a.familia === "bloqueo")) peso *= pesos.bloquear_y_devolver ?? 1.0;
   if (combo[0].id === "jab") peso *= pesos.entrada_con_jab ?? 1.0;
+  if (refuerzo && combo.some((a) => refuerzo.acciones.includes(a.id))) peso *= refuerzo.factor;
   return peso;
 }
 
@@ -86,6 +89,8 @@ export class GeneradorCombos {
     this.azar = azar;
     this.pesos = this.perfil.pesos ?? {};
     this.pesoMax = Object.values(this.pesos).reduce((p, v) => p * Math.max(v, 1.0), 1.0);
+    this.refuerzo = this.perfil.refuerzo ?? null;
+    if (this.refuerzo) this.pesoMax *= Math.max(this.refuerzo.factor, 1.0);
     // Solo los clásicos que cumplen las reglas de ESTE nivel.
     this.clasicos = combosClasicos().filter((c) => esValida(c.acciones, nivel));
     this.anterior = null;
@@ -109,7 +114,7 @@ export class GeneradorCombos {
     while (true) {
       candidata = this.candidata(clasico);
       if (!candidata || clave(candidata.acciones) === this.anterior) continue;
-      const aceptar = pesoPerfil(candidata.acciones, this.pesos) / this.pesoMax;
+      const aceptar = pesoPerfil(candidata.acciones, this.pesos, this.refuerzo) / this.pesoMax;
       if (this.azar.random() < aceptar) break;
     }
     this.anterior = clave(candidata.acciones);

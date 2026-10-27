@@ -19,3 +19,6 @@ Thumbs.db
 
 # Web estática montada
 _site/
+
+# Referencias visuales privadas (no se publican)
+docs/referencias/

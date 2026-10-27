@@ -2,17 +2,18 @@
 // guantes a 1–2 m del móvil). No contiene reglas de boxeo: el guion lo genera el motor y
 // el reproductor lo lanza en tiempo de sesión (con pausa).
 import { nuevoGuion, preferencias } from "../ajustes.js";
+import { catalogo } from "../motor/acciones.js";
 import { crearAzar, semillaAleatoria } from "../motor/azar.js";
 import { datos } from "../motor/datos.js";
 import { PAUSA_POR_NIVEL } from "../motor/ritmo.js";
 import { validarConfig } from "../motor/temporizador.js";
 import { crearReproductor } from "../reproductor.js";
 import { activarSonido, campana, pitido, tablillas } from "../sonido.js";
-import { $, anunciar, minutos } from "./dom.js";
+import { $, anunciar, esc, minutos } from "./dom.js";
 
 const SEGUNDOS_FINAL = 10;
 const TEXTO_FASE = {
-  asalto: "Asalto", final: "Últimos 10 s", descanso: "Descanso", reaccion: "¡Reacción!", pausa: "En pausa",
+  asalto: "En asalto", final: "Últimos 10 s", descanso: "Descanso", reaccion: "¡Reacción!", pausa: "En pausa",
 };
 
 export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
@@ -23,9 +24,18 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
 
   // ---------- Configuración ----------
 
-  $("#preset").innerHTML = presets.map((p) => `<option value="${p.id}">${p.nombre}</option>`).join("") +
-    `<option value="">Personalizado</option>`;
+  // Presets como chips (radios); los ajustes avanzados solo se ven con "Personalizado".
+  const chip = (id, nombre) =>
+    `<label class="chip-opcion"><input type="radio" name="preset" value="${id}"><span>${esc(nombre)}</span></label>`;
+  $("#presets").insertAdjacentHTML("beforeend",
+    presets.map((p) => chip(p.id, p.nombre)).join("") + chip("", "Personalizado"));
+  marcarPreset(presets[0].id);
   aplicarPreset(presets[0]);
+
+  function marcarPreset(id) {
+    $(`input[name="preset"][value="${id}"]`).checked = true;
+    $("#avanzados").hidden = id !== "";
+  }
 
   function aplicarPreset(p) {
     $("#asaltos").value = p.asaltos;
@@ -61,20 +71,23 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     const c = leerConfigSegura();
     if (!c) return;
     $("#pausa-combos").placeholder = `${PAUSA_POR_NIVEL[c.nivel]} (la del nivel)`;
-    $("#resumen-config").textContent =
-      `${c.asaltos} × ${minutos(c.duracion_asalto)} · descanso ${minutos(c.descanso)}`;
+    const resumen = `${c.asaltos} × ${minutos(c.duracion_asalto)} · descanso ${minutos(c.descanso)}`;
+    $("#resumen-config").textContent = resumen;
+    $("#resumen-grande").textContent = resumen;
   }
 
   function leerConfigSegura() {
     return $('input[name="nivel"]:checked') ? leerConfig() : null;
   }
 
-  $("#preset").addEventListener("change", () => {
-    const p = presets.find((x) => x.id === $("#preset").value);
+  $("#presets").addEventListener("change", (e) => {
+    const p = presets.find((x) => x.id === e.target.value);
+    marcarPreset(e.target.value);
     if (p) aplicarPreset(p);
+    else $("#avanzados").open = true;
   });
   for (const id of ["asaltos", "duracion", "descanso"]) {
-    $(`#${id}`).addEventListener("input", () => { $("#preset").value = ""; resumir(); });
+    $(`#${id}`).addEventListener("input", () => { marcarPreset(""); resumir(); });
   }
   form.addEventListener("change", resumir);
   form.addEventListener("submit", (e) => { e.preventDefault(); empezar(); });
@@ -96,6 +109,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       finFase: 0,
       reaccionHasta: -1,
       dictadas: [],
+      asalto: 0,
       asaltosCompletados: 0,
     };
     estado.reproductor = crearReproductor(eventos, { alLanzar: lanzar });
@@ -103,7 +117,9 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     pedirPantallaEncendida();
     document.body.classList.add("entrenando");
     $("#pantalla").hidden = false;
-    $("#combo").textContent = "Prepárate";
+    $("#progreso").innerHTML = "<i><b></b></i>".repeat(config.asaltos);
+    $("#asalto").innerHTML = `Asalto <span class="acento">1</span>/${config.asaltos}`;
+    mostrarTexto("Prepárate");
     $("#anterior").textContent = "";
     pintarPausa();
     tic();
@@ -122,6 +138,25 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     else if (fase === "asalto" && restante <= SEGUNDOS_FINAL) fase = "final";
     $("#pantalla").dataset.fase = fase;
     $("#fase").textContent = TEXTO_FASE[fase];
+    pintarProgreso(restante);
+    $("#despues").textContent = despues();
+  }
+
+  // Una barra por asalto: los pasados llenos y el actual según el tiempo que lleva.
+  function pintarProgreso(restante) {
+    const { asalto, fase, config } = estado;
+    const actual = fase === "asalto" ? 1 - restante / config.duracion_asalto : 1;
+    [...$("#progreso").children].forEach((barra, i) => {
+      const lleno = i + 1 < asalto ? 1 : i + 1 === asalto ? actual : 0;
+      barra.firstChild.style.width = `${Math.round(lleno * 100)}%`;
+    });
+  }
+
+  function despues() {
+    const { asalto, fase, config } = estado;
+    if (fase === "descanso" || asalto === 0) return `Después · asalto ${asalto + 1}`;
+    if (asalto >= config.asaltos) return "Último asalto";
+    return config.descanso > 0 ? `Después · descanso ${minutos(config.descanso)}` : `Después · asalto ${asalto + 1}`;
   }
 
   function lanzar(e) {
@@ -129,21 +164,23 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     switch (e.tipo) {
       case "inicio_asalto":
         estado.fase = "asalto";
+        estado.asalto = e.asalto;
         estado.finFase = e.t + estado.config.duracion_asalto;
-        $("#asalto").textContent = `Asalto ${e.asalto} / ${estado.config.asaltos}`;
-        $("#combo").textContent = "¡Boxea!";
+        $("#asalto").innerHTML = `Asalto <span class="acento">${e.asalto}</span>/${estado.config.asaltos}`;
+        $("#marca-asalto").textContent = `R${e.asalto}`;
+        mostrarTexto("¡Boxea!");
         $("#anterior").textContent = "";
         estado.ultimoCombo = null;
         campana(1);
         r.programar(1.2, () => voz.decir(e.texto)); // que no pise la campana
         break;
       case "combo":
-        mostrarCombo(e.texto, true);
+        mostrarCombo(e.texto, e.ids);
         voz.decir(e.texto);
         estado.dictadas.push({ asalto: e.asalto, texto: e.texto, ids: e.ids });
         break;
       case "reaccion":
-        mostrarCombo(e.texto);
+        mostrarTexto(e.texto);
         estado.reaccionHasta = e.t + e.duracion;
         pitido();
         voz.decir(e.texto);
@@ -159,24 +196,33 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       case "descanso":
         estado.fase = "descanso";
         estado.finFase = e.t + e.duracion;
-        mostrarCombo("Descanso");
+        mostrarTexto("Descanso");
         r.programar(1.5, () => voz.decir("Descanso"));
         break;
       case "fin_sesion":
-        $("#combo").textContent = e.texto;
+        mostrarTexto(e.texto);
         setTimeout(() => voz.decir(e.texto), 1500); // la sesión ya ha terminado: fuera del reproductor
         terminar();
         break;
     }
   }
 
-  // En grande lo actual; en pequeño, la combinación anterior (las señales no cuentan).
-  function mostrarCombo(texto, esCombinacion = false) {
-    if (esCombinacion) {
-      $("#anterior").textContent = estado.ultimoCombo ? `Anterior: ${estado.ultimoCombo}` : "";
-      estado.ultimoCombo = texto;
-    }
-    $("#combo").textContent = texto;
+  // En grande lo actual, paso a paso y numerado con el tipo de cada acción (golpe, defensa,
+  // pies); en pequeño, la combinación anterior (las señales no cuentan).
+  function mostrarCombo(texto, ids) {
+    $("#anterior").textContent = estado.ultimoCombo ? `Anterior: ${estado.ultimoCombo}` : "";
+    estado.ultimoCombo = texto;
+    const nombres = texto.split(", ");
+    const tipos = ids.map((id) => catalogo().get(id)?.tipo);
+    if (nombres.length !== ids.length || tipos.includes(undefined)) return mostrarTexto(texto);
+    $("#combo").innerHTML = `<ol class="pasos">${nombres.map((n, i) =>
+      `<li class="paso-${tipos[i]}"><i aria-hidden="true">${i + 1}</i>${esc(n)}</li>`).join("")}</ol>`;
+    $("#leyenda").hidden = false;
+  }
+
+  function mostrarTexto(texto) {
+    $("#combo").innerHTML = `<p class="combo-texto">${esc(texto)}</p>`;
+    $("#leyenda").hidden = true;
   }
 
   function pausarOReanudar() {
@@ -195,14 +241,14 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
 
   function pintarPausa() {
     const pausado = estado?.reproductor.pausado ?? false;
-    $("#pausa").textContent = pausado ? "Reanudar" : "Pausa";
+    $("#pausa span").textContent = pausado ? "Seguir" : "Pausa";
     $("#pausa").setAttribute("aria-pressed", String(pausado));
   }
 
   function parar() {
     if (!estado) return;
     voz.callar();
-    $("#combo").textContent = "Parado";
+    mostrarTexto("Parado");
     terminar();
   }
 

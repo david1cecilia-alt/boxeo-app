@@ -19,28 +19,41 @@
   font-weight: 600;
   font-display: swap;
 }
+@font-face {
+  font-family: "Inter";
+  src: url("fuentes/inter-latin-800-normal.woff2") format("woff2");
+  font-weight: 800;
+  font-display: swap;
+}
 
-/* Todos los colores y letras de la app viven aquí (tokens). Negro + rojo como único acento.
+/* Todos los colores y letras de la app viven aquí (tokens). Negro neutro + rojo como único acento.
    El fondo rojo completo se reserva para los últimos 10 s (--fase-final): en el resto de la
-   app el rojo va solo en detalles. Contraste comprobado en tests/js/contraste.test.mjs. */
+   app el rojo va en texto, botones, pestaña activa y chips destacados.
+   Contraste comprobado en tests/js/contraste.test.mjs. */
 :root {
   color-scheme: dark;
-  --fondo: #0b0b0b;
-  --superficie: #151515;      /* tarjeta sólida: alternativa al cristal */
-  --superficie-hover: #1f1d1b;
+  --fondo: #0a0a0a;
+  --superficie: #141414;      /* tarjeta sólida */
+  --superficie-hover: #1c1c1c;
   --campo: #101010;
-  --cristal: rgba(24, 22, 21, 0.85);  /* tarjetas y barra flotante con backdrop-filter */
+  --cristal: rgba(255, 255, 255, 0.05);        /* tarjeta de cristal (sobre negro o foto oscura) */
+  --borde-cristal: rgba(255, 255, 255, 0.10);
+  --barra: rgba(20, 20, 20, 0.95);             /* barra flotante: se lee hasta sobre una foto clara */
   --desenfoque: blur(16px) saturate(140%);
-  --linea: #2a2724;           /* líneas finas decorativas y rejilla de gráficos */
-  --borde: #6e6862;           /* bordes de campos: 3:1 */
+  --linea: rgba(255, 255, 255, 0.09);          /* borde de tarjetas, separadores y rejilla de gráficos */
+  --linea-chip: rgba(255, 255, 255, 0.16);     /* chip no seleccionado y botón secundario */
+  --borde: #737373;           /* bordes de campos de texto: 3:1 */
   --texto: #f5f3f0;
-  --suave: #b5ada4;           /* gris cálido */
-  --acento: #ff3b30;          /* palabra roja, pestaña activa, líneas: texto AA sobre negro */
-  --acento-relleno: #c8102e;  /* botón principal y Parar (texto blanco AA) */
-  --acento-relleno-hover: #a50d26;
-  --sobre-acento: #ffffff;    /* texto de botones */
-  --secundario: #2e2b28;
-  --secundario-hover: #3a3633;
+  --suave: #a8a29e;           /* texto secundario */
+  --terciario: #d6d3d1;
+  --acento: #ff3b30;          /* rojo de texto: palabra roja, contexto, cifras */
+  --acento-relleno: #d7192a;  /* rojo de relleno: botones, pestaña activa, chip destacado (texto blanco) */
+  --acento-relleno-hover: #b81424;
+  --sobre-acento: #ffffff;
+  --chip-activo: #f5f3f0;     /* chip seleccionado */
+  --sobre-chip-activo: #0a0a0a;
+  --secundario: rgba(255, 255, 255, 0.06);
+  --secundario-hover: rgba(255, 255, 255, 0.12);
   --foco: #ffffff;
   --ok: #7ad1a9;
   --ok-fondo: #12392c;
@@ -51,19 +64,20 @@
   --resplandor: rgba(255, 59, 48, 0.32); /* halo rojo detrás del maniquí */
 
   /* Fases de la sesión: fondo y texto */
-  --fase-asalto: #0b0b0b;
-  --fase-final: #b00012;
-  --fase-descanso: #0d4a42;
+  --fase-asalto: #0a0a0a;
+  --fase-final: #d7192a;
+  --fase-descanso: #0b3b34;
   --fase-reaccion: #ffb703;
-  --fase-reaccion-texto: #0b0b0b;
-  --fase-pausa: #26231f;
+  --fase-reaccion-texto: #0a0a0a;
+  --fase-pausa: #1c1c1c;
 
   /* Series de los gráficos (validadas sobre --superficie) */
   --serie-asaltos: #ff3b30;
   --serie-rpe: #e8e2da;
 
-  --alto-nav: 64px;
-  --radio: 18px;
+  --alto-nav: 68px;
+  --hueco: 20px;              /* margen lateral en móvil */
+  --radio: 20px;
 
   /* Tipografía: titulares condensados en mayúsculas y texto legible */
   --letra-titular: "Anton", "Impact", "Arial Narrow", sans-serif;
@@ -79,45 +93,76 @@ body {
   background: var(--fondo);
   color: var(--texto);
   font-family: var(--letra-texto);
-  font-size: 1.05rem;
+  font-size: 1rem;
   line-height: 1.45;
 }
 
 main {
+  overflow-x: clip; /* la palabra de fondo y la foto sobresalen a propósito */
   max-width: 720px;
   margin: 0 auto;
-  padding: 0 16px calc(var(--alto-nav) + 40px + env(safe-area-inset-bottom));
+  padding: 0 var(--hueco) calc(var(--alto-nav) + 44px + env(safe-area-inset-bottom));
 }
 
-.vista { display: grid; gap: 16px; }
+.vista { position: relative; isolation: isolate; display: grid; gap: 16px; }
 .vista[hidden] { display: none; }
 
 h1, h2, .titular {
   font-family: var(--letra-titular); font-weight: 400; text-transform: uppercase;
-  letter-spacing: 0.01em; line-height: 0.95;
+  letter-spacing: 0.01em; line-height: 0.98;
 }
-h1 { margin: 4px 0; font-size: clamp(2.6rem, 12vw, 4rem); }
+h1 { margin: 0; font-size: clamp(2.75rem, 12.8vw, 4rem); }
 h2 { margin: 0 0 14px; font-size: 1.5rem; letter-spacing: 0.02em; }
 h3 { margin: 16px 0 6px; font-size: 0.85rem; font-weight: 600; color: var(--suave); text-transform: uppercase; letter-spacing: 0.08em; }
 .acento { color: var(--acento); }
 
-/* Cabecera: titular grande con una palabra en rojo y una palabra gigante de fondo. */
-.cabecera { position: relative; padding: 28px 0 8px; isolation: isolate; }
-.cabecera::after {
-  content: ""; display: block; width: 48px; height: 3px; margin-top: 14px; background: var(--acento);
+/* Titular de pantalla: línea de contexto en rojo, titular de dos líneas con la segunda en rojo
+   y una palabra gigante de fondo. */
+.cabecera { position: relative; padding: 28px 0 0; }
+.antetitulo {
+  margin: 0 0 6px; color: var(--acento);
+  font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase;
 }
 .marca-agua {
   position: absolute; z-index: -1; right: -8px; top: 10px;
-  font-family: var(--letra-titular); text-transform: uppercase; line-height: 0.8;
-  font-size: clamp(5rem, 30vw, 11rem); color: var(--texto); opacity: 0.05;
+  font-family: var(--letra-titular); text-transform: uppercase; line-height: 1;
+  font-size: clamp(5rem, 30vw, 11rem); color: #fff; opacity: 0.05;
   white-space: nowrap; pointer-events: none; user-select: none;
+}
+.marca-agua.vertical {
+  writing-mode: vertical-rl; top: 120px; right: calc(-26px - var(--hueco));
+  font-size: 150px; letter-spacing: 4px;
 }
 h1:focus, h2:focus { outline: none; }
 h1:focus-visible, h2:focus-visible { outline: 3px solid var(--foco); outline-offset: 4px; }
 
+/* Cabecera con foto fundida al negro (detrás del titular). La foto nunca se amplía por encima
+   de su tamaño: en pantallas anchas se queda a la derecha y se funde también por la izquierda. */
+.foto-cabecera {
+  position: absolute; z-index: -2; top: 0; left: calc(-1 * var(--hueco)); right: calc(-1 * var(--hueco));
+  height: 360px; overflow: hidden; pointer-events: none;
+}
+.foto-cabecera img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; }
+.foto-cabecera::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(10, 10, 10, 0.55) 0%, rgba(10, 10, 10, 0) 30%,
+    rgba(10, 10, 10, 0.2) 60%, var(--fondo) 100%);
+}
+.con-foto .cabecera { padding-top: 166px; }
+
+/* Marca en móvil (en el PC va en la barra lateral). */
+.marca-movil, .marca {
+  display: flex; align-items: center; gap: 8px; margin: 0;
+  font-family: var(--letra-titular); text-transform: uppercase; font-size: 22px; letter-spacing: 2px; line-height: 1;
+}
+.marca-movil::before, .marca::before {
+  content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--acento);
+}
+.marca-movil { padding-top: 20px; height: 44px; margin-bottom: -16px; }
+
 a { color: var(--texto); text-decoration-color: var(--acento); text-underline-offset: 3px; }
 
-/* Tarjetas de cristal oscuro; sin backdrop-filter, fondo sólido. */
+/* Tarjetas sólidas y de cristal. */
 .tarjeta {
   background: var(--superficie);
   border: 1px solid var(--linea);
@@ -125,15 +170,12 @@ a { color: var(--texto); text-decoration-color: var(--acento); text-underline-of
   padding: 18px;
   min-width: 0;
 }
-@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .tarjeta {
-    background: var(--cristal);
-    -webkit-backdrop-filter: var(--desenfoque);
-    backdrop-filter: var(--desenfoque);
-  }
+.tarjeta.cristal {
+  background: var(--cristal); border-color: var(--borde-cristal); border-radius: 22px;
+  -webkit-backdrop-filter: var(--desenfoque); backdrop-filter: var(--desenfoque);
 }
 
-.nota { color: var(--suave); font-size: 0.92rem; margin: 8px 0 0; }
+.nota { color: var(--suave); font-size: 0.875rem; margin: 8px 0 0; }
 .solo-lectores {
   position: absolute; width: 1px; height: 1px; overflow: hidden;
   clip: rect(0 0 0 0); white-space: nowrap;
@@ -149,13 +191,13 @@ a { color: var(--texto); text-decoration-color: var(--acento); text-underline-of
 
 /* ---------- Formularios ---------- */
 .formulario { display: grid; gap: 14px; }
-.campo { display: grid; gap: 6px; color: var(--suave); font-size: 0.95rem; }
+.campo { display: grid; gap: 6px; color: var(--suave); font-size: 0.9rem; }
 input, select, textarea {
   font: inherit;
   color: var(--texto);
   background: var(--campo);
   border: 1px solid var(--borde);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 12px;
   min-height: 48px;
   width: 100%;
@@ -165,37 +207,63 @@ input[type="checkbox"], input[type="radio"] { width: auto; min-height: 0; accent
 fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 legend { color: var(--suave); font-size: 0.95rem; padding: 0; margin-bottom: 8px; }
 legend small { display: block; font-size: 0.85rem; }
-.rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+.rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
 
-/* Nivel: tres botones grandes (radios). */
-.segmentado { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.segmentado legend { grid-column: 1 / -1; }
-.segmentado label, .chip { position: relative; }
-.segmentado input, .chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-.segmentado span, .chip span {
-  display: grid; place-items: center; text-align: center;
-  min-height: 64px; padding: 8px 4px;
-  border: 2px solid var(--borde); border-radius: 12px;
-  font-size: 1.5rem; font-weight: 600; color: var(--texto);
+/* Chips de opción (radios): presets, categorías, estilo. El seleccionado, en claro. */
+.fila-chips {
+  display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
+  margin: 0 calc(-1 * var(--hueco)); padding: 2px var(--hueco);
 }
-.segmentado small, .chip small { font-size: 0.8rem; font-weight: 400; color: var(--suave); }
-.segmentado input:checked + span, .chip input:checked + span {
-  background: var(--superficie-hover); border-color: var(--acento);
-  box-shadow: inset 0 -3px 0 var(--acento);
+.fila-chips::-webkit-scrollbar { display: none; }
+.chip-opcion { position: relative; flex: none; }
+.chip-opcion input, .niveles input, .chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.chip-opcion span {
+  display: inline-flex; align-items: center; height: 40px; padding: 0 16px;
+  border: 1px solid var(--linea-chip); border-radius: 20px; background: rgba(255, 255, 255, 0.04);
+  font-size: 0.875rem; font-weight: 400; white-space: nowrap;
 }
-.segmentado input:checked + span small, .chip input:checked + span small { color: var(--texto); }
-.segmentado input:focus-visible + span, .chip input:focus-visible + span { outline: 3px solid var(--foco); outline-offset: 2px; }
+.chip-opcion input:checked + span {
+  background: var(--chip-activo); border-color: var(--chip-activo); color: var(--sobre-chip-activo); font-weight: 600;
+}
+:is(.chip-opcion, .niveles, .chip) input:focus-visible + span { outline: 3px solid var(--foco); outline-offset: 2px; }
 
-/* Interruptores grandes (checkbox con texto). */
+/* Nivel: tres botones grandes (radios); el elegido, en rojo. */
+.niveles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.niveles legend {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px; width: 100%;
+  margin-bottom: 14px; font-size: 0.8125rem;
+}
+.niveles legend span:first-child { font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.niveles label { position: relative; }
+.niveles label span {
+  display: grid; place-content: center; text-align: center; min-height: 68px; padding: 6px 2px;
+  border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px;
+  font-size: 0.75rem; font-weight: 400;
+}
+.niveles b { display: block; margin-bottom: 4px; font-family: var(--letra-titular); font-weight: 400; font-size: 24px; line-height: 1; }
+.niveles label input:checked + span { background: var(--acento-relleno); border-color: var(--acento-relleno); color: var(--sobre-acento); }
+
+/* Interruptores (switch): Zurdo y Reacción. */
+.interruptores { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .interruptor {
-  display: flex; align-items: center; gap: 14px;
-  min-height: 64px; padding: 8px 12px;
-  border: 1px solid var(--linea); border-radius: 14px;
-  cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  min-height: 56px; padding: 0 14px; cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px; background: rgba(255, 255, 255, 0.03);
+  font-size: 0.9375rem; font-weight: 600;
 }
-.interruptor input { width: 28px; height: 28px; flex: none; }
-.interruptor span { display: grid; font-size: 1.15rem; font-weight: 600; }
-.interruptor small { font-size: 0.85rem; font-weight: 400; color: var(--suave); }
+.interruptor input {
+  appearance: none; -webkit-appearance: none; flex: none; position: relative; cursor: pointer;
+  width: 40px; height: 24px; min-height: 0; padding: 0; margin: 0;
+  border: 0; border-radius: 12px; background: rgba(255, 255, 255, 0.18);
+  transition: background-color 0.15s;
+}
+.interruptor input::before {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
+  border-radius: 50%; background: #fff; transition: transform 0.15s;
+}
+.interruptor input:checked { background: var(--acento-relleno); }
+.interruptor input:checked::before { transform: translateX(16px); }
 
 .check { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; cursor: pointer; }
 .check input { width: 22px; height: 22px; margin-top: 2px; flex: none; }
@@ -212,46 +280,57 @@ details > summary::before {
   transition: transform 0.15s;
 }
 details[open] > summary::before { transform: rotate(90deg); }
+.avanzados > summary { min-height: 44px; margin: -6px 0; font-size: 0.875rem; color: var(--suave); }
 .avanzados[open] > summary { margin-bottom: 8px; }
 
-.resumen-config { margin: 0; text-align: center; color: var(--suave); font-size: 1.1rem; }
+.resumen-config { color: var(--suave); font-weight: 400; }
 
 /* ---------- Botones ---------- */
 .boton {
-  display: inline-flex; align-items: center; justify-content: center;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
   min-height: 48px; padding: 10px 20px;
   font: inherit; font-weight: 600; color: var(--sobre-acento);
-  border: 0; border-radius: 999px; cursor: pointer; text-align: center;
+  border: 1px solid var(--linea-chip); border-radius: 20px; cursor: pointer; text-align: center;
   transition: background-color 0.15s, transform 0.1s;
   background: var(--secundario);
 }
-.boton.principal, .boton.peligro { background: var(--acento-relleno); }
+.boton.principal, .boton.peligro { background: var(--acento-relleno); border-color: transparent; }
 .boton.principal:hover, .boton.peligro:hover { background: var(--acento-relleno-hover); }
 .boton.secundario:hover { background: var(--secundario-hover); }
 .boton:disabled { opacity: 0.5; cursor: not-allowed; }
 .boton:active:not(:disabled) { transform: scale(0.98); }
+.boton svg { width: 20px; height: 20px; flex: none; fill: currentColor; }
 .boton.enorme {
-  min-height: 76px; width: 100%; border-radius: 20px;
-  font-family: var(--letra-titular); font-weight: 400; font-size: 1.9rem;
-  text-transform: uppercase; letter-spacing: 0.04em;
+  min-height: 76px; width: 100%; border-radius: 22px;
+  font-family: var(--letra-titular); font-weight: 400; font-size: 1.5rem;
+  text-transform: uppercase; letter-spacing: 0.08em;
 }
-.boton.pequeno { min-height: 40px; padding: 6px 12px; font-size: 0.9rem; }
+.boton.pequeno { min-height: 40px; padding: 6px 14px; font-size: 0.875rem; }
 .acciones { display: flex; flex-wrap: wrap; gap: 10px; }
 .acciones .boton { flex: 1 1 140px; }
 label.boton { color: var(--sobre-acento); }
 input[type="file"].solo-lectores:focus-visible + *, label.boton:focus-within { outline: 3px solid var(--foco); }
 
+/* ---------- Entrenar ---------- */
+.config-opciones, .config-sesion { display: grid; gap: 14px; min-width: 0; }
+.config-tarjeta { display: grid; gap: 14px; padding: 16px; }
+.config-titulo, .resumen-grande { display: none; margin: 0; }
+.empezar {
+  min-height: 64px; width: 100%; gap: 12px;
+  font-family: var(--letra-titular); font-weight: 400; font-size: 26px; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.empezar svg { width: 22px; height: 22px; }
+.config-sesion .nota { margin: -4px 0 0; text-align: center; font-size: 0.75rem; }
+
 /* ---------- Sesión en curso ---------- */
-body.entrenando #config, body.entrenando #pestanas, body.entrenando .cabecera { display: none; }
+body.entrenando #vista-entrenar > :not(#pantalla), body.entrenando #pestanas { display: none; }
 body.entrenando main { padding: 0; max-width: none; }
 
 #pantalla {
+  position: relative; isolation: isolate; overflow: hidden;
   min-height: 100dvh;
-  display: grid;
-  grid-template-rows: auto 1fr auto auto auto auto;
-  align-items: center;
-  text-align: center;
-  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column;
+  padding: 20px var(--hueco) calc(20px + env(safe-area-inset-bottom));
   background: var(--fase-asalto);
   transition: background-color 0.2s;
 }
@@ -263,78 +342,104 @@ body.entrenando main { padding: 0; max-width: none; }
   background: var(--fase-reaccion); color: var(--fase-reaccion-texto);
   --foco: var(--fase-reaccion-texto); /* el foco claro no se vería sobre ámbar */
 }
+/* Fuera del asalto normal el fondo cambia de color: el rojo y el gris de texto pasan al color
+   del texto de la fase para mantener el contraste. */
+#pantalla:not([data-fase="asalto"]) :is(.antetitulo, .acento, #despues, #anterior, .leyenda) { color: inherit; }
+#pantalla .marca-agua { top: auto; right: auto; left: -20px; bottom: 150px; font-size: 190px; opacity: 0.04; }
 
-.marcador {
-  display: flex; justify-content: space-between; gap: 12px;
-  font-size: clamp(1.3rem, 5vw, 2rem); font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.04em;
+.marcador { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+#asalto { font-size: 22px; letter-spacing: 0.04em; }
+.pastilla {
+  display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px;
+  border: 1px solid currentColor; border-radius: 17px;
+  font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
 }
-#fase {
-  padding: 2px 12px; border-radius: 999px;
-  border: 2px solid currentColor;
-}
+.pastilla::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--acento); }
+#pantalla:not([data-fase="asalto"]) .pastilla::before { background: currentColor; }
 
+.progreso { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; margin-top: 16px; }
+.progreso i { display: block; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+.progreso b { display: block; width: 0; height: 100%; background: var(--acento); }
+#pantalla:not([data-fase="asalto"]) .progreso b { background: currentColor; }
+#pantalla[data-fase="reaccion"] .progreso i { background: rgba(0, 0, 0, 0.15); }
+
+.reloj { flex: 1; display: grid; place-content: center; text-align: center; gap: 4px; padding: 12px 0; }
 #tiempo {
   /* Inter y no Anton: Anton no tiene cifras tabulares y el reloj bailaría cada segundo. */
-  font-size: min(36vw, 34vh);
-  font-weight: 600;
+  font-size: min(31vw, 22vh);
+  font-weight: 800;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.035em;
 }
+#despues { margin: 0; min-height: 1.4em; color: var(--suave); font-size: 0.8125rem; letter-spacing: 0.08em; text-transform: uppercase; }
 
-#combo {
-  margin: 0;
-  min-height: 2.4em;
-  font-family: var(--letra-titular);
-  font-size: clamp(2.2rem, 10vw, 5rem);
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.01em;
-  line-height: 1.05;
-  text-wrap: balance;
+/* Sin desenfoque: el fondo de la sesión es liso y el saturate() avivaría el rojo de los últimos 10 s. */
+.tarjeta.tarjeta-combo { display: grid; gap: 10px; padding: 18px 18px 16px; border-radius: 24px; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.tarjeta-combo .antetitulo { margin: 0; font-size: 0.75rem; }
+#combo { min-height: 2.2em; }
+.combo-texto, .pasos li {
+  margin: 0; font-family: var(--letra-titular); font-weight: 400; text-transform: uppercase;
+  line-height: 1.05; letter-spacing: 0.01em;
 }
-#anterior { margin: 8px 0 16px; min-height: 1.4em; font-size: clamp(1rem, 4vw, 1.4rem); opacity: 0.85; }
+.combo-texto { font-size: clamp(2.2rem, 10vw, 4rem); text-wrap: balance; }
+.pasos { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.pasos li { display: flex; align-items: center; gap: 12px; font-size: clamp(1.75rem, 8.7vw, 2.6rem); }
+/* Círculo numerado: relleno rojo = golpe, borde = defensa, borde discontinuo = pies. */
+.pasos i, .leyenda i {
+  flex: none; display: grid; place-items: center; border-radius: 50%;
+  font-family: var(--letra-texto); font-style: normal; font-size: 0.8125rem; font-weight: 800; letter-spacing: 0;
+}
+.pasos i { width: 28px; height: 28px; }
+.paso-golpe i { background: var(--acento-relleno); color: var(--sobre-acento); }
+.paso-defensa i { border: 1.5px solid currentColor; }
+.paso-movimiento i { border: 1.5px dashed var(--suave); color: var(--suave); }
+.pasos .paso-movimiento { color: var(--terciario); }
+#pantalla:not([data-fase="asalto"]) :is(.pasos, .leyenda) :is(.paso-movimiento, .paso-movimiento i) { color: inherit; border-color: currentColor; }
+#pantalla[data-fase="final"] .paso-golpe i { background: var(--texto); color: var(--fase-final); }
+.leyenda { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 4px 0 0; padding: 0; list-style: none; color: var(--suave); font-size: 0.75rem; }
+.leyenda[hidden] { display: none; }
+.leyenda li { display: inline-flex; align-items: center; gap: 6px; }
+.leyenda i { width: 10px; height: 10px; }
 
-.controles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+#anterior { margin: 12px 0 0; min-height: 1.4em; color: var(--suave); font-size: 0.8125rem; text-align: center; }
+
+.controles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+#pausa[aria-pressed="true"] .icono-pausa, #pausa[aria-pressed="false"] .icono-play { display: none; }
 #pantalla[data-fase="reaccion"] .boton.secundario { background: var(--fondo); }
 /* Parar se distingue también sobre el fondo rojo de los últimos 10 s. */
 #pantalla .boton.peligro { box-shadow: inset 0 0 0 3px var(--texto); }
+#pantalla[data-fase="asalto"] .boton.peligro { box-shadow: none; }
 /* Mismo color que el texto de la fase: se lee en todas. */
-.atajos { margin: 12px 0 0; color: inherit; }
+.atajos { margin: 12px 0 0; color: inherit; text-align: center; }
 @media (pointer: coarse) { .atajos { display: none; } }
 
-/* ---------- Barra inferior ---------- */
-/* Píldora flotante de cristal oscuro. */
+/* ---------- Barra de pestañas ---------- */
+/* Píldora flotante; la pestaña activa, píldora roja con icono y texto. */
 #pestanas {
   position: fixed; z-index: 10;
   left: 50%; transform: translateX(-50%);
-  bottom: calc(12px + env(safe-area-inset-bottom));
-  width: min(460px, calc(100% - 24px)); height: var(--alto-nav);
-  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: 0 6px;
-  background: var(--superficie);
-  border: 1px solid var(--linea); border-radius: 999px;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  width: min(460px, calc(100% - 32px)); height: var(--alto-nav);
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; align-items: center; padding: 0 6px;
+  background: var(--barra); border: 1px solid var(--borde-cristal); border-radius: 34px;
+  -webkit-backdrop-filter: var(--desenfoque); backdrop-filter: var(--desenfoque);
   box-shadow: 0 10px 30px var(--velo);
 }
-@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  #pestanas { background: var(--cristal); -webkit-backdrop-filter: var(--desenfoque); backdrop-filter: var(--desenfoque); }
-}
 #pestanas a {
-  position: relative; display: grid; place-items: center; align-content: center; gap: 2px;
-  color: var(--suave); text-decoration: none; font-size: 0.78rem; font-weight: 600;
-  border-radius: 999px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  height: 56px; border-radius: 28px;
+  color: var(--suave); text-decoration: none; font-size: 0.75rem; font-weight: 600;
+  transition: background-color 0.15s, color 0.15s;
 }
-#pestanas a[aria-current="page"] { color: var(--texto); }
-#pestanas a[aria-current="page"] svg { stroke: var(--acento); }
-#pestanas a[aria-current="page"]::after {
-  content: ""; position: absolute; bottom: 6px; width: 16px; height: 2px;
-  border-radius: 2px; background: var(--acento);
-}
+#pestanas a:hover { color: var(--texto); }
+#pestanas a[aria-current="page"] { background: var(--acento-relleno); color: var(--sobre-acento); }
 #pestanas svg {
-  width: 26px; height: 26px; fill: none; stroke: currentColor;
-  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  width: 20px; height: 20px; fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
 }
 #pestanas a:focus-visible { outline-offset: -4px; }
+.marca { display: none; }
 
 /* ---------- Historial ---------- */
 .cifras { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 16px; }
@@ -404,11 +509,6 @@ body.entrenando main { padding: 0; max-width: none; }
 .col-detalle > p { margin: 0; }
 .lista-sesiones a[aria-current="true"] { border-color: var(--acento); box-shadow: inset 3px 0 0 var(--acento); }
 
-/* Entrenar: la configuración y la tarjeta de sesión, apiladas en móvil. */
-.config-opciones, .config-sesion { display: grid; gap: 14px; min-width: 0; }
-.config-titulo { display: none; margin: 0; font-size: 2rem; }
-
-.marca { display: none; }
 
 /* ---------- Perfil ---------- */
 .lista-editable { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
@@ -439,8 +539,14 @@ dialog {
 dialog::backdrop { background: var(--velo); }
 .chips { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
 .chips legend { grid-column: 1 / -1; }
-.chip span { min-height: 52px; font-size: 1.2rem; }
-.chip small { font-size: 0.7rem; }
+.chip { position: relative; }
+.chip span {
+  display: grid; place-items: center; text-align: center; min-height: 52px; padding: 4px 2px;
+  border: 1px solid var(--linea-chip); border-radius: 16px; font-size: 1.2rem; font-weight: 600;
+}
+.chip small { font-size: 0.7rem; font-weight: 400; color: var(--suave); }
+.chip input:checked + span { background: var(--chip-activo); border-color: var(--chip-activo); color: var(--sobre-chip-activo); }
+.chip input:checked + span small { color: inherit; }
 .grupo-combos { margin-top: 8px; }
 .grupo-combos legend { font-weight: 600; }
 .costosas { margin: 0; }
@@ -479,55 +585,72 @@ dialog::backdrop { background: var(--velo); }
 }
 .maniqui-foto.activa { opacity: 1; }
 
+
 /* ---------- Escritorio (≥ 1024 px) ---------- */
 /* Barra lateral izquierda en vez de la píldora y contenido con ancho máximo centrado. */
 @media (min-width: 1024px) {
-  :root { --ancho-lateral: 232px; }
+  :root { --ancho-lateral: 232px; --hueco: 48px; }
 
   #pestanas {
     left: 0; top: 0; bottom: 0; transform: none;
     width: var(--ancho-lateral); height: auto;
     grid-auto-flow: row; grid-auto-rows: max-content; grid-auto-columns: auto;
-    align-content: start; gap: 6px; padding: 28px 16px;
-    border: 0; border-right: 1px solid var(--linea); border-radius: 0; box-shadow: none;
+    align-content: start; align-items: stretch; gap: 6px; padding: 28px 16px;
+    background: var(--fondo); border: 0; border-right: 1px solid var(--linea); border-radius: 0; box-shadow: none;
   }
-  #pestanas .marca {
-    display: block; margin: 0 12px 28px;
-    font-family: var(--letra-titular); text-transform: uppercase; font-size: 2.4rem; line-height: 1;
-  }
+  #pestanas .marca { display: flex; margin: 0 12px 28px; font-size: 28px; }
   #pestanas a {
-    grid-auto-flow: column; justify-content: start; justify-items: start; gap: 14px;
-    min-height: 52px; padding: 0 16px; border-radius: 14px; font-size: 1rem;
+    flex-direction: row; justify-content: flex-start; gap: 14px;
+    height: 52px; padding: 0 18px; border-radius: 26px; font-size: 0.9375rem;
   }
-  #pestanas a:hover { background: var(--superficie-hover); color: var(--texto); }
-  #pestanas a[aria-current="page"] { background: var(--superficie-hover); }
-  #pestanas a[aria-current="page"]::after { left: 0; top: 14px; bottom: 14px; width: 3px; height: auto; }
+  #pestanas a:hover:not([aria-current]) { background: var(--superficie-hover); }
 
   main {
     max-width: 1200px;
     margin-left: max(var(--ancho-lateral), calc((100vw - 1200px) / 2));
     margin-right: auto;
-    padding: 0 48px 48px;
+    padding: 0 var(--hueco) 48px;
   }
-  body.entrenando main { margin: 0; max-width: none; }
+  body.entrenando main { margin: 0; max-width: none; padding: 0; }
 
   .cabecera { padding-top: 48px; }
   h1 { font-size: 5rem; }
+  .marca-movil { display: none; }
+
+  /* Foto a la derecha a su tamaño (como mucho), fundida al negro por la izquierda y por abajo. */
+  .foto-cabecera { left: auto; right: calc(-1 * var(--hueco)); width: min(587px, 60%); height: 420px; }
+  .foto-cabecera::after {
+    background: linear-gradient(90deg, var(--fondo) 0%, rgba(10, 10, 10, 0) 45%),
+      linear-gradient(180deg, rgba(10, 10, 10, 0.3) 0%, rgba(10, 10, 10, 0) 30%, rgba(10, 10, 10, 0.2) 60%, var(--fondo) 100%);
+  }
+  .con-foto .cabecera { padding-top: 150px; min-height: 340px; }
+  .marca-agua.vertical { writing-mode: horizontal-tb; top: 36px; right: auto; left: -12px; font-size: 13rem; }
 
   /* Entrenar: opciones a la izquierda, sesión a la derecha. */
-  #config { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 32px; padding: 28px; }
+  #config { grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr); gap: 32px; align-items: start; }
+  .fila-chips { margin: 0; padding: 2px 0; flex-wrap: wrap; overflow: visible; }
+  .config-tarjeta { padding: 24px; gap: 18px; }
+  .niveles label span { min-height: 84px; font-size: 0.875rem; }
+  .niveles b { font-size: 32px; }
   .config-sesion {
-    align-self: start; position: sticky; top: 24px;
-    padding: 24px; border: 1px solid var(--linea); border-radius: var(--radio); background: var(--campo);
+    position: sticky; top: 24px; gap: 16px; padding: 28px;
+    background: var(--superficie); border: 1px solid var(--linea); border-radius: 22px;
   }
-  .config-titulo { display: block; }
-  .resumen-config { text-align: left; }
+  .config-titulo { display: block; font-size: 2.25rem; }
+  .resumen-grande { display: block; margin-top: -6px; color: var(--suave); font-size: 1.05rem; }
 
   /* Sesión: reloj y combinación centrados a pantalla completa. */
-  #pantalla { padding: 32px 48px; }
-  #pantalla > * { width: min(100%, 1100px); justify-self: center; }
-  #combo { font-size: clamp(3rem, 7vw, 7rem); }
-  #pantalla > .controles { width: min(100%, 720px); }
+  #pantalla { padding: 32px 48px; align-items: center; }
+  #pantalla > :not(.marca-agua) { width: min(100%, 820px); }
+  #pantalla .marca-agua { font-size: 26rem; left: -30px; bottom: 60px; }
+  #asalto { font-size: 30px; }
+  #tiempo { font-size: min(16vw, 30vh); }
+  #despues { font-size: 1rem; }
+  .tarjeta-combo { padding: 26px 28px 22px; }
+  .pasos li { font-size: clamp(2.6rem, 3.6vw, 3.4rem); gap: 16px; }
+  .pasos i { width: 36px; height: 36px; font-size: 1rem; }
+  .combo-texto { font-size: clamp(3rem, 5vw, 5rem); }
+  #anterior { font-size: 1rem; }
 
   /* Historial: resumen arriba a todo el ancho; lista y detalle en dos columnas. */
   .maestro-detalle { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: start; }
@@ -563,6 +686,7 @@ dialog::backdrop { background: var(--velo); }
   to { opacity: 1; transform: none; }
 }
 .vista > * { animation: entrada 0.28s ease-out both; }
+.vista > .marca-agua { animation: none; } /* la animación le pisaría la opacidad */
 .vista > :nth-child(2) { animation-delay: 60ms; }
 .vista > :nth-child(n+3) { animation-delay: 120ms; }
 /* La sesión no anima su entrada: tiene que estar lista al instante. */

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Boxeo</title>
-  <meta name="theme-color" content="#0b0b0b">
+  <meta name="theme-color" content="#0a0a0a">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,6 +13,7 @@
   <link rel="apple-touch-icon" href="iconos/apple-touch-icon.png">
   <link rel="preload" href="fuentes/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fuentes/anton-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fuentes/inter-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
@@ -20,59 +21,83 @@
 
   <main>
     <!-- ============ Entrenar ============ -->
-    <section id="vista-entrenar" class="vista" aria-labelledby="t-entrenar">
+    <section id="vista-entrenar" class="vista con-foto" aria-labelledby="t-entrenar">
+      <div class="foto-cabecera" aria-hidden="true">
+        <img src="imagenes/entrenar-cabecera.webp" alt="" width="587" height="887" fetchpriority="high">
+      </div>
+      <span class="marca-agua vertical" aria-hidden="true">Asalto</span>
+      <p class="marca-movil" aria-hidden="true">Boxeo</p>
       <header class="cabecera">
-        <span class="marca-agua" aria-hidden="true">Asalto</span>
-        <h1 id="t-entrenar" tabindex="-1">Sal a <span class="acento">entrenar</span></h1>
+        <p class="antetitulo">Sesión de hoy</p>
+        <h1 id="t-entrenar" tabindex="-1">Listo para<br><span class="acento">el asalto</span></h1>
       </header>
-      <form id="config" class="tarjeta formulario">
+      <form id="config" class="formulario">
         <div class="config-opciones">
-          <label class="campo">Preset
-            <select id="preset"></select>
-          </label>
-
-          <fieldset class="segmentado">
-            <legend>Nivel</legend>
-            <label><input type="radio" name="nivel" value="1"><span>1<small>Principiante</small></span></label>
-            <label><input type="radio" name="nivel" value="2"><span>2<small>Intermedio</small></span></label>
-            <label><input type="radio" name="nivel" value="3"><span>3<small>Avanzado</small></span></label>
+          <fieldset class="fila-chips" id="presets">
+            <legend class="solo-lectores">Preset</legend>
           </fieldset>
 
-          <label class="interruptor"><input type="checkbox" id="zurdo">
-            <span>Zurdo<small>Todo en espejo: derecha delante</small></span></label>
-          <label class="interruptor"><input type="checkbox" id="reaccion">
-            <span>Modo reacción<small>Señales al azar: esquiva, contra, sal…</small></span></label>
-
-          <details class="avanzados">
-            <summary>Ajustes avanzados</summary>
-            <div class="rejilla">
-              <label class="campo">Asaltos <input id="asaltos" type="number" inputmode="numeric" min="1" max="20"></label>
-              <label class="campo">Asalto (s) <input id="duracion" type="number" inputmode="numeric" min="20" max="600" step="10"></label>
-              <label class="campo">Descanso (s) <input id="descanso" type="number" inputmode="numeric" min="0" max="300" step="5"></label>
-              <label class="campo">Pausa entre combos (s) <input id="pausa-combos" type="number" inputmode="decimal" min="0" max="30" step="0.5"></label>
+          <div class="tarjeta cristal config-tarjeta">
+            <fieldset class="niveles">
+              <legend><span>Nivel</span><span id="resumen-config" class="resumen-config"></span></legend>
+              <label><input type="radio" name="nivel" value="1"><span><b>1</b>Principiante</span></label>
+              <label><input type="radio" name="nivel" value="2"><span><b>2</b>Intermedio</span></label>
+              <label><input type="radio" name="nivel" value="3"><span><b>3</b>Avanzado</span></label>
+            </fieldset>
+            <hr>
+            <div class="interruptores">
+              <label class="interruptor"><span>Zurdo<small class="solo-lectores">: todo en espejo, derecha delante</small></span>
+                <input type="checkbox" role="switch" id="zurdo"></label>
+              <label class="interruptor"><span>Reacción<small class="solo-lectores">: señales al azar, esquiva, contra, sal…</small></span>
+                <input type="checkbox" role="switch" id="reaccion"></label>
             </div>
-          </details>
+            <details class="avanzados" id="avanzados">
+              <summary>Ajustes avanzados</summary>
+              <div class="rejilla">
+                <label class="campo">Asaltos <input id="asaltos" type="number" inputmode="numeric" min="1" max="20"></label>
+                <label class="campo">Asalto (s) <input id="duracion" type="number" inputmode="numeric" min="20" max="600" step="10"></label>
+                <label class="campo">Descanso (s) <input id="descanso" type="number" inputmode="numeric" min="0" max="300" step="5"></label>
+                <label class="campo">Pausa entre combos (s) <input id="pausa-combos" type="number" inputmode="decimal" min="0" max="30" step="0.5"></label>
+              </div>
+            </details>
+          </div>
         </div>
 
         <div class="config-sesion">
           <p class="titular config-titulo" aria-hidden="true">Tu <span class="acento">sesión</span></p>
-          <p id="resumen-config" class="resumen-config"></p>
-          <button id="empezar" type="submit" class="boton principal enorme">Empezar</button>
+          <p class="resumen-grande" id="resumen-grande" aria-hidden="true"></p>
+          <button id="empezar" type="submit" class="boton principal empezar">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>Empezar</button>
           <p id="info-voz" class="nota"></p>
         </div>
       </form>
 
       <section id="pantalla" data-fase="asalto" hidden aria-label="Sesión en curso">
+        <span id="marca-asalto" class="marca-agua" aria-hidden="true">R1</span>
         <div class="marcador">
-          <span id="asalto">Asalto 1 / 1</span>
-          <span id="fase">Asalto</span>
+          <span id="asalto" class="titular">Asalto 1/1</span>
+          <span id="fase" class="pastilla">Asalto</span>
         </div>
-        <div id="tiempo" role="timer" aria-live="off">0:00</div>
-        <p id="combo"></p>
+        <div id="progreso" class="progreso" aria-hidden="true"></div>
+        <div class="reloj">
+          <div id="tiempo" role="timer" aria-live="off">0:00</div>
+          <p id="despues"></p>
+        </div>
+        <div class="tarjeta cristal tarjeta-combo">
+          <p class="antetitulo">Combinación</p>
+          <div id="combo"></div>
+          <ul class="leyenda" id="leyenda" hidden>
+            <li class="paso-golpe"><i aria-hidden="true"></i>Golpe</li>
+            <li class="paso-defensa"><i aria-hidden="true"></i>Defensa</li>
+            <li class="paso-movimiento"><i aria-hidden="true"></i>Pies</li>
+          </ul>
+        </div>
         <p id="anterior"></p>
         <div class="controles">
-          <button id="pausa" type="button" class="boton secundario enorme" aria-pressed="false">Pausa</button>
-          <button id="parar" type="button" class="boton peligro enorme">Parar</button>
+          <button id="pausa" type="button" class="boton secundario enorme" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect class="icono-pausa" x="6" y="4.5" width="4" height="15" rx="1"/><rect class="icono-pausa" x="14" y="4.5" width="4" height="15" rx="1"/><path class="icono-play" d="M7 4.5v15l13-7.5z"/></svg><span>Pausa</span></button>
+          <button id="parar" type="button" class="boton peligro enorme">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>Parar</button>
         </div>
         <p class="nota atajos">Teclado: espacio = pausa · Esc = parar</p>
       </section>
@@ -98,9 +123,9 @@
   </main>
 
   <nav id="pestanas" aria-label="Secciones">
-    <span class="marca" aria-hidden="true">Box<span class="acento">eo</span></span>
+    <span class="marca" aria-hidden="true">Boxeo</span>
     <a href="#entrenar">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 13V9M9 2h6M12 2v3"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2h5"/></svg>
       <span>Entrenar</span>
     </a>
     <a href="#historial">
@@ -108,7 +133,7 @@
       <span>Historial</span>
     </a>
     <a href="#perfil">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
       <span>Perfil</span>
     </a>
   </nav>

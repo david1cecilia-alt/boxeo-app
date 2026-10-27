@@ -1,7 +1,7 @@
 {
   "presets": [
-    {"id": "amateur", "nombre": "Amateur 3×3 min", "asaltos": 3, "duracion_asalto": 180, "descanso": 60},
-    {"id": "prueba",  "nombre": "Prueba rápida 2×30 s", "asaltos": 2, "duracion_asalto": 30, "descanso": 10}
+    {"id": "amateur", "nombre": "Amateur 3×3", "asaltos": 3, "duracion_asalto": 180, "descanso": 60},
+    {"id": "prueba",  "nombre": "Prueba 2×30 s", "asaltos": 2, "duracion_asalto": 30, "descanso": 10}
   ],
   "reacciones": [
     {"id": "esquiva", "texto": "¡esquiva!"},

@@ -2,6 +2,7 @@
 // cambiar cada campo. Los pesos sustituyen a los de data/perfil.json en el generador.
 import { PESOS } from "../ajustes.js";
 import { datos } from "../motor/datos.js";
+import { NO_SE } from "../almacen.js";
 import { $, $$, anunciar, esc, hoyIso } from "./dom.js";
 import { BASICOS, ESTILO, PESOS_TEXTO, RANGO_PESO } from "./opciones.js";
 
@@ -11,11 +12,37 @@ const MEDIDAS = {
   alcance_cm: ["Alcance", "cm", 100, 250],
 };
 
-function selector(grupo, campo, { etiqueta, opciones }, actual) {
-  return `<label class="campo">${etiqueta}
-    <select data-grupo="${grupo}" data-campo="${campo}">
-      ${opciones.map(([v, t]) => `<option value="${v}" ${String(actual) === v ? "selected" : ""}>${t}</option>`).join("")}
-    </select></label>`;
+// Opciones cerradas como chips (radios); "No lo sé" va la última.
+function chips(grupo, campo, { etiqueta, opciones }, actual) {
+  const orden = [...opciones.filter(([v]) => v !== NO_SE), ...opciones.filter(([v]) => v === NO_SE)];
+  return `<fieldset class="grupo-chips"><legend>${etiqueta}</legend><div class="chips-fila">
+    ${orden.map(([v, texto]) => `<label class="chip-opcion"><input type="radio" name="${grupo}-${campo}" value="${v}"
+      data-grupo="${grupo}" data-campo="${campo}" ${String(actual ?? NO_SE) === v ? "checked" : ""}><span>${esc(texto)}</span></label>`).join("")}
+  </div></fieldset>`;
+}
+
+const DISTANCIA = { corta: "Corta distancia", media: "Media distancia", larga: "Larga distancia" };
+const DETALLE_ESTILO = { golpe_favorito: "Golpe favorito", presion: "Bajo presión", defensa: "Defensa", iniciativa: "Iniciativa", cardio: "Cardio" };
+const pesoTexto = (n) => `×${n.toLocaleString("es-ES", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
+
+// Resumen provisional del estilo hecho SOLO con las respuestas del usuario: no se clasifica
+// (boxer, puncher…) porque eso es criterio de entrenador.
+function resumenEstilo(estilo) {
+  const respondido = (c) => estilo[c] && estilo[c] !== NO_SE;
+  const texto = (c) => ESTILO[c].opciones.find(([v]) => v === estilo[c])?.[1] ?? "";
+  const titulo = [respondido("distancia") && DISTANCIA[estilo.distancia], respondido("volumen") && texto("volumen")].filter(Boolean);
+  const detalle = Object.entries(DETALLE_ESTILO).filter(([c]) => respondido(c))
+    .map(([c, nombre]) => `${nombre}: ${texto(c).toLowerCase()}`);
+  if (!titulo.length && !detalle.length) {
+    return { titulo: ["Por definir"], texto: "Responde a las preguntas de abajo y aquí verás el resumen de tu estilo." };
+  }
+  if (!titulo.length) titulo.push(texto("golpe_favorito") || "Por definir");
+  return { titulo, texto: `${detalle.length ? `${detalle.join(" · ")}. ` : ""}Revísalo en 2–3 meses.` };
+}
+
+function contexto({ guardia, nivel }) {
+  const g = { ortodoxa: "Ortodoxo", zurda: "Zurdo" }[guardia] ?? "Guardia por definir";
+  return nivel && nivel !== NO_SE ? `${g} · nivel ${nivel}` : g;
 }
 
 export function iniciarPerfil({ almacen }) {
@@ -29,18 +56,71 @@ export function iniciarPerfil({ almacen }) {
     cambio(p);
     almacen.guardarPerfil(p);
     anunciar("Guardado");
-    $("#guardado-perfil").textContent = almacen.persistente ? "Guardado" : "Guardado solo en memoria";
+    $("#guardado-perfil").textContent = almacen.persistente ? "Guardado." : "Guardado solo en memoria.";
+    pintarResumen();
+  }
+
+  // Antetítulo (guardia y nivel) y tarjeta de estilo: cambian al responder sin repintar todo.
+  function pintarResumen() {
+    const p = almacen.datos.perfil;
+    $("#antetitulo-perfil").textContent = contexto(p.basicos);
+    const r = resumenEstilo(p.estilo);
+    $("#estilo-titulo").innerHTML = r.titulo.map(esc).join("<br>");
+    $("#estilo-texto").textContent = r.texto;
   }
 
   function pintar() {
     const p = almacen.datos.perfil;
     const pesos = p.pesos ?? datos().perfil.pesos;
     raiz.innerHTML = `
-      <p class="nota">Todo lo de esta pestaña se guarda solo en este navegador. <span id="guardado-perfil" aria-hidden="true"></span></p>
+      <section class="tarjeta estilo-provisional" aria-labelledby="t-estilo-provisional" aria-live="polite">
+        <h2 id="t-estilo-provisional" class="antetitulo">Estilo provisional</h2>
+        <p class="titular" id="estilo-titulo"></p>
+        <p id="estilo-texto"></p>
+      </section>
+
+      <form class="grupos-estilo" id="f-estilo" aria-label="Tu estilo">
+        ${Object.entries(ESTILO).map(([c, def]) => chips("estilo", c, def, p.estilo[c])).join("")}
+      </form>
+
+      <section class="tarjeta" aria-labelledby="t-focos">
+        <div class="cabeza-tarjeta">
+          <h2 id="t-focos" tabindex="-1">Focos de trabajo</h2>
+          <button type="button" class="boton pequeno" id="anadir-foco" aria-controls="f-foco"
+            aria-expanded="${!p.focos.length}">+ Añadir</button>
+        </div>
+        ${p.focos.length ? `<ul class="focos">${p.focos.map((f, i) => `
+          <li><span>${esc(f)}</span>
+            <button type="button" class="quitar" data-quitar-foco="${i}" aria-label="Quitar foco: ${esc(f)}">×</button></li>`).join("")}
+          </ul>` : `<p class="nota">Aún no hay focos. Añade lo que quieras trabajar.</p>`}
+        <form id="f-foco" class="en-linea" ${p.focos.length ? "hidden" : ""}>
+          <label class="campo">Nuevo foco <input name="foco" maxlength="120" required
+            placeholder="p. ej. lanzar 2–3 golpes en vez de 1–2"></label>
+          <button type="submit" class="boton secundario">Añadir</button>
+        </form>
+      </section>
+
+      <form class="tarjeta formulario" id="f-pesos" aria-labelledby="t-pesos">
+        <div>
+          <h2 id="t-pesos" tabindex="-1">Qué te dicta la app</h2>
+          <p class="nota">Más a la derecha, más a menudo. 1 = neutro.
+            ${p.pesos ? "Estás usando tus valores." : "Ahora mismo, los valores por defecto."}</p>
+        </div>
+        ${PESOS.map((c) => `
+          <div class="deslizador">
+            <label for="peso-${c}">${PESOS_TEXTO[c].etiqueta}</label>
+            <output for="peso-${c}" id="valor-${c}">${pesoTexto(pesos[c])}</output>
+            <input type="range" id="peso-${c}" data-peso="${c}" min="${RANGO_PESO.min}" max="${RANGO_PESO.max}"
+              step="${RANGO_PESO.paso}" value="${pesos[c]}" aria-describedby="ayuda-${c}">
+            <p class="solo-lectores" id="ayuda-${c}">${PESOS_TEXTO[c].ayuda}</p>
+          </div>`).join("")}
+        <button type="button" id="pesos-defecto" class="boton pequeno" ${p.pesos ? "" : "disabled"}>
+          Volver a los valores por defecto</button>
+      </form>
 
       <form class="tarjeta formulario" id="f-basicos" aria-labelledby="t-basicos">
-        <h2 id="t-basicos">Básicos</h2>
-        ${Object.entries(BASICOS).map(([c, def]) => selector("basicos", c, def, p.basicos[c])).join("")}
+        <h2 id="t-basicos">Tus datos</h2>
+        ${Object.entries(BASICOS).map(([c, def]) => chips("basicos", c, def, p.basicos[c])).join("")}
         <label class="campo">Empecé a boxear
           <input type="date" data-grupo="basicos" data-campo="inicio" value="${esc(p.basicos.inicio ?? "")}" max="${hoyIso()}"></label>
         <div class="rejilla">
@@ -49,40 +129,6 @@ export function iniciarPerfil({ almacen }) {
               <input type="number" inputmode="decimal" min="${min}" max="${max}" step="0.5"
                 data-grupo="basicos" data-campo="${c}" data-numero value="${p.basicos[c] ?? ""}"></label>`).join("")}
         </div>
-      </form>
-
-      <form class="tarjeta formulario" id="f-estilo" aria-labelledby="t-estilo">
-        <h2 id="t-estilo">Estilo</h2>
-        ${Object.entries(ESTILO).map(([c, def]) => selector("estilo", c, def, p.estilo[c])).join("")}
-      </form>
-
-      <section class="tarjeta" aria-labelledby="t-focos">
-        <h2 id="t-focos" tabindex="-1">Focos de trabajo</h2>
-        ${p.focos.length ? `<ul class="lista-editable">${p.focos.map((f, i) => `
-          <li><span>${esc(f)}</span>
-            <button type="button" class="boton pequeno" data-quitar-foco="${i}" aria-label="Quitar foco: ${esc(f)}">Quitar</button></li>`).join("")}
-          </ul>` : `<p class="nota">Aún no hay focos. Añade lo que quieras trabajar.</p>`}
-        <form id="f-foco" class="en-linea">
-          <label class="campo">Nuevo foco <input name="foco" maxlength="120" required
-            placeholder="p. ej. lanzar 2–3 golpes en vez de 1–2"></label>
-          <button type="submit" class="boton secundario">Añadir</button>
-        </form>
-      </section>
-
-      <form class="tarjeta formulario" id="f-pesos" aria-labelledby="t-pesos">
-        <h2 id="t-pesos" tabindex="-1">Ajustes del generador</h2>
-        <p class="nota">Cambian cuántas veces sale cada tipo de combinación. 1 = neutro; más de 1, más a menudo;
-          menos de 1, menos. ${p.pesos ? "Estás usando tus valores." : "Ahora mismo, los valores por defecto."}</p>
-        ${PESOS.map((c) => `
-          <div class="deslizador">
-            <label for="peso-${c}">${PESOS_TEXTO[c].etiqueta}</label>
-            <output for="peso-${c}" id="valor-${c}">×${pesos[c].toFixed(1)}</output>
-            <input type="range" id="peso-${c}" data-peso="${c}" min="${RANGO_PESO.min}" max="${RANGO_PESO.max}"
-              step="${RANGO_PESO.paso}" value="${pesos[c]}" aria-describedby="ayuda-${c}">
-            <p class="nota" id="ayuda-${c}">${PESOS_TEXTO[c].ayuda}</p>
-          </div>`).join("")}
-        <button type="button" id="pesos-defecto" class="boton secundario" ${p.pesos ? "" : "disabled"}>
-          Volver a los valores por defecto</button>
       </form>
 
       <section class="tarjeta" aria-labelledby="t-notas">
@@ -102,7 +148,10 @@ export function iniciarPerfil({ almacen }) {
         <h2 id="t-revisar">Revisar con el entrenador</h2>
         <p class="nota">Puntos del motor marcados como dudosos. Lo que apuntes aquí es solo para ti: no cambia el motor.</p>
         <div id="lista-revisar"><p class="nota">Cargando…</p></div>
-      </section>`;
+      </section>
+
+      <p class="nota pie-perfil">Tus datos se guardan solo en este dispositivo. <span id="guardado-perfil"></span></p>`;
+    pintarResumen();
     conectar();
     pintarRevisar();
   }
@@ -123,13 +172,19 @@ export function iniciarPerfil({ almacen }) {
       });
     }
 
+    $("#anadir-foco").addEventListener("click", (e) => {
+      const formulario = $("#f-foco");
+      formulario.hidden = !formulario.hidden;
+      e.currentTarget.setAttribute("aria-expanded", String(!formulario.hidden));
+      if (!formulario.hidden) $("#f-foco input").focus();
+    });
     $("#f-foco").addEventListener("submit", (e) => {
       e.preventDefault();
       const texto = e.target.foco.value.trim();
       if (!texto) return;
       guardar((p) => p.focos.push(texto));
       pintar();
-      $("#f-foco input").focus();
+      $("#anadir-foco").focus();
     });
     for (const b of $$("[data-quitar-foco]", raiz)) {
       b.addEventListener("click", () => {
@@ -140,7 +195,7 @@ export function iniciarPerfil({ almacen }) {
     }
 
     for (const r of $$("[data-peso]", raiz)) {
-      r.addEventListener("input", () => ($(`#valor-${r.dataset.peso}`).textContent = `×${Number(r.value).toFixed(1)}`));
+      r.addEventListener("input", () => ($(`#valor-${r.dataset.peso}`).textContent = pesoTexto(Number(r.value))));
       r.addEventListener("change", () => {
         guardar((p) => (p.pesos = Object.fromEntries(PESOS.map((c) => [c, Number($(`#peso-${c}`).value)]))));
         $("#pesos-defecto").disabled = false;

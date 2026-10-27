@@ -1,7 +1,8 @@
 // Contraste WCAG de los colores de estilos.css: texto AA (4,5:1) y componentes (3:1).
 // Los tokens translúcidos se componen sobre lo que tienen debajo: el cristal y los botones
-// secundarios, sobre el fondo negro; la barra flotante, sobre el peor caso posible, blanco
-// puro (una foto clara detrás), así vale con o sin backdrop-filter.
+// secundarios, sobre el fondo negro; la pastilla de RPE y las barras del gráfico, sobre su
+// tarjeta; la barra flotante, sobre el peor caso posible, blanco puro (una foto clara detrás),
+// así vale con o sin backdrop-filter.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -16,13 +17,16 @@ const tokens = Object.fromEntries(
 );
 
 const BLANCO = [255, 255, 255];
-const SOBRE_FONDO = new Set(["cristal", "secundario", "secundario-hover"]);
+const DEBAJO = {
+  cristal: "fondo", secundario: "fondo", "secundario-hover": "fondo",
+  "acento-tenue": "superficie", "serie-barra": "superficie",
+};
 
-// [r, g, b] de 0 a 255; los rgba se componen sobre `debajo` (o sobre el fondo si van siempre encima).
+// [r, g, b] de 0 a 255; los rgba se componen sobre `debajo` (o sobre lo que llevan siempre debajo).
 function rgb(c, debajo = BLANCO) {
   const valor = c.startsWith("#") || c.startsWith("rgba") ? c : tokens[c];
   if (valor.startsWith("#")) return [1, 3, 5].map((i) => parseInt(valor.slice(i, i + 2), 16));
-  if (SOBRE_FONDO.has(c)) debajo = rgb("fondo");
+  if (DEBAJO[c]) debajo = rgb(DEBAJO[c]);
   const [r, g, b, a] = valor.slice(5, -1).split(",").map(Number);
   return [r, g, b].map((x, i) => x * a + debajo[i] * (1 - a));
 }
@@ -53,6 +57,9 @@ const TEXTO = [
   ["fase-final", "texto"], // número del golpe en los últimos 10 s (círculo invertido)
   ["fase-reaccion-texto", "fase-reaccion"], ["sobre-acento", "fondo"], // botón secundario en reacción
   ["aviso", "aviso-fondo"], ["ok", "ok-fondo"],
+  // Historial y perfil
+  ["sobre-acento", "acento-relleno"], // cifra destacada y tarjeta de estilo
+  ["acento", "acento-tenue"], ["terciario", "superficie"], ["terciario", "secundario"], // RPE, gráfico
 ];
 
 const COMPONENTES = [
@@ -64,7 +71,7 @@ const COMPONENTES = [
   ["acento-relleno", "cristal"], ["acento-relleno", "fondo"], // nivel elegido, interruptor encendido
   ["chip-activo", "fondo"], ["chip-activo", "cristal"], // chip seleccionado
   ["acento", "fondo"], // barra de progreso de los asaltos
-  ["serie-asaltos", "superficie"], ["serie-rpe", "superficie"],
+  ["serie-asaltos", "superficie"], ["serie-rpe", "superficie"], ["serie-barra", "superficie"],
 ];
 
 test("los tokens existen", () => {

@@ -3,13 +3,28 @@
 // Maestro-detalle: en PC la lista y el detalle van en dos columnas; en móvil el CSS muestra
 // solo la lista o, si hay una sesión elegida (#historial/<clave>), solo su detalle.
 import { ErrorAlmacen } from "../almacen.js";
-import { $, anunciar, esc, fechaLarga, hoyIso, minutos } from "./dom.js";
+import { datos } from "../motor/datos.js";
+import { $, aFecha, anunciar, esc, fechaLarga, hoyIso, minutos } from "./dom.js";
 import { activarGrafico, graficoSemanas } from "./grafico.js";
 import { SENSACION } from "./opciones.js";
 import { porSemana, totales } from "./resumen.js";
 
+const MES = new Intl.DateTimeFormat("es-ES", { month: "short" });
+const MES_LARGO = new Intl.DateTimeFormat("es-ES", { month: "long" });
+const mesYAno = (d) => `${MES_LARGO.format(d)} ${d.getFullYear()}`; // "octubre 2026", sin el "de"
+const fmt = (n) => n.toLocaleString("es-ES", { maximumFractionDigits: 1 });
+const plural = (n, una, varias) => `${n} ${n === 1 ? una : varias}`;
+
+// Nombre del preset con el que se hizo la sesión (por su asalto y descanso), o "Personalizado".
+function nombrePreset(s) {
+  const p = datos().presets.presets.find((x) => x.duracion_asalto === s.duracion_asalto && x.descanso === s.descanso);
+  return p?.nombre ?? "Personalizado";
+}
+
 export function iniciarHistorial({ almacen, historial, valoracion }) {
   const raiz = $("#historial-contenido");
+  const mesActual = mesYAno(new Date());
+  $("#antetitulo-historial").textContent = mesActual;
 
   async function pintar(clave = "") {
     let sesiones;
@@ -20,23 +35,22 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
       return;
     }
     const v = almacen.datos.valoraciones;
-    const t = totales(sesiones);
+    const { mes } = totales(sesiones, v);
     const semanas = porSemana(sesiones, v);
     raiz.classList.toggle("con-detalle", Boolean(clave));
     raiz.innerHTML = `
-      <section class="tarjeta resumen-historial" aria-labelledby="t-resumen">
-        <h2 id="t-resumen">Resumen</h2>
+      <section class="resumen-historial" aria-label="Resumen de ${esc(mesActual)}">
         <dl class="cifras">
-          ${[["Esta semana", t.semana], ["Este mes", t.mes]].map(([titulo, x]) => `<div><dt>${titulo}</dt><dd>
-            <span><strong>${x.sesiones}</strong> ${x.sesiones === 1 ? "sesión" : "sesiones"}</span>
-            <span><strong>${x.asaltos}</strong> ${x.asaltos === 1 ? "asalto" : "asaltos"}</span></dd></div>`).join("")}
+          <div class="destacada"><dt>sesiones / mes</dt><dd>${mes.sesiones}</dd></div>
+          <div><dt>asaltos / mes</dt><dd>${mes.asaltos}</dd></div>
+          <div><dt>RPE medio</dt><dd>${mes.rpe == null ? "–" : `${fmt(mes.rpe)}<small>/10</small>`}</dd></div>
         </dl>
         ${graficoSemanas(semanas)}
       </section>
 
       <div class="maestro-detalle">
       <div class="col-lista">
-      <section class="tarjeta" aria-labelledby="t-sesiones">
+      <section class="sesiones" aria-labelledby="t-sesiones">
         <h2 id="t-sesiones">Sesiones</h2>
         ${sesiones.length ? `<ul class="lista-sesiones">${sesiones.map((s) => fila(s, v[s.clave], clave)).join("")}</ul>`
           : `<p class="nota">Aún no hay sesiones. Las que termines aparecerán aquí.</p>`}
@@ -64,12 +78,22 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
     if (clave) await detalle(sesiones.find((x) => x.clave === clave), clave);
   }
 
+  // Bloque de fecha, preset y nivel, asaltos y combinaciones, y una pastilla con el RPE.
   function fila(s, v, elegida) {
-    const esfuerzo = v?.rpe != null ? `RPE ${v.rpe}` : "Sin valorar";
+    const fecha = aFecha(s.fecha);
     const actual = s.clave === elegida ? ' aria-current="true"' : "";
+    const detalle = [plural(s.asaltos, "asalto", "asaltos"), plural(s.num_combinaciones ?? 0, "combinación", "combinaciones"),
+      s.modo_reaccion ? "reacción" : ""].filter(Boolean).join(" · ");
+    const rpe = v?.rpe != null ? `<span class="rpe">RPE ${v.rpe}</span>`
+      : `<span class="rpe sin-valorar">RPE <span aria-hidden="true">–</span><span class="solo-lectores">sin valorar</span></span>`;
     return `<li><a href="#historial/${encodeURIComponent(s.clave)}"${actual}>
-      <span class="fecha">${esc(fechaLarga(s.fecha))}</span>
-      <span class="detalle">Nivel ${s.nivel} · ${s.asaltos} ${s.asaltos === 1 ? "asalto" : "asaltos"} · ${esfuerzo}</span>
+      <span class="bloque-fecha" aria-hidden="true"><b>${fecha.getDate()}</b>${esc(MES.format(fecha).replace(".", ""))}</span>
+      <span class="texto-sesion">
+        <span class="solo-lectores">${esc(fechaLarga(s.fecha))}:</span>
+        <span class="titulo-sesion">${esc(nombrePreset(s))} · nivel ${s.nivel}</span>
+        <span class="detalle">${esc(detalle)}</span>
+      </span>
+      ${rpe}
     </a></li>`;
   }
 

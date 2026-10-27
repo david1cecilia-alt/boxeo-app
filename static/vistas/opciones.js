@@ -46,7 +46,7 @@ export const ESTILO = {
 
 export const PESOS_TEXTO = {
   termina_en_gancho: {
-    etiqueta: "Termina en gancho",
+    etiqueta: "Acabar en gancho",
     ayuda: "Más combinaciones cuyo último golpe es un gancho (aunque después venga una salida).",
   },
   bloquear_y_devolver: {
@@ -54,7 +54,7 @@ export const PESOS_TEXTO = {
     ayuda: "Más combinaciones con «cúbrete» seguido de un golpe.",
   },
   entrada_con_jab: {
-    etiqueta: "Entrada con jab",
+    etiqueta: "Entrar con el jab",
     ayuda: "Más combinaciones que empiezan con jab.",
   },
 };

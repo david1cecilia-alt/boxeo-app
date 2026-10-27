@@ -18,11 +18,12 @@ test("la semana empieza el lunes", () => {
   assert.deepEqual(lunes(new Date(2026, 9, 25, 23, 59)), new Date(2026, 9, 19));
 });
 
-test("totales de esta semana y de este mes", () => {
-  assert.deepEqual(totales(sesiones, HOY), {
-    semana: { sesiones: 2, asaltos: 5 },
-    mes: { sesiones: 3, asaltos: 9 },
+test("totales de esta semana y de este mes, con el RPE medio de las valoradas", () => {
+  assert.deepEqual(totales(sesiones, valoraciones, HOY), {
+    semana: { sesiones: 2, asaltos: 5, rpe: 7.5 },
+    mes: { sesiones: 3, asaltos: 9, rpe: 7.5 }, // la sin RPE no cuenta
   });
+  assert.equal(totales(sesiones, {}, HOY).mes.rpe, null);
 });
 
 test("asaltos y RPE medio por semana, la más antigua primero", () => {

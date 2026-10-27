@@ -1,5 +1,5 @@
 // Cálculos del resumen del historial (lógica pura, sin DOM): totales de la semana y
-// del mes, y asaltos y RPE medio por semana (de lunes a domingo).
+// del mes (sesiones, asaltos y RPE medio), y asaltos y RPE medio por semana (de lunes a domingo).
 
 export function lunes(fecha) {
   const d = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
@@ -9,19 +9,23 @@ export function lunes(fecha) {
 
 const mismoDia = (a, b) => a.getTime() === b.getTime();
 
+const media = (lista) => (lista.length ? lista.reduce((a, b) => a + b, 0) / lista.length : null);
+
 // sesiones: [{ clave, fecha, asaltos }]; valoraciones: { clave: { rpe } }.
-export function totales(sesiones, hoy = new Date()) {
+// rpe: media de las sesiones valoradas, o null si no hay ninguna.
+export function totales(sesiones, valoraciones = {}, hoy = new Date()) {
   const semana = lunes(hoy);
   const enSemana = sesiones.filter((s) => mismoDia(lunes(new Date(s.fecha)), semana));
   const enMes = sesiones.filter((s) => {
     const d = new Date(s.fecha);
     return d.getFullYear() === hoy.getFullYear() && d.getMonth() === hoy.getMonth();
   });
-  const sumar = (lista) => lista.reduce((n, s) => n + s.asaltos, 0);
-  return {
-    semana: { sesiones: enSemana.length, asaltos: sumar(enSemana) },
-    mes: { sesiones: enMes.length, asaltos: sumar(enMes) },
-  };
+  const resumir = (lista) => ({
+    sesiones: lista.length,
+    asaltos: lista.reduce((n, s) => n + s.asaltos, 0),
+    rpe: media(lista.map((s) => valoraciones[s.clave]?.rpe).filter((r) => r != null)),
+  });
+  return { semana: resumir(enSemana), mes: resumir(enMes) };
 }
 
 // Las últimas `n` semanas, la más antigua primero: { inicio, asaltos, sesiones, rpe (media o null) }.
@@ -40,7 +44,5 @@ export function porSemana(sesiones, valoraciones, { hoy = new Date(), n = 8 } = 
     const rpe = valoraciones[s.clave]?.rpe;
     if (rpe != null) semana.rpes.push(rpe);
   }
-  return semanas.map(({ rpes, ...s }) => ({
-    ...s, rpe: rpes.length ? rpes.reduce((a, b) => a + b, 0) / rpes.length : null,
-  }));
+  return semanas.map(({ rpes, ...s }) => ({ ...s, rpe: media(rpes) }));
 }

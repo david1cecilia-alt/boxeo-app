@@ -2,7 +2,7 @@
 // Controles: play/pausa, paso anterior/siguiente, velocidad 0,25×–1×, girar con el dedo
 // (o con ← → si el lienzo tiene el foco) y vista 3/4 (la de inicio) / frente / lado / arriba.
 // Three.js se carga aquí con import(), solo cuando se abre una ficha con postura. Sin WebGL
-// (o si falla la carga) se muestran en secuencia las fotos de cada paso, que se pintan con
+// (o si falla la carga de Three.js o del modelo) se muestran en secuencia las fotos de cada paso, que se pintan con
 // esta misma escena al montar el sitio (herramientas/fotos_maniqui.py).
 // Con prefers-reduced-motion no se reproduce solo y los pasos cambian sin animación.
 // `?sinwebgl` en la URL fuerza las fotos, para probarlas.
@@ -75,7 +75,12 @@ export async function crearManiqui(contenedor, { pasos, datos, zurdo = false, al
   const rotulo = contenedor.querySelector(".maniqui-paso");
   const botonPlay = contenedor.querySelector("[data-play]");
   const selector = contenedor.querySelector("select");
-  const motor = escena.crearEscena(lienzo, datos);
+  let motor;
+  try {
+    motor = await escena.crearEscena(lienzo, datos);
+  } catch {
+    return crearFotos(contenedor, secuencia, { zurdo, alCambiarPaso });
+  }
   const { orbita } = motor;
 
   // Estado: el muñeco va de `desde` a `actual`; t = progreso de esa transición (0…1).

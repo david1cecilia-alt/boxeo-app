@@ -28,6 +28,7 @@ const FICHEROS = [
   "maniqui/escena.js",
   "maniqui/maniqui.js",
   "maniqui/posturas.js",
+  "maniqui/maniqui.glb",
   "motor/acciones.js",
   "motor/azar.js",
   "motor/datos.js",
@@ -64,6 +65,12 @@ const FICHEROS = [
   // Three.js se precachea para ir sin conexión, pero solo se ejecuta al abrir una ficha.
   "vendor/three/three.module.min.js",
   "vendor/three/LICENSE",
+  "vendor/three/addons/loaders/GLTFLoader.js",
+  "vendor/three/addons/loaders/DRACOLoader.js",
+  "vendor/three/addons/utils/BufferGeometryUtils.js",
+  "vendor/three/addons/libs/draco/draco_decoder.wasm",
+  "vendor/three/addons/libs/draco/draco_wasm_wrapper.js",
+  "vendor/three/addons/libs/draco/LICENSE",
   // FOTOS_MANIQUI: construir_sitio.py añade aquí las fotos del maniquí que genera.
 ];
 

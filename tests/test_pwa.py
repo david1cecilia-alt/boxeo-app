@@ -58,8 +58,13 @@ def test_las_fotos_de_fondo_se_publican_en_webp_y_sin_los_originales(sitio):
     assert not list(sitio.rglob("imagenes/**/*.png"))
 
 
-def test_el_maniqui_3d_pesa_menos_de_1_mb():
-    # Lo que se descarga al abrir una ficha con maniquí: Three.js, la escena y las posturas.
-    ficheros = [RAIZ / "static" / "vendor" / "three" / "three.module.min.js",
-                *(RAIZ / "static" / "maniqui").glob("*.js"), RAIZ / "data" / "posturas.json"]
-    assert sum(f.stat().st_size for f in ficheros) < 1_000_000
+def test_el_maniqui_3d_pesa_poco():
+    # Lo que se descarga al abrir una ficha con maniquí: Three.js con su cargador de GLB y el
+    # decodificador Draco, la escena, el modelo y las posturas. Solo Three.js pesa unos 700 KB.
+    three = RAIZ / "static" / "vendor" / "three"
+    glb = RAIZ / "static" / "maniqui" / "maniqui.glb"
+    ficheros = [three / "three.module.min.js", *(three / "addons").rglob("*.js"),
+                *(three / "addons").rglob("*.wasm"), *(RAIZ / "static" / "maniqui").glob("*.js"),
+                glb, RAIZ / "data" / "posturas.json"]
+    assert glb.stat().st_size < 1_000_000
+    assert sum(f.stat().st_size for f in ficheros) < 1_300_000

@@ -33,7 +33,7 @@ import {{ crearEscena, VISTAS }} from "./maniqui/escena.js";
 import {{ prepararPosturas }} from "./maniqui/posturas.js";
 const datos = await (await fetch("data/posturas.json")).json();
 const posturas = {{ ortodoxa: prepararPosturas(datos), zurda: prepararPosturas(datos, {{ zurdo: true }}) }};
-const escena = crearEscena(document.querySelector("canvas"), datos);
+const escena = await crearEscena(document.querySelector("canvas"), datos);
 window.foto = (id, guardia, vista) => {{
   Object.assign(escena.orbita, VISTAS[vista]);
   escena.mostrar(posturas[guardia][id]);

@@ -157,6 +157,14 @@ py -3.12 -m venv .venv
 Los iconos se regeneran desde `static/iconos/guante.svg` con `herramientas\generar_iconos.py`
 (usa Edge o Chrome headless).
 
+El maniquí 3D (`static/maniqui/maniqui.glb`) se crea con Blender 4.5 LTS y la extensión MPFB
+(MakeHuman para Blender), y el script reescribe también el esqueleto de `data/posturas.json`:
+
+```powershell
+blender --online-mode --command extension install mpfb --enable   # una vez
+blender --background --python herramientas\blender\crear_maniqui.py
+```
+
 ## Estructura
 
 | Carpeta | Qué contiene |
@@ -168,7 +176,7 @@ Los iconos se regeneran desde `static/iconos/guante.svg` con `herramientas\gener
 | `app/` | API FastAPI y acceso a SQLite |
 | `data/` | Vocabulario, combos clásicos, perfil por defecto, presets y puntos a revisar (JSON): fuente única para los dos motores |
 | `tests/` | pytest; `tests/js/` tiene los tests de JS y genera los datos de equivalencia |
-| `herramientas/` | Montar la web estática, generar iconos y extraer los puntos a revisar |
+| `herramientas/` | Montar la web estática, generar iconos, extraer los puntos a revisar, ajustar y medir las posturas y crear el maniquí (`blender/`) |
 | `.github/workflows/` | Tests y despliegue en GitHub Pages |
 
 ## Límites conocidos

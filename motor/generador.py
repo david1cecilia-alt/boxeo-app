@@ -38,8 +38,12 @@ class Combinacion:
         return ", ".join(a.nombre_hablado for a in self.acciones)
 
 
-def peso_perfil(combo: list[Accion], pesos: dict) -> float:
-    """Multiplica los pesos del perfil que cumple la combinación (ortodoxa)."""
+def peso_perfil(combo: list[Accion], pesos: dict, refuerzo: dict | None = None) -> float:
+    """Multiplica los pesos del perfil que cumple la combinación (ortodoxa).
+
+    `refuerzo` ({"acciones": [ids], "factor": x}) sube las combinaciones que llevan alguna
+    de esas acciones: es el "Practicar" de una ficha, solo para una sesión.
+    """
     peso = 1.0
     ultimo = ultimo_golpe(combo)
     if ultimo and ultimo.familia == "gancho":
@@ -48,6 +52,8 @@ def peso_perfil(combo: list[Accion], pesos: dict) -> float:
         peso *= pesos.get("bloquear_y_devolver", 1.0)
     if combo[0].id == "jab":
         peso *= pesos.get("entrada_con_jab", 1.0)
+    if refuerzo and any(a.id in refuerzo["acciones"] for a in combo):
+        peso *= refuerzo["factor"]
     return peso
 
 
@@ -113,6 +119,9 @@ class GeneradorCombos:
         self._peso_max = 1.0
         for valor in self.pesos.values():
             self._peso_max *= max(valor, 1.0)
+        self.refuerzo = self.perfil.get("refuerzo")
+        if self.refuerzo:
+            self._peso_max *= max(self.refuerzo["factor"], 1.0)
         # Solo los clásicos que cumplen las reglas de ESTE nivel.
         self._clasicos = [c for c in combos_clasicos() if es_valida(list(c.acciones), nivel)]
         self._anterior: tuple[Accion, ...] | None = None
@@ -133,7 +142,7 @@ class GeneradorCombos:
             candidata = self._candidata(clasico)
             if candidata is None or candidata.acciones == self._anterior:
                 continue
-            aceptar = peso_perfil(list(candidata.acciones), self.pesos) / self._peso_max
+            aceptar = peso_perfil(list(candidata.acciones), self.pesos, self.refuerzo) / self._peso_max
             if self.rng.random() < aceptar:
                 break
         self._anterior = candidata.acciones

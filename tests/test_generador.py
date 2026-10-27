@@ -67,3 +67,31 @@ def test_el_perfil_aumenta_bloqueo_gancho_y_jab():
         assert _frecuencia(con_perfil, condicion) > _frecuencia(sin_perfil, condicion), condicion.__name__
     # Es su punto débil: que salga a menudo.
     assert _frecuencia(con_perfil, bloqueo) >= 0.2
+
+
+def _con_accion(ids):
+    return lambda c: any(a.id in ids for a in c.acciones)
+
+
+@pytest.mark.parametrize("ids", [["jab"], ["bloqueo"], ["gancho_izq"], ["esquiva_izq", "esquiva_der"]])
+def test_el_refuerzo_sube_la_proporcion_de_esa_accion(ids):
+    perfil = cargar_perfil()
+    reforzado = {**perfil, "refuerzo": {"acciones": ids, "factor": 3.0}}
+    con = _generar(1, perfil=reforzado, semilla=7)
+    sin = _generar(1, perfil=perfil, semilla=7)
+    assert _frecuencia(con, _con_accion(ids)) > _frecuencia(sin, _con_accion(ids)) + 0.05
+
+
+def test_el_refuerzo_no_cambia_el_perfil_recibido():
+    perfil = cargar_perfil()
+    copia = {**perfil, "pesos": dict(perfil["pesos"])}
+    reforzado = {**perfil, "refuerzo": {"acciones": ["jab"], "factor": 3.0}}
+    _generar(1, perfil=reforzado, semilla=7)
+    assert perfil == copia and "refuerzo" not in perfil
+
+
+def test_el_refuerzo_va_en_ortodoxo_y_el_zurdo_es_su_espejo():
+    reforzado = {**cargar_perfil(), "refuerzo": {"acciones": ["gancho_izq"], "factor": 3.0}}
+    orto = _generar(1, perfil=reforzado, semilla=3)
+    zurdo = _generar(1, perfil=reforzado, zurdo=True, semilla=3)
+    assert [espejo_combo(list(c.acciones)) for c in orto] == [list(c.acciones) for c in zurdo]

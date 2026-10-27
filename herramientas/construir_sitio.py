@@ -23,7 +23,8 @@ MARCA_FOTOS = re.compile(r"^ *// FOTOS_MANIQUI:.*\n", re.M)
 def construir(destino: Path, version: str = "dev", fotos: bool = True) -> Path:
     if destino.exists():
         shutil.rmtree(destino)
-    shutil.copytree(RAIZ / "static", destino)
+    # Los PNG originales de las fotos de fondo no se publican: van sus WebP (convertir_imagenes.py).
+    shutil.copytree(RAIZ / "static", destino, ignore=shutil.ignore_patterns("originales"))
     (destino / "data").mkdir()
     for fichero in (RAIZ / "data").glob("*.json"):
         shutil.copy2(fichero, destino / "data" / fichero.name)

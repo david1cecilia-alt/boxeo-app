@@ -42,7 +42,7 @@ def test_cada_paso_con_postura_tiene_su_foto(sitio):
     for ruta in necesarias:
         datos = (sitio / ruta).read_bytes()
         assert _medidas_webp(datos) == (ANCHO, ALTO), ruta
-        assert len(datos) > 4000, f"{ruta} parece vacía"
+        assert 4000 < len(datos) < 40_000, f"{ruta}: {len(datos)} bytes"
 
 
 def test_las_fotos_van_al_precache(sitio):

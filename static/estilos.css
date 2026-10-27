@@ -556,6 +556,9 @@ dialog::backdrop { background: var(--velo); }
 .maniqui-escena {
   position: relative; aspect-ratio: 3 / 4; max-height: 72vh; overflow: hidden;
   border: 1px solid var(--linea); border-radius: var(--radio);
+}
+/* Fondo del maniquí: lo comparten la escena 3D y las fotos sin WebGL (fotos_maniqui.py). */
+.maniqui-escena, .maniqui-fondo {
   background: radial-gradient(ellipse 70% 60% at 75% 40%, var(--resplandor), transparent 70%), var(--fondo);
 }
 .maniqui-escena canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; cursor: grab; }
@@ -572,7 +575,7 @@ dialog::backdrop { background: var(--velo); }
 .boton[data-play][aria-pressed="true"] .icono-play, .boton[data-play][aria-pressed="false"] .icono-pausa { display: none; }
 .maniqui-velocidad { display: flex; align-items: center; gap: 8px; margin-left: auto; color: var(--suave); font-size: 0.95rem; }
 .maniqui-velocidad select { width: auto; min-height: 44px; padding: 8px 12px; }
-.maniqui-vistas { display: flex; gap: 8px; }
+.maniqui-vistas { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip-vista {
   min-height: 44px; padding: 0 18px; font: inherit; font-weight: 600; cursor: pointer;
   color: var(--suave); background: transparent; border: 1px solid var(--linea); border-radius: 999px;

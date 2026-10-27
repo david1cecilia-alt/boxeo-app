@@ -27,14 +27,14 @@
       "texto": "rodar a un lado deja el peso en ese mismo lado"
     },
     {
-      "id": "posturas-f82d1062",
+      "id": "posturas-d6a8608a",
       "origen": "data/posturas.json",
-      "texto": "maniquí, guardia: flexión de rodillas, barbilla detrás del hombro izquierdo, guantes a la altura de los pómulos, separación y giro de los pies"
+      "texto": "maniquí, guardia: flexión de rodillas, barbilla detrás del hombro izquierdo, guantes a la altura de los pómulos, codos cerrados, talón trasero algo levantado, separación y giro de los pies"
     },
     {
-      "id": "posturas-9b6f108b",
+      "id": "posturas-1d852f03",
       "origen": "data/posturas.json",
-      "texto": "maniquí, jab a medio camino: trayectoria recta del puño y codo abajo"
+      "texto": "maniquí, jab a medio camino: puño recto a la altura del mentón, sin subir por encima del hombro, y codo abajo"
     },
     {
       "id": "posturas-0c8950e0",

@@ -1,6 +1,6 @@
 // Maniquí de una ficha: un paso = una postura y el muñeco interpola entre ellas.
 // Controles: play/pausa, paso anterior/siguiente, velocidad 0,25×–1×, girar con el dedo
-// (o con ← → si el lienzo tiene el foco) y vista frente / lado / arriba.
+// (o con ← → si el lienzo tiene el foco) y vista 3/4 (la de inicio) / frente / lado / arriba.
 // Three.js se carga aquí con import(), solo cuando se abre una ficha con postura. Sin WebGL
 // (o si falla la carga) se muestran en secuencia las fotos de cada paso, que se pintan con
 // esta misma escena al montar el sitio (herramientas/fotos_maniqui.py).
@@ -12,7 +12,7 @@ import { interpolar, prepararPosturas, suave } from "./posturas.js";
 const TRANSICION = 0.8; // s entre postura y postura a velocidad 1×
 const ESPERA = 0.7;     // s quieto en cada paso al reproducir
 const VELOCIDADES = [0.25, 0.5, 0.75, 1];
-const NOMBRES_VISTA = { frente: "Frente", lado: "Lado", arriba: "Arriba" };
+const NOMBRES_VISTA = { tres_cuartos: "3/4", frente: "Frente", lado: "Lado", arriba: "Arriba" };
 
 export function hayWebGL() {
   if (new URLSearchParams(location.search).has("sinwebgl")) return false;
@@ -45,8 +45,8 @@ export async function crearManiqui(contenedor, { pasos, datos, zurdo = false, al
   let escena = null;
   if (hayWebGL()) {
     try {
-      const { crearEscena, VISTAS } = await import("./escena.js");
-      escena = { crearEscena, VISTAS };
+      const { crearEscena, VISTAS, VISTA_INICIAL } = await import("./escena.js");
+      escena = { crearEscena, VISTAS, VISTA_INICIAL };
     } catch {
       escena = null;
     }
@@ -67,7 +67,7 @@ export async function crearManiqui(contenedor, { pasos, datos, zurdo = false, al
         </label>
       </div>
       <div class="maniqui-vistas" role="group" aria-label="Vista del maniquí">
-        ${Object.entries(NOMBRES_VISTA).map(([v, n]) => `<button type="button" class="chip-vista" data-vista="${v}" aria-pressed="${v === "frente"}">${n}</button>`).join("")}
+        ${Object.entries(NOMBRES_VISTA).map(([v, n]) => `<button type="button" class="chip-vista" data-vista="${v}" aria-pressed="${v === escena.VISTA_INICIAL}">${n}</button>`).join("")}
       </div>
     </div>`;
 
@@ -77,7 +77,6 @@ export async function crearManiqui(contenedor, { pasos, datos, zurdo = false, al
   const selector = contenedor.querySelector("select");
   const motor = escena.crearEscena(lienzo, datos);
   const { orbita } = motor;
-  Object.assign(orbita, escena.VISTAS.frente);
 
   // Estado: el muñeco va de `desde` a `actual`; t = progreso de esa transición (0…1).
   let actual = 0;
@@ -221,7 +220,7 @@ export async function crearManiqui(contenedor, { pasos, datos, zurdo = false, al
 }
 
 
-// Sin WebGL: las fotos de cada paso (vista de lado), una tras otra con un fundido, con los
+// Sin WebGL: las fotos de cada paso (vista 3/4, la de inicio), una tras otra con un fundido, con los
 // mismos controles de paso y reproducción. Mismo nombre que en herramientas/fotos_maniqui.py.
 export const rutaFoto = (postura, zurdo) =>
   new URL(`./fotos/${postura}-${zurdo ? "zurda" : "ortodoxa"}.webp`, import.meta.url).href;

@@ -2,7 +2,8 @@
 
 Se pintan con la propia escena 3D (static/maniqui/escena.js) en Chromium headless (Playwright),
 con la misma luz, cámara y fondo, así que salen idénticas al maniquí y siguen a data/posturas.json.
-El fondo queda transparente: detrás va el mismo degradado CSS que en la escena 3D.
+El fondo es la misma regla CSS que el de la escena 3D (.maniqui-fondo): se hace una captura del
+conjunto y se guarda opaca, porque con transparencia el humo y la sombra pesan el triple.
 
 Uso: python herramientas/fotos_maniqui.py _site   (lo llama construir_sitio.py)
      python herramientas/fotos_maniqui.py _site --vistas   (además frente/lado/arriba, para revisar)
@@ -16,16 +17,17 @@ from pathlib import Path
 
 CARPETA = "maniqui/fotos"
 ANCHO, ALTO = 600, 800  # 3:4, como .maniqui-escena; ×2 de un hueco de 300 px
-VISTA = "lado"
+VISTA = "tres_cuartos"  # la de inicio del maniquí 3D (VISTA_INICIAL en escena.js)
 GUARDIAS = ("ortodoxa", "zurda")
 ORIGEN = "http://boxeo.local"
 
-# Página de trabajo: carga los estilos (tokens de color) y la escena, y deja una función que
-# pinta una postura y devuelve la WebP como data URL.
+CALIDAD = 0.82
+# Página de trabajo: carga los estilos (fondo y tokens de color) y la escena, y deja una
+# función que pinta una postura y otra que pasa una captura PNG a WebP.
 PAGINA = f"""<!doctype html><meta charset="utf-8">
 <link rel="stylesheet" href="estilos.css">
-<style>body{{margin:0;background:transparent}} canvas{{width:{ANCHO}px;height:{ALTO}px;display:block}}</style>
-<canvas></canvas>
+<style>body{{margin:0}} canvas{{width:{ANCHO}px;height:{ALTO}px;display:block}}</style>
+<div class="maniqui-fondo"><canvas></canvas></div>
 <script type="module">
 import {{ crearEscena, VISTAS }} from "./maniqui/escena.js";
 import {{ prepararPosturas }} from "./maniqui/posturas.js";
@@ -35,7 +37,16 @@ const escena = crearEscena(document.querySelector("canvas"), datos);
 window.foto = (id, guardia, vista) => {{
   Object.assign(escena.orbita, VISTAS[vista]);
   escena.mostrar(posturas[guardia][id]);
-  return document.querySelector("canvas").toDataURL("image/webp", 0.9);
+}};
+window.aWebp = async (png) => {{
+  const imagen = new Image();
+  imagen.src = "data:image/png;base64," + png;
+  await imagen.decode();
+  const lienzo = document.createElement("canvas");
+  lienzo.width = {ANCHO};
+  lienzo.height = {ALTO};
+  lienzo.getContext("2d").drawImage(imagen, 0, 0);
+  return lienzo.toDataURL("image/webp", {CALIDAD});
 }};
 window.posturas = Object.keys(datos.posturas);
 window.listo = true;
@@ -88,7 +99,9 @@ def generar(sitio: Path, vistas: tuple[str, ...] = (VISTA,)) -> list[str]:
         for postura in pagina.evaluate("window.posturas"):
             for guardia in GUARDIAS:
                 for vista in vistas:
-                    url = pagina.evaluate("([p, g, v]) => window.foto(p, g, v)", [postura, guardia, vista])
+                    pagina.evaluate("([p, g, v]) => window.foto(p, g, v)", [postura, guardia, vista])
+                    png = pagina.locator(".maniqui-fondo").screenshot(type="png", animations="disabled")
+                    url = pagina.evaluate("(png) => window.aWebp(png)", base64.b64encode(png).decode())
                     assert url.startswith("data:image/webp;base64,"), "Chromium no exportó WebP"
                     ruta = nombre_foto(postura, guardia, vista)
                     (sitio / ruta).write_bytes(base64.b64decode(url.split(",", 1)[1]))
@@ -107,6 +120,6 @@ def fotos_necesarias(raiz: Path) -> set[str]:
 if __name__ == "__main__":
     if len(sys.argv) not in (2, 3):
         raise SystemExit(__doc__)
-    extra = ("frente", "lado", "arriba") if "--vistas" in sys.argv else (VISTA,)
+    extra = (VISTA, "frente", "lado", "arriba") if "--vistas" in sys.argv else (VISTA,)
     for r in generar(Path(sys.argv[1]), extra):
         print(r)

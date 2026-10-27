@@ -395,6 +395,20 @@ body.entrenando main { padding: 0; max-width: none; }
 .tabla-grafico th, .tabla-grafico td { padding: 6px 4px; text-align: right; border-bottom: 1px solid var(--linea); }
 .tabla-grafico th:first-child { text-align: left; }
 
+/* Maestro-detalle. Móvil: o la lista o el detalle (con su enlace de volver). */
+.maestro-detalle, .col-lista, .col-detalle { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.con-detalle > .resumen-historial, .con-detalle .col-lista,
+#historial-contenido:not(.con-detalle) .col-detalle { display: none; }
+#historial-contenido { display: grid; gap: 16px; }
+.col-detalle > p { margin: 0; }
+.lista-sesiones a[aria-current="true"] { border-color: var(--acento); box-shadow: inset 3px 0 0 var(--acento); }
+
+/* Entrenar: la configuración y la tarjeta de sesión, apiladas en móvil. */
+.config-opciones, .config-sesion { display: grid; gap: 14px; min-width: 0; }
+.config-titulo { display: none; margin: 0; font-size: 2rem; }
+
+.marca { display: none; }
+
 /* ---------- Perfil ---------- */
 .lista-editable { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
 .lista-editable li {
@@ -430,16 +444,92 @@ dialog::backdrop { background: var(--velo); }
 .grupo-combos legend { font-weight: 600; }
 .costosas { margin: 0; }
 
+/* ---------- Escritorio (≥ 1024 px) ---------- */
+/* Barra lateral izquierda en vez de la píldora y contenido con ancho máximo centrado. */
+@media (min-width: 1024px) {
+  :root { --ancho-lateral: 232px; }
+
+  #pestanas {
+    left: 0; top: 0; bottom: 0; transform: none;
+    width: var(--ancho-lateral); height: auto;
+    grid-auto-flow: row; grid-auto-rows: max-content; grid-auto-columns: auto;
+    align-content: start; gap: 6px; padding: 28px 16px;
+    border: 0; border-right: 1px solid var(--linea); border-radius: 0; box-shadow: none;
+  }
+  #pestanas .marca {
+    display: block; margin: 0 12px 28px;
+    font-family: var(--letra-titular); text-transform: uppercase; font-size: 2.4rem; line-height: 1;
+  }
+  #pestanas a {
+    grid-auto-flow: column; justify-content: start; justify-items: start; gap: 14px;
+    min-height: 52px; padding: 0 16px; border-radius: 14px; font-size: 1rem;
+  }
+  #pestanas a:hover { background: var(--superficie-hover); color: var(--texto); }
+  #pestanas a[aria-current="page"] { background: var(--superficie-hover); }
+  #pestanas a[aria-current="page"]::after { left: 0; top: 14px; bottom: 14px; width: 3px; height: auto; }
+
+  main {
+    max-width: 1200px;
+    margin-left: max(var(--ancho-lateral), calc((100vw - 1200px) / 2));
+    margin-right: auto;
+    padding: 0 48px 48px;
+  }
+  body.entrenando main { margin: 0; max-width: none; }
+
+  .cabecera { padding-top: 48px; }
+  h1 { font-size: 5rem; }
+
+  /* Entrenar: opciones a la izquierda, sesión a la derecha. */
+  #config { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 32px; padding: 28px; }
+  .config-sesion {
+    align-self: start; position: sticky; top: 24px;
+    padding: 24px; border: 1px solid var(--linea); border-radius: var(--radio); background: var(--campo);
+  }
+  .config-titulo { display: block; }
+  .resumen-config { text-align: left; }
+
+  /* Sesión: reloj y combinación centrados a pantalla completa. */
+  #pantalla { padding: 32px 48px; }
+  #pantalla > * { width: min(100%, 1100px); justify-self: center; }
+  #combo { font-size: clamp(3rem, 7vw, 7rem); }
+  #pantalla > .controles { width: min(100%, 720px); }
+
+  /* Historial: resumen arriba a todo el ancho; lista y detalle en dos columnas. */
+  .maestro-detalle { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: start; }
+  /* El gráfico se dibuja a 340 de ancho: a todo el ancho saldría ampliado 3×. Cifras a la
+     izquierda y gráficos con ancho máximo a la derecha. */
+  .resumen-historial, .con-detalle > .resumen-historial {
+    display: grid; grid-template-columns: minmax(200px, 260px) minmax(0, 640px);
+    column-gap: 48px; align-items: start;
+  }
+  .resumen-historial > h2 { grid-column: 1 / -1; }
+  .resumen-historial > .cifras { grid-column: 1; grid-row: 2 / span 6; grid-template-columns: 1fr; }
+  .resumen-historial > :not(h2):not(.cifras) { grid-column: 2; }
+  .con-detalle .col-lista, #historial-contenido:not(.con-detalle) .col-detalle { display: grid; }
+  .col-lista { position: sticky; top: 24px; }
+  .volver-movil { display: none; }
+  .col-detalle > .vacio {
+    display: grid; place-items: center; min-height: 240px; text-align: center;
+    border: 1px dashed var(--linea); border-radius: var(--radio);
+  }
+
+  /* Perfil: secciones en dos columnas. */
+  #perfil-contenido { columns: 2; column-gap: 24px; }
+  #perfil-contenido > * { break-inside: avoid; margin: 0 0 24px; }
+  #perfil-contenido > .nota { column-span: all; }
+}
+
 /* ---------- Animaciones sobrias ---------- */
-/* Al mostrarse una vista (cambio de pestaña) sus bloques entran escalonados. */
+/* Al mostrarse una vista (cambio de pestaña) sus bloques entran escalonados. Solo los hijos
+   directos de la vista: lo que se repinta dentro (elegir una sesión, guardar el perfil) no
+   vuelve a animarse. */
 @keyframes entrada {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
 }
-.vista > *, #historial-contenido > *, #perfil-contenido > * { animation: entrada 0.28s ease-out both; }
-.vista > :nth-child(2), #historial-contenido > :nth-child(2), #perfil-contenido > :nth-child(2) { animation-delay: 40ms; }
-.vista > :nth-child(3), #historial-contenido > :nth-child(3), #perfil-contenido > :nth-child(3) { animation-delay: 80ms; }
-.vista > :nth-child(n+4), #historial-contenido > :nth-child(n+4), #perfil-contenido > :nth-child(n+4) { animation-delay: 120ms; }
+.vista > * { animation: entrada 0.28s ease-out both; }
+.vista > :nth-child(2) { animation-delay: 60ms; }
+.vista > :nth-child(n+3) { animation-delay: 120ms; }
 /* La sesión no anima su entrada: tiene que estar lista al instante. */
 #pantalla { animation: none; }
 

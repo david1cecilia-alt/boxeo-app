@@ -1,5 +1,7 @@
 // Pestaña Historial: resumen y gráfico semanal, lista de sesiones, detalle con valoración
 // (editable), borrado y copia de seguridad (exportar / importar).
+// Maestro-detalle: en PC la lista y el detalle van en dos columnas; en móvil el CSS muestra
+// solo la lista o, si hay una sesión elegida (#historial/<clave>), solo su detalle.
 import { ErrorAlmacen } from "../almacen.js";
 import { $, anunciar, esc, fechaLarga, hoyIso, minutos } from "./dom.js";
 import { activarGrafico, graficoSemanas } from "./grafico.js";
@@ -9,7 +11,7 @@ import { porSemana, totales } from "./resumen.js";
 export function iniciarHistorial({ almacen, historial, valoracion }) {
   const raiz = $("#historial-contenido");
 
-  async function lista() {
+  async function pintar(clave = "") {
     let sesiones;
     try {
       sesiones = await historial.listar();
@@ -20,8 +22,9 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
     const v = almacen.datos.valoraciones;
     const t = totales(sesiones);
     const semanas = porSemana(sesiones, v);
+    raiz.classList.toggle("con-detalle", Boolean(clave));
     raiz.innerHTML = `
-      <section class="tarjeta" aria-labelledby="t-resumen">
+      <section class="tarjeta resumen-historial" aria-labelledby="t-resumen">
         <h2 id="t-resumen">Resumen</h2>
         <dl class="cifras">
           ${[["Esta semana", t.semana], ["Este mes", t.mes]].map(([titulo, x]) => `<div><dt>${titulo}</dt><dd>
@@ -31,9 +34,11 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
         ${graficoSemanas(semanas)}
       </section>
 
+      <div class="maestro-detalle">
+      <div class="col-lista">
       <section class="tarjeta" aria-labelledby="t-sesiones">
         <h2 id="t-sesiones">Sesiones</h2>
-        ${sesiones.length ? `<ul class="lista-sesiones">${sesiones.map((s) => fila(s, v[s.clave])).join("")}</ul>`
+        ${sesiones.length ? `<ul class="lista-sesiones">${sesiones.map((s) => fila(s, v[s.clave], clave)).join("")}</ul>`
           : `<p class="nota">Aún no hay sesiones. Las que termines aparecerán aquí.</p>`}
         <p class="nota">Guardado ${esc(historial.descripcion)}. Las valoraciones y notas, en este navegador.</p>
       </section>
@@ -47,25 +52,31 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
           <label class="boton secundario" for="importar">Importar copia…</label>
           <input type="file" id="importar" accept="application/json,.json" class="solo-lectores">
         </div>
-      </section>`;
+      </section>
+      </div>
+      <div class="col-detalle" id="historial-detalle">
+        <p class="nota vacio">Elige una sesión de la lista para ver su detalle.</p>
+      </div>
+      </div>`;
     activarGrafico(raiz, semanas);
     $("#exportar").addEventListener("click", exportar);
     $("#importar").addEventListener("change", importar);
+    if (clave) await detalle(sesiones.find((x) => x.clave === clave), clave);
   }
 
-  function fila(s, v) {
+  function fila(s, v, elegida) {
     const esfuerzo = v?.rpe != null ? `RPE ${v.rpe}` : "Sin valorar";
-    return `<li><a href="#historial/${encodeURIComponent(s.clave)}">
+    const actual = s.clave === elegida ? ' aria-current="true"' : "";
+    return `<li><a href="#historial/${encodeURIComponent(s.clave)}"${actual}>
       <span class="fecha">${esc(fechaLarga(s.fecha))}</span>
       <span class="detalle">Nivel ${s.nivel} · ${s.asaltos} ${s.asaltos === 1 ? "asalto" : "asaltos"} · ${esfuerzo}</span>
     </a></li>`;
   }
 
-  async function detalle(clave) {
-    const sesiones = await historial.listar().catch(() => []);
-    const s = sesiones.find((x) => x.clave === clave);
+  async function detalle(s, clave) {
+    const panel = $("#historial-detalle");
     if (!s) {
-      raiz.innerHTML = `<p class="aviso">Esa sesión no existe.</p><p><a href="#historial">Volver al historial</a></p>`;
+      panel.innerHTML = `<p class="aviso">Esa sesión no existe.</p><p><a href="#historial">Volver al historial</a></p>`;
       return;
     }
     const combinaciones = s.combinaciones ?? await historial.combinaciones(s.id);
@@ -73,8 +84,8 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
     const costosas = new Set(v?.costosas ?? []);
     const asaltos = [...new Set(combinaciones.map((c) => c.asalto))];
     const dato = (dt, dd) => `<div><dt>${dt}</dt><dd>${dd}</dd></div>`;
-    raiz.innerHTML = `
-      <p><a href="#historial" class="volver">← Historial</a></p>
+    panel.innerHTML = `
+      <p class="volver-movil"><a href="#historial" class="volver">← Historial</a></p>
       <section class="tarjeta" aria-labelledby="t-detalle">
         <h2 id="t-detalle" tabindex="-1">${esc(fechaLarga(s.fecha))}</h2>
         <dl class="datos">
@@ -113,7 +124,7 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
       </div>`;
     $("#t-detalle").focus();
     $("#valorar").addEventListener("click", async () => {
-      if (await valoracion.abrir({ clave, combinaciones, titulo: "Valoración de la sesión" })) detalle(clave);
+      if (await valoracion.abrir({ clave, combinaciones, titulo: "Valoración de la sesión" })) pintar(clave);
     });
     $("#borrar").addEventListener("click", async () => {
       if (!confirm("¿Borrar esta sesión y su valoración? No se puede deshacer.")) return;
@@ -160,7 +171,7 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
     try {
       const guardado = almacen.importar(copia);
       anunciar(guardado ? "Copia importada" : "Copia importada solo en memoria");
-      lista();
+      pintar();
     } catch (error) {
       alert(error instanceof ErrorAlmacen ? error.message : `No se pudo importar: ${error.message}`);
     }
@@ -168,8 +179,7 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
 
   return {
     mostrar(parametro) {
-      if (parametro) detalle(parametro);
-      else lista();
+      pintar(parametro);
     },
   };
 }

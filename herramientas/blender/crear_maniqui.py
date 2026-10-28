@@ -76,7 +76,7 @@ NEGRO_PANTALON = (0.0103, 0.0103, 0.0103)  # #1A1A1A (lineal)
 ROJO_CINTURILLA = (0.680, 0.0097, 0.0232)  # #D7192A (lineal)
 GRIS_SUELA = (0.069, 0.069, 0.069)  # #4A4A4A (lineal)
 
-# Pantalón: de la cintura (sobre la cadera) a medio muslo, más holgado abajo.
+# Pantalón: de la cintura (sobre la cadera) a medio muslo, ajustado.
 CINTURA = 0.1     # m por encima de la articulación de la cadera
 BAJO = 0.23       # m por debajo
 CINTURILLA = 0.045
@@ -279,28 +279,20 @@ def funda(cuerpo, esqueleto, nombre, elegir, separacion, pasadas, bordes):
 
 
 def pantalon(cuerpo, esqueleto, pos, mats):
-    """Pantalón corto y holgado: negro con cinturilla roja."""
+    """Pantalón corto ajustado a la cadera y los muslos: negro con cinturilla roja. Pocas pasadas
+    de suavizado (no hace puente entre glúteo y muslo) y los pesos de la piel: la pernera sigue
+    al muslo y no se abre al echar la pierna atrás."""
     cadera = pos["cadera_izq"].z
     arriba, abajo = cadera + CINTURA, cadera - BAJO
     zona = {"pelvis", "spine_01", "spine_02", "thigh_l", "thigh_r"}
 
     def holgura(co):
         t = min(1.0, max(0.0, (arriba - co.z) / (arriba - abajo)))
-        return 0.01 + 0.03 * t * t
+        return 0.008 + 0.004 * t * t
 
     objeto, alturas = funda(cuerpo, esqueleto, "pantalon",
-                            lambda co, h: h in zona and abajo - 0.02 <= co.z <= arriba + 0.02, holgura, 14,
+                            lambda co, h: h in zona and abajo - 0.02 <= co.z <= arriba + 0.02, holgura, 4,
                             (arriba, abajo))
-    # La tela holgada no gira con el muslo: arriba sigue a la pelvis y solo el bajo, al muslo.
-    nombres = {g.index: g.name for g in objeto.vertex_groups}
-    pelvis = objeto.vertex_groups["pelvis"]
-    for v in objeto.data.vertices:
-        s = min(1.0, max(0.0, (alturas[v.index] - abajo - 0.09) / (cadera - abajo - 0.09)))
-        s = s * s * (3 - 2 * s)
-        for g in v.groups:
-            if nombres[g.group].startswith("thigh_"):
-                pelvis.add([v.index], g.weight * s, "ADD")
-                g.weight *= 1 - s
     objeto.data.materials.append(mats["pantalon"])
     objeto.data.materials.append(mats["cinturilla"])
     for f in objeto.data.polygons:
@@ -464,7 +456,11 @@ def recortar(cuerpo, esqueleto, pos):
             # Lo que queda dentro de la caña de la bota.
             return v.co.z < pos["tobillo_izq"].z + CANA_BOTA - 0.07
         if g in tapado:
-            return cadera - BAJO + 0.06 < v.co.z < cadera + CINTURA - 0.04
+            # Pantalón ajustado: la piel, hasta casi el borde de la cinturilla (si no, asoma al
+            # doblarse, sobre todo en la curva de los riñones).
+            return cadera - BAJO + 0.04 < v.co.z < cadera + CINTURA - 0.004
+        if g == "neck_01":
+            return sobre_el_corte(v.co) > 0
         if g == "head":
             return v.co.z > barbilla + 0.01
         return False

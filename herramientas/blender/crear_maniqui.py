@@ -1,9 +1,10 @@
 """Crea el maniquí 3D de Aprende (static/maniqui/maniqui.glb) con MPFB (MakeHuman para Blender).
 
-Cuerpo masculino de 1,86 m y complexión atlética con el esqueleto «game engine» de MakeHuman,
-convertido en maniquí de dibujo: blanco mate, cabeza lisa, guantes gris oscuro, botas ajustadas de
-suela fina, pantalón de boxeo holgado (negro con cinturilla roja) y un punto rojo en hombros, codos
-y rodillas. Brazos y piernas cuelgan rectos en el reposo, que es
+Cuerpo masculino de 1,86 m, atlético y en V, con el esqueleto «game engine» de MakeHuman,
+convertido en maniquí de dibujo: blanco mate, cabeza de maniquí (mandíbula, mentón, nariz y orejas
+lisos, sin ojos ni boca) sobre un cuello de maniquí, guantes gris oscuro, botas ajustadas de suela
+fina, pantalón de boxeo ajustado (negro con cinturilla roja) y un punto rojo en hombros, codos y
+rodillas. Brazos y piernas cuelgan rectos en el reposo, que es
 el de data/posturas.json (ángulos a cero). Exporta un GLB comprimido con Draco y escribe en
 data/posturas.json las medidas del esqueleto y el hueso del GLB que mueve cada articulación;
 luego recalcula los ángulos (herramientas/ajustar_posturas.mjs, necesita node).

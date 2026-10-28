@@ -1,7 +1,7 @@
 // Escena 3D del maniquí (Three.js). Solo se carga con import() al abrir una ficha con
 // postura: la app arranca sin Three.js.
 // El maniquí es un GLB (maniqui.glb, comprimido con Draco) que crea
-// herramientas/blender/crear_maniqui.py con MPFB: cuerpo de 1,86 m blanco mate, cabeza lisa,
+// herramientas/blender/crear_maniqui.py con MPFB: cuerpo de 1,86 m blanco mate, cabeza de maniquí,
 // guantes y botas gris oscuro, pantalón negro con cinturilla roja y punto rojo en las juntas.
 // Cada articulación de data/posturas.json mueve su `hueso` del GLB (y los que cuelgan de él sin
 // articulación propia). Material satinado con oclusión ambiental suave en las juntas, líneas

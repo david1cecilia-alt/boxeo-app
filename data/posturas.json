@@ -26,7 +26,7 @@
   },
   "posturas": {
     "guardia": {
-      "pos": [0,0.925,-0.02],
+      "pos": [0,0.95,-0.02],
       "pelvis": [0,-42,0],
       "columna": [17,0,0],
       "pecho": [-9,-8,4],
@@ -34,19 +34,19 @@
       "cabeza": [26,40,0],
       "hombro_izq": [-34.9,11.9,-2],
       "codo_izq": [-149.8,0,0],
-      "cadera_izq": [-53.1,36,40.5],
-      "rodilla_izq": [48.7,0,0],
-      "tobillo_izq": [-9.4,-30,-2.2],
+      "cadera_izq": [-46.2,35.3,33.4],
+      "rodilla_izq": [41.5,0,0],
+      "tobillo_izq": [-6.3,-25,-2.1],
       "hombro_der": [-60.8,31.2,39.6],
       "codo_der": [-110.7,0,0],
-      "cadera_der": [-43.2,-20.6,-34.8],
-      "rodilla_der": [62.1,0,0],
-      "tobillo_der": [-6.6,36.9,1.7],
+      "cadera_der": [-37.9,-20.1,-30.5],
+      "rodilla_der": [57.3,0,0],
+      "tobillo_der": [-6.5,33.1,3],
       "revisar": true,
-      "pendiente": "REVISAR CON ENTRENADOR: maniquí, guardia: flexión de rodillas, barbilla detrás del hombro izquierdo, guantes a la altura de los pómulos y cerrados al centro tapando nariz y barbilla (sin tocarse), codos cerrados, talón trasero algo levantado, separación y giro de los pies"
+      "pendiente": "REVISAR CON ENTRENADOR: maniquí, guardia: flexión de rodillas, barbilla detrás del hombro izquierdo, guantes a la altura de los pómulos y cerrados al centro tapando nariz y barbilla (sin tocarse), codos cerrados, talón trasero algo levantado, separación y giro de los pies; base a la anchura de los hombros, rodillas sobre la punta del pie y flexión menos profunda"
     },
     "jab_salida": {
-      "pos": [0,0.925,-0.01],
+      "pos": [0,0.95,-0.01],
       "pelvis": [0,-44,0],
       "columna": [17,0,0],
       "pecho": [-9,-11,4],
@@ -55,19 +55,19 @@
       "muneca_izq": [0,-45,0],
       "hombro_izq": [-71.4,39.4,42],
       "codo_izq": [-87.3,0,0],
-      "cadera_izq": [-53.8,37.3,42.4],
-      "rodilla_izq": [49.6,0,0],
-      "tobillo_izq": [-10.9,-30,-2.5],
+      "cadera_izq": [-46.2,35.9,34.4],
+      "rodilla_izq": [42.7,0,0],
+      "tobillo_izq": [-8,-24,-2.6],
       "hombro_der": [-62.3,31.5,41.9],
       "codo_der": [-108.7,0,0],
-      "cadera_der": [-42.4,-18.9,-33.6],
-      "rodilla_der": [61.7,0,0],
-      "tobillo_der": [-6.7,37,2.3],
+      "cadera_der": [-38.1,-19.8,-30.8],
+      "rodilla_der": [56.8,0,0],
+      "tobillo_der": [-5.9,35.1,2.7],
       "revisar": true,
-      "pendiente": "REVISAR CON ENTRENADOR: maniquí, jab a medio camino: puño recto a la altura del mentón, sin subir por encima del hombro, y codo abajo"
+      "pendiente": "REVISAR CON ENTRENADOR: maniquí, jab a medio camino: puño recto a la altura del mentón, sin subir por encima del hombro, y codo abajo; base a la anchura de los hombros, rodillas sobre la punta del pie y flexión menos profunda"
     },
     "jab_impacto": {
-      "pos": [0,0.925,0],
+      "pos": [0,0.95,0],
       "pelvis": [0,-47,0],
       "columna": [18,0,0],
       "pecho": [-9,-15,5],
@@ -76,16 +76,16 @@
       "muneca_izq": [0,-90,0],
       "hombro_izq": [-99,14.8,63.3],
       "codo_izq": [-28.7,0,0],
-      "cadera_izq": [-55.1,39.1,45.5],
-      "rodilla_izq": [50.6,0,0],
-      "tobillo_izq": [-12.5,-30,-3],
+      "cadera_izq": [-46.6,37.2,36.3],
+      "rodilla_izq": [43.8,0,0],
+      "tobillo_izq": [-9.7,-23,-3.3],
       "hombro_der": [-65.5,31.7,44.5],
       "codo_der": [-105.6,0,0],
-      "cadera_der": [-41.5,-16.4,-31.8],
-      "rodilla_der": [61.1,0,0],
-      "tobillo_der": [-6.6,37.1,3],
+      "cadera_der": [-37.7,-18,-29.7],
+      "rodilla_der": [56.3,0,0],
+      "tobillo_der": [-5.5,36,2.7],
       "revisar": true,
-      "pendiente": "REVISAR CON ENTRENADOR: maniquí, jab al impacto: hombro arriba tapando la barbilla, giro del puño y extensión del brazo"
+      "pendiente": "REVISAR CON ENTRENADOR: maniquí, jab al impacto: hombro arriba tapando la barbilla, giro del puño y extensión del brazo; base a la anchura de los hombros, rodillas sobre la punta del pie y flexión menos profunda"
     }
   }
 }

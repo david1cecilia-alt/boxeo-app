@@ -8,6 +8,10 @@
       `REVISAR CON ENTRENADOR`.
 - [ ] REVISAR CON ENTRENADOR — guardia: guantes cerrados hacia el centro (a ±10 cm de la cara y
       1,5 cm bajo los pómulos) para tapar nariz y barbilla sin tocarse; los ojos se ven por encima.
+- [ ] REVISAR CON ENTRENADOR — guardia y jab: base más estrecha (tobillos a 38 cm, 0,9 × la
+      anchura de los hombros: de frente, con el tronco girado, como los hombros), rodillas sobre la
+      línea de la punta del pie (sin abrirse) y flexión menos profunda (pelvis 2,5 cm más alta).
+      El test admite 0,9–1,1 × los hombros: más estrecho habría que cambiar ese margen.
 - [ ] Cinturilla: en guardia, de espaldas, el borde de arriba hace un pequeño escalón (los pesos
       de la piel pasan de golpe de la pelvis a la columna). Suavizar los pesos solo del pantalón
       hace que asome la piel: habría que suavizar los dos.

@@ -529,7 +529,8 @@ def esfera(bm, centro, radios, segmentos, anillos, deformar=None):
 
 
 def pieza(nombre, bm, material, pesos):
-    """Objeto de malla con `pesos` {hueso: peso} en todos sus vértices."""
+    """Objeto de malla con `pesos` {hueso: peso} en todos sus vértices (normales hacia fuera)."""
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     malla = bpy.data.meshes.new(nombre)
     bm.to_mesh(malla)
     bm.free()

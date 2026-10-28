@@ -70,22 +70,22 @@
       "pos": [0,0.95,0],
       "pelvis": [0,-47,0],
       "columna": [18,0,0],
-      "pecho": [-9,-15,5],
-      "cuello": [0,0,-8],
-      "cabeza": [26,48,0],
+      "pecho": [-9,-16,11],
+      "cuello": [-8,27,-34],
+      "cabeza": [22,54,3],
       "muneca_izq": [0,-90,0],
-      "hombro_izq": [-99,14.8,63.3],
-      "codo_izq": [-28.7,0,0],
+      "hombro_izq": [-104.4,9.9,68.3],
+      "codo_izq": [-5.2,0,0],
       "cadera_izq": [-46.6,37.2,36.3],
       "rodilla_izq": [43.8,0,0],
       "tobillo_izq": [-9.7,-23,-3.3],
-      "hombro_der": [-65.5,31.7,44.5],
-      "codo_der": [-105.6,0,0],
+      "hombro_der": [-74.1,42.2,59.1],
+      "codo_der": [-104,0,0],
       "cadera_der": [-37.7,-18,-29.7],
       "rodilla_der": [56.3,0,0],
       "tobillo_der": [-5.5,36,2.7],
       "revisar": true,
-      "pendiente": "REVISAR CON ENTRENADOR: maniquí, jab al impacto: hombro arriba tapando la barbilla, giro del puño y extensión del brazo; base a la anchura de los hombros, rodillas sobre la punta del pie y flexión menos profunda"
+      "pendiente": "REVISAR CON ENTRENADOR: maniquí, jab al impacto: cabeza recta, barbilla baja metida detrás del hombro adelantado, hombro arriba tapando la mandíbula (cuello 34° de lado), giro del puño y extensión del brazo; base a la anchura de los hombros, rodillas sobre la punta del pie y flexión menos profunda"
     }
   }
 }

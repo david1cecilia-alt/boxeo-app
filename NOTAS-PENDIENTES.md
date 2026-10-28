@@ -12,6 +12,10 @@
       anchura de los hombros: de frente, con el tronco girado, como los hombros), rodillas sobre la
       línea de la punta del pie (sin abrirse) y flexión menos profunda (pelvis 2,5 cm más alta).
       El test admite 0,9–1,1 × los hombros: más estrecho habría que cambiar ese margen.
+- [ ] REVISAR CON ENTRENADOR — jab_impacto: cabeza recta (sin inclinarse de lado), barbilla baja
+      (32°) y metida hacia el hombro adelantado, que sube (pecho girado 11° de lado) hasta quedar
+      por encima de la mandíbula. Para llevar la barbilla al hombro el cuello se dobla 34° de lado:
+      ver si es mucho. Vista desde el rival, la barbilla aún queda a ~8 cm del hombro.
 - [ ] Cinturilla: en guardia, de espaldas, el borde de arriba hace un pequeño escalón (los pesos
       de la piel pasan de golpe de la pelvis a la columna). Suavizar los pesos solo del pantalón
       hace que asome la piel: habría que suavizar los dos.

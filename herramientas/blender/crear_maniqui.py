@@ -386,45 +386,80 @@ def botas(cuerpo, esqueleto, pos, mats):
 
 
 # ---------- 4. Recorte: fuera manos, pies, cara y lo que tapan las fundas ----------
+ESCALA_CABEZA = 0.92  # algo más pequeña que la de MakeHuman: unas 8 cabezas de alto
+
+# Rasgos de la cara de maniquí, lisos, sin ojos ni boca: bultos (+) y huecos (−) a lo largo del
+# radio del huevo. [acimut, elevación, ancho en acimut, ancho en elevación (grados), metros];
+# acimut 0 = de frente y + hacia la izquierda del maniquí (se repiten en espejo), elevación 0 =
+# el centro del huevo, a la altura de los ojos.
+RASGOS = [
+    (0, 90, 1000, 30, -0.012),   # coronilla redonda, no en punta
+    (80, 28, 40, 30, 0.009),     # cráneo ancho por encima de las orejas
+    (0, -64, 15, 11, 0.011),     # mentón
+    (62, -44, 13, 11, 0.009),    # ángulo de la mandíbula
+    (34, -56, 22, 8, 0.004),     # línea de la mandíbula
+    (36, -14, 13, 9, 0.004),     # pómulo
+    (17, 11, 17, 6, 0.005),      # arco de la ceja
+    (19, -1, 10, 7, -0.008),     # cuenca del ojo
+    (60, 18, 12, 14, -0.003),    # sien
+    (42, -34, 11, 9, -0.004),    # bajo el pómulo
+]
+# Nariz: [altura respecto a los ojos, cuánto sale, ancho] de la raíz a la base, en metros.
+NARIZ = [[0.004, 0.0, 0.016], [-0.002, 0.003, 0.017], [-0.011, 0.006, 0.019], [-0.021, 0.01, 0.021],
+         [-0.03, 0.013, 0.025], [-0.036, 0.014, 0.03], [-0.041, 0.01, 0.034], [-0.045, 0.004, 0.03],
+         [-0.047, 0.0, 0.02]]
+OREJA = Vector((0.007, 0.017, 0.03))  # radios: grosor, fondo, alto
+
+
 class Huevo:
-    """La cabeza lisa: un elipsoide del tamaño del cráneo con la mandíbula más estrecha."""
+    """La cabeza de maniquí: un elipsoide del tamaño del cráneo con la mandíbula más estrecha y
+    los RASGOS de la cara."""
 
     def __init__(self, craneo):
         self.alto = craneo["arriba"] - craneo["barbilla"]
         self.centro = Vector((0, (craneo["atras"] + craneo["frente"]) / 2 + 0.006,
                               (craneo["arriba"] + craneo["barbilla"]) / 2))
-        self.radios = Vector((craneo["ancho"] * 0.47, (craneo["atras"] - craneo["frente"]) / 2, self.alto / 2))
-        self.estrechar = [0.28, 0.3, 0.12]  # x, y detrás, y delante, en la barbilla
+        self.radios = Vector((craneo["ancho"] * 0.5, (craneo["atras"] - craneo["frente"]) / 2, self.alto / 2))
+        self.estrechar = [0.3, 0.4, 0.1]  # x, y detrás, y delante, en la barbilla
+        self.escala = 1.0
+
+    def escalar(self, k, pivote):
+        self.centro = pivote + (self.centro - pivote) * k
+        self.radios *= k
+        self.escala *= k
 
     def factores(self, z):
         """Estrechamiento [x, y detrás, y delante] a la altura `z` (relativa al centro)."""
         t = max(0.0, -z / self.radios.z) ** 2
         return tuple(1 - k * t for k in self.estrechar)
 
-    def tapar(self, puntos, margen=0.004):
-        """Ensancha la mandíbula (y, si no basta, todo el huevo) hasta que `puntos` (el borde
-        del corte del cuello) quedan dentro: así no se ve el corte."""
-        while not all(self.dentro(p, -margen) for p in puntos):
-            if max(self.estrechar) > 0:
-                self.estrechar = [max(0.0, k - 0.02) for k in self.estrechar]
-            else:
-                self.radios *= 1.01
+    def relieve(self, p):
+        """Metros que sale (o entra) la cara en el punto `p` de la esfera de radios `radios`."""
+        u = Vector((p.x / self.radios.x, p.y / self.radios.y, p.z / self.radios.z))
+        acimut = math.degrees(math.atan2(u.x, -u.y))
+        elevacion = math.degrees(math.asin(max(-1.0, min(1.0, u.z))))
+        total = 0.0
+        for az, el, ancho_az, ancho_el, metros in RASGOS:
+            for s in ((1, -1) if az else (1,)):
+                total += metros * math.exp(-((acimut - s * az) / ancho_az) ** 2 - ((elevacion - el) / ancho_el) ** 2)
+        return total * self.escala
 
     def deformar(self, p):
         x, atras, delante = self.factores(p.z)
-        return Vector((p.x * x, p.y * (atras if p.y > 0 else delante), p.z))
+        q = Vector((p.x * x, p.y * (atras if p.y > 0 else delante), p.z))
+        return q + q.normalized() * self.relieve(p)
 
-    def dentro(self, punto, margen=0.0):
-        p = punto - self.centro
-        x, atras, delante = self.factores(p.z)
-        q = Vector((p.x / x, p.y / (atras if p.y > 0 else delante), p.z))
-        r = self.radios + Vector((margen,) * 3)
-        return (q.x / r.x) ** 2 + (q.y / r.y) ** 2 + (q.z / r.z) ** 2 < 1
+
+# La piel del cuello se corta algo por encima de su articulación, perpendicular al cuello (que va
+# hacia delante: el corte queda más bajo en la garganta que en la nuca); de ahí arriba va el
+# cuello de maniquí (cuello_maniqui), que entra en la cabeza.
+CORTE_CUELLO = 0.04
 
 
 def recortar(cuerpo, esqueleto, pos):
-    """Borra lo que tapan guantes, botas, pantalón y cabeza lisa (con un margen bajo los bordes
-    de las fundas). Devuelve las medidas del pie y el huevo de la cabeza."""
+    """Borra lo que tapan guantes, botas, pantalón y cabeza de maniquí (con un margen bajo los
+    bordes de las fundas). Devuelve las medidas del pie, el huevo de la cabeza y el corte del
+    cuello (centro, eje y radios)."""
     nombres = {g.index: g.name for g in cuerpo.vertex_groups if g.name in esqueleto.data.bones}
     orejas = cuerpo.vertex_groups["ears"].index
     bm = bmesh.new()
@@ -442,11 +477,17 @@ def recortar(cuerpo, esqueleto, pos):
         "atras": max(p.y for p in cabeza),
         "frente": min(p.y for p in cabeza if arriba - 0.09 < p.z < arriba - 0.05),
     })
+    huevo.escalar(ESCALA_CABEZA, pos["cabeza"])
     pies = [v.co.y for v in bm.verts if grupo[v].startswith("foot_l")]
     pie = {"talon": max(pies), "punta": min(pies)}
 
     cadera = pos["cadera_izq"].z
     tapado = {"pelvis", "spine_01", "spine_02", "thigh_l", "thigh_r"}
+    eje = (pos["cabeza"] - pos["cuello"]).normalized()
+    corte = pos["cuello"] + eje * CORTE_CUELLO
+
+    def sobre_el_corte(co):
+        return (co - corte).dot(eje)
 
     def sobra(v):
         g = grupo[v]
@@ -465,16 +506,25 @@ def recortar(cuerpo, esqueleto, pos):
         if g == "neck_01":
             return sobre_el_corte(v.co) > 0
         if g == "head":
-            return v.co.z > barbilla + 0.01
+            # La garganta se queda (pesa a la cabeza); la barbilla de MakeHuman, no.
+            return sobre_el_corte(v.co) > 0 or v.co.y < pos["cuello"].y - 0.085
         return False
 
     bmesh.ops.delete(bm, geom=[v for v in bm.verts if sobra(v)], context="VERTS")
-    huevo.tapar([v.co for v in bm.verts if v.is_boundary and v.co.z > pos["cuello"].z])
+    borde = [v.co for v in bm.verts if v.is_boundary and abs(sobre_el_corte(v.co)) < 0.008 and abs(v.co.x) < 0.1]
+    centro = sum(borde, Vector()) / len(borde)
+    centro = corte + (centro - corte) - eje * sobre_el_corte(centro)  # en el plano del corte
+    lateral = Vector((1, 0, 0))
+    fondo = lateral.cross(eje)
+    radios = (max(abs((p - centro).dot(lateral)) for p in borde) + 0.003,
+              max(abs((p - centro).dot(fondo)) for p in borde) + 0.003)
+    print(f"Corte del cuello: {len(borde)} vértices, {radios[0] * 200:.1f} × {radios[1] * 200:.1f} cm")
+    cuello = {"centro": centro, "eje": eje, "lateral": lateral, "fondo": fondo, "radios": radios}
     # Restos sueltos (uñas, islas pequeñas).
     bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
     bm.to_mesh(cuerpo.data)
     bm.free()
-    return pie, huevo
+    return pie, huevo, cuello
 
 
 def diezmar(cuerpo, triangulos):
@@ -588,10 +638,76 @@ def guante(lado, muneca, materiales):
     return [puno, munequera, pulgar]
 
 
-def cabeza_lisa(huevo, materiales):
+def cabeza_maniqui(huevo, materiales):
+    """El huevo con los rasgos, la nariz (una pieza de anillos horizontales hundida en la cara) y
+    las orejas (elipsoides planos con el lado de fuera algo hundido), todo en el hueso de la
+    cabeza. Nariz y orejas se colocan sobre la superficie del huevo con rayos."""
     bm = bmesh.new()
-    esfera(bm, huevo.centro, huevo.radios, 32, 20, huevo.deformar)
-    return pieza("cabeza", bm, materiales["piel"], {"head": 1.0})
+    esfera(bm, huevo.centro, huevo.radios, 40, 28, huevo.deformar)
+    arbol = BVHTree.FromBMesh(bm)
+    piezas = [pieza("cabeza", bm, materiales["piel"], {"head": 1.0})]
+    k = huevo.escala
+    c = huevo.centro
+
+    hundir = 0.006 * k
+    anillos = []
+    for dz, sale, ancho in catmull_rom(NARIZ, 16):
+        z = c.z + dz * k
+        cara, _, _, _ = arbol.ray_cast(Vector((0, c.y - 1, z)), Vector((0, 1, 0)))
+        a, b = max(ancho, 0.004) * k / 2, max(sale, 0.0) * k / 2 + hundir
+        centro_y = cara.y - max(sale, 0.0) * k + b  # el frente sale `sale`; el resto, dentro de la cara
+        anillo = []
+        for i in range(14):
+            t = 2 * math.pi * i / 14
+            delante = max(0.0, -math.sin(t))  # el lomo de la nariz, algo más estrecho
+            anillo.append(Vector((a * math.cos(t) * (1 - 0.25 * delante), centro_y + b * math.sin(t), z)))
+        anillos.append(anillo)
+    bm = bmesh.new()
+    tubo(bm, anillos)
+    piezas.append(pieza("nariz", bm, materiales["piel"], {"head": 1.0}))
+
+    for lado, s in (("l", 1), ("r", -1)):
+        y, z = c.y + 0.004 * k, c.z - 0.02 * k
+        costado, _, _, _ = arbol.ray_cast(Vector((s, y, z)), Vector((-s, 0, 0)))
+        giro = Matrix.Rotation(math.radians(-s * 15), 3, "Z") @ Matrix.Rotation(math.radians(-12), 3, "X")
+        r = OREJA * k
+
+        def oreja(p, s=s, r=r, giro=giro):
+            hueco = math.exp(-((p.y / r.y) ** 2 + (p.z / r.z) ** 2) / 0.3)
+            if p.x * s > 0:
+                p = Vector((p.x * (1 - 0.6 * hueco), p.y, p.z))
+            return giro @ p
+        bm = bmesh.new()
+        esfera(bm, costado + Vector((s * 0.003 * k, 0, 0)), r, 14, 10, oreja)
+        piezas.append(pieza(f"oreja_{lado}", bm, materiales["piel"], {"head": 1.0}))
+    return piezas
+
+
+def cuello_maniqui(cuello, huevo, materiales):
+    """Cuello de maniquí: cilindro elíptico a lo largo del cuello, algo más ancho que el corte de
+    la piel (lo tapa desde un poco más abajo) y metido en la cabeza. Abajo sigue al hueso del
+    cuello y arriba al de la cabeza."""
+    eje, c0 = cuello["eje"], cuello["centro"]
+    abajo, arriba = -0.015, (huevo.centro.z - 0.02 - c0.z) / eje.z  # a lo largo del eje
+    rx, ry = cuello["radios"]
+    anillos = []
+    for i in range(11):
+        t = i / 10
+        c = c0 + eje * (abajo + (arriba - abajo) * t)
+        k = 1 - 0.1 * t  # algo más estrecho arriba
+        anillos.append([c + cuello["lateral"] * (rx * k * math.cos(a)) + cuello["fondo"] * (ry * k * math.sin(a))
+                        for a in (2 * math.pi * j / 20 for j in range(20))])
+    bm = bmesh.new()
+    tubo(bm, anillos)
+    objeto = pieza("cuello", bm, materiales["piel"], {"neck_01": 1.0, "head": 0.0})
+    grupos = objeto.vertex_groups
+    for v in objeto.data.vertices:
+        s = (v.co - c0).dot(eje)
+        t = min(1.0, max(0.0, ((s - abajo) / (arriba - abajo) - 0.3) / 0.5))
+        w = t * t * (3 - 2 * t)
+        grupos["head"].add([v.index], w, "REPLACE")
+        grupos["neck_01"].add([v.index], 1 - w, "REPLACE")
+    return objeto
 
 
 # Juntas con punto rojo: [articulación, radio, huesos donde se apoya]. La cadera no lleva:
@@ -782,12 +898,13 @@ def main():
     fundir_bolas(cuerpo)
     mats = materiales()
     piezas = [pantalon(cuerpo, esqueleto, pos, mats), *botas(cuerpo, esqueleto, pos, mats)]
-    pie, huevo = recortar(cuerpo, esqueleto, pos)
+    pie, huevo, cuello = recortar(cuerpo, esqueleto, pos)
 
-    piezas.append(cabeza_lisa(huevo, mats))
+    piezas += cabeza_maniqui(huevo, mats)
+    piezas.append(cuello_maniqui(cuello, huevo, mats))
     for lado, l in LADOS.items():
         piezas += guante(l, pos[f"muneca_{lado}"], mats)
-    extra = sum(len(p.data.polygons) for p in piezas) + 6 * 120
+    extra = sum(len(f.vertices) - 2 for p in piezas for f in p.data.polygons) + 6 * 120
     diezmar(cuerpo, TRIANGULOS - extra)
     piezas += puntos_rojos(cuerpo, esqueleto, pos, mats)
     pintar_espalda(cuerpo, esqueleto, pos, mats)

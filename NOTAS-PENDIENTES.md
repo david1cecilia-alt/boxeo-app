@@ -6,10 +6,8 @@
       jab_impacto en frente real, 3/4 delantero, lado, espalda y cenital; recortes de cabeza y
       guantes). No se versiona: `python herramientas/hoja_maniqui.py`. Las posturas siguen
       `REVISAR CON ENTRENADOR`.
-- [ ] Al revisar las posturas, regenerar con `crear_maniqui.py` dejando que reescriba
-      `data/posturas.json`: con la cabeza nueva (más pequeña), el punto `ojos` pasa de
-      `[0, 0.0282, 0.12]` a `[0, 0.0259, 0.0971]` (la cara queda 2,3 cm más atrás). No se ha
-      cambiado aún para no tocar las posturas; el esqueleto mide igual.
+- [ ] REVISAR CON ENTRENADOR — guardia: guantes cerrados hacia el centro (a ±10 cm de la cara y
+      1,5 cm bajo los pómulos) para tapar nariz y barbilla sin tocarse; los ojos se ven por encima.
 - [ ] Cinturilla: en guardia, de espaldas, el borde de arriba hace un pequeño escalón (los pesos
       de la piel pasan de golpe de la pelvis a la columna). Suavizar los pesos solo del pantalón
       hace que asome la piel: habría que suavizar los dos.

@@ -5,22 +5,22 @@
       "pelvis": {"pos": [0, 0.925, -0.02]},
       "angulos": {"pelvis": [0, -42, 0], "columna": [17, 0, 0], "pecho": [-9, -8, 4], "cuello": [0, 0, -8], "cabeza": [26, 40, 0]},
       "brazos": {
-        "izq": {"puno": [0.013, 1.525, 0.309], "polo": [-0.1, -1, 0]},
-        "der": {"puno": [-0.274, 1.525, 0.219], "polo": [0.1, -1, 0]}
+        "izq": {"puno": [-0.032, 1.51, 0.309], "polo": [-0.1, -1, 0]},
+        "der": {"puno": [-0.232, 1.51, 0.219], "polo": [0.1, -1, 0]}
       },
       "piernas": {
         "izq": {"tobillo": [0.16, 0.088, 0.289], "rumbo": -20, "rodilla": 10},
         "der": {"tobillo": [-0.26, 0.137, -0.248], "rumbo": -45, "talon": 19, "rodilla": -80}
       },
       "revisar": true,
-      "pendiente": "REVISAR CON ENTRENADOR: maniquí, guardia: flexión de rodillas, barbilla detrás del hombro izquierdo, guantes a la altura de los pómulos, codos cerrados, talón trasero algo levantado, separación y giro de los pies"
+      "pendiente": "REVISAR CON ENTRENADOR: maniquí, guardia: flexión de rodillas, barbilla detrás del hombro izquierdo, guantes a la altura de los pómulos y cerrados al centro tapando nariz y barbilla (sin tocarse), codos cerrados, talón trasero algo levantado, separación y giro de los pies"
     },
     "jab_salida": {
       "pelvis": {"pos": [0, 0.925, -0.01]},
       "angulos": {"pelvis": [0, -44, 0], "columna": [17, 0, 0], "pecho": [-9, -11, 4], "cuello": [0, 0, -8], "cabeza": [26, 43, 0], "muneca_izq": [0, -45, 0]},
       "brazos": {
         "izq": {"puno": [0.04, 1.45, 0.681], "polo": [-0.1, -1, 0]},
-        "der": {"puno": [-0.273, 1.525, 0.22], "polo": [0.1, -1, 0]}
+        "der": {"puno": [-0.24, 1.511, 0.221], "polo": [0.1, -1, 0]}
       },
       "piernas": {
         "izq": {"tobillo": [0.16, 0.088, 0.289], "rumbo": -20, "rodilla": 10},
@@ -34,7 +34,7 @@
       "angulos": {"pelvis": [0, -47, 0], "columna": [18, 0, 0], "pecho": [-9, -15, 5], "cuello": [0, 0, -8], "cabeza": [26, 48, 0], "muneca_izq": [0, -90, 0]},
       "brazos": {
         "izq": {"puno": [0.03, 1.45, 0.856], "polo": [-0.1, -1, 0]},
-        "der": {"puno": [-0.303, 1.524, 0.22], "polo": [0.1, -1, 0]}
+        "der": {"puno": [-0.261, 1.51, 0.219], "polo": [0.1, -1, 0]}
       },
       "piernas": {
         "izq": {"tobillo": [0.16, 0.088, 0.289], "rumbo": -20, "rodilla": 10},

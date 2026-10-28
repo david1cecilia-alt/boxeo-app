@@ -8,8 +8,8 @@ import { fileURLToPath } from "node:url";
 import { cinematica, prepararPosturas, rotar } from "../static/maniqui/posturas.js";
 
 const GRADOS = 180 / Math.PI;
-// Radio del guante (puño de PERFIL_PUNO en crear_maniqui.py, ~0,1 m alrededor del punto puno).
-export const RADIO_GUANTE = 0.1;
+// Radio del guante visto de frente (GUANTE en crear_maniqui.py: 13 × 15 cm alrededor del punto puno).
+export const RADIO_GUANTE = 0.07;
 // Separación de los ojos a cada lado del punto `ojos` (centro de la cara).
 const MEDIO_OJOS = 0.032;
 // Los pómulos, algo por debajo de los ojos.

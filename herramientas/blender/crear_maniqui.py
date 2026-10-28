@@ -452,6 +452,9 @@ def recortar(cuerpo, esqueleto, pos):
         g = grupo[v]
         if g.startswith(("hand_", "foot_") + DEDOS):
             return True
+        if g.startswith("lowerarm_"):
+            # Lo que pasa de la muñeca: asomaría entre la muñequera y el guante.
+            return v.co.z < pos["muneca_izq"].z + 0.005
         if g.startswith("calf_"):
             # Lo que queda dentro de la caña de la bota.
             return v.co.z < pos["tobillo_izq"].z + CANA_BOTA - 0.07
@@ -552,25 +555,35 @@ PERFIL_PUNO = [[0, -0.195], [0.06, -0.188], [0.086, -0.165], [0.097, -0.12], [0.
 PERFIL_MUNEQUERA = [[0, -0.005], [0.058, 0], [0.057, 0.05], [0.053, 0.09], [0.04, 0.095], [0, 0.095]]
 
 
+# Guante de 14 oz algo generoso: 13 cm de grosor (de la palma al dorso, X en el reposo: la palma
+# mira al muslo), 15 de ancho (de nudillo a nudillo, Z) y 18 de la muñeca a la punta. La mano de
+# MakeHuman mide 9 cm de grueso con los dedos estirados: cabe con relleno.
+GUANTE = Vector((0.67, 0.92, 0.77))  # escala de PERFIL_PUNO en X, largo y Z
+
+
 def guante(lado, muneca, materiales):
-    """Puño (más grande que la cabeza), muñequera y pulgar, todo en el hueso de la mano."""
+    """Puño (del ancho de la cara), muñequera y pulgar, todo en el hueso de la mano."""
     s = 1 if lado == "l" else -1
     origen = a_three(muneca)
     bm = bmesh.new()
-    torneado(bm, PERFIL_PUNO, 24, 18, lambda p: a_blender(origen + Vector((p.x * 1.12, p.y, p.z * 0.9))))
+    # Junto a la muñeca, casi del grosor de la muñequera: el guante no se estrecha ahí.
+    def forma(p):
+        cerca = min(1.0, max(0.0, (p.y + 0.05) / 0.045))
+        return Vector((p.x * (GUANTE.x + (0.95 - GUANTE.x) * cerca), p.y * GUANTE.y, p.z * GUANTE.z))
+    torneado(bm, PERFIL_PUNO, 24, 18, lambda p: a_blender(origen + forma(p)))
     puno = pieza(f"guante_{lado}", bm, materiales["guante"], {f"hand_{lado}": 1.0})
     bm = bmesh.new()
     torneado(bm, PERFIL_MUNEQUERA, 24, 8, lambda p: a_blender(origen + p))
     munequera = pieza(f"munequera_{lado}", bm, materiales["munequera"], {f"hand_{lado}": 1.0})
     # Pulgar: cápsula pegada al puño, por el lado de la palma y hacia delante.
     giro = Matrix.Rotation(0.4, 3, "X") @ Matrix.Rotation(s * 0.25, 3, "Z")
-    centro = origen + Vector((-s * 0.085, -0.07, 0.035))
+    centro = origen + Vector((-s * 0.07, -0.066, 0.03))
     bm = bmesh.new()
 
     def capsula(p):
-        q = Vector((p.x, p.y + math.copysign(0.03, p.y), p.z))
+        q = Vector((p.x, p.y + math.copysign(0.025, p.y), p.z))
         return a_blender(giro @ q)
-    esfera(bm, a_blender(centro), (0.026, 0.026, 0.026), 12, 8, capsula)
+    esfera(bm, a_blender(centro), (0.021, 0.021, 0.021), 12, 8, capsula)
     pulgar = pieza(f"pulgar_{lado}", bm, materiales["guante"], {f"hand_{lado}": 1.0})
     return [puno, munequera, pulgar]
 

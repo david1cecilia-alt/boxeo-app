@@ -19,8 +19,6 @@
 - [ ] Cinturilla: en guardia, de espaldas, el borde de arriba hace un pequeño escalón (los pesos
       de la piel pasan de golpe de la pelvis a la columna). Suavizar los pesos solo del pantalón
       hace que asome la piel: habría que suavizar los dos.
-- [ ] Vista inicial de la app (`tres_cuartos`, acimut 55°): con el tronco girado de la guardia
-      enseña sobre todo la espalda. Valorar ponerla del lado de la mano trasera (≈ −40°).
 - [ ] Instalar Blender 4.5 LTS + MPFB en otro PC para regenerar el maniquí:
   1. Blender 4.5 LTS: `winget install --id BlenderFoundation.Blender.LTS.4.5 --exact`
      (pide administrador) o, sin administrador, el ZIP portátil de

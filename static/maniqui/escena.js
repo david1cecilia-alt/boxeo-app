@@ -20,9 +20,10 @@ const DECODIFICADOR = new URL("../vendor/three/addons/libs/draco/", import.meta.
 // Algo por delante del cuerpo: así cabe el brazo estirado de los golpes en la vista de lado.
 const OBJETIVO = new THREE.Vector3(0, 0.84, 0.18);
 // Ángulos de cámara (grados): acimut 0 = de frente (desde +Z), 90 = de lado (desde +X, el
-// lado izquierdo del maniquí). Elevación negativa = desde abajo. La primera es la de inicio.
+// lado izquierdo del maniquí). Elevación negativa = desde abajo. La primera es la de inicio:
+// del lado de la mano trasera, que con el tronco girado de la guardia enseña pecho y cara.
 export const VISTAS = {
-  tres_cuartos: { acimut: 55, elevacion: -4 },
+  tres_cuartos: { acimut: -40, elevacion: -4 },
   frente: { acimut: 0, elevacion: 6 },
   lado: { acimut: 90, elevacion: 6 },
   arriba: { acimut: 0, elevacion: 89 },

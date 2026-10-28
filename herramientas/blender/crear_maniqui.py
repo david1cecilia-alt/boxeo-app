@@ -24,7 +24,9 @@ from mathutils.bvhtree import BVHTree
 from mathutils.kdtree import KDTree
 
 try:
+    from bl_ext.blender_org.mpfb.entities.objectproperties import HumanObjectProperties
     from bl_ext.blender_org.mpfb.services.humanservice import HumanService
+    from bl_ext.blender_org.mpfb.services.targetservice import TargetService
 except ImportError:
     sys.exit("Falta MPFB: blender --online-mode --command extension install mpfb --enable")
 
@@ -38,6 +40,20 @@ ALTURA = 1.86
 MACROS = {
     "gender": 1.0, "age": 0.5, "muscle": 1.0, "weight": 0.5, "proportions": 1.0, "height": 0.7,
     "cupsize": 0.5, "firmness": 0.5, "race": {"asian": 0.33, "caucasian": 0.34, "african": 0.33},
+}
+# Forma atlética en V, como el maniquí de la referencia: más masa muscular sin grasa, espalda y
+# hombros anchos, cintura, cadera y glúteos estrechos, brazos y piernas algo más gruesos. Se carga
+# después de colocar el esqueleto (que se ajusta al cuerpo de MACROS): así ninguna articulación se
+# mueve y data/posturas.json sigue valiendo. {l} es cada lado (l, r).
+FORMA_MACROS = {"weight": 0.62}
+FORMA = {
+    "torso-vshape-incr": 1.0, "torso-muscle-dorsi-incr": 0.8, "torso-muscle-pectoral-incr": 0.5,
+    "measure-waist-circ-decr": 0.5, "hip-scale-horiz-decr": 0.5, "buttocks-volume-decr": 0.8,
+    "{l}-upperarm-shoulder-muscle-incr": 0.8, "{l}-upperarm-muscle-incr": 0.6, "{l}-lowerarm-muscle-incr": 0.5,
+    "{l}-upperleg-muscle-incr": 0.5, "{l}-lowerleg-muscle-incr": 0.4, "{l}-upperarm-fat-decr": 1.0,
+    "{l}-lowerarm-fat-decr": 1.0, "{l}-upperleg-fat-decr": 1.0, "{l}-lowerleg-fat-decr": 1.0,
+    "measure-upperarm-circ-incr": 0.3, "measure-thigh-circ-incr": 0.3, "measure-calf-circ-incr": 0.2,
+    "measure-neck-circ-decr": 0.6,  # cuello de maniquí, más estrecho que la mandíbula
 }
 TRIANGULOS = 15_000  # objetivo del maniquí entero (cuerpo diezmado + piezas)
 
@@ -127,6 +143,15 @@ def crear_cuerpo():
     vaciar_escena()
     cuerpo = HumanService.create_human(macro_detail_dict=MACROS, scale=escala)
     esqueleto = HumanService.add_builtin_rig(cuerpo, "game_engine")
+    # La forma, con el esqueleto ya puesto (sin reajustarlo).
+    for nombre, valor in FORMA_MACROS.items():
+        HumanObjectProperties.set_value(nombre, valor, entity_reference=cuerpo)
+    TargetService.reapply_macro_details(cuerpo)
+    for nombre, valor in FORMA.items():
+        for lado in (LADOS.values() if "{l}" in nombre else ("",)):
+            ruta = TargetService.target_full_path(nombre.format(l=lado))
+            assert ruta, f"Falta el target {nombre}"
+            TargetService.load_target(cuerpo, ruta, weight=valor)
     # Suelta la malla del esqueleto (se vuelve a emparentar al final): así se mueven por separado.
     mundo = cuerpo.matrix_world.copy()
     cuerpo.parent = None

@@ -386,6 +386,7 @@ export async function crearEscena(lienzo, datos) {
   return {
     mostrar(resuelta) { mostrar(resuelta); pintar(); },
     orbita,
+    camara, // solo para leerla (herramientas/hoja_maniqui.py proyecta puntos para los recortes)
     pintar,
     destruir() {
       observador.disconnect();

@@ -59,16 +59,17 @@ def nombre_foto(postura: str, guardia: str, vista: str = VISTA) -> str:
 
 
 @contextmanager
-def abrir(sitio: Path, html: str, ancho: int = ANCHO, alto: int = ALTO):
+def abrir(sitio: Path, html: str, ancho: int = ANCHO, alto: int = ALTO, buscar=None):
     """Abre `html` en Chromium headless como una página más de `sitio` (sin servidor: Playwright
-    sirve los ficheros). Devuelve la página y la lista de errores de JS que vaya habiendo."""
+    sirve los ficheros; `buscar(relativa)` puede cambiar de dónde sale cada uno). Devuelve la
+    página y la lista de errores de JS que vaya habiendo."""
     from playwright.sync_api import sync_playwright
 
     def servir(ruta):
         relativa = ruta.request.url.removeprefix(ORIGEN + "/").split("?")[0]
         if relativa == "__pagina__.html":
             return ruta.fulfill(body=html, content_type="text/html; charset=utf-8")
-        fichero = sitio / relativa
+        fichero = buscar(relativa) if buscar else sitio / relativa
         if not fichero.is_file():
             return ruta.fulfill(status=404)
         tipo = "text/javascript" if fichero.suffix == ".js" else mimetypes.guess_type(fichero.name)[0]

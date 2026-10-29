@@ -361,7 +361,10 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   $("#parar").addEventListener("click", parar);
 
 
-  setTimeout(() => ($("#info-voz").textContent = `Voz: ${voz.descripcion}`), 500);
+  // Completa en el móvil; en escritorio, la corta para que quepa en una línea.
+  setTimeout(() => ($("#info-voz").innerHTML =
+    `<span class="voz-larga">Voz: ${esc(voz.descripcion)}</span>`
+    + `<span class="voz-corta">Voz: ${esc(voz.descripcionCorta ?? voz.descripcion)}</span>`), 500);
 
   return {
     mostrar() {

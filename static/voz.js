@@ -44,6 +44,16 @@ class VozNavegador {
   get descripcion() {
     return this.voz ? `${this.voz.name} (${this.voz.lang})` : "sin voz en español";
   }
+
+  // Sin la coletilla del idioma, que ya dice el código: «Microsoft Helena (es-ES)».
+  get descripcionCorta() {
+    return this.voz ? `${nombreCortoVoz(this.voz.name)} (${this.voz.lang})` : this.descripcion;
+  }
+}
+
+// «Microsoft Helena - Spanish (Spain)» → «Microsoft Helena». Los nombres sin coletilla, tal cual.
+export function nombreCortoVoz(nombre) {
+  return nombre.replace(/\s+-\s+[^-]+$/, "").trim() || nombre;
 }
 
 export function crearVoz() {

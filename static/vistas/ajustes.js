@@ -46,6 +46,7 @@ export function iniciarAjustes({ almacen, voz }) {
     const p = almacen.datos.perfil;
     const pesos = p.pesos ?? datos().perfil.pesos;
     raiz.innerHTML = `
+      <div class="columna-ajustes">
       <form class="tarjeta formulario" id="f-voz" aria-labelledby="t-voz">
         <div>
           <h2 id="t-voz">Voz</h2>
@@ -68,6 +69,7 @@ export function iniciarAjustes({ almacen, voz }) {
         </div>
         ${Object.entries(BASICOS).map(([c, def]) => chips("basicos", c, def, p.basicos[c])).join("")}
       </form>
+      </div>
 
       <form class="tarjeta formulario" id="f-pesos" aria-labelledby="t-pesos">
         <div>

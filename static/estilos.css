@@ -493,7 +493,7 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
 #vista-ajustes .volver-movil { margin: 14px 0 -24px; }
 #vista-ajustes h1 { font-size: clamp(2.5rem, 11.8vw, 3.6rem); }
 #vista-ajustes .marca-agua { top: 6px; right: -10px; font-size: 140px; opacity: 0.04; }
-#ajustes-contenido { display: grid; gap: 16px; }
+#ajustes-contenido, .columna-ajustes { display: grid; gap: 16px; align-content: start; min-width: 0; }
 
 /* ---------- Historial ---------- */
 #vista-historial { --alto-foto: 240px; --arriba-titular: 96px; --posicion-foto: 50% 35%; }
@@ -806,11 +806,11 @@ dialog::backdrop { background: var(--velo); }
     border: 1px dashed var(--linea); border-radius: var(--radio);
   }
 
-  /* Ajustes: como Perfil, secciones en dos columnas. */
+  /* Ajustes: Voz y Tus datos a la izquierda, Qué te dicta a la derecha (a 1024 y a 1440 igual). */
   #vista-ajustes h1 { font-size: 4.5rem; }
-  #ajustes-contenido { display: block; columns: 2; column-gap: 24px; }
-  #ajustes-contenido > * { break-inside: avoid; margin: 0 0 24px; }
-  #ajustes-contenido > .nota { column-span: all; }
+  #ajustes-contenido { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
+  .columna-ajustes { gap: 24px; }
+  #ajustes-contenido > .nota { grid-column: 1 / -1; }
 
   /* Perfil: secciones en dos columnas. */
   #perfil-contenido { columns: 2; column-gap: 24px; }

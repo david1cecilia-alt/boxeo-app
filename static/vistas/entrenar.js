@@ -49,6 +49,19 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     $("#descanso").value = p.descanso;
   }
 
+  // En el móvil la fila de chips se desplaza en horizontal: si el elegido no se ve entero, se mueve
+  // lo justo para mostrarlo (sin animación y sin tocar el scroll vertical de la página).
+  function verChipElegido() {
+    const fila = $("#presets");
+    const chip = $('input[name="preset"]:checked')?.parentElement;
+    if (!chip || fila.scrollWidth <= fila.clientWidth) return;
+    const relleno = parseFloat(getComputedStyle(fila).paddingLeft) || 0;
+    const f = fila.getBoundingClientRect();
+    const c = chip.getBoundingClientRect();
+    if (c.right > f.right - relleno) fila.scrollLeft += c.right - (f.right - relleno);
+    else if (c.left < f.left + relleno) fila.scrollLeft -= f.left + relleno - c.left;
+  }
+
   // Lo último que se eligió aquí (o lo que se cambió en Guardia/Nivel del perfil). Se aplica solo
   // si el perfil ha cambiado: lo de aquí ya está guardado, así que aplicarlo de nuevo no pisa nada.
   function aplicarPreferencias() {
@@ -350,7 +363,9 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
 
   return {
     mostrar() {
-      if (!estado) aplicarPreferencias();
+      if (estado) return;
+      aplicarPreferencias();
+      document.fonts.ready.then(verChipElegido); // el ancho de los chips depende de la fuente
     },
     get entrenando() { return estado !== null; },
   };

@@ -36,23 +36,27 @@ def test_el_gancho_de_derecha_es_el_4_en_ortodoxo_y_el_3_en_zurdo():
 
 def test_modos_de_voz():
     combo = acciones_por_ids(["jab", "directo", "esquiva_der", "gancho_izq"])
-    assert texto_hablado(combo, "nombres") == "jab, recto, esquiva, gancho de izquierda"
-    assert texto_hablado(combo, "numeros") == "uno, dos, esquiva, tres"
-    assert texto_hablado(combo, "ambos") == "uno jab, dos recto, esquiva, tres gancho de izquierda"
+    assert texto_hablado(combo, "nombres") == "jab, recto, esquiva derecha, gancho de izquierda"
+    assert texto_hablado(combo, "numeros") == "uno, dos, esquiva derecha, tres"
+    assert texto_hablado(combo, "ambos") == "uno jab, dos recto, esquiva derecha, tres gancho de izquierda"
 
 
 def test_modos_de_voz_en_zurdo():
     zurda = espejo_combo(acciones_por_ids(["jab", "gancho_izq", "uppercut_der", "rodar_izq", "gancho_izq"]))
     assert texto_hablado(zurda, "nombres", zurdo=True) == \
-        "jab, gancho de derecha, uppercut de izquierda, rueda, gancho de derecha"
-    assert texto_hablado(zurda, "numeros", zurdo=True) == "uno, tres, seis, rueda, tres"
+        "jab, gancho de derecha, uppercut de izquierda, rueda derecha, gancho de derecha"
+    assert texto_hablado(zurda, "numeros", zurdo=True) == "uno, tres, seis, rueda derecha, tres"
     assert texto_hablado(zurda, "ambos", zurdo=True) == \
-        "uno jab, tres gancho de derecha, seis uppercut de izquierda, rueda, tres gancho de derecha"
+        "uno jab, tres gancho de derecha, seis uppercut de izquierda, rueda derecha, tres gancho de derecha"
 
 
-def test_las_defensas_se_dicen_como_orden_corta():
-    ordenes = {a.id: palabra_hablada(a, modo) for a in catalogo().values() if a.orden for modo in MODOS_VOZ}
-    assert set(ordenes.values()) == {"esquiva", "rueda", "atrás", "bloquea"}
+def test_las_defensas_se_dicen_como_orden_corta_con_su_lado():
+    for a in catalogo().values():
+        if a.orden:
+            assert {palabra_hablada(a, m) for m in MODOS_VOZ} == {{
+                "esquiva_der": "esquiva derecha", "esquiva_izq": "esquiva izquierda",
+                "rodar_der": "rueda derecha", "rodar_izq": "rueda izquierda",
+                "paso_atras": "atrás", "bloqueo": "bloquea"}[a.id]}, a.id
 
 
 def test_sin_numero_se_dice_el_nombre_en_todos_los_modos():

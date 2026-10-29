@@ -97,10 +97,16 @@ export function numero(accion, zurdo = false) {
   return (zurdo ? espejo(accion) : accion).numero;
 }
 
-// Lo que se dice de una acción: las defensas, su orden corta; los golpes con número,
-// el número, el nombre o los dos ("uno jab").
+// La orden de una defensa con su lado si lo tiene: "esquiva izquierda", "atrás".
+function ordenHablada(accion) {
+  if (!accion.orden || !(accion.lado in PALABRA)) return accion.orden;
+  return `${accion.orden} ${PALABRA[accion.lado]}`;
+}
+
+// Lo que se dice de una acción: las defensas, su orden corta con su lado ("esquiva derecha");
+// los golpes con número, el número, el nombre o los dos ("uno jab").
 export function palabraHablada(accion, modo = "nombres", zurdo = false) {
-  const nombre = accion.orden || nombreHablado(accion);
+  const nombre = ordenHablada(accion) || nombreHablado(accion);
   const n = numero(accion, zurdo);
   if (n === null || modo === "nombres") return nombre;
   const palabra = palabrasNumero()[n];

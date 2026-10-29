@@ -26,7 +26,7 @@ class Accion:
     poder: bool = False
     plantilla_corta: str = ""  # nombre para la pantalla de la sesión
     numero: int | None = None  # número del golpe EN ORTODOXO (1 jab … 6 uppercut trasero)
-    orden: str = ""            # lo que se dice de una defensa en la sesión ("esquiva")
+    orden: str = ""            # lo que se dice de una defensa en la sesión ("esquiva" + su lado)
 
     @property
     def nombre_hablado(self) -> str:
@@ -148,10 +148,17 @@ def numero(accion: Accion, zurdo: bool = False) -> int | None:
     return (espejo(accion) if zurdo else accion).numero
 
 
+def _orden_hablada(accion: Accion) -> str:
+    """La orden de una defensa con su lado si lo tiene: "esquiva izquierda", "atrás"."""
+    if not accion.orden or accion.lado not in _PALABRA:
+        return accion.orden
+    return f"{accion.orden} {_PALABRA[accion.lado]}"
+
+
 def palabra_hablada(accion: Accion, modo: str = "nombres", zurdo: bool = False) -> str:
-    """Lo que se dice de una acción: las defensas, su orden corta; los golpes con número,
-    el número, el nombre o los dos ("uno jab")."""
-    nombre = accion.orden or accion.nombre_hablado
+    """Lo que se dice de una acción: las defensas, su orden corta con su lado ("esquiva derecha");
+    los golpes con número, el número, el nombre o los dos ("uno jab")."""
+    nombre = _orden_hablada(accion) or accion.nombre_hablado
     n = numero(accion, zurdo)
     if n is None or modo == "nombres":
         return nombre

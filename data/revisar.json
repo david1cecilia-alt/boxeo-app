@@ -32,6 +32,21 @@
       "texto": "toda la biblioteca (combinaciones, sus niveles, las proporciones de defensa y las combinaciones adaptadas o añadidas)"
     },
     {
+      "id": "estilos-da16430f",
+      "origen": "data/estilos.json",
+      "texto": "la tabla de puntos de cada respuesta a cada estilo"
+    },
+    {
+      "id": "estilos-231f1cde",
+      "origen": "data/estilos.json",
+      "texto": "el umbral de 3 cm entre alcance y altura para hablar de alcance largo o corto"
+    },
+    {
+      "id": "estilos-b296c13e",
+      "origen": "data/estilos.json",
+      "texto": "que con cardio por mejorar se avise solo al fajador"
+    },
+    {
       "id": "posturas-d6a8608a",
       "origen": "data/posturas.json",
       "texto": "maniquí, guardia: flexión de rodillas, barbilla detrás del hombro izquierdo, guantes a la altura de los pómulos, codos cerrados, talón trasero algo levantado, separación y giro de los pies"

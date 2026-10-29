@@ -665,17 +665,25 @@ button.volver {
 
 /* ---------- Perfil ---------- */
 #perfil-contenido, .columna-perfil { display: grid; gap: 16px; align-content: start; min-width: 0; }
-/* Tarjeta roja con el resumen provisional del estilo. */
-.tarjeta.estilo-provisional {
+/* Tarjeta roja con el estilo recomendado (o el elegido y, debajo y más pequeña, la recomendación). */
+.tarjeta.estilo-recomendado {
   display: grid; gap: 6px; padding: 16px;
   background: var(--acento-relleno); border-color: transparent; color: var(--sobre-acento);
 }
-.estilo-provisional .antetitulo {
+.estilo-recomendado .antetitulo {
   margin: 0; color: inherit; font-family: var(--letra-texto); font-size: 0.75rem; font-weight: 600;
   letter-spacing: 0.15em; line-height: 1.3;
 }
-.estilo-provisional .titular { margin: 0; font-size: 28px; line-height: 1.05; }
-#estilo-texto { margin: 0; font-size: 0.8125rem; line-height: 1.4; }
+.estilo-recomendado .titular { margin: 0; font-size: 28px; line-height: 1.05; }
+#estilo-resumen { display: grid; gap: 6px; }
+#estilo-resumen p, .nota-estilo { margin: 0; font-size: 0.8125rem; line-height: 1.4; }
+#estilo-resumen .titular { font-size: 28px; line-height: 1.05; }
+.estilo-recomendado .recomendacion {
+  display: grid; gap: 4px; margin-top: 4px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.35);
+}
+.estilo-recomendado .recomendado { font-size: 0.875rem; }
+.estilo-recomendado .aviso-estilo { font-weight: 700; }
+.nota-estilo { margin-top: 4px; font-style: italic; }
 
 .grupos-estilo { display: grid; gap: 16px; }
 .grupo-chips legend { margin-bottom: 8px; color: var(--suave); font-size: 0.8125rem; font-weight: 600; }

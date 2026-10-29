@@ -9,7 +9,7 @@ export const BASICOS = {
   nivel: { etiqueta: "Nivel actual", opciones: [NO_LO_SE, ["1", "1 · básico"], ["2", "2 · medio"], ["3", "3 · avanzado"]] },
 };
 
-// "Mi estilo": lo elige el usuario (o su entrenador). La app no lo calcula a partir de las respuestas.
+// "Mi estilo": lo elige el usuario (o su entrenador). La app solo lo recomienda (vistas/estilo.js).
 export const MI_ESTILO = {
   etiqueta: "Mi estilo",
   opciones: [NO_LO_SE, ["boxer", "Boxer"], ["fajador", "Fajador"], ["contragolpeador", "Contragolpeador"],

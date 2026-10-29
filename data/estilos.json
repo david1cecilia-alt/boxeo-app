@@ -1,0 +1,81 @@
+{
+  "_nota": "Estilo recomendado del Perfil (static/vistas/estilo.js). Cada respuesta suma 1 punto a cada estilo de su lista; gana el que más suma y, si el segundo queda a 1 punto o menos, también se nombra. Hace falta un mínimo de respuestas de las preguntas obligatorias. Cardio no puntúa: solo avisa si sale fajador. Los ids de los estilos son los de «Mi estilo» y los de las respuestas, los del Perfil. Las frases completan «Porque …». Orientativo, nunca una obligación. REVISAR CON ENTRENADOR: (1) la tabla de puntos de cada respuesta a cada estilo; (2) el umbral de 3 cm entre alcance y altura para hablar de alcance largo o corto; (3) que con cardio por mejorar se avise solo al fajador.",
+  "_fuentes": [
+    "Wikipedia (en), «Boxing styles and technique»",
+    "FightCamp, «The 4 styles of boxing»",
+    "Expert Boxing, «How to beat a shorter boxer»"
+  ],
+  "obligatorias": ["distancia", "presion", "volumen", "iniciativa", "defensa"],
+  "minimo": 4,
+  "umbral_alcance_cm": 3,
+  "puntos": {
+    "distancia": {
+      "larga": ["boxer"],
+      "media": ["boxer_puncher", "contragolpeador"],
+      "corta": ["fajador"]
+    },
+    "presion": {
+      "salir": ["boxer"],
+      "contraatacar": ["contragolpeador"],
+      "cubrirse": ["contragolpeador"],
+      "intercambiar": ["fajador"]
+    },
+    "volumen": {
+      "combos_largos": ["fajador"],
+      "pocos_fuertes": ["boxer_puncher"]
+    },
+    "iniciativa": {
+      "ataco": ["fajador", "boxer_puncher"],
+      "espero": ["contragolpeador"],
+      "segun_rival": ["boxer", "boxer_puncher"]
+    },
+    "defensa": {
+      "pies": ["boxer"],
+      "esquiva": ["contragolpeador", "fajador"],
+      "bloqueo": ["fajador"],
+      "mixta": ["boxer_puncher"]
+    },
+    "golpe_favorito": {
+      "jab": ["boxer"],
+      "gancho": ["fajador"],
+      "cuerpo": ["fajador"],
+      "directo": ["boxer_puncher"],
+      "uppercut": ["boxer_puncher"]
+    }
+  },
+  "frases": {
+    "distancia": {
+      "larga": "prefieres la larga distancia",
+      "media": "prefieres la media distancia",
+      "corta": "prefieres la corta distancia"
+    },
+    "presion": {
+      "salir": "bajo presión te mueves y sales",
+      "contraatacar": "bajo presión contraatacas",
+      "cubrirse": "bajo presión te cubres y esperas tu momento",
+      "intercambiar": "bajo presión intercambias golpes"
+    },
+    "volumen": {
+      "combos_largos": "lanzas combos largos",
+      "pocos_fuertes": "prefieres pocos golpes y fuertes"
+    },
+    "iniciativa": {
+      "ataco": "llevas la iniciativa",
+      "espero": "esperas para contraatacar",
+      "segun_rival": "te adaptas al rival"
+    },
+    "defensa": {
+      "pies": "defiendes con juego de pies",
+      "esquiva": "defiendes con esquivas y cintura",
+      "bloqueo": "defiendes con bloqueo y guardia",
+      "mixta": "mezclas defensas"
+    },
+    "golpe_favorito": {
+      "jab": "tu golpe favorito es el jab",
+      "gancho": "tu golpe favorito es el gancho",
+      "cuerpo": "te gustan los golpes al cuerpo",
+      "directo": "tu golpe favorito es el directo",
+      "uppercut": "tu golpe favorito es el uppercut"
+    }
+  }
+}

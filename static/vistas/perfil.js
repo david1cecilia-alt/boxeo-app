@@ -1,9 +1,10 @@
-// Pestaña Perfil: lo informativo que rellena el usuario (solo en este navegador): estilo, sobre ti,
-// notas del entrenador y puntos a revisar. Se guarda al cambiar cada campo. Lo que cambia el
+// Pestaña Perfil: lo informativo que rellena el usuario (solo en este navegador): estilo (con el
+// recomendado según sus respuestas, de data/estilos.json), sobre ti, notas del entrenador y puntos a revisar. Se guarda al cambiar cada campo. Lo que cambia el
 // entreno (guardia, nivel, pesos y voz) está en Ajustes.
 import { NO_SE } from "../almacen.js";
 import { chips, conectarCampos } from "./campos.js";
 import { $, $$, anunciar, esc, hoyIso } from "./dom.js";
+import { recomendarEstilo, textoFaltan } from "./estilo.js";
 import { ESTILO, MI_ESTILO } from "./opciones.js";
 
 const MEDIDAS = {
@@ -12,28 +13,33 @@ const MEDIDAS = {
   alcance_cm: ["Alcance", "cm", 100, 250],
 };
 
-const DISTANCIA = { corta: "Corta distancia", media: "Media distancia", larga: "Larga distancia" };
-const DETALLE_ESTILO = { golpe_favorito: "Golpe favorito", presion: "Bajo presión", defensa: "Defensa", iniciativa: "Iniciativa", cardio: "Cardio" };
+// Nombres de los estilos (los de «Mi estilo»), sin «No lo sé».
+const NOMBRES_ESTILO = Object.fromEntries(MI_ESTILO.opciones.filter(([id]) => id !== NO_SE));
 
-// Tarjeta de estilo: el que eligió el usuario ("Mi estilo") más el resumen de sus respuestas.
-// La app nunca clasifica por su cuenta (boxer, fajador…): eso es criterio de entrenador.
-function resumenEstilo(estilo) {
-  const respondido = (c) => estilo[c] && estilo[c] !== NO_SE;
-  const texto = (c) => (c === "mi_estilo" ? MI_ESTILO : ESTILO[c]).opciones.find(([v]) => v === estilo[c])?.[1] ?? "";
-  const distancia = respondido("distancia") && DISTANCIA[estilo.distancia];
-  const volumen = respondido("volumen") && texto("volumen");
-  // Con "Mi estilo": "Boxer-puncher / De media distancia" y el volumen pasa al detalle.
-  const titulo = respondido("mi_estilo")
-    ? [texto("mi_estilo"), distancia && `De ${distancia.toLowerCase()}`].filter(Boolean)
-    : [distancia, volumen].filter(Boolean);
-  const detalle = [respondido("mi_estilo") && volumen,
-    ...Object.entries(DETALLE_ESTILO).filter(([c]) => respondido(c)).map(([c, nombre]) => `${nombre}: ${texto(c).toLowerCase()}`)]
-    .filter(Boolean);
-  if (!titulo.length && !detalle.length) {
-    return { titulo: ["Por definir"], texto: "Responde a las preguntas de abajo y aquí verás el resumen de tu estilo." };
+// Recomendación: «Boxer», el porqué, «También encajas como …» y los avisos; o cuántas preguntas faltan.
+function htmlRecomendacion(r, conMiEstilo) {
+  if (r.faltan) {
+    return `${conMiEstilo ? "" : '<p class="titular">Por definir</p>'}<p>${esc(textoFaltan(r.faltan))}</p>`;
   }
-  if (!titulo.length) titulo.push(texto("golpe_favorito") || "Por definir");
-  return { titulo, texto: `${detalle.length ? `${detalle.join(" · ")}. ` : ""}Revísalo en 2–3 meses.` };
+  const nombre = conMiEstilo
+    ? `<p class="recomendado">Estilo recomendado: <b>${esc(r.nombre)}</b></p>`
+    : `<p class="titular">${esc(r.nombre)}</p>`;
+  return [nombre, r.porque && `<p>${esc(r.porque)}</p>`, r.tambien && `<p>También encajas como ${esc(r.tambien)}.</p>`,
+    ...r.avisos.map((a) => `<p class="aviso-estilo">${esc(a)}</p>`)].filter(Boolean).join("");
+}
+
+// Tarjeta de estilo: con «Mi estilo» elegido, ese como su estilo y la recomendación debajo, más
+// pequeña; si no, la recomendación. La nota de alcance y altura, si están las dos medidas.
+function tarjetaEstilo(perfil, tabla) {
+  const r = recomendarEstilo(perfil.estilo, perfil.basicos, tabla, NOMBRES_ESTILO);
+  const mio = NOMBRES_ESTILO[perfil.estilo.mi_estilo];
+  const cuerpo = mio
+    ? `<p class="titular">${esc(mio)}</p><div class="recomendacion">${htmlRecomendacion(r, true)}</div>`
+    : htmlRecomendacion(r, false);
+  return {
+    titulo: mio ? "Tu estilo" : "Estilo recomendado",
+    html: cuerpo + (r.alcance ? `<p class="alcance">${esc(r.alcance)}</p>` : ""),
+  };
 }
 
 function contexto({ guardia, nivel }) {
@@ -44,6 +50,7 @@ function contexto({ guardia, nivel }) {
 export function iniciarPerfil({ almacen }) {
   const raiz = $("#perfil-contenido");
   let revisar = null; // data/revisar.json, cargado la primera vez
+  let estilos = null; // data/estilos.json (tabla del estilo recomendado), cargado la primera vez
 
   // Copia del perfil para editar y guardar entero.
   const perfil = () => structuredClone(almacen.datos.perfil);
@@ -60,19 +67,30 @@ export function iniciarPerfil({ almacen }) {
   function pintarResumen() {
     const p = almacen.datos.perfil;
     $("#antetitulo-perfil").textContent = contexto(p.basicos);
-    const r = resumenEstilo(p.estilo);
-    $("#estilo-titulo").innerHTML = r.titulo.map(esc).join("<br>");
-    $("#estilo-texto").textContent = r.texto;
+    if (!estilos) return; // se pinta al cargar la tabla
+    const t = tarjetaEstilo(p, estilos);
+    $("#t-estilo").textContent = t.titulo;
+    $("#estilo-resumen").innerHTML = t.html;
+  }
+
+  async function cargarEstilos() {
+    try {
+      estilos ??= await (await fetch("data/estilos.json")).json();
+    } catch {
+      $("#estilo-resumen").innerHTML = `<p>No se pudo cargar la tabla de estilos.</p>`;
+      return;
+    }
+    if ($("#estilo-resumen")) pintarResumen();
   }
 
   function pintar() {
     const p = almacen.datos.perfil;
     raiz.innerHTML = `
       <div class="columna-perfil">
-      <section class="tarjeta estilo-provisional" aria-labelledby="t-estilo-provisional" aria-live="polite">
-        <h2 id="t-estilo-provisional" class="antetitulo">Estilo provisional</h2>
-        <p class="titular" id="estilo-titulo"></p>
-        <p id="estilo-texto"></p>
+      <section class="tarjeta estilo-recomendado" aria-labelledby="t-estilo">
+        <h2 id="t-estilo" class="antetitulo">Estilo recomendado</h2>
+        <div id="estilo-resumen" aria-live="polite"><p>Cargando…</p></div>
+        <p class="nota-estilo">Orientativo: el estilo se define con meses de práctica y sparring. Consúltalo con tu entrenador.</p>
       </section>
 
       <form class="grupos-estilo" id="f-estilo" aria-label="Tu estilo">
@@ -116,6 +134,7 @@ export function iniciarPerfil({ almacen }) {
 
       <p class="nota pie-perfil">Tus datos se guardan solo en este dispositivo. <span id="guardado-perfil"></span></p>`;
     pintarResumen();
+    cargarEstilos();
     conectar();
     pintarRevisar();
   }

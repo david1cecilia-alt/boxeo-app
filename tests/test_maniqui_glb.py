@@ -1,5 +1,6 @@
-"""El maniquí 3D (static/maniqui/maniqui.glb, de herramientas/blender/crear_maniqui.py) encaja con
-data/posturas.json: cada articulación mueve un hueso que existe y el esqueleto mide lo mismo."""
+"""El maniquí 3D (static/maniqui/maniqui.glb, de herramientas/blender/crear_maniqui_quaternius.py)
+encaja con data/posturas.json: cada articulación mueve un hueso que existe y el esqueleto mide lo
+mismo."""
 import json
 import math
 import struct
@@ -29,7 +30,14 @@ def esqueleto():
 
 def test_es_un_glb_comprimido_con_draco_y_pequeno(gltf):
     assert "KHR_draco_mesh_compression" in gltf.get("extensionsRequired", [])
-    assert GLB.stat().st_size < 1_000_000
+    assert GLB.stat().st_size < 150_000, GLB.stat().st_size
+
+
+def test_la_piel_lleva_el_mapa_de_normales_del_musculo(gltf):
+    # escena.js lo pasa a su material de piel y espalda.
+    materiales = {m["name"]: m for m in gltf["materials"]}
+    assert "normalTexture" in materiales["piel"]
+    assert "normalTexture" in materiales["espalda"]
 
 
 def test_tiene_unos_15000_triangulos(gltf):

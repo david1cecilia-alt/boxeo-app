@@ -340,6 +340,8 @@ details[open] > summary::before { transform: rotate(90deg); }
 .acciones { display: flex; flex-wrap: wrap; gap: 10px; }
 .acciones .boton { flex: 1 1 140px; }
 label.boton { color: var(--sobre-acento); }
+/* Copia de seguridad: cada botón en una línea; si no caben juntos, uno debajo del otro a todo el ancho. */
+.copia .acciones .boton { flex: 1 1 auto; white-space: nowrap; }
 input[type="file"].solo-lectores:focus-visible + *, label.boton:focus-within { outline: 3px solid var(--foco); }
 
 /* ---------- Entrenar ---------- */

@@ -75,7 +75,7 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
         <p class="nota">Guardado ${esc(historial.descripcion)}. Las valoraciones y notas, en este navegador.</p>
       </section>
 
-      <section class="tarjeta" aria-labelledby="t-copia">
+      <section class="tarjeta copia" aria-labelledby="t-copia">
         <h2 id="t-copia">Copia de seguridad</h2>
         <p class="nota">Tus valoraciones, notas y perfil viven en este navegador: si borras sus datos, se pierden.
           Exporta una copia de vez en cuando.</p>

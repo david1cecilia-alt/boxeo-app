@@ -99,8 +99,8 @@ export function iniciarAjustes({ almacen, voz }) {
     $("#voz-id").innerHTML = `<option value="">Automática</option>${voces.map((v) =>
       `<option value="${esc(v.id)}" ${existe && (v.id === id || v.nombre === id) ? "selected" : ""}>${esc(nombreCortoVoz(v.nombre))} (${esc(v.idioma)})</option>`).join("")}`;
     $("#voz-aviso").textContent = id != null && !existe
-      ? `La voz elegida no está en este dispositivo: se usa la automática (${voz.descripcion}).`
-      : `Ahora: ${voz.descripcion}.`;
+      ? `La voz elegida no está en este dispositivo: se usa la automática (${voz.descripcionCorta}).`
+      : `Ahora: ${voz.descripcionCorta}.`;
   }
 
   function guardarVoz(cambio) {

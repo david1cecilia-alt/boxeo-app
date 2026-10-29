@@ -51,14 +51,15 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
     if (deLaElegida) abiertos[modo].add(deLaElegida.clave);
     raiz.classList.toggle("con-detalle", Boolean(clave));
     raiz.innerHTML = `
-      <section class="resumen-historial" aria-label="Resumen de ${esc(mesActual)}">
+      <div class="resumen-historial">
+        <h2 class="solo-lectores">Resumen de ${esc(mesActual)}</h2>
         <dl class="cifras">
           <div class="destacada"><dt>sesiones / mes</dt><dd>${mes.sesiones}</dd></div>
           <div><dt>asaltos / mes</dt><dd>${mes.asaltos}</dd></div>
           <div><dt>RPE medio</dt><dd>${mes.rpe == null ? "–" : `${fmt(mes.rpe)}<small>/10</small>`}</dd></div>
         </dl>
         ${graficoSemanas(semanas)}
-      </section>
+      </div>
 
       <div class="maestro-detalle">
       <div class="col-lista">

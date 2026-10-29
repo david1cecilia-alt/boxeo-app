@@ -822,9 +822,19 @@ dialog::backdrop { background: var(--velo); }
     border: 1px dashed var(--linea); border-radius: var(--radio);
   }
 
+  /* Desde 1280 px, una sola rejilla: cifras y lista a la izquierda, gráfico y detalle a la
+     derecha. La lista sigue justo debajo de las cifras sin esperar al gráfico, que es más alto
+     (la última fila, 1fr, absorbe lo que mida la lista de más). */
   @media (min-width: 1280px) {
-    .maestro-detalle { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
-    .resumen-historial, .con-detalle > .resumen-historial { grid-template-columns: minmax(0, 1fr) minmax(0, 640px); }
+    #historial-contenido {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); grid-template-rows: auto auto 1fr;
+      gap: 24px; align-items: start;
+    }
+    .resumen-historial, .con-detalle > .resumen-historial, .maestro-detalle { display: contents; }
+    .cifras { grid-column: 1; grid-row: 1; }
+    .grafico-semanas { grid-column: 2; grid-row: 1 / span 2; }
+    .col-lista { grid-column: 1; grid-row: 2 / span 2; }
+    .col-detalle { grid-column: 2; grid-row: 3; }
   }
 
   /* Ajustes: Voz y Tus datos a la izquierda, Qué te dicta a la derecha (a 1024 y a 1440 igual). */

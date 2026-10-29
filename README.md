@@ -31,7 +31,9 @@ es una PWA instalable y todo se calcula en el dispositivo.
   acabar, tablillas y aviso por voz a los 10 s del final.
 - **Combinaciones con sentido técnico**, dichas como elijas en «Cómo te las digo»: por **Números**
   ("uno, dos, tres"), por **Nombres** ("jab, recto, gancho de izquierda") o **Ambos** ("uno jab,
-  dos recto"). Se generan por reglas y se mezclan con combos clásicos.
+  dos recto"). La sesión las sortea de una biblioteca por niveles (`data/combinaciones.json`) que
+  pasa las reglas técnicas del motor; el generador por reglas sigue en el motor, pero hoy solo lo
+  usan los tests.
 - **3 niveles**: longitud y golpes disponibles cambian con el nivel; la pausa entre combinaciones
   depende del ritmo.
 - **Ritmo a tu medida**: golpeas mientras oyes la combinación; la siguiente llega tras un hueco desde
@@ -46,8 +48,9 @@ es una PWA instalable y todo se calcula en el dispositivo.
   borrado.
 - **Perfil**: guardia, nivel, estilo (cada pregunta admite «No lo sé»), focos de trabajo, notas del
   entrenador y los puntos marcados `REVISAR CON ENTRENADOR` en el motor para apuntar su respuesta.
-  Los **pesos del generador** (más finales en gancho, más bloquear-y-devolver, más entradas con
-  jab) se ajustan con deslizadores y sustituyen a los de `data/perfil.json`.
+  Los **pesos del sorteo** (más finales en gancho, más bloquear-y-devolver, más entradas con
+  jab) se ajustan con deslizadores, sustituyen a los de `data/perfil.json` y deciden qué
+  combinaciones de la biblioteca salen más.
 - **Sin conexión**: service worker con la app entera en caché.
 
 ## Tus datos
@@ -135,7 +138,7 @@ solo comando lo cubra todo:
 | Ids sin colisiones | Las sesiones locales usan UUID: borrar o importar no mezcla valoraciones |
 | Contraste | Los colores de `estilos.css` cumplen AA (texto 4,5:1; bordes, foco y gráficos 3:1) |
 
-En CI los tests se ejecutan en cada push (**183 tests**), y solo si pasan se despliega en GitHub Pages.
+En CI se ejecuta la suite completa de tests (pytest + Node) en cada push, y solo si pasa se despliega en GitHub Pages.
 
 ## Probarlo en local
 
@@ -169,7 +172,7 @@ Los iconos se regeneran desde `static/iconos/guante.svg` con `herramientas\gener
 | `static/vistas/` | Las tres pestañas, el formulario post-sesión y el gráfico SVG |
 | `static/` | Arranque, rutas, almacén, reproductor, voz, sonido, estilos, service worker y manifest |
 | `app/` | API FastAPI y acceso a SQLite |
-| `data/` | Vocabulario, combos clásicos, perfil por defecto, presets y puntos a revisar (JSON): fuente única para los dos motores |
+| `data/` | Vocabulario, biblioteca de combinaciones por niveles, perfil por defecto, presets y puntos a revisar (JSON): fuente única para los dos motores |
 | `tests/` | pytest; `tests/js/` tiene los tests de JS y genera los datos de equivalencia |
 | `herramientas/` | Montar la web estática, generar iconos y extraer los puntos a revisar |
 | `.github/workflows/` | Tests y despliegue en GitHub Pages |

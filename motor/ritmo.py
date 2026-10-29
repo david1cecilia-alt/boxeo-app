@@ -10,9 +10,15 @@ from motor.acciones import Accion, texto_hablado
 # Lo que tarda la voz en decir un texto, de que empieza a hablar a que termina: medido con la voz
 # del navegador (Microsoft Helena, es-ES, velocidad 1,1 como static/voz.js) sobre 75 combinaciones
 # en los tres modos y ajustado con un poco de margen (error ±0,4 s). Recalibrar si cambia la voz.
+# A otra velocidad se escala en proporción inversa (1,1 / velocidad): es una aproximación,
+# recalibrar midiendo a 0,9 y 1,3.
 HABLA_BASE = 1.0
 HABLA_POR_SILABA = 0.15
 HABLA_POR_COMA = 0.55   # pausa entre una acción y la siguiente
+VELOCIDAD_MEDIDA = 1.1  # la de las medidas de arriba
+# Velocidades de la voz que se pueden elegir en Ajustes (rate de la Web Speech API).
+VELOCIDADES = {"lenta": 0.9, "normal": 1.1, "rapida": 1.3}
+VELOCIDAD_POR_DEFECTO = "normal"
 _SILABA = re.compile(r"[aeiouáéíóúü]+", re.IGNORECASE)
 # Hueco desde que la voz termina de decir una combinación hasta que empieza la siguiente, según el
 # ritmo elegido: se sortea en el rango (mín, máx), igual para combinaciones cortas y largas.
@@ -21,17 +27,20 @@ PAUSA_POR_RITMO = {1: (5.0, 7.0), 2: (4.0, 5.0), 3: (2.0, 4.0), 4: (1.0, 3.0), 5
 RITMO_POR_DEFECTO = 3
 
 
-def segundos_habla(texto: str) -> float:
-    """Lo que tarda la voz en decir `texto` (sílabas aproximadas por grupos de vocales)."""
+def segundos_habla(texto: str, velocidad: float = VELOCIDAD_MEDIDA) -> float:
+    """Lo que tarda la voz en decir `texto` (sílabas aproximadas por grupos de vocales) a la
+    `velocidad` de la voz."""
     silabas = len(_SILABA.findall(texto))
-    return HABLA_BASE + HABLA_POR_SILABA * silabas + HABLA_POR_COMA * texto.count(",")
+    medido = HABLA_BASE + HABLA_POR_SILABA * silabas + HABLA_POR_COMA * texto.count(",")
+    return medido * VELOCIDAD_MEDIDA / velocidad
 
 
-def duracion_estimada(combo: list[Accion] | tuple[Accion, ...], texto: str | None = None) -> float:
+def duracion_estimada(combo: list[Accion] | tuple[Accion, ...], texto: str | None = None,
+                      velocidad: float = VELOCIDAD_MEDIDA) -> float:
     """Tiempo desde que empieza el dictado de `texto` (lo que se dice, según el modo de voz)
     hasta que se termina de decir: se golpea mientras se oye y el hueco cuenta desde ahí."""
     texto = texto_hablado(combo) if texto is None else texto
-    return round(segundos_habla(texto), 2)
+    return round(segundos_habla(texto, velocidad), 2)
 
 
 def pausa_entre_combos(ritmo: int, rng: random.Random, pausa: float | None = None) -> float:

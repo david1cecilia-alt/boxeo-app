@@ -80,3 +80,10 @@ def test_guion_con_ritmo_y_modo_de_voz(cliente):
     assert any("uno" in t.split(", ") for t in textos)
     assert cliente.post("/api/sesion/guion", json={"ritmo": 6}).status_code == 422
     assert cliente.post("/api/sesion/guion", json={"voz": "gritos"}).status_code == 422
+
+
+def test_guion_con_velocidad_de_voz(cliente):
+    r = cliente.post("/api/sesion/guion", json={"asaltos": 1, "duracion_asalto": 60, "velocidad": 1.3})
+    assert r.status_code == 200
+    assert r.json()["config"]["velocidad"] == 1.3
+    assert cliente.post("/api/sesion/guion", json={"velocidad": 2.0}).status_code == 422

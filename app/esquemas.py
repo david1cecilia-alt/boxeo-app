@@ -14,6 +14,7 @@ class PeticionGuion(BaseModel):
     pausa: float | None = Field(None, ge=0, le=30)
     ritmo: int = Field(3, ge=1, le=5)
     voz: Literal["numeros", "nombres", "ambos"] = "nombres"
+    velocidad: Literal[0.9, 1.1, 1.3] = 1.1  # de la voz: motor.ritmo.VELOCIDADES
 
 
 class ComboDictado(BaseModel):

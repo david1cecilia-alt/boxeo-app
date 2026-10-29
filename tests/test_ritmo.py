@@ -5,7 +5,8 @@ import random
 import pytest
 
 from motor.acciones import acciones_por_ids, texto_hablado
-from motor.ritmo import PAUSA_POR_RITMO, duracion_estimada, pausa_entre_combos, rango_pausa, segundos_habla
+from motor.ritmo import (PAUSA_POR_RITMO, VELOCIDAD_MEDIDA, VELOCIDAD_POR_DEFECTO, VELOCIDADES, duracion_estimada,
+                         pausa_entre_combos, rango_pausa, segundos_habla)
 from motor.temporizador import ConfigSesion, construir_guion
 
 CORTA = acciones_por_ids(["jab", "directo"])
@@ -123,3 +124,40 @@ def test_en_intenso_el_hueco_tras_hablar_es_menor_de_segundo_y_medio():
     huecos = [b.t - (a.t + segundos_habla(a.texto)) for a, b in zip(combos, combos[1:])
               if b.t < 180 - 10]  # antes del aviso de los 10 s
     assert huecos and max(huecos) < 1.5
+
+
+# ---------- Velocidad de la voz ----------
+
+def test_velocidades_que_se_pueden_elegir():
+    assert VELOCIDADES == {"lenta": 0.9, "normal": 1.1, "rapida": 1.3}
+    assert VELOCIDADES[VELOCIDAD_POR_DEFECTO] == VELOCIDAD_MEDIDA == 1.1
+
+
+def test_la_estimacion_escala_en_proporcion_inversa_a_la_velocidad():
+    texto = texto_hablado(LARGA)
+    normal = segundos_habla(texto)
+    assert segundos_habla(texto, 1.1) == normal
+    assert segundos_habla(texto, 0.9) == pytest.approx(normal * 1.1 / 0.9)
+    assert segundos_habla(texto, 1.3) == pytest.approx(normal * 1.1 / 1.3)
+    assert segundos_habla(texto, 1.3) < normal < segundos_habla(texto, 0.9)
+
+
+@pytest.mark.parametrize("velocidad", VELOCIDADES.values())
+def test_el_guion_usa_la_estimacion_de_su_velocidad(velocidad):
+    config = ConfigSesion(asaltos=1, duracion_asalto=180, descanso=0, nivel=3, velocidad=velocidad)
+    combos = [e for e in construir_guion(config, random.Random(0)) if e.tipo == "combo"]
+    assert combos
+    for e in combos:
+        assert e.duracion == round(segundos_habla(e.texto, velocidad), 2)
+
+
+def test_a_mas_velocidad_caben_mas_combinaciones():
+    def cuantas(velocidad):
+        config = ConfigSesion(asaltos=3, duracion_asalto=180, descanso=60, ritmo=5, velocidad=velocidad)
+        return sum(e.tipo == "combo" for e in construir_guion(config, random.Random(0)))
+    assert cuantas(1.3) > cuantas(1.1) > cuantas(0.9)
+
+
+def test_velocidad_desconocida_no_vale():
+    with pytest.raises(AssertionError):
+        ConfigSesion(velocidad=2.0)

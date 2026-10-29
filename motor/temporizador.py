@@ -8,7 +8,8 @@ from dataclasses import asdict, dataclass, field
 
 from motor.acciones import MODOS_VOZ, RUTA_DATOS, texto_hablado
 from motor.sorteo import SorteoBiblioteca
-from motor.ritmo import RITMO_POR_DEFECTO, duracion_estimada, pausa_entre_combos
+from motor.ritmo import (RITMO_POR_DEFECTO, VELOCIDAD_MEDIDA, VELOCIDADES, duracion_estimada,
+                         pausa_entre_combos)
 
 PREPARACION = 3.0         # segundos al inicio del asalto antes del primer combo
 AVISO_ANTES_FIN = 10.0    # aviso a los 10 s del final
@@ -30,9 +31,11 @@ class ConfigSesion:
     pausa: float | None = None  # pausa fija entre combinaciones; None = la del ritmo
     ritmo: int = RITMO_POR_DEFECTO  # 1 Calmado … 5 Intenso
     voz: str = "nombres"        # cómo se dicen: uno de MODOS_VOZ
+    velocidad: float = VELOCIDAD_MEDIDA  # de la voz: uno de VELOCIDADES
 
     def __post_init__(self):
         assert self.voz in MODOS_VOZ, self.voz
+        assert self.velocidad in VELOCIDADES.values(), self.velocidad
 
 
 @dataclass
@@ -87,7 +90,7 @@ def construir_guion(config: ConfigSesion, rng: random.Random | None = None,
 
     def texto_y_duracion(combo):
         texto = texto_hablado(combo.acciones, config.voz, config.zurdo)
-        return texto, duracion_estimada(combo.acciones, texto)
+        return texto, duracion_estimada(combo.acciones, texto, config.velocidad)
 
     for n in range(1, config.asaltos + 1):
         inicio, fin = t_asalto, t_asalto + config.duracion_asalto

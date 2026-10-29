@@ -87,8 +87,10 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   function resumir() {
     const c = leerConfigSegura();
     if (!c) return;
+    // Hueco desde que la voz termina hasta la siguiente (se golpea mientras se oye).
     const [min, max] = PAUSA_POR_RITMO[c.ritmo];
-    $("#resumen-ritmo").textContent = `${NOMBRE_RITMO[c.ritmo]} · ${decimal(min)}–${decimal(max)} s entre combinaciones`;
+    const hueco = min === max ? decimal(min) : `${decimal(min)}–${decimal(max)}`;
+    $("#resumen-ritmo").textContent = `${NOMBRE_RITMO[c.ritmo]} · ${hueco} s entre combinaciones`;
     $("#ritmo").style.setProperty("--lleno", `${(c.ritmo - 1) * 25}%`);
     const resumen = `${c.asaltos} × ${minutos(c.duracion_asalto)} · descanso ${minutos(c.descanso)}`;
     $("#resumen-config").textContent = resumen;

@@ -32,7 +32,8 @@ es una PWA instalable y todo se calcula en el dispositivo.
 - **Combinaciones con sentido técnico**, siempre por su nombre ("esquiva a la derecha, directo,
   gancho de izquierda"), nunca con números. Se generan por reglas y se mezclan con combos clásicos.
 - **3 niveles**: longitud, golpes disponibles y pausa entre combinaciones cambian con el nivel.
-- **Ritmo realista**: la siguiente combinación no llega hasta que da tiempo a ejecutar la anterior.
+- **Ritmo a tu medida**: golpeas mientras oyes la combinación; la siguiente llega tras un hueco desde
+  que la voz acaba, de 5–7 s (Calmado, para mover los pies) a 1 s (Intenso, para encadenar).
 - **Modo reacción**: señales aleatorias ("¡esquiva!", "¡sal!") que nunca pisan una combinación.
 - **Modo zurdo**: todo se define en guardia ortodoxa y el zurdo es su espejo exacto.
 - **Valoración tras cada sesión**: la app no puede saber si la técnica sale bien, así que la

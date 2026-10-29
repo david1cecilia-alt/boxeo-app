@@ -29,7 +29,7 @@ es una PWA instalable y todo se calcula en el dispositivo.
   reanuda en el mismo punto. La pantalla sigue encendida (Wake Lock).
 - **Asaltos configurables** (preset amateur 3×3 min con 1 min de descanso): campana al empezar y
   acabar, tablillas y aviso por voz a los 10 s del final.
-- **Combinaciones con sentido técnico**, dichas como elijas en «Cómo te las digo»: por **Números**
+- **Combinaciones con sentido técnico**, dichas como elijas en «Nombrar combinaciones»: por **Números**
   ("uno, dos, tres"), por **Nombres** ("jab, recto, gancho de izquierda") o **Ambos** ("uno jab,
   dos recto"). La sesión las sortea de una biblioteca por niveles (`data/combinaciones.json`) que
   pasa las reglas técnicas del motor; el generador por reglas sigue en el motor, pero hoy solo lo

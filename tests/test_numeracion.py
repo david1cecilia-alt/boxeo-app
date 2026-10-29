@@ -1,4 +1,4 @@
-"""Numeración de los golpes por mano adelantada/trasera y «Cómo te las digo»."""
+"""Numeración de los golpes por mano adelantada/trasera y «Nombrar combinaciones»."""
 import pytest
 
 from motor.acciones import (MODOS_VOZ, acciones_por_ids, catalogo, espejo, espejo_combo, numero,

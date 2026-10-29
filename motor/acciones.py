@@ -138,7 +138,7 @@ def espejo_combo(combo: list[Accion]) -> list[Accion]:
     return [espejo(a) for a in combo]
 
 
-# Cómo se dicen las combinaciones en la sesión ("Cómo te las digo").
+# Cómo se dicen las combinaciones en la sesión ("Nombrar combinaciones").
 MODOS_VOZ = ("numeros", "nombres", "ambos")
 
 

@@ -88,7 +88,7 @@ export function espejoCombo(combo) {
   return combo.map(espejo);
 }
 
-// Cómo se dicen las combinaciones en la sesión ("Cómo te las digo").
+// Cómo se dicen las combinaciones en la sesión ("Nombrar combinaciones").
 export const MODOS_VOZ = ["numeros", "nombres", "ambos"];
 
 // Número del golpe por mano adelantada/trasera. El de un zurdo se lee de su espejo

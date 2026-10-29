@@ -33,13 +33,16 @@
       </header>
       <form id="config" class="formulario">
         <div class="config-opciones">
-          <fieldset class="fila-chips" id="presets">
-            <legend class="solo-lectores">Preset</legend>
-          </fieldset>
+          <div class="presets">
+            <fieldset class="fila-chips" id="presets" aria-describedby="resumen-config">
+              <legend class="solo-lectores">Preset</legend>
+            </fieldset>
+            <p id="resumen-config" class="resumen-presets"></p>
+          </div>
 
           <div class="tarjeta cristal config-tarjeta">
             <fieldset class="niveles">
-              <legend><span>Nivel</span><span id="resumen-config" class="resumen-config"></span></legend>
+              <legend><span>Nivel</span></legend>
               <label><input type="radio" name="nivel" value="1"><span><b>1</b>Básico</span></label>
               <label><input type="radio" name="nivel" value="2"><span><b>2</b>Medio</span></label>
               <label><input type="radio" name="nivel" value="3"><span><b>3</b>Avanzado</span></label>

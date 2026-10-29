@@ -232,6 +232,10 @@ hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
 }
 :is(.chip-opcion, .niveles, .chip) input:focus-visible + span { outline: 3px solid var(--foco); outline-offset: 2px; }
 
+/* Presets y su resumen ("3 × 3:00 · descanso 1:00"): debajo en el móvil, al lado en el PC. */
+.presets { display: grid; gap: 8px; }
+.resumen-presets { margin: 0; font-size: 0.8125rem; color: var(--suave); }
+
 /* Nivel: tres botones grandes (radios); el elegido, en rojo. */
 .niveles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .niveles legend, .cabeza-campo {
@@ -732,6 +736,9 @@ dialog::backdrop { background: var(--velo); }
   #config { grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr); gap: 32px; align-items: start; }
   .fila-chips { margin: 0; padding: 2px 0; flex-wrap: wrap; overflow: visible; }
   .config-tarjeta { padding: 24px; gap: 18px; }
+  .presets { display: flex; align-items: center; gap: 16px; }
+  .presets .fila-chips { flex: 0 1 auto; min-width: 0; }
+  .resumen-presets { flex: none; margin-left: auto; }
   .niveles label span { min-height: 84px; font-size: 0.875rem; }
   .niveles b { font-size: 32px; }
   .config-sesion {

@@ -27,6 +27,11 @@
       "texto": "rodar a un lado deja el peso en ese mismo lado"
     },
     {
+      "id": "combinaciones-51b13a23",
+      "origen": "data/combinaciones.json",
+      "texto": "toda la biblioteca (combinaciones, sus niveles, las proporciones de defensa y las combinaciones adaptadas o añadidas)"
+    },
+    {
       "id": "posturas-d6a8608a",
       "origen": "data/posturas.json",
       "texto": "maniquí, guardia: flexión de rodillas, barbilla detrás del hombro izquierdo, guantes a la altura de los pómulos, codos cerrados, talón trasero algo levantado, separación y giro de los pies"

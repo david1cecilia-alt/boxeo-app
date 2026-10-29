@@ -93,21 +93,31 @@ REGLAS = [
     _regla_salida_tras_poder,
 ]
 
+# Las que debe pasar la biblioteca (data/combinaciones.json): la longitud y la salida tras
+# golpe de poder solo valen para las combinaciones inventadas (decisión del usuario).
+REGLAS_TECNICAS = [
+    _regla_nivel_minimo,
+    _regla_tiene_golpe,
+    _regla_cargar_y_soltar,
+    _regla_bloquear_y_devolver,
+    _regla_alternar_manos,
+]
 
-def validar(combo: list[Accion], nivel: int, zurdo: bool = False) -> list[str]:
+
+def validar(combo: list[Accion], nivel: int, zurdo: bool = False, reglas=REGLAS) -> list[str]:
     """Infracciones de la combinación. Si es zurda, se valida su espejo ortodoxo."""
     if zurdo:
         combo = espejo_combo(combo)
     errores = []
-    for regla in REGLAS:
+    for regla in reglas:
         error = regla(combo, nivel)
         if error:
             errores.append(error)
     return errores
 
 
-def es_valida(combo: list[Accion], nivel: int, zurdo: bool = False) -> bool:
-    return not validar(combo, nivel, zurdo)
+def es_valida(combo: list[Accion], nivel: int, zurdo: bool = False, reglas=REGLAS) -> bool:
+    return not validar(combo, nivel, zurdo, reglas)
 
 
 def ultimo_golpe(combo: list[Accion]) -> Accion | None:

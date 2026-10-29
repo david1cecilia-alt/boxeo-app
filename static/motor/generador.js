@@ -1,6 +1,6 @@
-// Port de motor/generador.py: reglas + combos clásicos + pesos del perfil.
+// Port de motor/generador.py: combinaciones inventadas (reglas + biblioteca + pesos del perfil).
 // Todo se genera en ortodoxo; si el perfil es zurdo se refleja al final con espejo().
-import { catalogo, combosClasicos, espejoCombo, repeticionesPermitidas, textoHablado } from "./acciones.js";
+import { biblioteca, catalogo, espejoCombo, repeticionesPermitidas, textoHablado } from "./acciones.js";
 import { datos } from "./datos.js";
 import { LONGITUD, SOLTAR_TRAS, esValida, familiaMano, ultimoGolpe } from "./reglas.js";
 
@@ -91,15 +91,15 @@ export class GeneradorCombos {
     this.pesoMax = Object.values(this.pesos).reduce((p, v) => p * Math.max(v, 1.0), 1.0);
     this.refuerzo = this.perfil.refuerzo ?? null;
     if (this.refuerzo) this.pesoMax *= Math.max(this.refuerzo.factor, 1.0);
-    // Solo los clásicos que cumplen las reglas de ESTE nivel.
-    this.clasicos = combosClasicos().filter((c) => esValida(c.acciones, nivel));
+    // Solo los de la biblioteca que cumplen TODAS las reglas de ESTE nivel.
+    this.clasicos = biblioteca().filter((c) => esValida(c.acciones, nivel));
     this.anterior = null;
   }
 
   candidata(clasico) {
     if (clasico) {
       const c = this.azar.choice(this.clasicos);
-      return { acciones: c.acciones, origen: "clasico", nombre: c.nombre };
+      return { acciones: c.acciones, origen: "clasico", nombre: c.nombre ?? c.notacion };
     }
     const combo = paseo(this.nivel, this.azar);
     if (!combo || !esValida(combo, this.nivel)) return null;

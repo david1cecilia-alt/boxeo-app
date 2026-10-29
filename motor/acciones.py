@@ -79,19 +79,38 @@ def acciones_por_ids(ids: list[str]) -> list[Accion]:
 
 
 @dataclass(frozen=True)
-class ComboClasico:
-    nombre: str
-    nivel: int
+class ComboBiblioteca:
+    notacion: str
+    nivel: int                 # 1 básico, 2 medio, 3 avanzado
     acciones: tuple[Accion, ...]
+    nombre: str | None = None  # los clásicos de antes conservan su nombre
+
+    @property
+    def con_defensa(self) -> bool:
+        return any(a.tipo == "defensa" for a in self.acciones)
 
 
 @lru_cache
-def combos_clasicos() -> tuple[ComboClasico, ...]:
-    """Biblioteca de combinaciones escritas a mano (data/combos.json)."""
-    with open(RUTA_DATOS / "combos.json", encoding="utf-8") as f:
-        datos = json.load(f)
-    return tuple(ComboClasico(c["nombre"], c["nivel"], tuple(acciones_por_ids(c["ids"])))
-                 for c in datos["combos"])
+def _leer_biblioteca() -> dict:
+    with open(RUTA_DATOS / "combinaciones.json", encoding="utf-8") as f:
+        return json.load(f)
+
+
+@lru_cache
+def biblioteca() -> tuple[ComboBiblioteca, ...]:
+    """Combinaciones escritas a mano (data/combinaciones.json), en ortodoxo."""
+    return tuple(ComboBiblioteca(c["notacion"], c["nivel"], tuple(acciones_por_ids(c["ids"])), c.get("nombre"))
+                 for c in _leer_biblioteca()["combinaciones"])
+
+
+def defensa_por_nivel() -> dict[int, float]:
+    """Proporción de combinaciones con defensa en la sesión, por nivel."""
+    return {int(n): p for n, p in _leer_biblioteca()["defensa_por_nivel"].items()}
+
+
+def notacion(acciones) -> str:
+    """Como "1-2-esquiva-2": número de cada golpe (en ortodoxo), orden de cada defensa o su id."""
+    return "-".join(str(a.numero) if a.numero else (a.orden or a.id) for a in acciones)
 
 
 def _contrario(valor: str) -> str:

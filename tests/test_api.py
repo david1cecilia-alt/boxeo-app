@@ -21,7 +21,7 @@ def test_config_incluye_preset_amateur(cliente):
 
 
 def test_sirve_los_datos_para_el_motor_js(cliente):
-    for nombre in ("acciones", "combos", "perfil", "presets"):
+    for nombre in ("acciones", "combinaciones", "perfil", "presets"):
         assert cliente.get(f"/data/{nombre}.json").status_code == 200
     assert cliente.get("/motor/temporizador.js").status_code == 200
 

@@ -30,7 +30,7 @@ def test_cada_version_estrena_cache(sitio):
 
 
 def test_el_sitio_lleva_los_mismos_datos_que_el_motor_python(sitio):
-    for nombre in ("acciones", "combos", "perfil", "presets"):
+    for nombre in ("acciones", "combinaciones", "perfil", "presets"):
         fichero = f"{nombre}.json"
         assert (sitio / "data" / fichero).read_bytes() == (RAIZ / "data" / fichero).read_bytes()
 

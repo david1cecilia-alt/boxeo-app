@@ -95,14 +95,24 @@ export const REGLAS = [
   reglaSalidaTrasPoder,
 ];
 
+// Las que debe pasar la biblioteca (data/combinaciones.json): la longitud y la salida tras
+// golpe de poder solo valen para las combinaciones inventadas (decisión del usuario).
+export const REGLAS_TECNICAS = [
+  reglaNivelMinimo,
+  reglaTieneGolpe,
+  reglaCargarYSoltar,
+  reglaBloquearYDevolver,
+  reglaAlternarManos,
+];
+
 // Infracciones de la combinación. Si es zurda, se valida su espejo ortodoxo.
-export function validar(combo, nivel, zurdo = false) {
+export function validar(combo, nivel, zurdo = false, reglas = REGLAS) {
   if (zurdo) combo = espejoCombo(combo);
-  return REGLAS.map((regla) => regla(combo, nivel)).filter(Boolean);
+  return reglas.map((regla) => regla(combo, nivel)).filter(Boolean);
 }
 
-export function esValida(combo, nivel, zurdo = false) {
-  return validar(combo, nivel, zurdo).length === 0;
+export function esValida(combo, nivel, zurdo = false, reglas = REGLAS) {
+  return validar(combo, nivel, zurdo, reglas).length === 0;
 }
 
 // El último GOLPE, aunque después vaya una salida (para los pesos del perfil).

@@ -36,7 +36,7 @@ const FICHEROS = [
   "motor/ritmo.js",
   "motor/temporizador.js",
   "data/acciones.json",
-  "data/combos.json",
+  "data/combinaciones.json",
   "data/perfil.json",
   "data/posturas.json",
   "data/presets.json",

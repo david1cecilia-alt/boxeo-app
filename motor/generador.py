@@ -1,4 +1,4 @@
-"""Generador de combinaciones: reglas + combos clásicos + pesos del perfil.
+"""Generador de combinaciones inventadas: reglas + biblioteca + pesos del perfil.
 
 Todo se genera en ortodoxo; si el perfil es zurdo se refleja al final con espejo().
 """
@@ -6,7 +6,7 @@ import json
 import random
 from dataclasses import dataclass
 
-from motor.acciones import (RUTA_DATOS, Accion, catalogo, combos_clasicos, espejo_combo,
+from motor.acciones import (RUTA_DATOS, Accion, biblioteca, catalogo, espejo_combo,
                             repeticiones_permitidas, texto_hablado)
 from motor.reglas import LONGITUD, SOLTAR_TRAS, es_valida, ultimo_golpe
 
@@ -122,14 +122,14 @@ class GeneradorCombos:
         self.refuerzo = self.perfil.get("refuerzo")
         if self.refuerzo:
             self._peso_max *= max(self.refuerzo["factor"], 1.0)
-        # Solo los clásicos que cumplen las reglas de ESTE nivel.
-        self._clasicos = [c for c in combos_clasicos() if es_valida(list(c.acciones), nivel)]
+        # Solo los de la biblioteca que cumplen TODAS las reglas de ESTE nivel.
+        self._clasicos = [c for c in biblioteca() if es_valida(list(c.acciones), nivel)]
         self._anterior: tuple[Accion, ...] | None = None
 
     def _candidata(self, clasico: bool) -> Combinacion | None:
         if clasico:
             c = self.rng.choice(self._clasicos)
-            return Combinacion(c.acciones, "clasico", c.nombre)
+            return Combinacion(c.acciones, "clasico", c.nombre or c.notacion)
         combo = _paseo(self.nivel, self.rng)
         if combo is None or not es_valida(combo, self.nivel):
             return None

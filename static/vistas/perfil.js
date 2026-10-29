@@ -1,6 +1,6 @@
 // Pestaña Perfil: datos que rellena el usuario (solo en este navegador). Se guarda al
 // cambiar cada campo. Los pesos sustituyen a los de data/perfil.json en el generador.
-import { PESOS } from "../ajustes.js";
+import { PESOS, seguirBasicos } from "../ajustes.js";
 import { datos } from "../motor/datos.js";
 import { NO_SE } from "../almacen.js";
 import { $, $$, anunciar, esc, hoyIso } from "./dom.js";
@@ -175,6 +175,7 @@ export function iniciarPerfil({ almacen }) {
           const valor = el.dataset.numero !== undefined ? (el.value === "" ? null : Number(el.value))
             : el.type === "date" ? (el.value || null) : el.value;
           p[el.dataset.grupo][el.dataset.campo] = valor;
+          if (el.dataset.grupo === "basicos") seguirBasicos(p, el.dataset.campo);
         });
       });
     }

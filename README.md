@@ -29,9 +29,11 @@ es una PWA instalable y todo se calcula en el dispositivo.
   reanuda en el mismo punto. La pantalla sigue encendida (Wake Lock).
 - **Asaltos configurables** (preset amateur 3×3 min con 1 min de descanso): campana al empezar y
   acabar, tablillas y aviso por voz a los 10 s del final.
-- **Combinaciones con sentido técnico**, siempre por su nombre ("esquiva a la derecha, directo,
-  gancho de izquierda"), nunca con números. Se generan por reglas y se mezclan con combos clásicos.
-- **3 niveles**: longitud, golpes disponibles y pausa entre combinaciones cambian con el nivel.
+- **Combinaciones con sentido técnico**, dichas como elijas en «Cómo te las digo»: por **Números**
+  ("uno, dos, tres"), por **Nombres** ("jab, recto, gancho de izquierda") o **Ambos** ("uno jab,
+  dos recto"). Se generan por reglas y se mezclan con combos clásicos.
+- **3 niveles**: longitud y golpes disponibles cambian con el nivel; la pausa entre combinaciones
+  depende del ritmo.
 - **Ritmo a tu medida**: golpeas mientras oyes la combinación; la siguiente llega tras un hueco desde
   que la voz acaba, de 5–7 s (Calmado, para mover los pies) a 1 s (Intenso, para encadenar).
 - **Modo reacción**: señales aleatorias ("¡esquiva!", "¡sal!") que nunca pisan una combinación.

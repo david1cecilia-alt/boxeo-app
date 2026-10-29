@@ -27,6 +27,10 @@ es una PWA instalable y todo se calcula en el dispositivo.
   Durante la sesión solo se ve lo esencial.
 - **Pausa y Reanudar** separados de **Parar**: la pausa congela el reloj, la voz y el guion, y
   reanuda en el mismo punto. La pantalla sigue encendida (Wake Lock).
+- **Entrenar recuerda tus elecciones**: asalto, nivel, ritmo, «Nombrar combinaciones», zurdo y
+  Reacción quedan como los dejaste. La sesión **Personalizada** (asaltos, duración y descanso) se
+  guarda sola al cambiarla y no se pierde al elegir Amateur o Prueba. Cambiar la guardia o el nivel
+  en Perfil también los cambia en Entrenar; elegirlos en Entrenar no toca el Perfil.
 - **Asaltos configurables** (preset amateur 3×3 min con 1 min de descanso): campana al empezar y
   acabar, tablillas y aviso por voz a los 10 s del final.
 - **Combinaciones con sentido técnico**, dichas como elijas en «Nombrar combinaciones»: por **Números**
@@ -55,7 +59,7 @@ es una PWA instalable y todo se calcula en el dispositivo.
 
 ## Tus datos
 
-Perfil, notas y valoraciones se guardan **solo en el navegador** (`localStorage`); nunca van al
+Perfil, últimas elecciones de Entrenar, notas y valoraciones se guardan **solo en el navegador** (`localStorage`); nunca van al
 repositorio ni a `data/`. El almacén (`static/almacen.js`) tiene esquema versionado con
 migraciones: las sesiones guardadas con versiones anteriores siguen apareciendo. Si el navegador
 no deja guardar, la app sigue funcionando en memoria y avisa. Como `localStorage` se borra al
@@ -133,7 +137,7 @@ solo comando lo cubra todo:
 |---|---|
 | Pausa y reanudación | Con un reloj falso y pausas en mitad de combos y descansos, cada evento del guion se lanza una sola vez, en orden y en su segundo de sesión |
 | Los pesos del perfil llegan al generador | Subir cada peso aumenta la proporción de esas combinaciones en el guion; los pesos sustituyen a los de `perfil.json` |
-| Migración del almacén | El historial anterior (v0) pasa a v1 conservando las sesiones; migrar dos veces no cambia nada; datos dañados o de una versión más nueva no se sobrescriben |
+| Migración del almacén | El historial anterior (v0) pasa a v1 conservando las sesiones; v3 pasa a v4 tomando nivel y guardia del perfil y conservando historial, valoraciones, notas y revisiones; migrar dos veces no cambia nada; datos dañados o de una versión más nueva no se sobrescriben |
 | Copia de seguridad | Exportar → JSON → importar da exactamente los mismos datos |
 | Ids sin colisiones | Las sesiones locales usan UUID: borrar o importar no mezcla valoraciones |
 | Contraste | Los colores de `estilos.css` cumplen AA (texto 4,5:1; bordes, foco y gráficos 3:1) |

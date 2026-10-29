@@ -1,10 +1,10 @@
 // Almacén de los datos del usuario en el navegador (localStorage): sesiones sin servidor,
-// valoraciones, perfil, notas del entrenador y revisiones. Nunca va al repo ni a data/.
+// valoraciones, perfil (con la voz elegida en Ajustes), notas del entrenador y revisiones. Nunca va al repo ni a data/.
 //
 // Esquema versionado: si cambia, se sube VERSION y se añade una migración en MIGRACIONES.
 // Si el almacenamiento falla, todo sigue funcionando en memoria y `persistente` pasa a false.
 
-export const VERSION = 4;
+export const VERSION = 5;
 const CLAVE = "boxeo";
 const CLAVE_V0 = "boxeo.historial"; // versión 0: un array de sesiones, antes del almacén
 
@@ -30,6 +30,12 @@ export function sesionDesdeBasicos(basicos) {
   };
 }
 
+// Voz de los dictados, elegida en Ajustes. `id`: voiceURI de la voz del navegador (null = la
+// automática); `velocidad`: una clave de VELOCIDADES de static/motor/ritmo.js.
+export function vozPorDefecto() {
+  return { id: null, velocidad: "normal" };
+}
+
 export function perfilPorDefecto() {
   return {
     basicos: { guardia: NO_SE, nivel: NO_SE, inicio: null, altura_cm: null, peso_kg: null, alcance_cm: null },
@@ -38,9 +44,9 @@ export function perfilPorDefecto() {
       distancia: NO_SE, presion: NO_SE, golpe_favorito: NO_SE, volumen: NO_SE,
       cardio: NO_SE, defensa: NO_SE, iniciativa: NO_SE,
     },
-    focos: [],
     pesos: null, // null = los de data/perfil.json
     sesion: sesionPorDefecto(),
+    voz: vozPorDefecto(),
   };
 }
 
@@ -89,6 +95,12 @@ const MIGRACIONES = {
       sesion: { ...sesionPorDefecto(), ...v3.perfil?.sesion, ...sesionDesdeBasicos(v3.perfil?.basicos) },
     },
   }),
+  // v4 → v5: el perfil recuerda la voz y su velocidad (Ajustes), con la automática y la velocidad
+  // de siempre; los focos de trabajo desaparecen.
+  4: (v4) => {
+    const { focos, ...perfil } = v4.perfil ?? {};
+    return { ...v4, version: 5, perfil: { ...perfil, voz: vozPorDefecto() } };
+  },
 };
 
 // Rellena lo que falte con los valores por defecto (datos escritos a mano o a medias).
@@ -108,6 +120,7 @@ function completar(datos) {
         ...perfil.sesion,
         personalizada: { ...base.perfil.sesion.personalizada, ...perfil.sesion?.personalizada },
       },
+      voz: { ...base.perfil.voz, ...perfil.voz },
     },
   };
 }

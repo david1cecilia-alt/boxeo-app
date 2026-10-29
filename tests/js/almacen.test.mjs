@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { VERSION, claveSesion, crearAlmacen, migrar, sesionPorDefecto, vacio } from "../../static/almacen.js";
+import { VERSION, claveSesion, crearAlmacen, migrar, sesionPorDefecto, vacio, vozPorDefecto } from "../../static/almacen.js";
 
 // localStorage falso. `roto: true` simula un navegador que no deja guardar.
 function almacenamiento(inicial = {}, { roto = false } = {}) {
@@ -58,7 +58,7 @@ test("completa campos que falten en datos v1 a medias", () => {
 
 test("v2 → v3: el perfil gana voz «nombres» y ritmo 3, y conserva lo demás", () => {
   const v2 = { ...vacio(), version: 2, sesiones: [{ id: "a" }],
-    perfil: { ...vacio().perfil, focos: ["jab"], estilo: { ...vacio().perfil.estilo, mi_estilo: "boxer" } } };
+    perfil: { ...vacio().perfil, pesos: { termina_en_gancho: 2, bloquear_y_devolver: 1, entrada_con_jab: 1 }, estilo: { ...vacio().perfil.estilo, mi_estilo: "boxer" } } };
   delete v2.perfil.sesion;
   const { datos, migrado } = migrar(v2);
   assert.equal(migrado, true);
@@ -66,7 +66,7 @@ test("v2 → v3: el perfil gana voz «nombres» y ritmo 3, y conserva lo demás"
   assert.equal(datos.perfil.sesion.voz, "nombres");
   assert.equal(datos.perfil.sesion.ritmo, 3);
   assert.equal(datos.perfil.estilo.mi_estilo, "boxer");
-  assert.deepEqual(datos.perfil.focos, ["jab"]);
+  assert.equal(datos.perfil.pesos.termina_en_gancho, 2);
   assert.deepEqual(datos.sesiones, [{ id: "a" }]);
 });
 
@@ -77,9 +77,9 @@ test("v1 llega a la versión actual pasando por todas las migraciones", () => {
   assert.deepEqual(datos.perfil.sesion, sesionPorDefecto());
 });
 
-// Almacén v3 completo, como lo tiene hoy quien ya usa la app.
+// Almacén v3 completo, como lo tenía quien usaba la app antes de la v4.
 function almacenV3() {
-  const perfil = vacio().perfil;
+  const { voz, ...perfil } = vacio().perfil;
   return {
     version: 3,
     sesiones: [{ ...SESION_V0, id: "s-1", ritmo: 4, voz: "numeros" }],
@@ -103,7 +103,7 @@ test("v3 → v4: nivel y zurdo salen de «Tus datos» y se conserva todo lo dem�
   const v3 = almacenV3();
   const { datos, migrado } = migrar(structuredClone(v3));
   assert.equal(migrado, true);
-  assert.equal(datos.version, 4);
+  assert.equal(datos.version, VERSION);
   assert.deepEqual(datos.perfil.sesion, {
     voz: "ambos", ritmo: 5, asalto: "amateur", nivel: 2, zurdo: true, reaccion: false,
     personalizada: { asaltos: 3, duracion_asalto: 180, descanso: 60 },
@@ -113,8 +113,8 @@ test("v3 → v4: nivel y zurdo salen de «Tus datos» y se conserva todo lo dem�
   assert.deepEqual(datos.valoraciones, v3.valoraciones);
   assert.deepEqual(datos.notas_entrenador, v3.notas_entrenador);
   assert.deepEqual(datos.revisiones, v3.revisiones);
-  const { sesion, ...resto } = datos.perfil;
-  const { sesion: _, ...restoV3 } = v3.perfil;
+  const { sesion, voz, ...resto } = datos.perfil;
+  const { sesion: _, focos, ...restoV3 } = v3.perfil;
   assert.deepEqual(resto, restoV3);
 });
 
@@ -132,25 +132,91 @@ test("v3 → v4: guardia ortodoxa queda como diestro", () => {
   assert.equal(migrar(v3).datos.perfil.sesion.zurdo, false);
 });
 
-test("al abrir un almacén v3 se migra, se guarda en v4 y no se pierde nada", () => {
+test("al abrir un almacén v3 se migra, se guarda en la versión actual y no se pierde nada", () => {
   const v3 = almacenV3();
   const storage = almacenamiento({ boxeo: JSON.stringify(v3) });
   const almacen = crearAlmacen({ storage });
   const guardado = JSON.parse(storage.mapa.get("boxeo"));
-  assert.equal(guardado.version, 4);
+  assert.equal(guardado.version, VERSION);
   assert.deepEqual(guardado, almacen.datos);
   assert.deepEqual(guardado.revisiones, v3.revisiones);
   assert.deepEqual(guardado.sesiones, v3.sesiones);
 });
 
-test("importar una copia v3 la migra a v4 conservando revisiones y valoraciones", () => {
+test("importar una copia v3 la migra a la versión actual conservando revisiones y valoraciones", () => {
   const v3 = almacenV3();
   const almacen = crearAlmacen({ storage: almacenamiento() });
   almacen.importar({ app: "boxeo", version: 3, datos: v3 });
-  assert.equal(almacen.datos.version, 4);
+  assert.equal(almacen.datos.version, VERSION);
   assert.deepEqual(almacen.datos.revisiones, v3.revisiones);
   assert.deepEqual(almacen.datos.valoraciones, v3.valoraciones);
   assert.equal(almacen.datos.perfil.sesion.nivel, 2);
+});
+
+// Almacén v4 completo, como lo tiene hoy quien ya usa la app.
+function almacenV4() {
+  const v4 = migrar(almacenV3()).datos;
+  const { voz, ...perfil } = v4.perfil;
+  return {
+    ...v4,
+    version: 4,
+    perfil: {
+      ...perfil,
+      focos: ["jab doble", "salir por el ángulo"],
+      sesion: { ...perfil.sesion, asalto: "personalizado", personalizada: { asaltos: 4, duracion_asalto: 120, descanso: 45 } },
+    },
+  };
+}
+
+test("v4 → v5: voz automática a velocidad normal, sin focos, y se conserva todo lo demás", () => {
+  const v4 = almacenV4();
+  const { datos, migrado } = migrar(structuredClone(v4));
+  assert.equal(migrado, true);
+  assert.equal(datos.version, 5);
+  assert.deepEqual(datos.perfil.voz, { id: null, velocidad: "normal" });
+  assert.equal("focos" in datos.perfil, false);
+  const { voz, ...perfil } = datos.perfil;
+  const { focos, ...perfilV4 } = v4.perfil;
+  assert.deepEqual(perfil, perfilV4);
+  for (const campo of ["sesiones", "valoraciones", "notas_entrenador", "revisiones"]) {
+    assert.deepEqual(datos[campo], v4[campo], campo);
+  }
+});
+
+test("v4 → v5: un perfil sin nada también migra", () => {
+  const { datos } = migrar({ version: 4, sesiones: [] });
+  assert.equal(datos.version, 5);
+  assert.deepEqual(datos.perfil, vacio().perfil);
+});
+
+test("al abrir un almacén v4 se guarda en v5 sin focos y sin perder nada", () => {
+  const v4 = almacenV4();
+  const storage = almacenamiento({ boxeo: JSON.stringify(v4) });
+  const almacen = crearAlmacen({ storage });
+  const guardado = JSON.parse(storage.mapa.get("boxeo"));
+  assert.equal(guardado.version, 5);
+  assert.deepEqual(guardado, almacen.datos);
+  assert.equal("focos" in guardado.perfil, false);
+  assert.deepEqual(guardado.perfil.sesion, v4.perfil.sesion);
+  assert.deepEqual(guardado.notas_entrenador, v4.notas_entrenador);
+});
+
+test("importar una copia v4 la deja en v5", () => {
+  const v4 = almacenV4();
+  const almacen = crearAlmacen({ storage: almacenamiento() });
+  almacen.importar({ app: "boxeo", version: 4, datos: v4 });
+  assert.equal(almacen.datos.version, 5);
+  assert.deepEqual(almacen.datos.perfil.voz, vozPorDefecto());
+  assert.deepEqual(almacen.datos.valoraciones, v4.valoraciones);
+});
+
+test("la voz elegida se guarda y se relee; a medias se completa", () => {
+  const storage = almacenamiento();
+  const almacen = crearAlmacen({ storage });
+  almacen.guardarPerfil({ ...almacen.datos.perfil, voz: { id: "urn:voz-helena", velocidad: "rapida" } });
+  assert.deepEqual(crearAlmacen({ storage }).datos.perfil.voz, { id: "urn:voz-helena", velocidad: "rapida" });
+  almacen.guardarPerfil({ ...almacen.datos.perfil, voz: { velocidad: "lenta" } });
+  assert.deepEqual(almacen.datos.perfil.voz, { id: null, velocidad: "lenta" });
 });
 
 test("completa la sesión personalizada a medias con los valores por defecto", () => {
@@ -197,7 +263,7 @@ test("datos dañados no se sobrescriben", () => {
   const storage = almacenamiento({ boxeo: "{roto" });
   const almacen = crearAlmacen({ storage });
   assert.equal(almacen.persistente, false);
-  almacen.guardarPerfil({ focos: ["x"] });
+  almacen.guardarPerfil({ pesos: null });
   assert.equal(storage.mapa.get("boxeo"), "{roto");
 });
 
@@ -249,7 +315,7 @@ test("exportar e importar dan exactamente los mismos datos", () => {
   });
   origen.guardarValoracion(claveSesion("local", id), { rpe: 7, sensacion: 4, bien: "ritmo", corregir: "guardia", costosas: [0] });
   origen.guardarValoracion(claveSesion("servidor", 12), { rpe: 5, sensacion: 3, bien: "", corregir: "", costosas: [] });
-  origen.guardarPerfil({ ...origen.datos.perfil, focos: ["acabar en gancho"], pesos: { termina_en_gancho: 3, bloquear_y_devolver: 1, entrada_con_jab: 1.5 } });
+  origen.guardarPerfil({ ...origen.datos.perfil, voz: { id: "urn:voz", velocidad: "lenta" }, pesos: { termina_en_gancho: 3, bloquear_y_devolver: 1, entrada_con_jab: 1.5 } });
   origen.anadirNotaEntrenador("Baja la barbilla", "2026-10-20");
   origen.guardarRevision("parada", { respuesta: "Tras parar, jab", confirmado: true });
 

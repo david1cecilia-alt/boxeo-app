@@ -560,6 +560,14 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
   color: var(--texto); text-decoration: none; transition: border-color 0.15s;
 }
 .lista-sesiones a:hover { border-color: var(--linea-chip); }
+/* Grupos plegables (semana, mes o año): título a la izquierda, sesiones y minutos a la derecha. */
+.grupos-sesiones { display: grid; gap: 4px; min-width: 0; }
+.grupo-sesiones { min-width: 0; }
+.grupo-sesiones > summary { flex-wrap: wrap; gap: 2px 10px; border-bottom: 1px solid var(--linea); }
+.grupo-sesiones[open] > summary { margin-bottom: 10px; }
+.titulo-grupo { flex: 1 1 auto; font-size: 0.9375rem; }
+.resumen-grupo { margin-left: auto; color: var(--suave); font-size: 0.8125rem; font-weight: 400; font-variant-numeric: tabular-nums; }
+.grupo-sesiones > .lista-sesiones, .grupo-sesiones > .nota { margin: 0 0 12px; }
 .lista-sesiones a[aria-current="true"] { border-color: var(--acento); box-shadow: inset 3px 0 0 var(--acento); }
 .bloque-fecha {
   flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center;

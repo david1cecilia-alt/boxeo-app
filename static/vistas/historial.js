@@ -1,5 +1,6 @@
-// Pestaña Historial: resumen y gráfico semanal, lista de sesiones, detalle con valoración
-// (editable), borrado y copia de seguridad (exportar / importar).
+// Pestaña Historial: resumen y gráfico semanal, lista de sesiones en grupos plegables (por
+// semana, mes o año, con sus sesiones y minutos), detalle con valoración (editable), borrado y
+// copia de seguridad (exportar / importar).
 // Maestro-detalle: en PC la lista y el detalle van en dos columnas; en móvil el CSS muestra
 // solo la lista o, si hay una sesión elegida (#historial/<clave>), solo su detalle.
 import { ErrorAlmacen } from "../almacen.js";
@@ -7,13 +8,17 @@ import { datos } from "../motor/datos.js";
 import { $, aFecha, anunciar, esc, fechaLarga, hoyIso, minutos } from "./dom.js";
 import { activarGrafico, graficoSemanas } from "./grafico.js";
 import { SENSACION } from "./opciones.js";
-import { porSemana, totales } from "./resumen.js";
+import { AGRUPACIONES, agrupar, clavesAbiertas, porSemana, textoMinutos, tituloGrupo, totales } from "./resumen.js";
 
 const MES = new Intl.DateTimeFormat("es-ES", { month: "short" });
 const MES_LARGO = new Intl.DateTimeFormat("es-ES", { month: "long" });
 const mesYAno = (d) => `${MES_LARGO.format(d)} ${d.getFullYear()}`; // "octubre 2026", sin el "de"
 const fmt = (n) => n.toLocaleString("es-ES", { maximumFractionDigits: 1 });
 const plural = (n, una, varias) => `${n} ${n === 1 ? una : varias}`;
+const PERIODO_VACIO = { semana: "esta semana", mes: "este mes", ano: "este año" };
+
+// Grupos desplegados de cada agrupación mientras la app está abierta (no se guardan).
+const abiertos = {};
 
 // Nombre del preset con el que se hizo la sesión (por su asalto y descanso), o "Personalizado".
 function nombrePreset(s) {
@@ -37,6 +42,12 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
     const v = almacen.datos.valoraciones;
     const { mes } = totales(sesiones, v);
     const semanas = porSemana(sesiones, v);
+    const modo = agrupacion();
+    const grupos = agrupar(sesiones, modo);
+    abiertos[modo] ??= clavesAbiertas(grupos);
+    // El grupo de la sesión elegida sale abierto (al volver de su detalle, también).
+    const deLaElegida = grupos.find((g) => g.sesiones.some((s) => s.clave === clave));
+    if (deLaElegida) abiertos[modo].add(deLaElegida.clave);
     raiz.classList.toggle("con-detalle", Boolean(clave));
     raiz.innerHTML = `
       <section class="resumen-historial" aria-label="Resumen de ${esc(mesActual)}">
@@ -52,7 +63,7 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
       <div class="col-lista">
       <section class="sesiones" aria-labelledby="t-sesiones">
         <h2 id="t-sesiones">Sesiones</h2>
-        ${sesiones.length ? `<ul class="lista-sesiones">${sesiones.map((s) => fila(s, v[s.clave], clave)).join("")}</ul>`
+        ${sesiones.length ? `<div class="grupos-sesiones">${grupos.map((g) => grupo(g, modo, v, clave)).join("")}</div>`
           : `<p class="nota">Aún no hay sesiones. Las que termines aparecerán aquí.</p>`}
         <p class="nota">Guardado ${esc(historial.descripcion)}. Las valoraciones y notas, en este navegador.</p>
       </section>
@@ -73,9 +84,29 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
       </div>
       </div>`;
     activarGrafico(raiz, semanas);
+    for (const d of raiz.querySelectorAll("details[data-grupo]")) {
+      d.addEventListener("toggle", () => abiertos[modo][d.open ? "add" : "delete"](d.dataset.grupo));
+    }
     $("#exportar").addEventListener("click", exportar);
     $("#importar").addEventListener("change", importar);
     if (clave) await detalle(sesiones.find((x) => x.clave === clave), clave);
+  }
+
+  function agrupacion() {
+    const elegida = almacen.datos.perfil.historial?.agrupar;
+    return AGRUPACIONES.includes(elegida) ? elegida : "semana";
+  }
+
+  // Grupo plegable: título del periodo, sesiones y minutos de asalto, y sus sesiones.
+  function grupo(g, modo, v, elegida) {
+    const resumen = g.sesiones.length
+      ? `${plural(g.sesiones.length, "sesión", "sesiones")} · ${textoMinutos(g.minutos)}` : "sin sesiones";
+    return `<details class="grupo-sesiones" data-grupo="${esc(g.clave)}"${abiertos[modo].has(g.clave) ? " open" : ""}>
+      <summary><span class="titulo-grupo">${esc(tituloGrupo(g.inicio, modo))}</span><span class="solo-lectores">:</span>
+        <span class="resumen-grupo">${resumen}</span></summary>
+      ${g.sesiones.length ? `<ul class="lista-sesiones">${g.sesiones.map((s) => fila(s, v[s.clave], elegida)).join("")}</ul>`
+        : `<p class="nota">Aún no has entrenado ${PERIODO_VACIO[modo]}.</p>`}
+    </details>`;
   }
 
   // Bloque de fecha, preset y nivel, asaltos y combinaciones, y una pastilla con el RPE.

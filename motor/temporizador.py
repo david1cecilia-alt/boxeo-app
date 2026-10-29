@@ -6,9 +6,9 @@ import json
 import random
 from dataclasses import asdict, dataclass, field
 
-from motor.acciones import RUTA_DATOS
-from motor.generador import GeneradorCombos
-from motor.ritmo import duracion_estimada, pausa_entre_combos
+from motor.acciones import MODOS_VOZ, RUTA_DATOS, texto_hablado
+from motor.sorteo import SorteoBiblioteca
+from motor.ritmo import RITMO_POR_DEFECTO, duracion_estimada, pausa_entre_combos
 
 PREPARACION = 3.0         # segundos al inicio del asalto antes del primer combo
 AVISO_ANTES_FIN = 10.0    # aviso a los 10 s del final
@@ -16,6 +16,7 @@ DURACION_AVISO = 1.5      # lo que ocupa decir "diez segundos"
 DURACION_REACCION = 2.0   # señal + tiempo para reaccionar
 INTERVALO_REACCION = (8.0, 20.0)  # separación aleatoria entre señales de reacción
 MARGEN = 0.5              # hueco mínimo entre una combinación y una señal
+REINTENTOS = 5            # combinaciones que se prueban si no cabe ninguna en un asalto aún vacío
 
 
 @dataclass
@@ -26,7 +27,12 @@ class ConfigSesion:
     nivel: int = 1
     zurdo: bool = False
     modo_reaccion: bool = False
-    pausa: float | None = None  # None = la del nivel
+    pausa: float | None = None  # pausa fija entre combinaciones; None = la del ritmo
+    ritmo: int = RITMO_POR_DEFECTO  # 1 Calmado … 5 Intenso
+    voz: str = "nombres"        # cómo se dicen: uno de MODOS_VOZ
+
+    def __post_init__(self):
+        assert self.voz in MODOS_VOZ, self.voz
 
 
 @dataclass
@@ -51,6 +57,13 @@ def _solapa(ini: float, fin: float, reservados: list[tuple[float, float]]) -> tu
     return None
 
 
+def _hueco(t: float, d: float, reservados: list[tuple[float, float]]) -> float:
+    """Primer instante desde t en el que cabe una combinación de d segundos sin pisar señales."""
+    while (choque := _solapa(t, t + d, reservados)):
+        t = choque[1] + MARGEN
+    return t
+
+
 def _reacciones(inicio: float, limite: float, rng: random.Random,
                 reacciones: list[dict], asalto: int) -> list[Evento]:
     eventos = []
@@ -63,13 +76,18 @@ def _reacciones(inicio: float, limite: float, rng: random.Random,
 
 
 def construir_guion(config: ConfigSesion, rng: random.Random | None = None,
-                    generador: GeneradorCombos | None = None) -> list[Evento]:
+                    generador=None) -> list[Evento]:
+    """`generador`: cualquier objeto con siguiente() (por defecto, el sorteo de la biblioteca)."""
     rng = rng or random.Random()
-    generador = generador or GeneradorCombos(config.nivel, zurdo=config.zurdo, rng=rng)
+    generador = generador or SorteoBiblioteca(config.nivel, zurdo=config.zurdo, rng=rng)
     reacciones = cargar_presets()["reacciones"]
-    pausa = pausa_entre_combos(config.nivel, config.pausa)
     eventos: list[Evento] = []
     t_asalto = 0.0
+    pendiente = None  # la que no cupo al final del asalto: abre el siguiente (no se pierde)
+
+    def texto_y_duracion(combo):
+        texto = texto_hablado(combo.acciones, config.voz, config.zurdo)
+        return texto, duracion_estimada(combo.acciones, texto)
 
     for n in range(1, config.asaltos + 1):
         inicio, fin = t_asalto, t_asalto + config.duracion_asalto
@@ -87,16 +105,25 @@ def construir_guion(config: ConfigSesion, rng: random.Random | None = None,
 
         # Colocar combinaciones en los huecos libres.
         t = inicio + PREPARACION
+        vacio = True
         while True:
-            combo = generador.siguiente()
-            d = duracion_estimada(combo.acciones)
-            while (choque := _solapa(t, t + d, reservados)):
-                t = choque[1] + MARGEN
-            if t + d > fin:
+            combo, pendiente = pendiente or generador.siguiente(), None
+            texto, d = texto_y_duracion(combo)
+            empieza = _hueco(t, d, reservados)
+            # Asalto muy corto y aún vacío: la que no cabe espera al siguiente y se prueba otra.
+            for _ in range(REINTENTOS if vacio else 0):
+                if empieza + d <= fin:
+                    break
+                pendiente = pendiente or combo
+                combo = generador.siguiente()
+                texto, d = texto_y_duracion(combo)
+                empieza = _hueco(t, d, reservados)
+            if empieza + d > fin:
+                pendiente = pendiente or combo
                 break
-            eventos.append(Evento(round(t, 2), "combo", n, d, combo.texto,
-                                  [a.id for a in combo.acciones]))
-            t = round(t + d + pausa, 2)
+            t, vacio = empieza, False
+            eventos.append(Evento(round(t, 2), "combo", n, d, texto, [a.id for a in combo.acciones]))
+            t = round(t + d + pausa_entre_combos(config.ritmo, combo.acciones, rng, config.pausa), 2)
 
         eventos.append(Evento(fin, "fin_asalto", n))
         t_asalto = fin

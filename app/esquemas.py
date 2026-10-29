@@ -1,4 +1,6 @@
 """Modelos Pydantic: validan lo que entra y sale de la API."""
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -10,6 +12,8 @@ class PeticionGuion(BaseModel):
     zurdo: bool = False
     modo_reaccion: bool = False
     pausa: float | None = Field(None, ge=0, le=30)
+    ritmo: int = Field(3, ge=1, le=5)
+    voz: Literal["numeros", "nombres", "ambos"] = "nombres"
 
 
 class ComboDictado(BaseModel):

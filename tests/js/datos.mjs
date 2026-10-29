@@ -12,7 +12,7 @@ export function leerJson(nombre) {
 }
 
 export function cargarDatosDeDisco() {
-  const datos = Object.fromEntries(["acciones", "combos", "perfil", "presets"].map((n) => [n, leerJson(n)]));
+  const datos = Object.fromEntries(["acciones", "combinaciones", "perfil", "presets"].map((n) => [n, leerJson(n)]));
   usarDatos(datos);
   return datos;
 }

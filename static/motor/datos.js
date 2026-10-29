@@ -1,7 +1,7 @@
 // Datos del motor (los mismos JSON de data/). Se inyectan: el navegador los carga
 // con fetch y los tests de Node con fs, así el motor no sabe de dónde vienen.
 
-const FICHEROS = ["acciones", "combos", "perfil", "presets"];
+const FICHEROS = ["acciones", "combinaciones", "perfil", "presets"];
 
 let actuales = null;
 

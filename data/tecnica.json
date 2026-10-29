@@ -1,5 +1,5 @@
 {
-  "_nota": "Fichas de la pestaña Aprende. Todo en guardia ORTODOXA (izquierda delante); el zurdo se ve en espejo. `acciones` son ids de acciones.json (vacío en estrategia). Cada paso puede llevar una `postura` de posturas.json. Las combinaciones relacionadas NO se escriben: salen de combos.json. `revisar: true` = pendiente de revisar con el entrenador; `pendiente` dice qué (y sale en Perfil vía herramientas/extraer_revisar.py). Textos redactados con palabras propias a partir de las fuentes.",
+  "_nota": "Fichas de la pestaña Aprende. Todo en guardia ORTODOXA (izquierda delante); el zurdo se ve en espejo. `acciones` son ids de acciones.json (vacío en estrategia). Cada paso puede llevar una `postura` de posturas.json. Las combinaciones relacionadas NO se escriben: salen de combinaciones.json. `revisar: true` = pendiente de revisar con el entrenador; `pendiente` dice qué (y sale en Perfil vía herramientas/extraer_revisar.py). Textos redactados con palabras propias a partir de las fuentes.",
   "categorias": [
     {"id": "golpes",     "titulo": "Golpes",        "frase": "Qué lanzar y cómo lanzarlo sin abrirte.",       "imagen": null},
     {"id": "defensas",   "titulo": "Defensas",      "frase": "Que no te den es la mitad del trabajo.",          "imagen": null},

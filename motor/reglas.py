@@ -68,7 +68,8 @@ def _regla_alternar_manos(combo, nivel):
         if a.tipo == b.tipo == "golpe" and a.mano == b.mano and (a.id, b.id) not in permitidas:
             return f"{a.id} y {b.id} repiten mano sin ser excepción"
     for a, b, c in zip(combo, combo[1:], combo[2:]):
-        if a.tipo == b.tipo == c.tipo == "golpe" and a.mano == b.mano == c.mano:
+        if (a.tipo == b.tipo == c.tipo == "golpe" and a.mano == b.mano == c.mano
+                and (a.id, b.id, c.id) not in permitidas):
             return f"tres golpes seguidos con la misma mano ({a.id}, {b.id}, {c.id})"
 
 
@@ -92,21 +93,31 @@ REGLAS = [
     _regla_salida_tras_poder,
 ]
 
+# Las que debe pasar la biblioteca (data/combinaciones.json): la longitud y la salida tras
+# golpe de poder solo valen para las combinaciones inventadas (decisión del usuario).
+REGLAS_TECNICAS = [
+    _regla_nivel_minimo,
+    _regla_tiene_golpe,
+    _regla_cargar_y_soltar,
+    _regla_bloquear_y_devolver,
+    _regla_alternar_manos,
+]
 
-def validar(combo: list[Accion], nivel: int, zurdo: bool = False) -> list[str]:
+
+def validar(combo: list[Accion], nivel: int, zurdo: bool = False, reglas=REGLAS) -> list[str]:
     """Infracciones de la combinación. Si es zurda, se valida su espejo ortodoxo."""
     if zurdo:
         combo = espejo_combo(combo)
     errores = []
-    for regla in REGLAS:
+    for regla in reglas:
         error = regla(combo, nivel)
         if error:
             errores.append(error)
     return errores
 
 
-def es_valida(combo: list[Accion], nivel: int, zurdo: bool = False) -> bool:
-    return not validar(combo, nivel, zurdo)
+def es_valida(combo: list[Accion], nivel: int, zurdo: bool = False, reglas=REGLAS) -> bool:
+    return not validar(combo, nivel, zurdo, reglas)
 
 
 def ultimo_golpe(combo: list[Accion]) -> Accion | None:

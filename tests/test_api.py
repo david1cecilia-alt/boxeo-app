@@ -21,7 +21,7 @@ def test_config_incluye_preset_amateur(cliente):
 
 
 def test_sirve_los_datos_para_el_motor_js(cliente):
-    for nombre in ("acciones", "combos", "perfil", "presets"):
+    for nombre in ("acciones", "combinaciones", "perfil", "presets"):
         assert cliente.get(f"/data/{nombre}.json").status_code == 200
     assert cliente.get("/motor/temporizador.js").status_code == 200
 
@@ -71,3 +71,12 @@ def test_borrar_sesion_borra_tambien_sus_combinaciones(cliente, tmp_path):
 
 def test_sesion_inexistente_da_404(cliente):
     assert cliente.get("/api/sesiones/999/combinaciones").status_code == 404
+
+
+def test_guion_con_ritmo_y_modo_de_voz(cliente):
+    r = cliente.post("/api/sesion/guion", json={"asaltos": 1, "duracion_asalto": 60, "ritmo": 5, "voz": "numeros"})
+    assert r.status_code == 200
+    textos = [e["texto"] for e in r.json()["eventos"] if e["tipo"] == "combo"]
+    assert any("uno" in t.split(", ") for t in textos)
+    assert cliente.post("/api/sesion/guion", json={"ritmo": 6}).status_code == 422
+    assert cliente.post("/api/sesion/guion", json={"voz": "gritos"}).status_code == 422

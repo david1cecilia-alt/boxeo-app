@@ -25,11 +25,13 @@ def test_longitud_por_nivel():
     assert not es_valida(combo("jab", "directo"), 2)
 
 
-def test_uppercuts_y_cuerpo_solo_desde_nivel_2():
+def test_cuerpo_solo_desde_nivel_2_y_uppercuts_a_la_cabeza_desde_el_1():
     for accion in catalogo().values():
-        if accion.familia == "uppercut" or accion.objetivo == "cuerpo":
+        if accion.objetivo == "cuerpo":
             assert accion.nivel_minimo >= 2, accion.id
-    assert not es_valida(combo("jab", "uppercut_der"), 1)
+        elif accion.familia == "uppercut":
+            assert accion.nivel_minimo == 1, accion.id
+    assert es_valida(combo("jab", "uppercut_der"), 1)
     assert not es_valida(combo("jab", "directo_cuerpo"), 1)
 
 
@@ -80,9 +82,12 @@ def test_bloqueo_nunca_termina_y_va_seguido_de_golpe():
 def test_repetir_mano_solo_en_excepciones():
     assert es_valida(combo("jab", "jab", "directo"), 1)                   # doble jab
     assert not es_valida(combo("directo", "directo"), 1)
-    assert not es_valida(combo("jab", "gancho_izq"), 1)
+    assert es_valida(combo("jab", "gancho_izq"), 1)                       # 1-3
+    assert not es_valida(combo("jab", "uppercut_izq"), 1)                 # 1-5: no
+    assert not es_valida(combo("directo", "uppercut_der"), 1)             # 2-6: no
     assert es_valida(combo("jab", "directo", "gancho_izq", "gancho_izq_cuerpo", "salir"), 3)
-    assert not es_valida(combo("jab", "jab", "jab"), 1)                   # triple: no
+    assert es_valida(combo("jab", "jab", "jab"), 1)                       # triple jab
+    assert not es_valida(combo("jab", "jab", "gancho_izq"), 1)            # otros tríos: no
 
 
 # --- Salida tras golpe de poder ---

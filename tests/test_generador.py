@@ -65,8 +65,9 @@ def test_el_perfil_aumenta_bloqueo_gancho_y_jab():
 
     for condicion in (bloqueo, gancho, jab):
         assert _frecuencia(con_perfil, condicion) > _frecuencia(sin_perfil, condicion), condicion.__name__
-    # Es su punto débil: que salga a menudo.
-    assert _frecuencia(con_perfil, bloqueo) >= 0.2
+    # Es su punto débil: que salga a menudo (con la biblioteca de 83 combinaciones los
+    # clásicos con bloqueo son una parte menor que con los 16 de antes).
+    assert _frecuencia(con_perfil, bloqueo) >= 0.12
 
 
 def _con_accion(ids):

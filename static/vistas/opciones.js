@@ -6,7 +6,7 @@ const NO_LO_SE = [NO_SE, "No lo sé"];
 
 export const BASICOS = {
   guardia: { etiqueta: "Guardia", opciones: [NO_LO_SE, ["ortodoxa", "Ortodoxa (izquierda delante)"], ["zurda", "Zurda (derecha delante)"]] },
-  nivel: { etiqueta: "Nivel actual", opciones: [NO_LO_SE, ["1", "1 · principiante"], ["2", "2 · intermedio"], ["3", "3 · avanzado"]] },
+  nivel: { etiqueta: "Nivel actual", opciones: [NO_LO_SE, ["1", "1 · básico"], ["2", "2 · medio"], ["3", "3 · avanzado"]] },
 };
 
 // "Mi estilo": lo elige el usuario (o su entrenador). La app no lo calcula a partir de las respuestas.
@@ -58,7 +58,7 @@ export const PESOS_TEXTO = {
   },
   bloquear_y_devolver: {
     etiqueta: "Bloquear y devolver",
-    ayuda: "Más combinaciones con «cúbrete» seguido de un golpe.",
+    ayuda: "Más combinaciones con «bloquea» seguido de un golpe.",
   },
   entrada_con_jab: {
     etiqueta: "Entrar con el jab",

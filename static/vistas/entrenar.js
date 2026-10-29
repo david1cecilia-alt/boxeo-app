@@ -1,17 +1,21 @@
 // Pestaña Entrenar: configuración antes de empezar y pantalla de sesión (para usar con
 // guantes a 1–2 m del móvil). No contiene reglas de boxeo: el guion lo genera el motor y
 // el reproductor lo lanza en tiempo de sesión (con pausa).
-import { nuevoGuion, preferencias } from "../ajustes.js";
-import { catalogo, nombreCorto } from "../motor/acciones.js";
+import { nuevoGuion, preferencias, recordarSesion } from "../ajustes.js";
 import { crearAzar, semillaAleatoria } from "../motor/azar.js";
 import { datos } from "../motor/datos.js";
-import { PAUSA_POR_NIVEL } from "../motor/ritmo.js";
+import { PAUSA_POR_RITMO } from "../motor/ritmo.js";
 import { validarConfig } from "../motor/temporizador.js";
+import { PARA_REACCIONAR, crearDictado } from "../dictado.js";
+import { crearPantallaEncendida } from "../pantalla.js";
 import { crearReproductor } from "../reproductor.js";
 import { activarSonido, campana, pitido, tablillas } from "../sonido.js";
 import { $, anunciar, esc, minutos } from "./dom.js";
+import { pasosCombo } from "./pasos.js";
 
 const SEGUNDOS_FINAL = 10;
+const NOMBRE_RITMO = { 1: "Calmado", 2: "Tranquilo", 3: "Constante", 4: "Vivo", 5: "Intenso" };
+const decimal = (x) => String(x).replace(".", ",");
 const TEXTO_FASE = {
   asalto: "En asalto", final: "Últimos 10 s", descanso: "Descanso", reaccion: "¡Reacción!", pausa: "En pausa",
 };
@@ -20,6 +24,8 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   const form = $("#config");
   const presets = datos().presets.presets;
   let estado = null;        // sesión en curso, o null
+  // Wake Lock de empezar a parar/terminar (pausa y descanso incluidos); se repide al volver.
+  const pantalla = crearPantallaEncendida();
   let perfilAplicado = null;
 
   // ---------- Configuración ----------
@@ -44,18 +50,27 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     resumir();
   }
 
-  // Nivel y guardia del perfil (solo cuando el perfil cambia, para no pisar lo que se elija aquí).
+  // Nivel, guardia, voz y ritmo del perfil (solo cuando el perfil cambia, para no pisar lo que
+  // se elija aquí).
   function aplicarPerfil() {
     if (perfilAplicado === almacen.datos.perfil) return;
     perfilAplicado = almacen.datos.perfil;
-    const { nivel, zurdo } = preferencias(perfilAplicado);
+    const { nivel, zurdo, voz, ritmo } = preferencias(perfilAplicado);
     $(`input[name="nivel"][value="${nivel}"]`).checked = true;
+    $(`input[name="voz"][value="${voz}"]`).checked = true;
+    $("#ritmo").value = ritmo;
     $("#zurdo").checked = zurdo;
     resumir();
   }
 
+  // Voz y ritmo se recuerdan para la próxima sesión.
+  function recordar() {
+    const { voz, ritmo } = leerConfig();
+    recordarSesion(almacen, { voz, ritmo });
+    perfilAplicado = almacen.datos.perfil;
+  }
+
   function leerConfig() {
-    const pausa = $("#pausa-combos").value;
     return {
       asaltos: Number($("#asaltos").value),
       duracion_asalto: Number($("#duracion").value),
@@ -63,14 +78,18 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       nivel: Number($('input[name="nivel"]:checked').value),
       zurdo: $("#zurdo").checked,
       modo_reaccion: $("#reaccion").checked,
-      pausa: pausa === "" ? null : Number(pausa),
+      pausa: null, // la del ritmo
+      ritmo: Number($("#ritmo").value),
+      voz: $('input[name="voz"]:checked')?.value ?? "nombres",
     };
   }
 
   function resumir() {
     const c = leerConfigSegura();
     if (!c) return;
-    $("#pausa-combos").placeholder = `${PAUSA_POR_NIVEL[c.nivel]} (la del nivel)`;
+    const [min, max] = PAUSA_POR_RITMO[c.ritmo];
+    $("#resumen-ritmo").textContent = `${NOMBRE_RITMO[c.ritmo]} · ${decimal(min)}–${decimal(max)} s entre combinaciones`;
+    $("#ritmo").style.setProperty("--lleno", `${(c.ritmo - 1) * 25}%`);
     const resumen = `${c.asaltos} × ${minutos(c.duracion_asalto)} · descanso ${minutos(c.descanso)}`;
     $("#resumen-config").textContent = resumen;
     $("#resumen-grande").textContent = resumen;
@@ -89,7 +108,11 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   for (const id of ["asaltos", "duracion", "descanso"]) {
     $(`#${id}`).addEventListener("input", () => { marcarPreset(""); resumir(); });
   }
-  form.addEventListener("change", resumir);
+  form.addEventListener("change", (e) => {
+    if (e.target.name === "voz" || e.target.id === "ritmo") recordar();
+    resumir();
+  });
+  $("#ritmo").addEventListener("input", resumir);
   form.addEventListener("submit", (e) => { e.preventDefault(); empezar(); });
 
   // ---------- Sesión ----------
@@ -112,9 +135,19 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       asalto: 0,
       asaltosCompletados: 0,
     };
-    estado.reproductor = crearReproductor(eventos, { alLanzar: lanzar });
+    // Las combinaciones no van a hora fija: las dicta el dictado, que espera a que la voz termine.
+    estado.combos = eventos.filter((e) => e.tipo === "combo");
+    estado.fijos = eventos.filter((e) => e.tipo !== "combo");
+    estado.reproductor = crearReproductor(estado.fijos, { alLanzar: lanzar });
+    estado.dictado = crearDictado({
+      reproductor: estado.reproductor, voz, config, azar: crearAzar(semillaAleatoria()),
+      alDecir: (c) => {
+        mostrarCombo(c.texto, c.ids);
+        estado.dictadas.push({ asalto: c.asalto, texto: c.texto, ids: c.ids });
+      },
+    });
     estado.temporizador = setInterval(tic, 100);
-    pedirPantallaEncendida();
+    pantalla.encender();
     document.body.classList.add("entrenando");
     $("#pantalla").hidden = false;
     $("#progreso").innerHTML = "<i><b></b></i>".repeat(config.asaltos);
@@ -159,8 +192,15 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     return config.descanso > 0 ? `Después · descanso ${minutos(config.descanso)}` : `Después · asalto ${asalto + 1}`;
   }
 
+  // Señales previstas del asalto n (aviso y reacciones), que una combinación no debe pisar.
+  function reservados(n) {
+    return estado.fijos.filter((e) => e.asalto === n && (e.tipo === "aviso" || e.tipo === "reaccion"))
+      .map((e) => [e.t, e.t + e.duracion]);
+  }
+
   function lanzar(e) {
     const r = estado.reproductor;
+    const dictado = estado.dictado;
     switch (e.tipo) {
       case "inicio_asalto":
         estado.fase = "asalto";
@@ -172,32 +212,37 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
         $("#anterior").textContent = "";
         estado.ultimoCombo = null;
         campana(1);
-        r.programar(1.2, () => voz.decir(e.texto)); // que no pise la campana
+        r.programar(1.2, () => dictado.senal(e.texto)); // que no pise la campana
+        dictado.asalto({
+          combos: estado.combos.filter((c) => c.asalto === e.asalto),
+          reservados: reservados(e.asalto),
+          fin: estado.finFase,
+        });
         break;
-      case "combo":
-        mostrarCombo(e.texto, e.ids);
-        voz.decir(e.texto);
-        estado.dictadas.push({ asalto: e.asalto, texto: e.texto, ids: e.ids });
-        break;
-      case "reaccion":
+      case "reaccion": {
         mostrarTexto(e.texto);
         estado.reaccionHasta = e.t + e.duracion;
         pitido();
-        voz.decir(e.texto);
+        const sesion = estado;
+        dictado.senal(e.texto, PARA_REACCIONAR).then(() => {
+          sesion.reaccionHasta = Math.max(sesion.reaccionHasta, r.tiempo() + PARA_REACCIONAR);
+        });
         break;
+      }
       case "aviso":
         tablillas();
-        voz.decir(e.texto);
+        dictado.senal(e.texto);
         break;
       case "fin_asalto":
         estado.asaltosCompletados = e.asalto;
+        dictado.cortar();
         campana(3);
         break;
       case "descanso":
         estado.fase = "descanso";
         estado.finFase = e.t + e.duracion;
         mostrarTexto("Descanso");
-        r.programar(1.5, () => voz.decir("Descanso"));
+        r.programar(1.5, () => dictado.hablar("Descanso"));
         break;
       case "fin_sesion":
         mostrarTexto(e.texto);
@@ -207,21 +252,20 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     }
   }
 
-  // En grande lo actual, paso a paso y numerado con el tipo de cada acción (golpe, defensa,
-  // pies) y su nombre corto; en pequeño, la combinación anterior (las señales no cuentan).
-  // Los ids ya vienen en espejo para el zurdo y el catálogo tiene las dos versiones.
+  // En grande lo actual, paso a paso con el tipo de cada acción (golpe, defensa, pies) y su
+  // nombre corto; en pequeño, la combinación anterior (las señales no cuentan). Con Números o
+  // Ambos, cada golpe lleva su número; con Nombres, el círculo solo marca el tipo (pasos.js).
   function mostrarCombo(texto, ids) {
-    const acciones = ids.map((id) => catalogo().get(id));
+    const pasos = pasosCombo(ids, estado.config);
     const anterior = estado.ultimoCombo;
     $("#anterior").textContent = anterior ? `Anterior: ${anterior}` : "";
-    if (acciones.includes(undefined)) {
+    if (!pasos) {
       estado.ultimoCombo = texto;
       return mostrarTexto(texto);
     }
-    const cortos = acciones.map(nombreCorto);
-    estado.ultimoCombo = cortos.join(" · ");
-    $("#combo").innerHTML = `<ol class="pasos" aria-label="${esc(texto)}">${acciones.map((a, i) =>
-      `<li class="paso-${a.tipo}"><i aria-hidden="true">${i + 1}</i>${esc(cortos[i])}</li>`).join("")}</ol>`;
+    estado.ultimoCombo = pasos.map((p) => (p.numero ? `${p.numero} ${p.texto}` : p.texto)).join(" · ");
+    $("#combo").innerHTML = `<ol class="pasos" aria-label="${esc(texto)}">${pasos.map((p) =>
+      `<li class="paso-${p.tipo}"><i aria-hidden="true">${p.numero ?? ""}</i>${esc(p.texto)}</li>`).join("")}</ol>`;
     $("#leyenda").hidden = false;
   }
 
@@ -261,10 +305,11 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     const sesion = estado;
     estado = null;
     clearInterval(sesion.temporizador);
+    sesion.dictado.cortar();
     sesion.reproductor.detener();
     document.body.classList.remove("entrenando");
     $("#pantalla").hidden = true;
-    liberarPantalla();
+    pantalla.apagar();
     $("#empezar").focus();
     if (!sesion.dictadas.length) return;
     const datosSesion = {
@@ -274,6 +319,8 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       duracion_asalto: sesion.config.duracion_asalto,
       descanso: sesion.config.descanso,
       pausa: sesion.config.pausa,
+      ritmo: sesion.config.ritmo,
+      voz: sesion.config.voz,
       modo_reaccion: sesion.config.modo_reaccion,
       combinaciones: sesion.dictadas,
     };
@@ -288,20 +335,6 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   $("#pausa").addEventListener("click", pausarOReanudar);
   $("#parar").addEventListener("click", parar);
 
-  // ---------- Pantalla encendida ----------
-  // Wake Lock durante toda la sesión, también en pausa. El navegador lo suelta al cambiar
-  // de app o bloquear el móvil, así que se vuelve a pedir al volver.
-  let bloqueoPantalla = null;
-  async function pedirPantallaEncendida() {
-    try { bloqueoPantalla = await navigator.wakeLock?.request("screen"); } catch { /* no soportado */ }
-  }
-  function liberarPantalla() {
-    bloqueoPantalla?.release();
-    bloqueoPantalla = null;
-  }
-  document.addEventListener("visibilitychange", () => {
-    if (estado && document.visibilityState === "visible") pedirPantallaEncendida();
-  });
 
   setTimeout(() => ($("#info-voz").textContent = `Voz: ${voz.descripcion}`), 500);
 

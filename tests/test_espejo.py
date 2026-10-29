@@ -26,13 +26,13 @@ def test_espejo_intercambia_mano_lado_y_peso():
     assert espejo(cat["esquiva_der"]).peso_despues == "izq"
 
 
-def test_jab_y_directo_cambian_de_mano_pero_no_de_nombre():
+def test_jab_y_recto_cambian_de_mano_pero_no_de_nombre():
     cat = catalogo()
     jab_zurdo = espejo(cat["jab"])
     assert jab_zurdo.mano == "der"
     assert jab_zurdo.nombre_hablado == "jab"
     assert espejo(cat["directo"]).mano == "izq"
-    assert espejo(cat["directo"]).nombre_hablado == "directo"
+    assert espejo(cat["directo"]).nombre_hablado == "recto"
 
 
 def test_ningun_nombre_lleva_numeros():

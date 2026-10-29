@@ -14,10 +14,12 @@ from pathlib import Path
 
 import pytest
 
-from motor.acciones import Accion, acciones_por_ids, catalogo, espejo, espejo_combo
+from motor.acciones import (Accion, acciones_por_ids, biblioteca, catalogo, espejo, espejo_combo,
+                            texto_hablado)
 from motor.generador import GeneradorCombos, cargar_perfil
+from motor.sorteo import NUMEROS, SIN_REPETIR, SorteoBiblioteca
 from motor.reglas import ultimo_golpe, validar
-from motor.ritmo import duracion_estimada, pausa_entre_combos
+from motor.ritmo import duracion_estimada, rango_pausa
 from motor.temporizador import (AVISO_ANTES_FIN, DURACION_AVISO, DURACION_REACCION, MARGEN,
                                 PREPARACION, ConfigSesion, cargar_presets, construir_guion,
                                 guion_a_dict)
@@ -67,7 +69,7 @@ def test_combinaciones_js_pasan_las_reglas_de_python(js, nivel, guardia):
         acciones = _acciones(c["acciones"])
         errores = validar(acciones, nivel, zurdo=guardia == "zurdo")
         assert errores == [], f"nivel {nivel} {guardia}: '{c['texto']}' -> {errores}"
-        assert c["texto"] == ", ".join(a.nombre_hablado for a in acciones)
+        assert c["texto"] == texto_hablado(acciones)
 
 
 @pytest.mark.parametrize("nivel", NIVELES)
@@ -91,6 +93,39 @@ def test_js_usa_reglas_y_clasicos_y_no_repite_seguido(js, nivel):
     ids = [[a["id"] for a in c["acciones"]] for c in combos]
     for a, b in zip(ids, ids[1:]):
         assert a != b
+
+
+# ---------- Sorteo de la biblioteca ----------
+
+def _biblioteca_hasta(nivel):
+    return {tuple(a.id for a in c.acciones) for c in biblioteca() if c.nivel <= nivel}
+
+
+@pytest.mark.parametrize("nivel", NIVELES)
+def test_sorteo_js_cumple_las_mismas_reglas_que_el_de_python(js, nivel):
+    sorteo = js["sorteos"][str(nivel)]
+    ortodoxas = [tuple(ids) for ids in sorteo["ortodoxo"]]
+    assert len(ortodoxas) == MUESTRAS
+    assert set(ortodoxas) <= _biblioteca_hasta(nivel)
+    for i, c in enumerate(ortodoxas):
+        assert c not in ortodoxas[max(0, i - SIN_REPETIR):i], f"repetida en {i}"
+    primeras = {a.numero for ids in ortodoxas[:6] for a in acciones_por_ids(list(ids)) if a.numero}
+    assert primeras == NUMEROS
+    for o, z in zip(sorteo["ortodoxo"], sorteo["zurdo"], strict=True):
+        assert z == [a.id for a in espejo_combo(acciones_por_ids(o))]
+
+
+@pytest.mark.parametrize("nivel", NIVELES)
+def test_sorteo_js_saca_lo_mismo_que_el_de_python(js, nivel):
+    sorteo = SorteoBiblioteca(nivel, rng=random.Random(nivel))
+    python = [list(sorteo.siguiente().acciones) for _ in range(MUESTRAS)]
+    javascript = [acciones_por_ids(ids) for ids in js["sorteos"][str(nivel)]["ortodoxo"]]
+    condiciones = {"defensa": lambda c: any(a.tipo == "defensa" for a in c), **CONDICIONES}
+    for numero_ in sorted(NUMEROS):
+        condiciones[f"golpe {numero_}"] = lambda c, n=numero_: any(a.numero == n for a in c)
+    for nombre, condicion in condiciones.items():
+        p_py, p_js = _proporcion(python, condicion), _proporcion(javascript, condicion)
+        assert abs(p_js - p_py) <= TOLERANCIA_PROPORCION, f"nivel {nivel}, {nombre}: JS {p_js:.1%} vs Python {p_py:.1%}"
 
 
 # ---------- Proporciones del perfil ----------
@@ -146,7 +181,6 @@ def comprobar_guion(eventos: list[dict], c: ConfigSesion) -> None:
     """Invariantes que debe cumplir cualquier guion, lo genere Python o JS."""
     assert [e["t"] for e in eventos] == sorted(e["t"] for e in eventos)
     textos_reaccion = {r["texto"] for r in cargar_presets()["reacciones"]}
-    pausa = pausa_entre_combos(c.nivel, c.pausa)
     final = c.asaltos * c.duracion_asalto + (c.asaltos - 1) * c.descanso
     assert eventos[-1]["tipo"] == "fin_sesion" and eventos[-1]["t"] == final
     assert [e for e in eventos if e["tipo"] == "fin_sesion"] == [eventos[-1]]
@@ -176,11 +210,14 @@ def comprobar_guion(eventos: list[dict], c: ConfigSesion) -> None:
         assert combos, f"asalto {n} sin combinaciones"
         for k in combos:
             acciones = acciones_por_ids(k["ids"])
-            assert k["duracion"] == duracion_estimada(acciones)
-            assert k["texto"] == ", ".join(a.nombre_hablado for a in acciones)
+            ortodoxas = espejo_combo(acciones) if c.zurdo else acciones
+            assert tuple(a.id for a in ortodoxas) in _biblioteca_hasta(c.nivel), "no es de la biblioteca"
+            assert k["duracion"] == duracion_estimada(acciones, k["texto"])
+            assert k["texto"] == texto_hablado(acciones, c.voz, c.zurdo)
             assert inicio + PREPARACION <= k["t"] and k["t"] + k["duracion"] <= fin
         for a, b in zip(combos, combos[1:]):
-            assert b["t"] >= a["t"] + a["duracion"] + pausa - REDONDEO, "no respeta la pausa entre combos"
+            minima, _ = rango_pausa(c.ritmo, a["ids"], c.pausa)
+            assert b["t"] >= a["t"] + a["duracion"] + minima - REDONDEO, "no respeta la pausa entre combos"
 
         # Combos, reacciones y aviso nunca se pisan (combos con un margen respecto a señales).
         senales = [(e["t"], e["t"] + e["duracion"]) for e in reacciones + de_tipo("aviso")]

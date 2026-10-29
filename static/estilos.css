@@ -616,8 +616,8 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
 .chips-fila .chip-opcion span { padding: 0 14px; }
 
 #f-pesos { gap: 14px; }
-#f-pesos h2 { margin: 0; }
-#f-pesos .nota { margin-top: 4px; font-size: 0.8125rem; }
+:is(#f-pesos, #f-tus-datos) h2 { margin: 0; }
+:is(#f-pesos, #f-tus-datos) .nota { margin-top: 4px; font-size: 0.8125rem; }
 #f-pesos > .boton { justify-self: start; }
 
 .lista-editable { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
@@ -799,6 +799,7 @@ dialog::backdrop { background: var(--velo); }
   #vista-ajustes h1 { font-size: 4.5rem; }
   #ajustes-contenido { display: block; columns: 2; column-gap: 24px; }
   #ajustes-contenido > * { break-inside: avoid; margin: 0 0 24px; }
+  #ajustes-contenido > .nota { column-span: all; }
 
   /* Perfil: secciones en dos columnas. */
   #perfil-contenido { columns: 2; column-gap: 24px; }

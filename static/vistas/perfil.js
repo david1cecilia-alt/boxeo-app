@@ -1,10 +1,10 @@
-// Pestaña Perfil: datos que rellena el usuario (solo en este navegador). Se guarda al
-// cambiar cada campo. Los pesos sustituyen a los de data/perfil.json en el generador.
-import { PESOS, seguirBasicos } from "../ajustes.js";
-import { datos } from "../motor/datos.js";
+// Pestaña Perfil: lo informativo que rellena el usuario (solo en este navegador): estilo, sobre ti,
+// notas del entrenador y puntos a revisar. Se guarda al cambiar cada campo. Lo que cambia el
+// entreno (guardia, nivel, pesos y voz) está en Ajustes.
 import { NO_SE } from "../almacen.js";
+import { chips, conectarCampos } from "./campos.js";
 import { $, $$, anunciar, esc, hoyIso } from "./dom.js";
-import { BASICOS, ESTILO, MI_ESTILO, PESOS_TEXTO, RANGO_PESO } from "./opciones.js";
+import { ESTILO, MI_ESTILO } from "./opciones.js";
 
 const MEDIDAS = {
   altura_cm: ["Altura", "cm", 100, 230],
@@ -12,18 +12,8 @@ const MEDIDAS = {
   alcance_cm: ["Alcance", "cm", 100, 250],
 };
 
-// Opciones cerradas como chips (radios); "No lo sé" va la última.
-function chips(grupo, campo, { etiqueta, opciones }, actual) {
-  const orden = [...opciones.filter(([v]) => v !== NO_SE), ...opciones.filter(([v]) => v === NO_SE)];
-  return `<fieldset class="grupo-chips"><legend>${etiqueta}</legend><div class="chips-fila">
-    ${orden.map(([v, texto]) => `<label class="chip-opcion"><input type="radio" name="${grupo}-${campo}" value="${v}"
-      data-grupo="${grupo}" data-campo="${campo}" ${String(actual ?? NO_SE) === v ? "checked" : ""}><span>${esc(texto)}</span></label>`).join("")}
-  </div></fieldset>`;
-}
-
 const DISTANCIA = { corta: "Corta distancia", media: "Media distancia", larga: "Larga distancia" };
 const DETALLE_ESTILO = { golpe_favorito: "Golpe favorito", presion: "Bajo presión", defensa: "Defensa", iniciativa: "Iniciativa", cardio: "Cardio" };
-const pesoTexto = (n) => `×${n.toLocaleString("es-ES", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
 
 // Tarjeta de estilo: el que eligió el usuario ("Mi estilo") más el resumen de sus respuestas.
 // La app nunca clasifica por su cuenta (boxer, fajador…): eso es criterio de entrenador.
@@ -77,7 +67,6 @@ export function iniciarPerfil({ almacen }) {
 
   function pintar() {
     const p = almacen.datos.perfil;
-    const pesos = p.pesos ?? datos().perfil.pesos;
     raiz.innerHTML = `
       <section class="tarjeta estilo-provisional" aria-labelledby="t-estilo-provisional" aria-live="polite">
         <h2 id="t-estilo-provisional" class="antetitulo">Estilo provisional</h2>
@@ -90,27 +79,8 @@ export function iniciarPerfil({ almacen }) {
         ${Object.entries(ESTILO).map(([c, def]) => chips("estilo", c, def, p.estilo[c])).join("")}
       </form>
 
-      <form class="tarjeta formulario" id="f-pesos" aria-labelledby="t-pesos">
-        <div>
-          <h2 id="t-pesos" tabindex="-1">Qué te dicta la app</h2>
-          <p class="nota">Más a la derecha, más a menudo. 1 = neutro.
-            ${p.pesos ? "Estás usando tus valores." : "Ahora mismo, los valores por defecto."}</p>
-        </div>
-        ${PESOS.map((c) => `
-          <div class="deslizador">
-            <label for="peso-${c}">${PESOS_TEXTO[c].etiqueta}</label>
-            <output for="peso-${c}" id="valor-${c}">${pesoTexto(pesos[c])}</output>
-            <input type="range" id="peso-${c}" data-peso="${c}" min="${RANGO_PESO.min}" max="${RANGO_PESO.max}"
-              step="${RANGO_PESO.paso}" value="${pesos[c]}" aria-describedby="ayuda-${c}">
-            <p class="solo-lectores" id="ayuda-${c}">${PESOS_TEXTO[c].ayuda}</p>
-          </div>`).join("")}
-        <button type="button" id="pesos-defecto" class="boton pequeno" ${p.pesos ? "" : "disabled"}>
-          Volver a los valores por defecto</button>
-      </form>
-
       <form class="tarjeta formulario" id="f-basicos" aria-labelledby="t-basicos">
-        <h2 id="t-basicos">Tus datos</h2>
-        ${Object.entries(BASICOS).map(([c, def]) => chips("basicos", c, def, p.basicos[c])).join("")}
+        <h2 id="t-basicos">Sobre ti</h2>
         <label class="campo">Empecé a boxear
           <input type="date" data-grupo="basicos" data-campo="inicio" value="${esc(p.basicos.inicio ?? "")}" max="${hoyIso()}"></label>
         <div class="rejilla">
@@ -147,34 +117,7 @@ export function iniciarPerfil({ almacen }) {
   }
 
   function conectar() {
-    // Selects, fecha y medidas: se guardan al cambiar.
-    for (const el of $$("[data-grupo]", raiz)) {
-      el.addEventListener("change", () => {
-        if (el.dataset.numero !== undefined && el.value !== "" && !el.checkValidity()) {
-          el.reportValidity();
-          return;
-        }
-        guardar((p) => {
-          const valor = el.dataset.numero !== undefined ? (el.value === "" ? null : Number(el.value))
-            : el.type === "date" ? (el.value || null) : el.value;
-          p[el.dataset.grupo][el.dataset.campo] = valor;
-          if (el.dataset.grupo === "basicos") seguirBasicos(p, el.dataset.campo);
-        });
-      });
-    }
-
-    for (const r of $$("[data-peso]", raiz)) {
-      r.addEventListener("input", () => ($(`#valor-${r.dataset.peso}`).textContent = pesoTexto(Number(r.value))));
-      r.addEventListener("change", () => {
-        guardar((p) => (p.pesos = Object.fromEntries(PESOS.map((c) => [c, Number($(`#peso-${c}`).value)]))));
-        $("#pesos-defecto").disabled = false;
-      });
-    }
-    $("#pesos-defecto").addEventListener("click", () => {
-      guardar((p) => (p.pesos = null));
-      pintar();
-      $("#t-pesos").focus();
-    });
+    conectarCampos(raiz, guardar);
 
     $("#f-nota").addEventListener("submit", (e) => {
       e.preventDefault();

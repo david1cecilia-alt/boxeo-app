@@ -28,8 +28,8 @@ try:
     from bl_ext.blender_org.mpfb.entities.objectproperties import HumanObjectProperties
     from bl_ext.blender_org.mpfb.services.humanservice import HumanService
     from bl_ext.blender_org.mpfb.services.targetservice import TargetService
-except ImportError:
-    sys.exit("Falta MPFB: blender --online-mode --command extension install mpfb --enable")
+except (ImportError, TypeError):  # sin MPFB (o desactivado): crear_maniqui_quaternius.py usa el resto
+    HumanService = None
 
 RAIZ = Path(__file__).resolve().parents[2]
 GLB = RAIZ / "static" / "maniqui" / "maniqui.glb"
@@ -804,7 +804,9 @@ def pintar_espalda(cuerpo, esqueleto, pos, mats):
 
 
 # ---------- 7. Limpieza y exportación ----------
-def limpiar(cuerpo, esqueleto):
+def limpiar(cuerpo, esqueleto, uvs=0):
+    """Fuera dedos y bolas del pie, grupos sin hueso y capas UV (salvo las `uvs` primeras), y
+    como mucho 4 huesos por vértice."""
     activar(esqueleto, "EDIT")
     sobran = [b for b in esqueleto.data.edit_bones if b.name.startswith(DEDOS + ("ball_",))]
     for b in sobran:
@@ -813,8 +815,8 @@ def limpiar(cuerpo, esqueleto):
     for g in list(cuerpo.vertex_groups):
         if g.name not in esqueleto.data.bones:
             cuerpo.vertex_groups.remove(g)
-    while cuerpo.data.uv_layers:
-        cuerpo.data.uv_layers.remove(cuerpo.data.uv_layers[0])
+    while len(cuerpo.data.uv_layers) > uvs:
+        cuerpo.data.uv_layers.remove(cuerpo.data.uv_layers[-1])
     activar(cuerpo)
     bpy.ops.object.vertex_group_limit_total(group_select_mode="ALL", limit=4)
     bpy.ops.object.vertex_group_normalize_all(group_select_mode="ALL", lock_active=False)
@@ -892,6 +894,8 @@ def escribir_esqueleto(pos, pie, ojos):
 
 
 def main():
+    if HumanService is None:
+        sys.exit("Falta MPFB: blender --online-mode --command extension install mpfb --enable")
     vaciar_escena()
     cuerpo, esqueleto = crear_cuerpo()
     colgar(cuerpo, esqueleto)

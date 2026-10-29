@@ -6,6 +6,7 @@ import { crearAzar, semillaAleatoria } from "../motor/azar.js";
 import { datos } from "../motor/datos.js";
 import { PAUSA_POR_RITMO } from "../motor/ritmo.js";
 import { validarConfig } from "../motor/temporizador.js";
+import { PARA_REACCIONAR, crearDictado } from "../dictado.js";
 import { crearPantallaEncendida } from "../pantalla.js";
 import { crearReproductor } from "../reproductor.js";
 import { activarSonido, campana, pitido, tablillas } from "../sonido.js";
@@ -134,7 +135,17 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       asalto: 0,
       asaltosCompletados: 0,
     };
-    estado.reproductor = crearReproductor(eventos, { alLanzar: lanzar });
+    // Las combinaciones no van a hora fija: las dicta el dictado, que espera a que la voz termine.
+    estado.combos = eventos.filter((e) => e.tipo === "combo");
+    estado.fijos = eventos.filter((e) => e.tipo !== "combo");
+    estado.reproductor = crearReproductor(estado.fijos, { alLanzar: lanzar });
+    estado.dictado = crearDictado({
+      reproductor: estado.reproductor, voz, config, azar: crearAzar(semillaAleatoria()),
+      alDecir: (c) => {
+        mostrarCombo(c.texto, c.ids);
+        estado.dictadas.push({ asalto: c.asalto, texto: c.texto, ids: c.ids });
+      },
+    });
     estado.temporizador = setInterval(tic, 100);
     pantalla.encender();
     document.body.classList.add("entrenando");
@@ -181,8 +192,15 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     return config.descanso > 0 ? `Después · descanso ${minutos(config.descanso)}` : `Después · asalto ${asalto + 1}`;
   }
 
+  // Señales previstas del asalto n (aviso y reacciones), que una combinación no debe pisar.
+  function reservados(n) {
+    return estado.fijos.filter((e) => e.asalto === n && (e.tipo === "aviso" || e.tipo === "reaccion"))
+      .map((e) => [e.t, e.t + e.duracion]);
+  }
+
   function lanzar(e) {
     const r = estado.reproductor;
+    const dictado = estado.dictado;
     switch (e.tipo) {
       case "inicio_asalto":
         estado.fase = "asalto";
@@ -194,32 +212,37 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
         $("#anterior").textContent = "";
         estado.ultimoCombo = null;
         campana(1);
-        r.programar(1.2, () => voz.decir(e.texto)); // que no pise la campana
+        r.programar(1.2, () => dictado.senal(e.texto)); // que no pise la campana
+        dictado.asalto({
+          combos: estado.combos.filter((c) => c.asalto === e.asalto),
+          reservados: reservados(e.asalto),
+          fin: estado.finFase,
+        });
         break;
-      case "combo":
-        mostrarCombo(e.texto, e.ids);
-        voz.decir(e.texto);
-        estado.dictadas.push({ asalto: e.asalto, texto: e.texto, ids: e.ids });
-        break;
-      case "reaccion":
+      case "reaccion": {
         mostrarTexto(e.texto);
         estado.reaccionHasta = e.t + e.duracion;
         pitido();
-        voz.decir(e.texto);
+        const sesion = estado;
+        dictado.senal(e.texto, PARA_REACCIONAR).then(() => {
+          sesion.reaccionHasta = Math.max(sesion.reaccionHasta, r.tiempo() + PARA_REACCIONAR);
+        });
         break;
+      }
       case "aviso":
         tablillas();
-        voz.decir(e.texto);
+        dictado.senal(e.texto);
         break;
       case "fin_asalto":
         estado.asaltosCompletados = e.asalto;
+        dictado.cortar();
         campana(3);
         break;
       case "descanso":
         estado.fase = "descanso";
         estado.finFase = e.t + e.duracion;
         mostrarTexto("Descanso");
-        r.programar(1.5, () => voz.decir("Descanso"));
+        r.programar(1.5, () => dictado.hablar("Descanso"));
         break;
       case "fin_sesion":
         mostrarTexto(e.texto);
@@ -282,6 +305,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     const sesion = estado;
     estado = null;
     clearInterval(sesion.temporizador);
+    sesion.dictado.cortar();
     sesion.reproductor.detener();
     document.body.classList.remove("entrenando");
     $("#pantalla").hidden = true;

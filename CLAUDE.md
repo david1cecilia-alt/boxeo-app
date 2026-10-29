@@ -19,6 +19,8 @@
 - El almacén tiene esquema versionado: si cambia, sube `VERSION` y añade una migración en `MIGRACIONES`
   con su test. Las sesiones locales usan `crypto.randomUUID()`.
 - `static/vistas/` solo presenta; `reproductor.js` lleva el tiempo de sesión; `ajustes.js` une perfil y motor.
+  `dictado.js` dicta las combinaciones: la pausa cuenta desde el `onend`/`onerror` real de la voz (la
+  estimación del motor + 3 s es solo el tope si no llega); avisos y señales también esperan a su voz.
 - Todo fichero nuevo de `static/` o `data/` va al precache de `static/sw.js` (lo comprueba `tests/test_pwa.py`).
 - Sin WebGL el maniquí muestra fotos WebP que pinta `herramientas/fotos_maniqui.py` con la propia escena 3D al
   montar el sitio (Playwright). No se versionan ni se dibujan aparte: cambian solas con `posturas.json`.

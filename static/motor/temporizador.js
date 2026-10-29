@@ -123,7 +123,7 @@ export function construirGuion(config, azar, generador = null) {
       t = empieza;
       vacio = false;
       eventos.push(evento(redondear(t), "combo", n, { duracion: d, texto, ids: combo.acciones.map((a) => a.id) }));
-      t = redondear(t + d + pausaEntreCombos(config.ritmo, combo.acciones, azar, config.pausa));
+      t = redondear(t + d + pausaEntreCombos(config.ritmo, azar, config.pausa));
     }
 
     eventos.push(evento(fin, "fin_asalto", n));

@@ -14,7 +14,7 @@ const TOLERANCIA = 0.11;
 const vaciar = () => new Promise((ok) => setImmediate(ok));
 
 // Voz de mentira: apunta qué se dice y cuándo; el test decide si llega onend, onerror o nada.
-function montar({ pausa = 1.0, combos = [], reservados = [], fin = 180 } = {}) {
+function montar({ pausa = 1.0, ritmo = 3, combos = [], reservados = [], fin = 180 } = {}) {
   let ms = 0;
   const reproductor = crearReproductor([], { alLanzar: () => {}, reloj: () => ms });
   const dichos = [];
@@ -24,7 +24,7 @@ function montar({ pausa = 1.0, combos = [], reservados = [], fin = 180 } = {}) {
     },
     callar() {},
   };
-  const dictado = crearDictado({ reproductor, voz, config: { ritmo: 3, pausa }, azar: crearAzar(1) });
+  const dictado = crearDictado({ reproductor, voz, config: { ritmo, pausa }, azar: crearAzar(1) });
   async function hasta(segundo) {
     while (reproductor.tiempo() < segundo - 1e-9) {
       ms += PASO;
@@ -36,12 +36,11 @@ function montar({ pausa = 1.0, combos = [], reservados = [], fin = 180 } = {}) {
   return { reproductor, dictado, dichos, hasta, real: (n) => (ms += n) };
 }
 
-// Dos combinaciones: "jab, recto" (ejecución 0,5 + 0,5 s) y otra.
+// Dos combinaciones: "jab, recto" y otra. Se golpea mientras se oye: tras la voz solo va el hueco.
 const COMBOS = [
   { t: 3, asalto: 1, duracion: 3.0, texto: "jab, recto", ids: ["jab", "directo"] },
   { t: 99, asalto: 1, duracion: 3.0, texto: "uno, dos", ids: ["jab", "directo"] },
 ];
-const EJECUCION = 1.0;
 const PAUSA = 1.0;
 
 const cerca = (real, esperado) => assert.ok(Math.abs(real - esperado) <= TOLERANCIA, `${real} vs ${esperado}`);
@@ -54,9 +53,9 @@ test("con onend: la pausa empieza cuando la voz termina, no a la hora prevista",
   await hasta(6.5); // la voz tarda más de lo estimado (2,0 s)…
   assert.equal(dichos.length, 1, "no empieza otra mientras habla");
   dichos[0].onend();
-  await hasta(6.5 + EJECUCION + PAUSA + 0.2);
+  await hasta(6.5 + PAUSA + 0.2);
   assert.equal(dichos.length, 2);
-  cerca(dichos[1].en, 6.5 + EJECUCION + PAUSA);
+  cerca(dichos[1].en, 6.5 + PAUSA);
 });
 
 test("sin onend: deja de esperar en la estimación + 3 s", async () => {
@@ -64,18 +63,18 @@ test("sin onend: deja de esperar en la estimación + 3 s", async () => {
   const maximo = segundosHabla("jab, recto") + MARGEN_VOZ;
   await hasta(3 + maximo - 0.2);
   assert.equal(dichos.length, 1);
-  await hasta(3 + maximo + EJECUCION + PAUSA + 0.2);
+  await hasta(3 + maximo + PAUSA + 0.2);
   assert.equal(dichos.length, 2);
-  cerca(dichos[1].en, 3 + maximo + EJECUCION + PAUSA);
+  cerca(dichos[1].en, 3 + maximo + PAUSA);
 });
 
 test("con onerror: cuenta como terminada", async () => {
   const { dichos, hasta } = montar({ combos: COMBOS });
   await hasta(4);
   dichos[0].onerror();
-  await hasta(4 + EJECUCION + PAUSA + 0.2);
+  await hasta(4 + PAUSA + 0.2);
   assert.equal(dichos.length, 2);
-  cerca(dichos[1].en, 4 + EJECUCION + PAUSA);
+  cerca(dichos[1].en, 4 + PAUSA);
 });
 
 test("el tope sin onend también se congela en la pausa", async () => {
@@ -85,9 +84,9 @@ test("el tope sin onend también se congela en la pausa", async () => {
   real(60_000); // un minuto en pausa
   reproductor.reanudar();
   const maximo = segundosHabla("jab, recto") + MARGEN_VOZ;
-  await hasta(3 + maximo + EJECUCION + PAUSA + 0.2);
+  await hasta(3 + maximo + PAUSA + 0.2);
   assert.equal(dichos.length, 2);
-  cerca(dichos[1].en, 3 + maximo + EJECUCION + PAUSA);
+  cerca(dichos[1].en, 3 + maximo + PAUSA);
 });
 
 test("tras una señal, la combinación espera a que se calle y al tiempo para reaccionar", async () => {
@@ -136,4 +135,18 @@ test("al cortar (fin del asalto o parar) no se dicta nada más", async () => {
   dichos[0].onend();
   await hasta(20);
   assert.equal(dichos.length, 1);
+});
+
+test("en Intenso la siguiente llega 1 s después de que la voz calle (menos de 1,5 s) y nunca antes", async () => {
+  const { dichos, hasta } = montar({ pausa: null, ritmo: 5, combos: COMBOS });
+  await hasta(3.05);
+  await hasta(6.5); // la voz tarda más de lo estimado: mientras habla no empieza otra
+  assert.equal(dichos.length, 1, "no se pisa la voz");
+  dichos[0].onend();
+  await hasta(6.5 + 0.9);
+  assert.equal(dichos.length, 1);
+  await hasta(6.5 + 1.2);
+  assert.equal(dichos.length, 2);
+  const hueco = dichos[1].en - 6.5;
+  assert.ok(hueco >= 1 - TOLERANCIA && hueco < 1.5, `hueco de ${hueco} s`);
 });

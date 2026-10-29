@@ -7,8 +7,7 @@
 // Todo en tiempo de sesión (reproductor.programar): la pausa lo congela también. Sin DOM: quien
 // lo usa decide qué se ve en alDecir.
 import { MARGEN } from "./motor/temporizador.js";
-import { SEGUNDOS_EJECUCION, pausaEntreCombos, segundosHabla } from "./motor/ritmo.js";
-import { accionesPorIds } from "./motor/acciones.js";
+import { pausaEntreCombos, segundosHabla } from "./motor/ritmo.js";
 
 export const MARGEN_VOZ = 3.0;    // segundos de más sobre la estimación antes de dejar de esperar
 export const PARA_REACCIONAR = 1.0; // tras decir una señal, tiempo para reaccionar sin combinaciones
@@ -85,10 +84,8 @@ export function crearDictado({ reproductor, voz, config, azar, alDecir = () => {
       alDecir(combo);
       await hablar(combo.texto);
       if (!viva()) return;
-      const acciones = accionesPorIds(combo.ids);
-      const ejecucion = acciones.reduce((s, a) => s + SEGUNDOS_EJECUCION[a.tipo], 0);
-      reproductor.programar(ejecucion + pausaEntreCombos(config.ritmo, acciones, azar, config.pausa),
-        () => intentar(i + 1));
+      // Se golpea mientras se oye: desde que la voz calla solo queda el hueco del ritmo.
+      reproductor.programar(pausaEntreCombos(config.ritmo, azar, config.pausa), () => intentar(i + 1));
     }
 
     if (combos.length) reproductor.programar(Math.max(0, combos[0].t - reproductor.tiempo()), () => intentar(0));

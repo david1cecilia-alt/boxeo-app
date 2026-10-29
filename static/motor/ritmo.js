@@ -1,5 +1,6 @@
-// Port de motor/ritmo.py: cuánto se tarda en dictar y ejecutar una combinación, y pausas según
-// el ritmo (1-5).
+// Port de motor/ritmo.py: cuánto se tarda en dictar una combinación y hueco hasta la siguiente
+// según el ritmo (1-5). Se golpea MIENTRAS se oye: no hay tiempo de ejecución aparte; el ritmo es
+// solo el hueco desde que la voz termina hasta que empieza la siguiente.
 
 import { textoHablado } from "./acciones.js";
 
@@ -10,15 +11,11 @@ export const HABLA_BASE = 1.0;
 export const HABLA_POR_SILABA = 0.15;
 export const HABLA_POR_COMA = 0.55; // pausa entre una acción y la siguiente
 const SILABA = /[aeiouáéíóúü]+/gi;
-// Segundos para ejecutar cada acción después de oírla.
-export const SEGUNDOS_EJECUCION = { golpe: 0.5, defensa: 0.8, movimiento: 1.0 };
-// Pausa (recuperar guardia) entre el final de una combinación y la siguiente, según el ritmo
-// elegido: se sortea en el rango [mín, máx]. 1 = Calmado … 5 = Intenso.
-export const PAUSA_POR_RITMO = { 1: [6.0, 8.0], 2: [4.9, 6.6], 3: [3.8, 5.3], 4: [2.6, 3.9], 5: [1.5, 2.5] };
+// Hueco desde que la voz termina de decir una combinación hasta que empieza la siguiente, según el
+// ritmo elegido: se sortea en el rango [mín, máx], igual para combinaciones cortas y largas.
+// 1 Calmado (mover los pies) … 5 Intenso (encadenar: 1 s fijo).
+export const PAUSA_POR_RITMO = { 1: [5.0, 7.0], 2: [4.0, 5.0], 3: [2.0, 4.0], 4: [1.0, 3.0], 5: [1.0, 1.0] };
 export const RITMO_POR_DEFECTO = 3;
-// Las combinaciones largas piden recuperar más: segundos de más por cada acción a partir de la 4.ª.
-export const ACCIONES_SIN_EXTRA = 3;
-export const EXTRA_POR_ACCION = 0.3;
 
 export function redondear(x, decimales = 2) {
   const f = 10 ** decimales;
@@ -33,19 +30,13 @@ export function segundosHabla(texto) {
 }
 
 // Tiempo desde que empieza el dictado de `texto` (lo que se dice, según el modo de voz) hasta
-// que se termina de decir y de ejecutar: la pausa entre combinaciones cuenta desde ahí.
+// que se termina de decir: se golpea mientras se oye y el hueco cuenta desde ahí.
 export function duracionEstimada(combo, texto = null) {
-  const ejecucion = combo.reduce((s, a) => s + SEGUNDOS_EJECUCION[a.tipo], 0);
-  return redondear(segundosHabla(texto ?? textoHablado(combo)) + ejecucion);
+  return redondear(segundosHabla(texto ?? textoHablado(combo)));
 }
 
-export function extraPorLongitud(combo) {
-  return EXTRA_POR_ACCION * Math.max(0, combo.length - ACCIONES_SIN_EXTRA);
-}
-
-// Pausa tras `combo`: la fija del usuario o, si no hay, una al azar del ritmo más lo que
-// pida su longitud.
-export function pausaEntreCombos(ritmo, combo, azar, pausa = null) {
+// Hueco tras una combinación: el fijo del usuario o, si no hay, uno al azar del ritmo.
+export function pausaEntreCombos(ritmo, azar, pausa = null) {
   if (pausa !== null) return pausa;
-  return redondear(azar.uniform(...PAUSA_POR_RITMO[ritmo]) + extraPorLongitud(combo));
+  return redondear(azar.uniform(...PAUSA_POR_RITMO[ritmo]));
 }

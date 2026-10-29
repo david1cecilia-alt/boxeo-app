@@ -8,7 +8,9 @@ import { datos } from "../motor/datos.js";
 import { $, aFecha, anunciar, esc, fechaLarga, hoyIso, minutos } from "./dom.js";
 import { activarGrafico, graficoSemanas } from "./grafico.js";
 import { SENSACION } from "./opciones.js";
-import { AGRUPACIONES, agrupar, clavesAbiertas, porSemana, textoMinutos, tituloGrupo, totales } from "./resumen.js";
+import {
+  AGRUPACIONES, SEMANAS_POR_TANDA, agrupar, clavesAbiertas, porSemana, recortarSemanas, textoMinutos, tituloGrupo, totales,
+} from "./resumen.js";
 
 const MES = new Intl.DateTimeFormat("es-ES", { month: "short" });
 const MES_LARGO = new Intl.DateTimeFormat("es-ES", { month: "long" });
@@ -20,6 +22,8 @@ const NOMBRE_AGRUPACION = { semana: "Semana", mes: "Mes", ano: "Año" };
 
 // Grupos desplegados de cada agrupación mientras la app está abierta (no se guardan).
 const abiertos = {};
+// Semanas con sesiones que se ven en la vista por semana (crece con «Ver semanas anteriores»).
+let limiteSemanas = SEMANAS_POR_TANDA;
 
 // Nombre del preset con el que se hizo la sesión (por su asalto y descanso), o "Personalizado".
 function nombrePreset(s) {
@@ -49,6 +53,12 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
     // El grupo de la sesión elegida sale abierto (al volver de su detalle, también).
     const deLaElegida = grupos.find((g) => g.sesiones.some((s) => s.clave === clave));
     if (deLaElegida) abiertos[modo].add(deLaElegida.clave);
+    // Por semana, solo las últimas; la de la sesión elegida sale aunque sea más antigua.
+    let visibles = grupos;
+    let quedan = 0;
+    if (modo === "semana") {
+      ({ grupos: visibles, limite: limiteSemanas, quedan } = recortarSemanas(grupos, limiteSemanas, deLaElegida?.clave));
+    }
     raiz.classList.toggle("con-detalle", Boolean(clave));
     raiz.innerHTML = `
       <div class="resumen-historial">
@@ -70,8 +80,9 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
             ${AGRUPACIONES.map((a) => `<button type="button" data-agrupar="${a}" aria-pressed="${a === modo}">${NOMBRE_AGRUPACION[a]}</button>`).join("")}
           </div>` : ""}
         </div>
-        ${sesiones.length ? `<div class="grupos-sesiones">${grupos.map((g) => grupo(g, modo, v, clave)).join("")}</div>`
+        ${sesiones.length ? `<div class="grupos-sesiones">${visibles.map((g) => grupo(g, modo, v, clave)).join("")}</div>`
           : `<p class="nota">Aún no hay sesiones. Las que termines aparecerán aquí.</p>`}
+        ${quedan ? `<button type="button" id="ver-semanas" class="boton secundario ver-mas">Ver semanas anteriores</button>` : ""}
         <p class="nota">Guardado ${esc(historial.descripcion)}. Las valoraciones y notas, en este navegador.</p>
       </section>
 
@@ -102,6 +113,15 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
         anunciar(`Sesiones por ${NOMBRE_AGRUPACION[b.dataset.agrupar].toLowerCase()}`);
       });
     }
+    $("#ver-semanas")?.addEventListener("click", async () => {
+      const primeraNueva = grupos.filter((g) => g.sesiones.length)[limiteSemanas]?.clave;
+      const antes = limiteSemanas;
+      limiteSemanas += SEMANAS_POR_TANDA;
+      await pintar(clave);
+      // El foco pasa a la primera semana añadida (el botón ya no está o ha bajado).
+      raiz.querySelector(`details[data-grupo="${primeraNueva}"] > summary`)?.focus();
+      anunciar(`${plural(Math.min(limiteSemanas, grupos.filter((g) => g.sesiones.length).length) - antes, "semana más", "semanas más")}`);
+    });
     for (const d of raiz.querySelectorAll("details[data-grupo]")) {
       d.addEventListener("toggle", () => abiertos[modo][d.open ? "add" : "delete"](d.dataset.grupo));
     }

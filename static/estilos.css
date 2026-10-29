@@ -571,6 +571,7 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
 .titulo-grupo { flex: 1 1 auto; font-size: 0.9375rem; }
 .resumen-grupo { margin-left: auto; color: var(--suave); font-size: 0.8125rem; font-weight: 400; font-variant-numeric: tabular-nums; }
 .grupo-sesiones > .lista-sesiones, .grupo-sesiones > .nota { margin: 0 0 12px; }
+.ver-mas { width: 100%; }
 .lista-sesiones a[aria-current="true"] { border-color: var(--acento); box-shadow: inset 3px 0 0 var(--acento); }
 .bloque-fecha {
   flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center;

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { agrupar, clavesAbiertas, lunes, porSemana, textoMinutos, tituloGrupo, totales } from "../../static/vistas/resumen.js";
+import { SEMANAS_POR_TANDA, agrupar, clavesAbiertas, lunes, porSemana, recortarSemanas, textoMinutos, tituloGrupo, totales } from "../../static/vistas/resumen.js";
 
 const HOY = new Date(2026, 9, 28, 18, 0); // miércoles 28 de octubre de 2026
 const sesiones = [
@@ -91,4 +91,48 @@ test("títulos de los grupos y minutos en texto", () => {
   assert.equal(textoMinutos(120), "2 h");
   assert.equal(textoMinutos(192), "3 h 12 min");
   assert.equal(textoMinutos(0), "0 min");
+});
+
+// Una sesión por semana durante `n` semanas seguidas, empezando `desde` semanas antes de la actual.
+function semanales(n, desde = 0) {
+  return Array.from({ length: n }, (_, i) => {
+    const d = new Date(2026, 9, 26 - 7 * (desde + i), 19);
+    return { clave: `local:${desde + i}`, fecha: d.toISOString(), asaltos: 3, duracion_asalto: 180 };
+  });
+}
+
+test("por semana se ven las últimas 12 con sesiones y se pueden pedir 12 más", () => {
+  assert.equal(SEMANAS_POR_TANDA, 12);
+  const grupos = agrupar(semanales(30), "semana", HOY);
+  const primera = recortarSemanas(grupos);
+  assert.equal(primera.grupos.length, 12);
+  assert.deepEqual([primera.limite, primera.quedan], [12, 18]);
+  assert.equal(primera.grupos[0].actual, true);
+  const segunda = recortarSemanas(grupos, primera.limite + SEMANAS_POR_TANDA);
+  assert.deepEqual([segunda.grupos.length, segunda.quedan], [24, 6]);
+  const tercera = recortarSemanas(grupos, 36);
+  assert.deepEqual([tercera.grupos.length, tercera.quedan], [30, 0]);
+});
+
+test("la semana actual vacía sale siempre y no cuenta entre las 12", () => {
+  const grupos = agrupar(semanales(20, 1), "semana", HOY); // nada esta semana
+  const { grupos: vistos, quedan } = recortarSemanas(grupos);
+  assert.equal(vistos.length, 13);
+  assert.deepEqual([vistos[0].actual, vistos[0].sesiones.length], [true, 0]);
+  assert.equal(quedan, 8);
+});
+
+test("si hay que enseñar una semana más antigua, el límite llega hasta ella sin dejar huecos", () => {
+  const grupos = agrupar(semanales(30), "semana", HOY);
+  const antigua = grupos[19].clave; // la 20.ª semana con sesiones
+  const r = recortarSemanas(grupos, 12, antigua);
+  assert.deepEqual([r.limite, r.grupos.length, r.quedan], [20, 20, 10]);
+  assert.equal(r.grupos.at(-1).clave, antigua);
+  assert.equal(recortarSemanas(grupos, 12, grupos[3].clave).limite, 12); // dentro de las 12: no cambia
+  assert.equal(recortarSemanas(grupos, 12, "no-existe").limite, 12);
+});
+
+test("con pocas semanas no queda nada por ver", () => {
+  const r = recortarSemanas(agrupar(semanales(5), "semana", HOY));
+  assert.deepEqual([r.grupos.length, r.quedan], [5, 0]);
 });

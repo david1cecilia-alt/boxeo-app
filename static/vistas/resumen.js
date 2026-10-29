@@ -102,6 +102,23 @@ export function clavesAbiertas(grupos) {
   return abiertas;
 }
 
+// En la vista por semana se enseñan las últimas `limite` semanas con sesiones (el periodo actual,
+// siempre); «Ver semanas anteriores» sube el límite de SEMANAS_POR_TANDA en SEMANAS_POR_TANDA.
+// Si hay que enseñar un grupo más antiguo (`incluir`: el de la sesión elegida), el límite se
+// alarga hasta él para que la lista siga sin huecos. Devuelve { grupos, limite, quedan }.
+export const SEMANAS_POR_TANDA = 12;
+
+export function recortarSemanas(grupos, limite = SEMANAS_POR_TANDA, incluir = null) {
+  const conSesiones = grupos.filter((g) => g.sesiones.length);
+  const n = Math.max(limite, conSesiones.findIndex((g) => g.clave === incluir) + 1);
+  const mostradas = new Set(conSesiones.slice(0, n).map((g) => g.clave));
+  return {
+    grupos: grupos.filter((g) => g.actual || mostradas.has(g.clave)),
+    limite: n,
+    quedan: Math.max(conSesiones.length - n, 0),
+  };
+}
+
 // «54 min», «2 h», «3 h 12 min».
 export function textoMinutos(minutos) {
   const h = Math.floor(minutos / 60);

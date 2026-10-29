@@ -25,7 +25,8 @@ class Accion:
     lado: str = "ninguno"  # lado de defensas/movimientos (izq | der | ninguno)
     poder: bool = False
     plantilla_corta: str = ""  # nombre para la pantalla de la sesión
-
+    numero: int | None = None  # número del golpe EN ORTODOXO (1 jab … 6 uppercut trasero)
+    orden: str = ""            # lo que se dice de una defensa en la sesión ("esquiva")
 
     @property
     def nombre_hablado(self) -> str:
@@ -45,7 +46,8 @@ def _desde_json(d: dict) -> Accion:
                   tipo=d["tipo"], mano=d["mano"], objetivo=d["objetivo"],
                   peso_despues=d["peso_despues"], nivel_minimo=d["nivel_minimo"],
                   lado=d.get("lado", "ninguno"), poder=d.get("poder", False),
-                  plantilla_corta=d["nombre_corto"])
+                  plantilla_corta=d["nombre_corto"], numero=d.get("numero"),
+                  orden=d.get("orden", ""))
 
 
 @lru_cache
@@ -64,6 +66,11 @@ def catalogo() -> dict[str, Accion]:
 def repeticiones_permitidas() -> dict[tuple[str, ...], str]:
     """Pares (o tríos) de la misma mano que sí están permitidos: {(id1, id2): nombre}."""
     return {tuple(r["ids"]): r["nombre"] for r in _leer_json()["repeticiones_permitidas"]}
+
+
+@lru_cache
+def palabras_numero() -> dict[int, str]:
+    return {int(n): palabra for n, palabra in _leer_json()["palabras_numero"].items()}
 
 
 def acciones_por_ids(ids: list[str]) -> list[Accion]:
@@ -102,10 +109,36 @@ def espejo(accion: Accion) -> Accion:
     reflejada = replace(accion, mano=_contrario(accion.mano), lado=_contrario(accion.lado),
                         peso_despues=_contrario(accion.peso_despues))
     for candidata in catalogo().values():
-        if replace(reflejada, id=candidata.id) == candidata:
+        # El número no cuenta: el de gancho_izq (3) y el de gancho_der (4) son distintos.
+        if replace(reflejada, id=candidata.id, numero=candidata.numero) == candidata:
             return candidata
     return reflejada
 
 
 def espejo_combo(combo: list[Accion]) -> list[Accion]:
     return [espejo(a) for a in combo]
+
+
+# Cómo se dicen las combinaciones en la sesión ("Cómo te las digo").
+MODOS_VOZ = ("numeros", "nombres", "ambos")
+
+
+def numero(accion: Accion, zurdo: bool = False) -> int | None:
+    """Número del golpe por mano adelantada/trasera. El de un zurdo se lee de su espejo
+    ortodoxo: su gancho de derecha es el gancho adelantado, el 3."""
+    return (espejo(accion) if zurdo else accion).numero
+
+
+def palabra_hablada(accion: Accion, modo: str = "nombres", zurdo: bool = False) -> str:
+    """Lo que se dice de una acción: las defensas, su orden corta; los golpes con número,
+    el número, el nombre o los dos ("uno jab")."""
+    nombre = accion.orden or accion.nombre_hablado
+    n = numero(accion, zurdo)
+    if n is None or modo == "nombres":
+        return nombre
+    palabra = palabras_numero()[n]
+    return palabra if modo == "numeros" else f"{palabra} {nombre}"
+
+
+def texto_hablado(acciones, modo: str = "nombres", zurdo: bool = False) -> str:
+    return ", ".join(palabra_hablada(a, modo, zurdo) for a in acciones)

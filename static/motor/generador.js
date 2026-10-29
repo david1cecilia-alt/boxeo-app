@@ -1,6 +1,6 @@
 // Port de motor/generador.py: reglas + combos clásicos + pesos del perfil.
 // Todo se genera en ortodoxo; si el perfil es zurdo se refleja al final con espejo().
-import { catalogo, combosClasicos, espejoCombo, nombreHablado, repeticionesPermitidas } from "./acciones.js";
+import { catalogo, combosClasicos, espejoCombo, repeticionesPermitidas, textoHablado } from "./acciones.js";
 import { datos } from "./datos.js";
 import { LONGITUD, SOLTAR_TRAS, esValida, familiaMano, ultimoGolpe } from "./reglas.js";
 
@@ -18,7 +18,7 @@ export function cargarPerfil() {
 }
 
 export function textoCombo(acciones) {
-  return acciones.map(nombreHablado).join(", ");
+  return textoHablado(acciones);
 }
 
 // Multiplica los pesos del perfil que cumple la combinación (ortodoxa).

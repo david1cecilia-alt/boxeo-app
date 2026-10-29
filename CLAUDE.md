@@ -26,7 +26,10 @@
 - La voz va detrás de la interfaz de `static/voz.js` (`decir`, `callar`). Hoy Web Speech API, mañana Piper.
 
 ## Datos
-- El vocabulario vive en `data/acciones.json`, nunca en el código. Los golpes se dicen por su nombre, nunca con números.
+- El vocabulario vive en `data/acciones.json`, nunca en el código. Los golpes se dicen por su nombre o, si el
+  usuario lo elige («Cómo te las digo»), por su número (`numero`: 1 jab … 6 uppercut trasero, por mano
+  adelantada/trasera y escrito en ortodoxo; el zurdo lo lee de su espejo con `motor.acciones.numero`).
+  Las defensas se dicen con su `orden` corta. `nombre_hablado` y `nombre_corto` nunca llevan cifras.
 - Todo se define en guardia **ortodoxa**; el zurdo se obtiene con `motor.acciones.espejo()`. No duplicar datos.
 - `nombre_hablado` es una plantilla (`{lado}`) que se rellena a partir de mano/lado.
 

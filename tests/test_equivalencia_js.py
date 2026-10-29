@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from motor.acciones import Accion, acciones_por_ids, catalogo, espejo, espejo_combo
+from motor.acciones import Accion, acciones_por_ids, catalogo, espejo, espejo_combo, texto_hablado
 from motor.generador import GeneradorCombos, cargar_perfil
 from motor.reglas import ultimo_golpe, validar
 from motor.ritmo import duracion_estimada, pausa_entre_combos
@@ -67,7 +67,7 @@ def test_combinaciones_js_pasan_las_reglas_de_python(js, nivel, guardia):
         acciones = _acciones(c["acciones"])
         errores = validar(acciones, nivel, zurdo=guardia == "zurdo")
         assert errores == [], f"nivel {nivel} {guardia}: '{c['texto']}' -> {errores}"
-        assert c["texto"] == ", ".join(a.nombre_hablado for a in acciones)
+        assert c["texto"] == texto_hablado(acciones)
 
 
 @pytest.mark.parametrize("nivel", NIVELES)
@@ -177,7 +177,7 @@ def comprobar_guion(eventos: list[dict], c: ConfigSesion) -> None:
         for k in combos:
             acciones = acciones_por_ids(k["ids"])
             assert k["duracion"] == duracion_estimada(acciones)
-            assert k["texto"] == ", ".join(a.nombre_hablado for a in acciones)
+            assert k["texto"] == texto_hablado(acciones)
             assert inicio + PREPARACION <= k["t"] and k["t"] + k["duracion"] <= fin
         for a, b in zip(combos, combos[1:]):
             assert b["t"] >= a["t"] + a["duracion"] + pausa - REDONDEO, "no respeta la pausa entre combos"

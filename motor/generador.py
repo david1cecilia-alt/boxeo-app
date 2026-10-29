@@ -7,7 +7,7 @@ import random
 from dataclasses import dataclass
 
 from motor.acciones import (RUTA_DATOS, Accion, catalogo, combos_clasicos, espejo_combo,
-                            repeticiones_permitidas)
+                            repeticiones_permitidas, texto_hablado)
 from motor.reglas import LONGITUD, SOLTAR_TRAS, es_valida, ultimo_golpe
 
 # Peso base de cada tipo al elegir la siguiente acción del paseo.
@@ -35,7 +35,7 @@ class Combinacion:
 
     @property
     def texto(self) -> str:
-        return ", ".join(a.nombre_hablado for a in self.acciones)
+        return texto_hablado(self.acciones)
 
 
 def peso_perfil(combo: list[Accion], pesos: dict, refuerzo: dict | None = None) -> float:

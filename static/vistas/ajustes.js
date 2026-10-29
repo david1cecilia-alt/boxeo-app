@@ -15,6 +15,8 @@ const pesoTexto = (n) => `×${n.toLocaleString("es-ES", { minimumFractionDigits:
 
 const EJEMPLO = ["jab", "directo", "gancho_izq"]; // lo que dice «Probar voz»
 const numeroEs = (n) => n.toLocaleString("es-ES", { minimumFractionDigits: 1 });
+// «Microsoft Helena (es-ES)»: el idioma va pegado al nombre y entero (el guion de «es-ES» partía la línea).
+const sinCortarIdioma = (texto) => esc(texto).replace(/ (\([^)]*\))$/, '&nbsp;<span class="sin-cortar">$1</span>');
 
 // La pestaña desde la que se entró en Ajustes (a la que vuelve «Volver»).
 let vuelta = "#entrenar";
@@ -98,9 +100,9 @@ export function iniciarAjustes({ almacen, voz }) {
     const existe = id != null && voces.some((v) => v.id === id || v.nombre === id);
     $("#voz-id").innerHTML = `<option value="">Automática</option>${voces.map((v) =>
       `<option value="${esc(v.id)}" ${existe && (v.id === id || v.nombre === id) ? "selected" : ""}>${esc(nombreCortoVoz(v.nombre))} (${esc(v.idioma)})</option>`).join("")}`;
-    $("#voz-aviso").textContent = id != null && !existe
-      ? `La voz elegida no está en este dispositivo: se usa la automática (${voz.descripcionCorta}).`
-      : `Ahora: ${voz.descripcionCorta}.`;
+    $("#voz-aviso").innerHTML = id != null && !existe
+      ? `La voz elegida no está en este dispositivo: se usa la automática (${sinCortarIdioma(voz.descripcionCorta)}).`
+      : `Ahora: ${sinCortarIdioma(voz.descripcionCorta)}.`;
   }
 
   function guardarVoz(cambio) {

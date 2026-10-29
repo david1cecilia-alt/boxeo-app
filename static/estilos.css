@@ -619,6 +619,7 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
 :is(#f-pesos, #f-tus-datos, #f-voz) h2 { margin: 0; }
 :is(#f-pesos, #f-tus-datos, #f-voz) .nota { margin-top: 4px; font-size: 0.8125rem; }
 #voz-aviso { margin: -6px 0 0; }
+.sin-cortar { white-space: nowrap; }
 #f-voz > .boton { justify-self: start; }
 #f-pesos > .boton { justify-self: start; }
 

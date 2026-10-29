@@ -614,6 +614,14 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
 .grupo-chips legend { margin-bottom: 8px; color: var(--suave); font-size: 0.8125rem; font-weight: 600; }
 .chips-fila { display: flex; flex-wrap: wrap; gap: 8px; }
 .chips-fila .chip-opcion span { padding: 0 14px; }
+/* Velocidad de la voz: siempre los tres en una fila, con el número pequeño debajo. */
+.chips-fila.velocidades { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.velocidades .chip-opcion span {
+  flex-direction: column; justify-content: center; width: 100%; height: auto; min-height: 52px;
+  padding: 4px 6px; border-radius: 16px; line-height: 1.2;
+}
+.velocidades small { color: var(--suave); font-size: 0.75rem; font-weight: 400; font-variant-numeric: tabular-nums; }
+.velocidades input:checked + span small { color: inherit; }
 
 #f-pesos { gap: 14px; }
 :is(#f-pesos, #f-tus-datos, #f-voz) h2 { margin: 0; }

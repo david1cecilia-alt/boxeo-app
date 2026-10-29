@@ -53,10 +53,10 @@ export function iniciarAjustes({ almacen, voz }) {
         </div>
         <label class="campo">Voz <select id="voz-id" aria-describedby="voz-aviso"></select></label>
         <p class="nota" id="voz-aviso"></p>
-        <fieldset class="grupo-chips"><legend>Velocidad</legend><div class="chips-fila">
+        <fieldset class="grupo-chips"><legend>Velocidad</legend><div class="chips-fila velocidades">
           ${Object.entries(VELOCIDADES).map(([clave, valor]) => `<label class="chip-opcion">
             <input type="radio" name="voz-velocidad" value="${clave}" ${p.voz.velocidad === clave ? "checked" : ""}>
-            <span>${NOMBRE_VELOCIDAD[clave]} · ${numeroEs(valor)}</span></label>`).join("")}
+            <span>${NOMBRE_VELOCIDAD[clave]} <small>${numeroEs(valor)}</small></span></label>`).join("")}
         </div></fieldset>
         <button type="button" id="probar-voz" class="boton secundario">Probar voz</button>
       </form>

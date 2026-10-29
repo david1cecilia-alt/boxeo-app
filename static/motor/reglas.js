@@ -67,7 +67,8 @@ function reglaAlternarManos(combo) {
   }
   for (let i = 0; i < combo.length - 2; i++) {
     const [a, b, c] = [combo[i], combo[i + 1], combo[i + 2]];
-    if ([a, b, c].every((x) => x.tipo === "golpe") && a.mano === b.mano && b.mano === c.mano) {
+    if ([a, b, c].every((x) => x.tipo === "golpe") && a.mano === b.mano && b.mano === c.mano
+        && !permitidas.has(`${a.id}|${b.id}|${c.id}`)) {
       return `tres golpes seguidos con la misma mano (${a.id}, ${b.id}, ${c.id})`;
     }
   }

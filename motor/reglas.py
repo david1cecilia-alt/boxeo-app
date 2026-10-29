@@ -68,7 +68,8 @@ def _regla_alternar_manos(combo, nivel):
         if a.tipo == b.tipo == "golpe" and a.mano == b.mano and (a.id, b.id) not in permitidas:
             return f"{a.id} y {b.id} repiten mano sin ser excepción"
     for a, b, c in zip(combo, combo[1:], combo[2:]):
-        if a.tipo == b.tipo == c.tipo == "golpe" and a.mano == b.mano == c.mano:
+        if (a.tipo == b.tipo == c.tipo == "golpe" and a.mano == b.mano == c.mano
+                and (a.id, b.id, c.id) not in permitidas):
             return f"tres golpes seguidos con la misma mano ({a.id}, {b.id}, {c.id})"
 
 

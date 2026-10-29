@@ -62,7 +62,7 @@ def catalogo() -> dict[str, Accion]:
 
 @lru_cache
 def repeticiones_permitidas() -> dict[tuple[str, ...], str]:
-    """Pares de la misma mano que sí están permitidos: {(id1, id2): nombre}."""
+    """Pares (o tríos) de la misma mano que sí están permitidos: {(id1, id2): nombre}."""
     return {tuple(r["ids"]): r["nombre"] for r in _leer_json()["repeticiones_permitidas"]}
 
 

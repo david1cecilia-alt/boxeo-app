@@ -29,7 +29,7 @@ function desdeJson(d) {
 // Todas las acciones ortodoxas indexadas por id (en el orden del JSON).
 export const catalogo = segunDatos((d) => new Map(d.acciones.acciones.map((a) => [a.id, desdeJson(a)])));
 
-// Pares de la misma mano que sí están permitidos, como "id1|id2".
+// Pares (o tríos) de la misma mano que sí están permitidos, como "id1|id2".
 export const repeticionesPermitidas = segunDatos(
   (d) => new Set(d.acciones.repeticiones_permitidas.map((r) => r.ids.join("|"))));
 

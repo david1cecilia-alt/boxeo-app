@@ -62,8 +62,9 @@ def test_en_cada_sesion_salen_todos_los_golpes_del_1_al_6(preset, nivel, zurdo):
             assert dichos == NUMEROS, f"semilla {semilla}: faltan {NUMEROS - dichos}"
 
 
-@pytest.mark.parametrize("nivel", NIVELES)
-def test_en_la_prueba_corta_casi_siempre_salen_todos(nivel):
+# En «Prueba 2×30 s» de medio y avanzado solo caben 3-5 combinaciones (lo que tarda de verdad la
+# voz): ahí no siempre salen todos. En básico, sí casi siempre.
+def test_en_la_prueba_corta_de_basico_casi_siempre_salen_todos(nivel=1):
     completas = 0
     for semilla in range(100):
         combos = [e for e in construir_guion(_config("prueba", nivel=nivel), random.Random(semilla))

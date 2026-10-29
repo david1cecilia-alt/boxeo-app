@@ -1,8 +1,15 @@
 // Port de motor/ritmo.py: cuánto se tarda en dictar y ejecutar una combinación, y pausas según
 // el ritmo (1-5).
 
-// Segundos que tarda la voz en decir cada acción (aprox., nombres de 1 a 4 palabras).
-export const SEGUNDOS_HABLA_POR_ACCION = 0.6;
+import { textoHablado } from "./acciones.js";
+
+// Lo que tarda la voz en decir un texto, de que empieza a hablar a que termina: medido con la voz
+// del navegador (Microsoft Helena, es-ES, velocidad 1,1 como static/voz.js) sobre 75 combinaciones
+// en los tres modos y ajustado con un poco de margen (error ±0,4 s). Recalibrar si cambia la voz.
+export const HABLA_BASE = 1.0;
+export const HABLA_POR_SILABA = 0.15;
+export const HABLA_POR_COMA = 0.55; // pausa entre una acción y la siguiente
+const SILABA = /[aeiouáéíóúü]+/gi;
 // Segundos para ejecutar cada acción después de oírla.
 export const SEGUNDOS_EJECUCION = { golpe: 0.5, defensa: 0.8, movimiento: 1.0 };
 // Pausa (recuperar guardia) entre el final de una combinación y la siguiente, según el ritmo
@@ -18,11 +25,18 @@ export function redondear(x, decimales = 2) {
   return Math.round(x * f) / f;
 }
 
-// Tiempo desde que empieza el dictado hasta que se termina de ejecutar.
-export function duracionEstimada(combo) {
-  const habla = SEGUNDOS_HABLA_POR_ACCION * combo.length;
+// Lo que tarda la voz en decir `texto` (sílabas aproximadas por grupos de vocales).
+export function segundosHabla(texto) {
+  const silabas = (texto.match(SILABA) ?? []).length;
+  const comas = texto.split(",").length - 1;
+  return HABLA_BASE + HABLA_POR_SILABA * silabas + HABLA_POR_COMA * comas;
+}
+
+// Tiempo desde que empieza el dictado de `texto` (lo que se dice, según el modo de voz) hasta
+// que se termina de decir y de ejecutar: la pausa entre combinaciones cuenta desde ahí.
+export function duracionEstimada(combo, texto = null) {
   const ejecucion = combo.reduce((s, a) => s + SEGUNDOS_EJECUCION[a.tipo], 0);
-  return redondear(habla + ejecucion);
+  return redondear(segundosHabla(texto ?? textoHablado(combo)) + ejecucion);
 }
 
 export function extraPorLongitud(combo) {

@@ -1,10 +1,16 @@
 """Cuánto se tarda en dictar y ejecutar una combinación, y pausas según el ritmo (1-5)."""
 import random
+import re
 
-from motor.acciones import Accion
+from motor.acciones import Accion, texto_hablado
 
-# Segundos que tarda la voz en decir cada acción (aprox., nombres de 1 a 4 palabras).
-SEGUNDOS_HABLA_POR_ACCION = 0.6
+# Lo que tarda la voz en decir un texto, de que empieza a hablar a que termina: medido con la voz
+# del navegador (Microsoft Helena, es-ES, velocidad 1,1 como static/voz.js) sobre 75 combinaciones
+# en los tres modos y ajustado con un poco de margen (error ±0,4 s). Recalibrar si cambia la voz.
+HABLA_BASE = 1.0
+HABLA_POR_SILABA = 0.15
+HABLA_POR_COMA = 0.55   # pausa entre una acción y la siguiente
+_SILABA = re.compile(r"[aeiouáéíóúü]+", re.IGNORECASE)
 # Segundos para ejecutar cada acción después de oírla.
 SEGUNDOS_EJECUCION = {"golpe": 0.5, "defensa": 0.8, "movimiento": 1.0}
 # Pausa (recuperar guardia) entre el final de una combinación y la siguiente, según el ritmo
@@ -16,11 +22,18 @@ ACCIONES_SIN_EXTRA = 3
 EXTRA_POR_ACCION = 0.3
 
 
-def duracion_estimada(combo: list[Accion] | tuple[Accion, ...]) -> float:
-    """Tiempo desde que empieza el dictado hasta que se termina de ejecutar."""
-    habla = SEGUNDOS_HABLA_POR_ACCION * len(combo)
+def segundos_habla(texto: str) -> float:
+    """Lo que tarda la voz en decir `texto` (sílabas aproximadas por grupos de vocales)."""
+    silabas = len(_SILABA.findall(texto))
+    return HABLA_BASE + HABLA_POR_SILABA * silabas + HABLA_POR_COMA * texto.count(",")
+
+
+def duracion_estimada(combo: list[Accion] | tuple[Accion, ...], texto: str | None = None) -> float:
+    """Tiempo desde que empieza el dictado de `texto` (lo que se dice, según el modo de voz)
+    hasta que se termina de decir y de ejecutar: la pausa entre combinaciones cuenta desde ahí."""
+    texto = texto_hablado(combo) if texto is None else texto
     ejecucion = sum(SEGUNDOS_EJECUCION[a.tipo] for a in combo)
-    return round(habla + ejecucion, 2)
+    return round(segundos_habla(texto) + ejecucion, 2)
 
 
 def extra_por_longitud(combo) -> float:

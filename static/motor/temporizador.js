@@ -80,6 +80,10 @@ export function construirGuion(config, azar, generador = null) {
   let eventos = [];
   let tAsalto = 0.0;
   let pendiente = null; // la que no cupo al final del asalto: abre el siguiente (no se pierde)
+  const textoYDuracion = (combo) => {
+    const texto = textoHablado(combo.acciones, config.voz, config.zurdo);
+    return [texto, duracionEstimada(combo.acciones, texto)];
+  };
 
   for (let n = 1; n <= config.asaltos; n++) {
     const [inicio, fin] = [tAsalto, tAsalto + config.duracion_asalto];
@@ -103,13 +107,13 @@ export function construirGuion(config, azar, generador = null) {
     while (true) {
       let combo = pendiente ?? generador.siguiente();
       pendiente = null;
-      let d = duracionEstimada(combo.acciones);
+      let [texto, d] = textoYDuracion(combo);
       let empieza = hueco(t, d, reservados);
       // Asalto muy corto y aún vacío: la que no cabe espera al siguiente y se prueba otra.
       for (let i = 0; vacio && i < REINTENTOS && empieza + d > fin; i++) {
         pendiente = pendiente ?? combo;
         combo = generador.siguiente();
-        d = duracionEstimada(combo.acciones);
+        [texto, d] = textoYDuracion(combo);
         empieza = hueco(t, d, reservados);
       }
       if (empieza + d > fin) {
@@ -118,7 +122,6 @@ export function construirGuion(config, azar, generador = null) {
       }
       t = empieza;
       vacio = false;
-      const texto = textoHablado(combo.acciones, config.voz, config.zurdo);
       eventos.push(evento(redondear(t), "combo", n, { duracion: d, texto, ids: combo.acciones.map((a) => a.id) }));
       t = redondear(t + d + pausaEntreCombos(config.ritmo, combo.acciones, azar, config.pausa));
     }

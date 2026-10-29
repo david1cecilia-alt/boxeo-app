@@ -212,7 +212,7 @@ def comprobar_guion(eventos: list[dict], c: ConfigSesion) -> None:
             acciones = acciones_por_ids(k["ids"])
             ortodoxas = espejo_combo(acciones) if c.zurdo else acciones
             assert tuple(a.id for a in ortodoxas) in _biblioteca_hasta(c.nivel), "no es de la biblioteca"
-            assert k["duracion"] == duracion_estimada(acciones)
+            assert k["duracion"] == duracion_estimada(acciones, k["texto"])
             assert k["texto"] == texto_hablado(acciones, c.voz, c.zurdo)
             assert inicio + PREPARACION <= k["t"] and k["t"] + k["duracion"] <= fin
         for a, b in zip(combos, combos[1:]):

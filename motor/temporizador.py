@@ -85,6 +85,10 @@ def construir_guion(config: ConfigSesion, rng: random.Random | None = None,
     t_asalto = 0.0
     pendiente = None  # la que no cupo al final del asalto: abre el siguiente (no se pierde)
 
+    def texto_y_duracion(combo):
+        texto = texto_hablado(combo.acciones, config.voz, config.zurdo)
+        return texto, duracion_estimada(combo.acciones, texto)
+
     for n in range(1, config.asaltos + 1):
         inicio, fin = t_asalto, t_asalto + config.duracion_asalto
         eventos.append(Evento(inicio, "inicio_asalto", n, texto=f"Asalto {n}"))
@@ -104,7 +108,7 @@ def construir_guion(config: ConfigSesion, rng: random.Random | None = None,
         vacio = True
         while True:
             combo, pendiente = pendiente or generador.siguiente(), None
-            d = duracion_estimada(combo.acciones)
+            texto, d = texto_y_duracion(combo)
             empieza = _hueco(t, d, reservados)
             # Asalto muy corto y aún vacío: la que no cabe espera al siguiente y se prueba otra.
             for _ in range(REINTENTOS if vacio else 0):
@@ -112,13 +116,12 @@ def construir_guion(config: ConfigSesion, rng: random.Random | None = None,
                     break
                 pendiente = pendiente or combo
                 combo = generador.siguiente()
-                d = duracion_estimada(combo.acciones)
+                texto, d = texto_y_duracion(combo)
                 empieza = _hueco(t, d, reservados)
             if empieza + d > fin:
                 pendiente = pendiente or combo
                 break
             t, vacio = empieza, False
-            texto = texto_hablado(combo.acciones, config.voz, config.zurdo)
             eventos.append(Evento(round(t, 2), "combo", n, d, texto, [a.id for a in combo.acciones]))
             t = round(t + d + pausa_entre_combos(config.ritmo, combo.acciones, rng, config.pausa), 2)
 

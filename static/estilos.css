@@ -728,6 +728,14 @@ dialog::backdrop { background: var(--velo); }
   #pestanas a:hover:not([aria-current]) { background: var(--superficie-hover); }
   #pestanas .solo-escritorio { display: flex; }
   #ir-ajustes { display: none; }
+  /* La línea del menú, también en el fondo de la página: el borde de la barra fija solo mide lo
+     que la ventana y se cortaba a media página (al pintar la página entera o si algo la tapaba). */
+  html { min-height: 100%; }
+  body {
+    background: linear-gradient(var(--linea), var(--linea)) no-repeat
+      calc(var(--ancho-lateral) - 1px) 0 / 1px 100%, var(--fondo);
+  }
+  body.entrenando { background: var(--fondo); }
 
   main {
     max-width: 1200px;

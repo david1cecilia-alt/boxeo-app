@@ -1,7 +1,8 @@
 // Port de motor/sorteo.py: sorteo de la sesión con las combinaciones de la biblioteca.
 // - Solo las del nivel elegido o inferiores.
 // - No repite ninguna de las últimas SIN_REPETIR.
-// - Hasta que hayan salido todos los golpes del 1 al 6, solo saca las que añaden alguno.
+// - Hasta que hayan salido todos los golpes del 1 al 6, solo saca las que añaden alguno (en las
+//   6 primeras están todos seguro).
 // - La proporción de combinaciones con defensa es la del nivel (defensaPorNivel).
 // - Los pesos del perfil y el refuerzo de "Practicar" pesan como en el generador.
 // Todo en ortodoxo; si es zurdo se refleja al final con espejo().
@@ -42,8 +43,10 @@ export class SorteoBiblioteca {
 
   siguiente() {
     const candidatas = this.candidatas();
+    // Mientras falten golpes, pesan más las que añaden más: así están todos antes.
+    const nuevos = (c) => [...numeros(c)].filter((n) => this.faltan.has(n)).length;
     const elegida = this.azar.elegirConPesos(candidatas,
-      candidatas.map((c) => pesoPerfil(c.acciones, this.pesos, this.refuerzo)));
+      candidatas.map((c) => pesoPerfil(c.acciones, this.pesos, this.refuerzo) * Math.max(1, nuevos(c))));
     this.recientes = [...this.recientes, elegida].slice(-SIN_REPETIR);
     for (const n of numeros(elegida)) this.faltan.delete(n);
     const acciones = this.zurdo ? espejoCombo(elegida.acciones) : elegida.acciones;

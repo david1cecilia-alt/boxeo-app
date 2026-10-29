@@ -52,11 +52,24 @@ def _config(preset, **extra):
 @pytest.mark.parametrize("nivel", NIVELES)
 @pytest.mark.parametrize("zurdo", [False, True])
 def test_en_cada_sesion_salen_todos_los_golpes_del_1_al_6(preset, nivel, zurdo):
+    # Garantizado en cuanto se han dicho 6 combinaciones (las que no caben al final de un asalto
+    # abren el siguiente: no se pierden). En «Prueba 2×30 s» de avanzado a veces caben menos.
     for semilla in range(20):
         config = _config(preset, nivel=nivel, zurdo=zurdo)
         combos = [e for e in construir_guion(config, random.Random(semilla)) if e.tipo == "combo"]
-        dichos = {numero(a, zurdo) for e in combos for a in acciones_por_ids(e.ids)} - {None}
-        assert dichos == NUMEROS, f"semilla {semilla}: faltan {NUMEROS - dichos}"
+        dichos = {numero(a, zurdo) for e in combos[:6] for a in acciones_por_ids(e.ids)} - {None}
+        if preset == "amateur" or len(combos) >= 6:
+            assert dichos == NUMEROS, f"semilla {semilla}: faltan {NUMEROS - dichos}"
+
+
+@pytest.mark.parametrize("nivel", NIVELES)
+def test_en_la_prueba_corta_casi_siempre_salen_todos(nivel):
+    completas = 0
+    for semilla in range(100):
+        combos = [e for e in construir_guion(_config("prueba", nivel=nivel), random.Random(semilla))
+                  if e.tipo == "combo"]
+        completas += {a.numero for e in combos for a in acciones_por_ids(e.ids) if a.numero} == NUMEROS
+    assert completas >= 90, f"solo {completas} de 100"
 
 
 @pytest.mark.parametrize("nivel", NIVELES)

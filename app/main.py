@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from app import db
 from app.esquemas import PeticionGuion, SesionNueva
 from motor.generador import cargar_perfil
-from motor.ritmo import PAUSA_POR_NIVEL
+from motor.ritmo import PAUSA_POR_RITMO
 from motor.temporizador import ConfigSesion, cargar_presets, construir_guion, guion_a_dict
 
 RAIZ = Path(__file__).resolve().parent.parent
@@ -25,7 +25,7 @@ def crear_app(ruta_db: Path = RUTA_DB) -> FastAPI:
         presets = cargar_presets()
         perfil = cargar_perfil()
         return {"presets": presets["presets"], "niveles": [1, 2, 3],
-                "pausa_por_nivel": PAUSA_POR_NIVEL, "perfil": perfil}
+                "pausa_por_ritmo": PAUSA_POR_RITMO, "perfil": perfil}
 
     @app.post("/api/sesion/guion")
     def guion(peticion: PeticionGuion):

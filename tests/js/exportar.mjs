@@ -51,8 +51,9 @@ const refuerzos = REFUERZOS.map((ids) => ({
 
 const CONFIGS = [
   { asaltos: 3, duracion_asalto: 180, descanso: 60, nivel: 1 },
-  { asaltos: 3, duracion_asalto: 180, descanso: 60, nivel: 2, modo_reaccion: true },
-  { asaltos: 3, duracion_asalto: 180, descanso: 60, nivel: 3, modo_reaccion: true, zurdo: true },
+  { asaltos: 3, duracion_asalto: 180, descanso: 60, nivel: 1, ritmo: 1, voz: "numeros", zurdo: true },
+  { asaltos: 3, duracion_asalto: 180, descanso: 60, nivel: 2, modo_reaccion: true, ritmo: 5, voz: "ambos" },
+  { asaltos: 3, duracion_asalto: 180, descanso: 60, nivel: 3, modo_reaccion: true, zurdo: true, voz: "ambos" },
   { asaltos: 2, duracion_asalto: 30, descanso: 10, nivel: 1, modo_reaccion: true },
   { asaltos: 5, duracion_asalto: 120, descanso: 30, nivel: 2, pausa: 1.5 },
   { asaltos: 1, duracion_asalto: 20, descanso: 0, nivel: 3, modo_reaccion: true, pausa: 0 },

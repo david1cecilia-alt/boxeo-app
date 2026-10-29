@@ -1,8 +1,9 @@
 // Port de motor/temporizador.py: construye el guion de una sesión (eventos con su segundo exacto).
 // El reproductor (app.js) solo lanza estos eventos; aquí está toda la lógica de tiempos.
+import { MODOS_VOZ, textoHablado } from "./acciones.js";
 import { datos } from "./datos.js";
 import { SorteoBiblioteca } from "./sorteo.js";
-import { duracionEstimada, pausaEntreCombos, redondear } from "./ritmo.js";
+import { RITMO_POR_DEFECTO, duracionEstimada, pausaEntreCombos, redondear } from "./ritmo.js";
 
 export const PREPARACION = 3.0;        // segundos al inicio del asalto antes del primer combo
 export const AVISO_ANTES_FIN = 10.0;   // aviso a los 10 s del final
@@ -10,16 +11,20 @@ export const DURACION_AVISO = 1.5;     // lo que ocupa decir "diez segundos"
 export const DURACION_REACCION = 2.0;  // señal + tiempo para reaccionar
 export const INTERVALO_REACCION = [8.0, 20.0]; // separación aleatoria entre señales de reacción
 export const MARGEN = 0.5;             // hueco mínimo entre una combinación y una señal
+export const REINTENTOS = 5;           // combinaciones que se prueban si no cabe ninguna en un asalto aún vacío
 
 export const CONFIG_POR_DEFECTO = {
   asaltos: 3, duracion_asalto: 180, descanso: 60, nivel: 1,
-  zurdo: false, modo_reaccion: false, pausa: null, // null = la del nivel
+  zurdo: false, modo_reaccion: false,
+  pausa: null, // pausa fija entre combinaciones; null = la del ritmo
+  ritmo: RITMO_POR_DEFECTO, // 1 Calmado … 5 Intenso
+  voz: "nombres", // cómo se dicen: uno de MODOS_VOZ
 };
 
 // Mismos límites que PeticionGuion en app/esquemas.py.
 const LIMITES = {
   asaltos: [1, 20, true], duracion_asalto: [20, 600, true], descanso: [0, 300, true],
-  nivel: [1, 3, true], pausa: [0, 30, false],
+  nivel: [1, 3, true], pausa: [0, 30, false], ritmo: [1, 5, true],
 };
 
 // Errores de la configuración (lista vacía = válida).
@@ -33,6 +38,7 @@ export function validarConfig(config) {
       errores.push(`${campo} debe estar entre ${min} y ${max}`);
     }
   }
+  if (!MODOS_VOZ.includes(config.voz)) errores.push(`voz debe ser una de: ${MODOS_VOZ.join(", ")}`);
   return errores;
 }
 
@@ -45,6 +51,13 @@ function solapa(ini, fin, reservados) {
     if (ini < rFin + MARGEN && rIni - MARGEN < fin) return [rIni, rFin];
   }
   return null;
+}
+
+// Primer instante desde t en el que cabe una combinación de d segundos sin pisar señales.
+function hueco(t, d, reservados) {
+  let choque;
+  while ((choque = solapa(t, t + d, reservados))) t = choque[1] + MARGEN;
+  return t;
 }
 
 function reaccionesEntre(inicio, limite, azar, reacciones, asalto) {
@@ -64,7 +77,6 @@ export function construirGuion(config, azar, generador = null) {
   config = { ...CONFIG_POR_DEFECTO, ...config };
   generador = generador ?? new SorteoBiblioteca(config.nivel, { zurdo: config.zurdo, azar });
   const reacciones = datos().presets.reacciones;
-  const pausa = pausaEntreCombos(config.nivel, config.pausa);
   let eventos = [];
   let tAsalto = 0.0;
   let pendiente = null; // la que no cupo al final del asalto: abre el siguiente (no se pierde)
@@ -87,19 +99,28 @@ export function construirGuion(config, azar, generador = null) {
 
     // Colocar combinaciones en los huecos libres.
     let t = inicio + PREPARACION;
+    let vacio = true;
     while (true) {
-      const combo = pendiente ?? generador.siguiente();
+      let combo = pendiente ?? generador.siguiente();
       pendiente = null;
-      const d = duracionEstimada(combo.acciones);
-      let choque;
-      while ((choque = solapa(t, t + d, reservados))) t = choque[1] + MARGEN;
-      if (t + d > fin) {
-        pendiente = combo;
+      let d = duracionEstimada(combo.acciones);
+      let empieza = hueco(t, d, reservados);
+      // Asalto muy corto y aún vacío: la que no cabe espera al siguiente y se prueba otra.
+      for (let i = 0; vacio && i < REINTENTOS && empieza + d > fin; i++) {
+        pendiente = pendiente ?? combo;
+        combo = generador.siguiente();
+        d = duracionEstimada(combo.acciones);
+        empieza = hueco(t, d, reservados);
+      }
+      if (empieza + d > fin) {
+        pendiente = pendiente ?? combo;
         break;
       }
-      eventos.push(evento(redondear(t), "combo", n,
-        { duracion: d, texto: combo.texto, ids: combo.acciones.map((a) => a.id) }));
-      t = redondear(t + d + pausa);
+      t = empieza;
+      vacio = false;
+      const texto = textoHablado(combo.acciones, config.voz, config.zurdo);
+      eventos.push(evento(redondear(t), "combo", n, { duracion: d, texto, ids: combo.acciones.map((a) => a.id) }));
+      t = redondear(t + d + pausaEntreCombos(config.ritmo, combo.acciones, azar, config.pausa));
     }
 
     eventos.push(evento(fin, "fin_asalto", n));

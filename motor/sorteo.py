@@ -2,7 +2,8 @@
 
 - Solo las del nivel elegido o inferiores.
 - No repite ninguna de las últimas SIN_REPETIR.
-- Hasta que hayan salido todos los golpes del 1 al 6, solo saca las que añaden alguno.
+- Hasta que hayan salido todos los golpes del 1 al 6, solo saca las que añaden alguno (en las
+  6 primeras están todos seguro).
 - La proporción de combinaciones con defensa es la del nivel (defensa_por_nivel).
 - Los pesos del perfil y el refuerzo de "Practicar" pesan como en el generador.
 
@@ -50,7 +51,9 @@ class SorteoBiblioteca:
 
     def siguiente(self) -> Combinacion:
         candidatas = self._candidatas()
-        pesos = [peso_perfil(list(c.acciones), self.pesos, self.refuerzo) for c in candidatas]
+        # Mientras falten golpes, pesan más las que añaden más: así están todos antes.
+        pesos = [peso_perfil(list(c.acciones), self.pesos, self.refuerzo) * max(1, len(numeros(c) & self.faltan))
+                 for c in candidatas]
         elegida = self.rng.choices(candidatas, weights=pesos)[0]
         self.recientes = (self.recientes + [elegida])[-SIN_REPETIR:]
         self.faltan -= numeros(elegida)

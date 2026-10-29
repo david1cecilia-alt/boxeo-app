@@ -19,7 +19,7 @@ from motor.acciones import (Accion, acciones_por_ids, biblioteca, catalogo, espe
 from motor.generador import GeneradorCombos, cargar_perfil
 from motor.sorteo import NUMEROS, SIN_REPETIR, SorteoBiblioteca
 from motor.reglas import ultimo_golpe, validar
-from motor.ritmo import duracion_estimada, rango_pausa
+from motor.ritmo import VELOCIDADES, duracion_estimada, rango_pausa
 from motor.temporizador import (AVISO_ANTES_FIN, DURACION_AVISO, DURACION_REACCION, MARGEN,
                                 PREPARACION, ConfigSesion, cargar_presets, construir_guion,
                                 guion_a_dict)
@@ -232,6 +232,11 @@ def comprobar_guion(eventos: list[dict], c: ConfigSesion) -> None:
 def test_hay_guiones_con_y_sin_modo_reaccion(js):
     modos = {bool(g["config"].get("modo_reaccion")) for g in js["guiones"]}
     assert modos == {True, False}
+
+
+def test_hay_guiones_con_cada_velocidad_de_voz(js):
+    velocidades = {g["config"].get("velocidad", ConfigSesion().velocidad) for g in js["guiones"]}
+    assert velocidades == set(VELOCIDADES.values())
 
 
 def test_guiones_js_cumplen_los_invariantes(js):

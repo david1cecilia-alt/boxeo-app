@@ -1,6 +1,6 @@
 // Dicta las combinaciones de un asalto contando la pausa desde que la voz TERMINA de verdad
 // (onend u onerror de la voz), no desde una estimación. La estimación solo sirve de tope por si
-// onend no llega (pasa en algunos Android): estimación + MARGEN_VOZ. Avisos y señales también
+// onend no llega (pasa en algunos Android): estimación a la velocidad de la voz + MARGEN_VOZ. Avisos y señales también
 // esperan a su voz: una combinación no empieza hasta que se callan (y, tras una señal, hasta que
 // pasa el tiempo para reaccionar).
 //
@@ -30,7 +30,7 @@ export function crearDictado({ reproductor, voz, config, azar, alDecir = () => {
         }
       };
       Promise.resolve(voz.decir(texto)).then((r) => acabar(r === "error" ? "error" : "fin"), () => acabar("error"));
-      reproductor.programar(segundosHabla(texto) + MARGEN_VOZ, () => acabar("maximo"));
+      reproductor.programar(segundosHabla(texto, config.velocidad) + MARGEN_VOZ, () => acabar("maximo"));
     });
     hablando = promesa;
     promesa.then(() => {

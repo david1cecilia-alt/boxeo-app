@@ -14,7 +14,7 @@ const TOLERANCIA = 0.11;
 const vaciar = () => new Promise((ok) => setImmediate(ok));
 
 // Voz de mentira: apunta qué se dice y cuándo; el test decide si llega onend, onerror o nada.
-function montar({ pausa = 1.0, ritmo = 3, combos = [], reservados = [], fin = 180 } = {}) {
+function montar({ pausa = 1.0, ritmo = 3, velocidad, combos = [], reservados = [], fin = 180 } = {}) {
   let ms = 0;
   const reproductor = crearReproductor([], { alLanzar: () => {}, reloj: () => ms });
   const dichos = [];
@@ -24,7 +24,7 @@ function montar({ pausa = 1.0, ritmo = 3, combos = [], reservados = [], fin = 18
     },
     callar() {},
   };
-  const dictado = crearDictado({ reproductor, voz, config: { ritmo, pausa }, azar: crearAzar(1) });
+  const dictado = crearDictado({ reproductor, voz, config: { ritmo, pausa, velocidad }, azar: crearAzar(1) });
   async function hasta(segundo) {
     while (reproductor.tiempo() < segundo - 1e-9) {
       ms += PASO;
@@ -66,6 +66,19 @@ test("sin onend: deja de esperar en la estimación + 3 s", async () => {
   await hasta(3 + maximo + PAUSA + 0.2);
   assert.equal(dichos.length, 2);
   cerca(dichos[1].en, 3 + maximo + PAUSA);
+});
+
+test("sin onend: el tope escala con la velocidad de la voz", async () => {
+  for (const velocidad of [0.9, 1.3]) {
+    const { dichos, hasta } = montar({ combos: COMBOS, velocidad });
+    const maximo = segundosHabla("jab, recto", velocidad) + MARGEN_VOZ;
+    assert.notEqual(maximo, segundosHabla("jab, recto") + MARGEN_VOZ);
+    await hasta(3 + maximo - 0.2);
+    assert.equal(dichos.length, 1, `a ${velocidad} aún espera`);
+    await hasta(3 + maximo + PAUSA + 0.2);
+    assert.equal(dichos.length, 2, `a ${velocidad} ya sigue`);
+    cerca(dichos[1].en, 3 + maximo + PAUSA);
+  }
 });
 
 test("con onerror: cuenta como terminada", async () => {

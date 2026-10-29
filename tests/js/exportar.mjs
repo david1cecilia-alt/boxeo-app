@@ -58,6 +58,8 @@ const CONFIGS = [
   { asaltos: 5, duracion_asalto: 120, descanso: 30, nivel: 2, pausa: 1.5 },
   { asaltos: 1, duracion_asalto: 20, descanso: 0, nivel: 3, modo_reaccion: true, pausa: 0 },
   { asaltos: 12, duracion_asalto: 600, descanso: 300, nivel: 3, zurdo: true, modo_reaccion: true, pausa: 30 },
+  { asaltos: 3, duracion_asalto: 180, descanso: 60, nivel: 2, voz: "ambos", velocidad: 0.9 },
+  { asaltos: 3, duracion_asalto: 120, descanso: 30, nivel: 3, modo_reaccion: true, ritmo: 5, velocidad: 1.3 },
 ];
 const guiones = [];
 CONFIGS.forEach((config, i) => {

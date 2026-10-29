@@ -3,7 +3,9 @@
 import { MODOS_VOZ, textoHablado } from "./acciones.js";
 import { datos } from "./datos.js";
 import { SorteoBiblioteca } from "./sorteo.js";
-import { RITMO_POR_DEFECTO, duracionEstimada, pausaEntreCombos, redondear } from "./ritmo.js";
+import {
+  RITMO_POR_DEFECTO, VELOCIDAD_MEDIDA, VELOCIDADES, duracionEstimada, pausaEntreCombos, redondear,
+} from "./ritmo.js";
 
 export const PREPARACION = 3.0;        // segundos al inicio del asalto antes del primer combo
 export const AVISO_ANTES_FIN = 10.0;   // aviso a los 10 s del final
@@ -19,6 +21,7 @@ export const CONFIG_POR_DEFECTO = {
   pausa: null, // pausa fija entre combinaciones; null = la del ritmo
   ritmo: RITMO_POR_DEFECTO, // 1 Calmado … 5 Intenso
   voz: "nombres", // cómo se dicen: uno de MODOS_VOZ
+  velocidad: VELOCIDAD_MEDIDA, // de la voz: uno de VELOCIDADES
 };
 
 // Mismos límites que PeticionGuion en app/esquemas.py.
@@ -39,6 +42,10 @@ export function validarConfig(config) {
     }
   }
   if (!MODOS_VOZ.includes(config.voz)) errores.push(`voz debe ser una de: ${MODOS_VOZ.join(", ")}`);
+  const velocidades = Object.values(VELOCIDADES);
+  if (config.velocidad !== undefined && !velocidades.includes(config.velocidad)) {
+    errores.push(`velocidad debe ser una de: ${velocidades.join(", ")}`);
+  }
   return errores;
 }
 
@@ -82,7 +89,7 @@ export function construirGuion(config, azar, generador = null) {
   let pendiente = null; // la que no cupo al final del asalto: abre el siguiente (no se pierde)
   const textoYDuracion = (combo) => {
     const texto = textoHablado(combo.acciones, config.voz, config.zurdo);
-    return [texto, duracionEstimada(combo.acciones, texto)];
+    return [texto, duracionEstimada(combo.acciones, texto, config.velocidad)];
   };
 
   for (let n = 1; n <= config.asaltos; n++) {

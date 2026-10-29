@@ -245,10 +245,11 @@ hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
 :is(.niveles legend, .cabeza-campo) span:first-child { font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
 .modos-voz b { font-size: 20px; white-space: nowrap; }
 
-/* Ritmo: barra 1-5, de Calmado a Intenso. */
+/* Ritmo: barra 1-5, de Calmado a Intenso. Solo se mueve arrastrando la bolita: la barra no recibe
+   el puntero (tocarla en el móvil saltaba a Intenso sin querer). El teclado sigue funcionando. */
 .ritmo input[type="range"] {
   appearance: none; -webkit-appearance: none; display: block; width: 100%; height: 44px; margin: 0;
-  padding: 0; border: 0; background: transparent; cursor: pointer;
+  padding: 0; border: 0; background: transparent; pointer-events: none;
   --lleno: 50%;
 }
 .ritmo input[type="range"]::-webkit-slider-runnable-track {
@@ -259,10 +260,11 @@ hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
 .ritmo input[type="range"]::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--acento-relleno); }
 .ritmo input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none; width: 28px; height: 28px; margin-top: -11px; border-radius: 50%;
-  background: var(--texto); border: 4px solid var(--acento-relleno);
+  background: var(--texto); border: 4px solid var(--acento-relleno); pointer-events: auto; cursor: grab;
 }
 .ritmo input[type="range"]::-moz-range-thumb {
   width: 20px; height: 20px; border-radius: 50%; background: var(--texto); border: 4px solid var(--acento-relleno);
+  pointer-events: auto; cursor: grab;
 }
 .ritmo input[type="range"]:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; border-radius: 8px; }
 .marcas-ritmo { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--suave); }

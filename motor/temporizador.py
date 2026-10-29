@@ -123,7 +123,7 @@ def construir_guion(config: ConfigSesion, rng: random.Random | None = None,
                 break
             t, vacio = empieza, False
             eventos.append(Evento(round(t, 2), "combo", n, d, texto, [a.id for a in combo.acciones]))
-            t = round(t + d + pausa_entre_combos(config.ritmo, combo.acciones, rng, config.pausa), 2)
+            t = round(t + d + pausa_entre_combos(config.ritmo, rng, config.pausa), 2)
 
         eventos.append(Evento(fin, "fin_asalto", n))
         t_asalto = fin

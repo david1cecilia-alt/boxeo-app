@@ -1,4 +1,5 @@
-"""Ritmo 1-5: pausa entre combinaciones al azar en su rango, más larga tras las combinaciones largas."""
+"""Ritmo 1-5: hueco al azar en su rango desde que la voz termina; se golpea mientras se oye, así que
+no hay tiempo de ejecución ni extra por longitud."""
 import random
 
 import pytest
@@ -11,30 +12,40 @@ CORTA = acciones_por_ids(["jab", "directo"])
 LARGA = acciones_por_ids(["jab", "directo", "gancho_izq", "directo", "gancho_izq", "directo"])
 
 
+def test_huecos_de_cada_ritmo():
+    assert PAUSA_POR_RITMO == {1: (5.0, 7.0), 2: (4.0, 5.0), 3: (2.0, 4.0), 4: (1.0, 3.0), 5: (1.0, 1.0)}
+
+
 def test_de_calmado_a_intenso():
-    assert PAUSA_POR_RITMO[1] == (6.0, 8.0)
-    assert PAUSA_POR_RITMO[5] == (1.5, 2.5)
     minimos = [PAUSA_POR_RITMO[r][0] for r in range(1, 6)]
     maximos = [PAUSA_POR_RITMO[r][1] for r in range(1, 6)]
     assert minimos == sorted(minimos, reverse=True) and maximos == sorted(maximos, reverse=True)
 
 
-@pytest.mark.parametrize("ritmo", range(1, 6))
+@pytest.mark.parametrize("ritmo", range(1, 5))
 def test_la_pausa_varia_dentro_de_su_rango(ritmo):
     rng = random.Random(ritmo)
-    pausas = [pausa_entre_combos(ritmo, CORTA, rng) for _ in range(500)]
+    pausas = [pausa_entre_combos(ritmo, rng) for _ in range(500)]
     minimo, maximo = PAUSA_POR_RITMO[ritmo]
     assert all(minimo <= p <= maximo for p in pausas)
     assert len(set(pausas)) > 50, "debe variar"
 
 
-def test_las_combinaciones_largas_dejan_mas_pausa():
-    assert rango_pausa(3, LARGA)[0] > rango_pausa(3, CORTA)[0]
-    assert rango_pausa(3, LARGA)[0] == pytest.approx(PAUSA_POR_RITMO[3][0] + 3 * 0.3)
+def test_intenso_deja_siempre_un_segundo():
+    rng = random.Random(5)
+    assert {pausa_entre_combos(5, rng) for _ in range(100)} == {1.0}
+
+
+def test_la_duracion_es_solo_lo_que_se_tarda_en_decirla():
+    for combo in (CORTA, LARGA):
+        for modo in ("numeros", "nombres", "ambos"):
+            texto = texto_hablado(combo, modo)
+            assert duracion_estimada(combo, texto) == round(segundos_habla(texto), 2), "sin ejecución ni extra"
 
 
 def test_la_pausa_fija_del_usuario_manda():
-    assert pausa_entre_combos(1, LARGA, random.Random(0), pausa=2.0) == 2.0
+    assert pausa_entre_combos(1, random.Random(0), pausa=2.0) == 2.0
+    assert rango_pausa(1, pausa=2.0) == (2.0, 2.0)
 
 
 def test_con_ritmo_intenso_caben_muchas_mas_combinaciones():
@@ -84,7 +95,31 @@ def test_la_pausa_cuenta_desde_que_termina_de_hablar(voz, zurdo):
     for a, b in zip(combos, combos[1:]):
         if a.asalto != b.asalto:
             continue
-        acciones = acciones_por_ids(a.ids)
         termina_de_hablar = a.t + segundos_habla(a.texto)
-        minima, _ = rango_pausa(config.ritmo, acciones)
-        assert b.t >= termina_de_hablar + minima, f"{a.texto!r} a los {a.t} s pisa la pausa"
+        minima, _ = rango_pausa(config.ritmo)
+        assert b.t >= termina_de_hablar + minima - 0.01, f"{a.texto!r} a los {a.t} s pisa la pausa"
+
+
+@pytest.mark.parametrize("ritmo", range(1, 6))
+@pytest.mark.parametrize("voz", ["numeros", "nombres"])
+def test_el_guion_encadena_voz_y_hueco_como_el_dictado(ritmo, voz):
+    """Cada combinación empieza a la voz estimada de la anterior más el hueco del ritmo (lo mismo
+    que espera el dictado desde onend): el guion no deja segundos de más."""
+    config = ConfigSesion(asaltos=2, duracion_asalto=180, descanso=30, nivel=3, ritmo=ritmo, voz=voz)
+    guion = construir_guion(config, random.Random(ritmo))
+    avisos = [e.t for e in guion if e.tipo == "aviso"]
+    combos = [e for e in guion if e.tipo == "combo"]
+    minimo, maximo = PAUSA_POR_RITMO[ritmo]
+    for a, b in zip(combos, combos[1:]):
+        if a.asalto != b.asalto or any(a.t < t < b.t for t in avisos):
+            continue
+        hueco = b.t - (a.t + segundos_habla(a.texto))
+        assert minimo - 0.02 <= hueco <= maximo + 0.02, f"{a.texto!r}: hueco de {hueco:.2f} s"
+
+
+def test_en_intenso_el_hueco_tras_hablar_es_menor_de_segundo_y_medio():
+    config = ConfigSesion(asaltos=1, duracion_asalto=180, descanso=0, nivel=3, ritmo=5)
+    combos = [e for e in construir_guion(config, random.Random(0)) if e.tipo == "combo"]
+    huecos = [b.t - (a.t + segundos_habla(a.texto)) for a, b in zip(combos, combos[1:])
+              if b.t < 180 - 10]  # antes del aviso de los 10 s
+    assert huecos and max(huecos) < 1.5

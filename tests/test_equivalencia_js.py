@@ -216,7 +216,7 @@ def comprobar_guion(eventos: list[dict], c: ConfigSesion) -> None:
             assert k["texto"] == texto_hablado(acciones, c.voz, c.zurdo)
             assert inicio + PREPARACION <= k["t"] and k["t"] + k["duracion"] <= fin
         for a, b in zip(combos, combos[1:]):
-            minima, _ = rango_pausa(c.ritmo, a["ids"], c.pausa)
+            minima, _ = rango_pausa(c.ritmo, c.pausa)
             assert b["t"] >= a["t"] + a["duracion"] + minima - REDONDEO, "no respeta la pausa entre combos"
 
         # Combos, reacciones y aviso nunca se pisan (combos con un margen respecto a señales).

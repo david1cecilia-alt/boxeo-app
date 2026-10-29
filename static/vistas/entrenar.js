@@ -1,7 +1,7 @@
 // Pestaña Entrenar: configuración antes de empezar y pantalla de sesión (para usar con
 // guantes a 1–2 m del móvil). No contiene reglas de boxeo: el guion lo genera el motor y
 // el reproductor lo lanza en tiempo de sesión (con pausa).
-import { nuevoGuion, preferencias, recordarSesion } from "../ajustes.js";
+import { PERSONALIZADO, nuevoGuion, personalizadaValida, preferencias, recordarSesion } from "../ajustes.js";
 import { crearAzar, semillaAleatoria } from "../motor/azar.js";
 import { datos } from "../motor/datos.js";
 import { PAUSA_POR_RITMO } from "../motor/ritmo.js";
@@ -34,39 +34,39 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   const chip = (id, nombre) =>
     `<label class="chip-opcion"><input type="radio" name="preset" value="${id}"><span>${esc(nombre)}</span></label>`;
   $("#presets").insertAdjacentHTML("beforeend",
-    presets.map((p) => chip(p.id, p.nombre)).join("") + chip("", "Personalizado"));
-  marcarPreset(presets[0].id);
-  aplicarPreset(presets[0]);
+    presets.map((p) => chip(p.id, p.nombre)).join("") + chip(PERSONALIZADO, "Personalizado"));
+  aplicarPreferencias();
 
-  function marcarPreset(id) {
+  // Marca el asalto y rellena sus valores: los del preset o los de la personalizada guardada.
+  function elegirAsalto(id, personalizada) {
     $(`input[name="preset"][value="${id}"]`).checked = true;
-    $("#avanzados").hidden = id !== "";
-  }
-
-  function aplicarPreset(p) {
+    const personalizado = id === PERSONALIZADO;
+    $("#avanzados").hidden = !personalizado;
+    if (personalizado) $("#avanzados").open = true;
+    const p = personalizado ? personalizada : presets.find((x) => x.id === id);
     $("#asaltos").value = p.asaltos;
     $("#duracion").value = p.duracion_asalto;
     $("#descanso").value = p.descanso;
-    resumir();
   }
 
-  // Nivel, guardia, voz y ritmo del perfil (solo cuando el perfil cambia, para no pisar lo que
-  // se elija aquí).
-  function aplicarPerfil() {
+  // Lo último que se eligió aquí (o lo que se cambió en Guardia/Nivel del perfil). Se aplica solo
+  // si el perfil ha cambiado: lo de aquí ya está guardado, así que aplicarlo de nuevo no pisa nada.
+  function aplicarPreferencias() {
     if (perfilAplicado === almacen.datos.perfil) return;
     perfilAplicado = almacen.datos.perfil;
-    const { nivel, zurdo, voz, ritmo } = preferencias(perfilAplicado);
+    const { asalto, nivel, zurdo, voz, ritmo, reaccion, personalizada } = preferencias(perfilAplicado);
+    elegirAsalto(asalto, personalizada);
     $(`input[name="nivel"][value="${nivel}"]`).checked = true;
     $(`input[name="voz"][value="${voz}"]`).checked = true;
     $("#ritmo").value = ritmo;
     $("#zurdo").checked = zurdo;
+    $("#reaccion").checked = reaccion;
     resumir();
   }
 
-  // Voz y ritmo se recuerdan para la próxima sesión.
-  function recordar() {
-    const { voz, ritmo } = leerConfig();
-    recordarSesion(almacen, { voz, ritmo });
+  // Cada cambio se guarda al momento para la próxima sesión.
+  function recordar(cambios) {
+    recordarSesion(almacen, cambios);
     perfilAplicado = almacen.datos.perfil;
   }
 
@@ -101,17 +101,25 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     return $('input[name="nivel"]:checked') ? leerConfig() : null;
   }
 
+  // Elegir Amateur o Prueba no borra la personalizada: sigue guardada para cuando se vuelva.
   $("#presets").addEventListener("change", (e) => {
-    const p = presets.find((x) => x.id === e.target.value);
-    marcarPreset(e.target.value);
-    if (p) aplicarPreset(p);
-    else $("#avanzados").open = true;
+    elegirAsalto(e.target.value, preferencias(almacen.datos.perfil).personalizada);
+    recordar({ asalto: e.target.value });
   });
+  // La personalizada se guarda en cuanto es válida (a medio escribir, no).
   for (const id of ["asaltos", "duracion", "descanso"]) {
-    $(`#${id}`).addEventListener("input", () => { marcarPreset(""); resumir(); });
+    $(`#${id}`).addEventListener("input", () => {
+      const { asaltos, duracion_asalto, descanso } = leerConfig();
+      const personalizada = { asaltos, duracion_asalto, descanso };
+      if (personalizadaValida(personalizada)) recordar({ personalizada });
+      resumir();
+    });
   }
   form.addEventListener("change", (e) => {
-    if (e.target.name === "voz" || e.target.id === "ritmo") recordar();
+    const { nivel, zurdo, modo_reaccion, ritmo, voz } = leerConfig();
+    const cambio = { nivel: { nivel }, voz: { voz } }[e.target.name]
+      ?? { ritmo: { ritmo }, zurdo: { zurdo }, reaccion: { reaccion: modo_reaccion } }[e.target.id];
+    if (cambio) recordar(cambio);
     resumir();
   });
   $("#ritmo").addEventListener("input", resumir);
@@ -342,7 +350,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
 
   return {
     mostrar() {
-      if (!estado) aplicarPerfil();
+      if (!estado) aplicarPreferencias();
     },
     get entrenando() { return estado !== null; },
   };

@@ -4,14 +4,31 @@
 // Esquema versionado: si cambia, se sube VERSION y se añade una migración en MIGRACIONES.
 // Si el almacenamiento falla, todo sigue funcionando en memoria y `persistente` pasa a false.
 
-export const VERSION = 3;
+export const VERSION = 4;
 const CLAVE = "boxeo";
 const CLAVE_V0 = "boxeo.historial"; // versión 0: un array de sesiones, antes del almacén
 
 export const NO_SE = "no_se";
 
-// Cómo se dicen las combinaciones y a qué ritmo: se eligen antes de cada sesión y se recuerdan.
-export const SESION_POR_DEFECTO = Object.freeze({ voz: "nombres", ritmo: 3 });
+// Lo que se elige en Entrenar y se recuerda para la próxima sesión. `nivel` y `zurdo` en null:
+// los de «Tus datos» del perfil (o los de data/perfil.json si «No lo sé»).
+export const PERSONALIZADA_POR_DEFECTO = Object.freeze({ asaltos: 3, duracion_asalto: 180, descanso: 60 });
+
+export function sesionPorDefecto() {
+  return {
+    voz: "nombres", ritmo: 3, asalto: "amateur", nivel: null, zurdo: null, reaccion: false,
+    personalizada: { ...PERSONALIZADA_POR_DEFECTO },
+  };
+}
+
+// Nivel y zurdo de Entrenar a partir de «Tus datos» del perfil (null si «No lo sé»).
+export function sesionDesdeBasicos(basicos) {
+  const { nivel, guardia } = basicos ?? {};
+  return {
+    nivel: nivel == null || nivel === NO_SE ? null : Number(nivel),
+    zurdo: guardia === "zurda" ? true : guardia === "ortodoxa" ? false : null,
+  };
+}
 
 export function perfilPorDefecto() {
   return {
@@ -23,7 +40,7 @@ export function perfilPorDefecto() {
     },
     focos: [],
     pesos: null, // null = los de data/perfil.json
-    sesion: { ...SESION_POR_DEFECTO },
+    sesion: sesionPorDefecto(),
   };
 }
 
@@ -60,7 +77,17 @@ const MIGRACIONES = {
   2: (v2) => ({
     ...v2,
     version: 3,
-    perfil: { ...v2.perfil, sesion: { ...SESION_POR_DEFECTO } },
+    perfil: { ...v2.perfil, sesion: { voz: "nombres", ritmo: 3 } },
+  }),
+  // v3 → v4: Entrenar recuerda también el asalto, el nivel, el zurdo, la reacción y la sesión
+  // personalizada. Nivel y zurdo salen de «Tus datos» para que al actualizar no cambie nada.
+  3: (v3) => ({
+    ...v3,
+    version: 4,
+    perfil: {
+      ...v3.perfil,
+      sesion: { ...sesionPorDefecto(), ...v3.perfil?.sesion, ...sesionDesdeBasicos(v3.perfil?.basicos) },
+    },
   }),
 };
 
@@ -76,7 +103,11 @@ function completar(datos) {
       ...perfil,
       basicos: { ...base.perfil.basicos, ...perfil.basicos },
       estilo: { ...base.perfil.estilo, ...perfil.estilo },
-      sesion: { ...base.perfil.sesion, ...perfil.sesion },
+      sesion: {
+        ...base.perfil.sesion,
+        ...perfil.sesion,
+        personalizada: { ...base.perfil.sesion.personalizada, ...perfil.sesion?.personalizada },
+      },
     },
   };
 }

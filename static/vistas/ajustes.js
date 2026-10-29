@@ -1,13 +1,20 @@
 // Pantalla Ajustes (#ajustes): lo que cambia el entreno. Se guarda al cambiar cada campo, solo en
 // este navegador. En el móvil se entra por el engranaje y «Volver» lleva a la pestaña de antes.
-// Los pesos sustituyen a los de data/perfil.json en el generador.
-import { PESOS } from "../ajustes.js";
+// Los pesos sustituyen a los de data/perfil.json en el generador. La voz y su velocidad se aplican
+// al momento (también a la línea «Voz: …» de Entrenar).
+import { NOMBRE_VELOCIDAD, PESOS, opcionesVoz } from "../ajustes.js";
+import { accionesPorIds, textoHablado } from "../motor/acciones.js";
 import { datos } from "../motor/datos.js";
+import { VELOCIDADES } from "../motor/ritmo.js";
+import { nombreCortoVoz } from "../voz.js";
 import { chips, conectarCampos } from "./campos.js";
-import { $, $$, anunciar } from "./dom.js";
+import { $, $$, anunciar, esc } from "./dom.js";
 import { BASICOS, PESOS_TEXTO, RANGO_PESO } from "./opciones.js";
 
 const pesoTexto = (n) => `×${n.toLocaleString("es-ES", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
+
+const EJEMPLO = ["jab", "directo", "gancho_izq"]; // lo que dice «Probar voz»
+const numeroEs = (n) => n.toLocaleString("es-ES", { minimumFractionDigits: 1 });
 
 // La pestaña desde la que se entró en Ajustes (a la que vuelve «Volver»).
 let vuelta = "#entrenar";
@@ -16,8 +23,12 @@ window.addEventListener("hashchange", (e) => {
   if (!desde.startsWith("#ajustes")) vuelta = desde || "#entrenar";
 });
 
-export function iniciarAjustes({ almacen }) {
+export function iniciarAjustes({ almacen, voz }) {
   const raiz = $("#ajustes-contenido");
+  // Al cargar las voces (o elegir otra) se rehace el selector si Ajustes está a la vista.
+  voz.alCambiar?.(() => {
+    if (raiz.isConnected && !$("#vista-ajustes").hidden && $("#voz-id")) pintarVoces();
+  });
 
   // Copia del perfil para editar y guardar entero.
   function guardar(cambio) {
@@ -33,6 +44,21 @@ export function iniciarAjustes({ almacen }) {
     const p = almacen.datos.perfil;
     const pesos = p.pesos ?? datos().perfil.pesos;
     raiz.innerHTML = `
+      <form class="tarjeta formulario" id="f-voz" aria-labelledby="t-voz">
+        <div>
+          <h2 id="t-voz">Voz</h2>
+          <p class="nota">La que te dicta las combinaciones.</p>
+        </div>
+        <label class="campo">Voz <select id="voz-id" aria-describedby="voz-aviso"></select></label>
+        <p class="nota" id="voz-aviso"></p>
+        <fieldset class="grupo-chips"><legend>Velocidad</legend><div class="chips-fila">
+          ${Object.entries(VELOCIDADES).map(([clave, valor]) => `<label class="chip-opcion">
+            <input type="radio" name="voz-velocidad" value="${clave}" ${p.voz.velocidad === clave ? "checked" : ""}>
+            <span>${NOMBRE_VELOCIDAD[clave]} · ${numeroEs(valor)}</span></label>`).join("")}
+        </div></fieldset>
+        <button type="button" id="probar-voz" class="boton secundario">Probar voz</button>
+      </form>
+
       <form class="tarjeta formulario" id="f-tus-datos" aria-labelledby="t-tus-datos">
         <div>
           <h2 id="t-tus-datos">Tus datos</h2>
@@ -60,11 +86,39 @@ export function iniciarAjustes({ almacen }) {
       </form>
 
       <p class="nota pie-perfil">Tus ajustes se guardan solo en este dispositivo. <span id="guardado-ajustes"></span></p>`;
+    pintarVoces();
     conectar();
+  }
+
+  // Selector de voces: «Automática» y las voces en español de este dispositivo. Si la guardada no
+  // está aquí (otro móvil u otro PC) se usa la automática, sin borrarla.
+  function pintarVoces() {
+    const { id } = almacen.datos.perfil.voz;
+    const voces = voz.voces?.() ?? [];
+    const existe = id != null && voces.some((v) => v.id === id || v.nombre === id);
+    $("#voz-id").innerHTML = `<option value="">Automática</option>${voces.map((v) =>
+      `<option value="${esc(v.id)}" ${existe && (v.id === id || v.nombre === id) ? "selected" : ""}>${esc(nombreCortoVoz(v.nombre))} (${esc(v.idioma)})</option>`).join("")}`;
+    $("#voz-aviso").textContent = id != null && !existe
+      ? `La voz elegida no está en este dispositivo: se usa la automática (${voz.descripcion}).`
+      : `Ahora: ${voz.descripcion}.`;
+  }
+
+  function guardarVoz(cambio) {
+    guardar((p) => (p.voz = { ...p.voz, ...cambio }));
+    voz.configurar?.(opcionesVoz(almacen.datos.perfil));
   }
 
   function conectar() {
     conectarCampos(raiz, guardar);
+
+    $("#voz-id").addEventListener("change", (e) => guardarVoz({ id: e.target.value || null }));
+    for (const r of $$('input[name="voz-velocidad"]', raiz)) {
+      r.addEventListener("change", () => guardarVoz({ velocidad: r.value }));
+    }
+    $("#probar-voz").addEventListener("click", () => {
+      const { voz: modo, zurdo } = almacen.datos.perfil.sesion;
+      voz.decir(textoHablado(accionesPorIds(EJEMPLO), modo, zurdo === true));
+    });
 
     for (const r of $$("[data-peso]", raiz)) {
       r.addEventListener("input", () => ($(`#valor-${r.dataset.peso}`).textContent = pesoTexto(Number(r.value))));

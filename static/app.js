@@ -1,5 +1,6 @@
 // Arranque: carga los datos del motor y el almacén, decide de dónde salen las sesiones
 // (servidor o este dispositivo) y monta las tres pestañas y Ajustes. Sin reglas de boxeo.
+import { opcionesVoz } from "./ajustes.js";
 import { claveSesion, crearAlmacen } from "./almacen.js";
 import { crearHistorial } from "./historial.js";
 import { cargarDatos } from "./motor/datos.js";
@@ -21,7 +22,7 @@ async function arrancar() {
   const almacen = crearAlmacen({ alFallar: avisar });
   await cargarDatos();
   const historial = await crearHistorial(almacen);
-  const voz = crearVoz();
+  const voz = crearVoz(opcionesVoz(almacen.datos.perfil));
   const valoracion = crearValoracion({ almacen });
 
   const entrenar = iniciarEntrenar({
@@ -36,7 +37,7 @@ async function arrancar() {
     entrenar,
     historial: iniciarHistorial({ almacen, historial, valoracion }),
     perfil: iniciarPerfil({ almacen }),
-    ajustes: iniciarAjustes({ almacen }),
+    ajustes: iniciarAjustes({ almacen, voz }),
   }, "entrenar");
 }
 

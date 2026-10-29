@@ -2,7 +2,7 @@
 // guantes a 1–2 m del móvil). No contiene reglas de boxeo: el guion lo genera el motor y
 // el reproductor lo lanza en tiempo de sesión (con pausa).
 import {
-  NOMBRE_RITMO, PERSONALIZADO, nuevoGuion, personalizadaValida, preferencias, recordarSesion, resumenElecciones,
+  NOMBRE_RITMO, PERSONALIZADO, nuevoGuion, opcionesVoz, personalizadaValida, preferencias, recordarSesion, resumenElecciones,
 } from "../ajustes.js";
 import { crearAzar, semillaAleatoria } from "../motor/azar.js";
 import { datos } from "../motor/datos.js";
@@ -95,6 +95,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       pausa: null, // la del ritmo
       ritmo: Number($("#ritmo").value),
       voz: $('input[name="voz"]:checked')?.value ?? "nombres",
+      velocidad: opcionesVoz(almacen.datos.perfil).velocidad, // la de Ajustes
     };
   }
 
@@ -361,10 +362,15 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   $("#parar").addEventListener("click", parar);
 
 
+  // La voz que de verdad se usa (cambia al cargar las voces o al elegir otra en Ajustes).
   // Completa en el móvil; en escritorio, la corta para que quepa en una línea.
-  setTimeout(() => ($("#info-voz").innerHTML =
-    `<span class="voz-larga">Voz: ${esc(voz.descripcion)}</span>`
-    + `<span class="voz-corta">Voz: ${esc(voz.descripcionCorta ?? voz.descripcion)}</span>`), 500);
+  function pintarVoz() {
+    $("#info-voz").innerHTML =
+      `<span class="voz-larga">Voz: ${esc(voz.descripcion)}</span>`
+      + `<span class="voz-corta">Voz: ${esc(voz.descripcionCorta ?? voz.descripcion)}</span>`;
+  }
+  pintarVoz();
+  voz.alCambiar?.(pintarVoz);
 
   return {
     mostrar() {

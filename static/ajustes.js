@@ -2,6 +2,7 @@
 // qué se propone al entrenar (lo último elegido). Sin reglas de boxeo.
 import { NO_SE, PERSONALIZADA_POR_DEFECTO, sesionDesdeBasicos } from "./almacen.js";
 import { datos } from "./motor/datos.js";
+import { VELOCIDADES, VELOCIDAD_POR_DEFECTO } from "./motor/ritmo.js";
 import { SorteoBiblioteca } from "./motor/sorteo.js";
 import { construirGuion, validarConfig } from "./motor/temporizador.js";
 
@@ -16,6 +17,15 @@ export const NOMBRE_VOZ = { numeros: "Números", nombres: "Nombres", ambos: "Amb
 export function resumenElecciones({ nivel, ritmo, voz, zurdo, modo_reaccion }) {
   return [NOMBRE_NIVEL[nivel], NOMBRE_RITMO[ritmo], NOMBRE_VOZ[voz], zurdo && "Zurdo", modo_reaccion && "Reacción"]
     .filter(Boolean).join(" · ");
+}
+
+export const NOMBRE_VELOCIDAD = { lenta: "Lenta", normal: "Normal", rapida: "Rápida" };
+
+// Voz y velocidad (número, para la voz y el motor) elegidas en Ajustes. Una velocidad que no se
+// conoce vale la de por defecto.
+export function opcionesVoz(perfilUsuario) {
+  const { id = null, velocidad } = perfilUsuario?.voz ?? {};
+  return { id, velocidad: VELOCIDADES[velocidad] ?? VELOCIDADES[VELOCIDAD_POR_DEFECTO] };
 }
 
 export const PESOS = ["termina_en_gancho", "bloquear_y_devolver", "entrada_con_jab"];

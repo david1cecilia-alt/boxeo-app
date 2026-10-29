@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { crearAlmacen, perfilPorDefecto } from "../../static/almacen.js";
 import {
-  nuevoGuion, perfilGenerador, personalizadaValida, preferencias, recordarSesion, resumenElecciones, seguirBasicos,
+  nuevoGuion, opcionesVoz, perfilGenerador, personalizadaValida, preferencias, recordarSesion, resumenElecciones, seguirBasicos,
 } from "../../static/ajustes.js";
 import { accionesPorIds } from "../../static/motor/acciones.js";
 import { crearAzar } from "../../static/motor/azar.js";
@@ -185,4 +185,25 @@ test("la línea de elecciones de «Tu sesión»: nivel · ritmo · voz, y Zurdo 
   assert.equal(resumenElecciones({ nivel: 1, ritmo: 1, voz: "nombres", zurdo: true, modo_reaccion: true }),
     "Básico · Calmado · Nombres · Zurdo · Reacción");
   assert.equal(resumenElecciones({ ...base, nivel: 3, ritmo: 5, voz: "ambos" }), "Avanzado · Intenso · Ambos");
+});
+
+test("la voz de Ajustes: automática a velocidad normal (1,1) por defecto", () => {
+  assert.deepEqual(opcionesVoz(perfilPorDefecto()), { id: null, velocidad: 1.1 });
+});
+
+test("la voz de Ajustes: la elegida y su velocidad en número para la voz y el motor", () => {
+  const p = { ...perfilPorDefecto(), voz: { id: "urn:helena", velocidad: "lenta" } };
+  assert.deepEqual(opcionesVoz(p), { id: "urn:helena", velocidad: 0.9 });
+  assert.equal(opcionesVoz({ ...p, voz: { id: null, velocidad: "rapida" } }).velocidad, 1.3);
+  assert.equal(opcionesVoz({ ...p, voz: { id: null, velocidad: "turbo" } }).velocidad, 1.1, "una desconocida, la normal");
+});
+
+test("el guion de Entrenar usa la velocidad de Ajustes", () => {
+  const perfil = { ...perfilPorDefecto(), voz: { id: null, velocidad: "lenta" } };
+  const config = { asaltos: 1, duracion_asalto: 60, descanso: 0, nivel: 1, ritmo: 3, pausa: null, voz: "nombres",
+    zurdo: false, modo_reaccion: false, velocidad: opcionesVoz(perfil).velocidad };
+  const lento = nuevoGuion(config, perfil, crearAzar(1)).filter((e) => e.tipo === "combo");
+  const normal = nuevoGuion({ ...config, velocidad: 1.1 }, perfil, crearAzar(1)).filter((e) => e.tipo === "combo");
+  assert.equal(lento[0].texto, normal[0].texto);
+  assert.ok(lento[0].duracion > normal[0].duracion);
 });

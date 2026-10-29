@@ -134,7 +134,7 @@ test("un asalto desconocido vuelve al primero (Amateur)", () => {
 
 test("recordarSesion guarda solo lo que llega y conserva el resto del perfil", () => {
   const guardados = [];
-  const perfil = { ...perfilPorDefecto(), focos: ["jab"] };
+  const perfil = { ...perfilPorDefecto(), pesos: { termina_en_gancho: 2, bloquear_y_devolver: 1, entrada_con_jab: 1 } };
   const almacen = { datos: { perfil }, guardarPerfil: (p) => guardados.push(p) };
   recordarSesion(almacen, { voz: "numeros", ritmo: 1 });
   assert.deepEqual(guardados, [{ ...perfil, sesion: { ...perfil.sesion, voz: "numeros", ritmo: 1 } }]);
@@ -163,7 +163,7 @@ test("cambiar nivel o zurdo en Entrenar no cambia el Perfil", () => {
   assert.equal(preferencias(almacen.datos.perfil).zurdo, true);
 });
 
-test("tocar otras cosas del Perfil (pesos, focos, estilo, medidas) no pisa el nivel ni el zurdo de Entrenar", () => {
+test("tocar otras cosas del Perfil (pesos, estilo, medidas) no pisa el nivel ni el zurdo de Entrenar", () => {
   const almacen = crearAlmacen({ storage: almacenamiento() });
   cambiarEnPerfil(almacen, "basicos", "guardia", "ortodoxa");
   cambiarEnPerfil(almacen, "basicos", "nivel", "1");
@@ -172,7 +172,6 @@ test("tocar otras cosas del Perfil (pesos, focos, estilo, medidas) no pisa el ni
   cambiarEnPerfil(almacen, "estilo", "cardio", "bueno");
   const p = structuredClone(almacen.datos.perfil);
   p.pesos = { termina_en_gancho: 3, bloquear_y_devolver: 1, entrada_con_jab: 1 };
-  p.focos.push("jab doble");
   almacen.guardarPerfil(p);
   assert.equal(preferencias(almacen.datos.perfil).nivel, 3);
   assert.equal(preferencias(almacen.datos.perfil).zurdo, true);

@@ -593,21 +593,6 @@ body.entrenando main { padding: 0; max-width: none; }
 .chips-fila { display: flex; flex-wrap: wrap; gap: 8px; }
 .chips-fila .chip-opcion span { padding: 0 14px; }
 
-.cabeza-tarjeta { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
-.cabeza-tarjeta h2 { margin: 0; }
-/* Focos de trabajo: un punto rojo por foco. */
-.focos { list-style: none; margin: 0 0 4px; padding: 0; display: grid; gap: 2px; }
-.focos li { display: flex; align-items: center; gap: 10px; min-height: 36px; font-size: 0.875rem; }
-.focos li::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--acento); }
-.focos li span { flex: 1; }
-.quitar {
-  flex: none; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
-  background: transparent; color: var(--suave); font: 400 1.25rem/1 var(--letra-texto);
-}
-.quitar:hover { color: var(--texto); background: var(--secundario); }
-#f-foco { margin-top: 8px; }
-#f-foco[hidden] { display: none; }
-
 #f-pesos { gap: 14px; }
 #f-pesos h2 { margin: 0; }
 #f-pesos .nota { margin-top: 4px; font-size: 0.8125rem; }
@@ -620,7 +605,6 @@ body.entrenando main { padding: 0; max-width: none; }
 }
 .lista-editable li p { margin: 4px 0 0; white-space: pre-wrap; }
 .notas time { color: var(--suave); font-size: 0.9rem; }
-.en-linea { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
 /* Deslizadores de pesos: nombre a la izquierda y valor en rojo a la derecha. */
 .deslizador { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; }
 .deslizador label { font-size: 0.875rem; font-weight: 400; }

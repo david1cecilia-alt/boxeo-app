@@ -90,23 +90,6 @@ export function iniciarPerfil({ almacen }) {
         ${Object.entries(ESTILO).map(([c, def]) => chips("estilo", c, def, p.estilo[c])).join("")}
       </form>
 
-      <section class="tarjeta" aria-labelledby="t-focos">
-        <div class="cabeza-tarjeta">
-          <h2 id="t-focos" tabindex="-1">Focos de trabajo</h2>
-          <button type="button" class="boton pequeno" id="anadir-foco" aria-controls="f-foco"
-            aria-expanded="${!p.focos.length}">+ Añadir</button>
-        </div>
-        ${p.focos.length ? `<ul class="focos">${p.focos.map((f, i) => `
-          <li><span>${esc(f)}</span>
-            <button type="button" class="quitar" data-quitar-foco="${i}" aria-label="Quitar foco: ${esc(f)}">×</button></li>`).join("")}
-          </ul>` : `<p class="nota">Aún no hay focos. Añade lo que quieras trabajar.</p>`}
-        <form id="f-foco" class="en-linea" ${p.focos.length ? "hidden" : ""}>
-          <label class="campo">Nuevo foco <input name="foco" maxlength="120" required
-            placeholder="p. ej. lanzar 2–3 golpes en vez de 1–2"></label>
-          <button type="submit" class="boton secundario">Añadir</button>
-        </form>
-      </section>
-
       <form class="tarjeta formulario" id="f-pesos" aria-labelledby="t-pesos">
         <div>
           <h2 id="t-pesos" tabindex="-1">Qué te dicta la app</h2>
@@ -177,28 +160,6 @@ export function iniciarPerfil({ almacen }) {
           p[el.dataset.grupo][el.dataset.campo] = valor;
           if (el.dataset.grupo === "basicos") seguirBasicos(p, el.dataset.campo);
         });
-      });
-    }
-
-    $("#anadir-foco").addEventListener("click", (e) => {
-      const formulario = $("#f-foco");
-      formulario.hidden = !formulario.hidden;
-      e.currentTarget.setAttribute("aria-expanded", String(!formulario.hidden));
-      if (!formulario.hidden) $("#f-foco input").focus();
-    });
-    $("#f-foco").addEventListener("submit", (e) => {
-      e.preventDefault();
-      const texto = e.target.foco.value.trim();
-      if (!texto) return;
-      guardar((p) => p.focos.push(texto));
-      pintar();
-      $("#anadir-foco").focus();
-    });
-    for (const b of $$("[data-quitar-foco]", raiz)) {
-      b.addEventListener("click", () => {
-        guardar((p) => p.focos.splice(Number(b.dataset.quitarFoco), 1));
-        pintar();
-        $("#t-focos").focus();
       });
     }
 

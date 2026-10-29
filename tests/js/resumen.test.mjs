@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { lunes, porSemana, totales } from "../../static/vistas/resumen.js";
+import { agrupar, clavesAbiertas, lunes, porSemana, textoMinutos, tituloGrupo, totales } from "../../static/vistas/resumen.js";
 
 const HOY = new Date(2026, 9, 28, 18, 0); // miércoles 28 de octubre de 2026
 const sesiones = [
@@ -32,4 +32,63 @@ test("asaltos y RPE medio por semana, la más antigua primero", () => {
   assert.deepEqual(semanas.at(-1), { inicio: new Date(2026, 9, 26), asaltos: 5, sesiones: 2, rpe: 7.5 });
   assert.deepEqual(semanas.at(-2), { inicio: new Date(2026, 9, 19), asaltos: 4, sesiones: 1, rpe: null });
   assert.equal(semanas.reduce((n, s) => n + s.asaltos, 0), 15); // la de enero no entra
+});
+
+// ---- Agrupación de la lista ----
+
+const conDuracion = [
+  { clave: "local:a", fecha: "2026-10-26T09:00:00", asaltos: 3, duracion_asalto: 180 }, // esta semana
+  { clave: "local:b", fecha: "2026-10-20T08:00:00", asaltos: 2, duracion_asalto: 120 }, // semana anterior
+  { clave: "local:c", fecha: "2026-10-19T20:00:00", asaltos: 4, duracion_asalto: 180 }, // misma semana
+  { clave: "local:d", fecha: "2026-09-30T20:00:00", asaltos: 6, duracion_asalto: 180 }, // septiembre
+  { clave: "local:e", fecha: "2025-12-29T10:00:00", asaltos: 1, duracion_asalto: 90 },  // 2025
+];
+
+test("agrupa por semana: la actual arriba y los periodos pasados vacíos no salen", () => {
+  const grupos = agrupar(conDuracion, "semana", HOY);
+  assert.deepEqual(grupos.map((g) => g.clave), ["2026-10-26", "2026-10-19", "2026-09-28", "2025-12-29"]);
+  assert.deepEqual(grupos.map((g) => g.actual), [true, false, false, false]);
+  assert.deepEqual(grupos[1].sesiones.map((s) => s.clave), ["local:b", "local:c"]); // conserva el orden
+  assert.deepEqual(grupos[1].inicio, new Date(2026, 9, 19));
+});
+
+test("los minutos son solo de asalto: asaltos completados × duración, sin descansos", () => {
+  const [actual, anterior] = agrupar(conDuracion, "semana", HOY);
+  assert.equal(actual.minutos, 9);       // 3 × 3:00
+  assert.equal(anterior.minutos, 16);    // 2 × 2:00 + 4 × 3:00
+  assert.equal(agrupar([{ fecha: "2026-10-26T09:00:00", asaltos: 1, duracion_asalto: 90 }], "semana", HOY)[0].minutos, 2); // 1,5 se redondea
+});
+
+test("agrupa por mes y por año", () => {
+  const meses = agrupar(conDuracion, "mes", HOY);
+  assert.deepEqual(meses.map((g) => [g.clave, g.sesiones.length, g.minutos]),
+    [["2026-10", 3, 25], ["2026-09", 1, 18], ["2025-12", 1, 2]]);
+  const anos = agrupar(conDuracion, "ano", HOY);
+  assert.deepEqual(anos.map((g) => [g.clave, g.sesiones.length]), [["2026", 4], ["2025", 1]]);
+  assert.deepEqual(anos[0].inicio, new Date(2026, 0, 1));
+});
+
+test("el periodo actual sale aunque esté vacío, y sin sesiones solo sale él", () => {
+  const grupos = agrupar(conDuracion.slice(1), "semana", HOY);
+  assert.equal(grupos[0].actual, true);
+  assert.deepEqual(grupos[0].sesiones, []);
+  assert.equal(grupos[0].minutos, 0);
+  assert.deepEqual(agrupar([], "mes", HOY).map((g) => g.clave), ["2026-10"]);
+});
+
+test("al abrir se despliega el actual y, si está vacío, también el más reciente con sesiones", () => {
+  assert.deepEqual([...clavesAbiertas(agrupar(conDuracion, "semana", HOY))], ["2026-10-26"]);
+  assert.deepEqual([...clavesAbiertas(agrupar(conDuracion.slice(1), "semana", HOY))], ["2026-10-26", "2026-10-19"]);
+  assert.deepEqual([...clavesAbiertas(agrupar([], "semana", HOY))], ["2026-10-26"]);
+});
+
+test("títulos de los grupos y minutos en texto", () => {
+  assert.equal(tituloGrupo(new Date(2026, 9, 26), "semana", HOY), "Semana del 26 oct");
+  assert.equal(tituloGrupo(new Date(2025, 11, 29), "semana", HOY), "Semana del 29 dic 2025");
+  assert.equal(tituloGrupo(new Date(2026, 9, 1), "mes", HOY), "Octubre 2026");
+  assert.equal(tituloGrupo(new Date(2025, 0, 1), "ano", HOY), "2025");
+  assert.equal(textoMinutos(54), "54 min");
+  assert.equal(textoMinutos(120), "2 h");
+  assert.equal(textoMinutos(192), "3 h 12 min");
+  assert.equal(textoMinutos(0), "0 min");
 });

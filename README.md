@@ -14,7 +14,7 @@ es una PWA instalable y todo se calcula en el dispositivo.
 
 | Valoración | Historial | Perfil |
 |:---:|:---:|:---:|
-| <img src="docs/capturas/postsesion.png" width="190" alt="Formulario post-sesión con RPE del 1 al 10, sensación del 1 al 5 y notas"> | <img src="docs/capturas/historial.png" width="190" alt="Historial: resumen de la semana y del mes, asaltos por semana en barras y RPE medio en línea"> | <img src="docs/capturas/perfil.png" width="190" alt="Perfil: guardia, nivel, fecha de inicio y medidas opcionales"> |
+| <img src="docs/capturas/postsesion.png" width="190" alt="Formulario post-sesión con RPE del 1 al 10, sensación del 1 al 5 y notas"> | <img src="docs/capturas/historial.png" width="190" alt="Historial: resumen de la semana y del mes, asaltos por semana en barras y RPE medio en línea"> | <img src="docs/capturas/perfil.png" width="190" alt="Perfil: tarjeta roja con el estilo provisional (boxer-puncher de media distancia) y las preguntas de estilo en chips"> |
 
 <sub>Capturas con datos de ejemplo.</sub>
 

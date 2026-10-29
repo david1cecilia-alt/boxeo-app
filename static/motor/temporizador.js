@@ -1,7 +1,7 @@
 // Port de motor/temporizador.py: construye el guion de una sesión (eventos con su segundo exacto).
 // El reproductor (app.js) solo lanza estos eventos; aquí está toda la lógica de tiempos.
 import { datos } from "./datos.js";
-import { GeneradorCombos } from "./generador.js";
+import { SorteoBiblioteca } from "./sorteo.js";
 import { duracionEstimada, pausaEntreCombos, redondear } from "./ritmo.js";
 
 export const PREPARACION = 3.0;        // segundos al inicio del asalto antes del primer combo
@@ -59,13 +59,15 @@ function reaccionesEntre(inicio, limite, azar, reacciones, asalto) {
   return eventos;
 }
 
+// `generador`: cualquier objeto con siguiente() (por defecto, el sorteo de la biblioteca).
 export function construirGuion(config, azar, generador = null) {
   config = { ...CONFIG_POR_DEFECTO, ...config };
-  generador = generador ?? new GeneradorCombos(config.nivel, { zurdo: config.zurdo, azar });
+  generador = generador ?? new SorteoBiblioteca(config.nivel, { zurdo: config.zurdo, azar });
   const reacciones = datos().presets.reacciones;
   const pausa = pausaEntreCombos(config.nivel, config.pausa);
   let eventos = [];
   let tAsalto = 0.0;
+  let pendiente = null; // la que no cupo al final del asalto: abre el siguiente (no se pierde)
 
   for (let n = 1; n <= config.asaltos; n++) {
     const [inicio, fin] = [tAsalto, tAsalto + config.duracion_asalto];
@@ -86,11 +88,15 @@ export function construirGuion(config, azar, generador = null) {
     // Colocar combinaciones en los huecos libres.
     let t = inicio + PREPARACION;
     while (true) {
-      const combo = generador.siguiente();
+      const combo = pendiente ?? generador.siguiente();
+      pendiente = null;
       const d = duracionEstimada(combo.acciones);
       let choque;
       while ((choque = solapa(t, t + d, reservados))) t = choque[1] + MARGEN;
-      if (t + d > fin) break;
+      if (t + d > fin) {
+        pendiente = combo;
+        break;
+      }
       eventos.push(evento(redondear(t), "combo", n,
         { duracion: d, texto: combo.texto, ids: combo.acciones.map((a) => a.id) }));
       t = redondear(t + d + pausa);

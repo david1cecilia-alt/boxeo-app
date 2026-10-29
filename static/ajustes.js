@@ -2,7 +2,7 @@
 // qué nivel/guardia se proponen al entrenar. Sin reglas de boxeo.
 import { NO_SE } from "./almacen.js";
 import { datos } from "./motor/datos.js";
-import { GeneradorCombos } from "./motor/generador.js";
+import { SorteoBiblioteca } from "./motor/sorteo.js";
 import { construirGuion } from "./motor/temporizador.js";
 
 export const PESOS = ["termina_en_gancho", "bloquear_y_devolver", "entrada_con_jab"];
@@ -14,7 +14,7 @@ export function perfilGenerador(perfilUsuario) {
 }
 
 export function nuevoGuion(config, perfilUsuario, azar) {
-  const generador = new GeneradorCombos(config.nivel,
+  const generador = new SorteoBiblioteca(config.nivel,
     { perfil: perfilGenerador(perfilUsuario), zurdo: config.zurdo, azar });
   return construirGuion(config, azar, generador);
 }

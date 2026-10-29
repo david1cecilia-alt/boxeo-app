@@ -9,8 +9,9 @@ import { ultimoGolpe } from "../../static/motor/reglas.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
 
 const datos = cargarDatosDeDisco();
-// Sesión larga (12 × 10 min): unas 1.000 combinaciones por guion.
-const CONFIG = { asaltos: 12, duracion_asalto: 600, descanso: 60, nivel: 1, zurdo: false, modo_reaccion: false, pausa: 0 };
+// Sesión larga (12 × 10 min): unas 1.000 combinaciones por guion. En nivel 3 (40 % con defensa):
+// en básico solo el 15 % lleva defensa y el peso del bloqueo apenas tendría margen.
+const CONFIG = { asaltos: 12, duracion_asalto: 600, descanso: 60, nivel: 3, zurdo: false, modo_reaccion: false, pausa: 0 };
 
 function perfilCon(pesos) {
   return { ...perfilPorDefecto(), pesos };

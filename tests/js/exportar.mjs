@@ -1,12 +1,13 @@
 // Genera con el motor JS lo que valida tests/test_equivalencia_js.py:
-// combinaciones por nivel, con refuerzo (Practicar), guiones de varias configuraciones y el
-// espejo del catálogo.
+// combinaciones inventadas por nivel, con refuerzo (Practicar), sorteos de la biblioteca, guiones
+// de varias configuraciones y el espejo del catálogo.
 // Uso: node tests/js/exportar.mjs salida.json [combinaciones_por_nivel]
 import { writeFileSync } from "node:fs";
 
 import { catalogo, espejo } from "../../static/motor/acciones.js";
 import { crearAzar } from "../../static/motor/azar.js";
 import { GeneradorCombos, cargarPerfil } from "../../static/motor/generador.js";
+import { SorteoBiblioteca } from "../../static/motor/sorteo.js";
 import { construirGuion } from "../../static/motor/temporizador.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
 
@@ -30,6 +31,16 @@ function generar(nivel, zurdo, semilla, perfil = null) {
 const combos = {};
 for (const nivel of NIVELES) {
   combos[nivel] = { ortodoxo: generar(nivel, false, 100 + nivel), zurdo: generar(nivel, true, 100 + nivel) };
+}
+
+// Sorteo de la biblioteca (lo que usa la sesión), con la misma semilla en ortodoxo y zurdo.
+function sortear(nivel, zurdo, semilla) {
+  const sorteo = new SorteoBiblioteca(nivel, { zurdo, azar: crearAzar(semilla) });
+  return Array.from({ length: N }, () => sorteo.siguiente().acciones.map((a) => a.id));
+}
+const sorteos = {};
+for (const nivel of NIVELES) {
+  sorteos[nivel] = { ortodoxo: sortear(nivel, false, 300 + nivel), zurdo: sortear(nivel, true, 300 + nivel) };
 }
 
 // "Practicar": el perfil de data/perfil.json con un refuerzo temporal (nivel 2: todas las acciones).
@@ -56,4 +67,4 @@ CONFIGS.forEach((config, i) => {
 
 const espejos = Object.fromEntries([...catalogo().values()].map((a) => [a.id, accionPlana(espejo(a))]));
 
-writeFileSync(process.argv[2], JSON.stringify({ combos, guiones, espejos, refuerzos }));
+writeFileSync(process.argv[2], JSON.stringify({ combos, guiones, espejos, refuerzos, sorteos }));

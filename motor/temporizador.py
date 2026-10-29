@@ -7,7 +7,7 @@ import random
 from dataclasses import asdict, dataclass, field
 
 from motor.acciones import RUTA_DATOS
-from motor.generador import GeneradorCombos
+from motor.sorteo import SorteoBiblioteca
 from motor.ritmo import duracion_estimada, pausa_entre_combos
 
 PREPARACION = 3.0         # segundos al inicio del asalto antes del primer combo
@@ -63,13 +63,15 @@ def _reacciones(inicio: float, limite: float, rng: random.Random,
 
 
 def construir_guion(config: ConfigSesion, rng: random.Random | None = None,
-                    generador: GeneradorCombos | None = None) -> list[Evento]:
+                    generador=None) -> list[Evento]:
+    """`generador`: cualquier objeto con siguiente() (por defecto, el sorteo de la biblioteca)."""
     rng = rng or random.Random()
-    generador = generador or GeneradorCombos(config.nivel, zurdo=config.zurdo, rng=rng)
+    generador = generador or SorteoBiblioteca(config.nivel, zurdo=config.zurdo, rng=rng)
     reacciones = cargar_presets()["reacciones"]
     pausa = pausa_entre_combos(config.nivel, config.pausa)
     eventos: list[Evento] = []
     t_asalto = 0.0
+    pendiente = None  # la que no cupo al final del asalto: abre el siguiente (no se pierde)
 
     for n in range(1, config.asaltos + 1):
         inicio, fin = t_asalto, t_asalto + config.duracion_asalto
@@ -88,11 +90,12 @@ def construir_guion(config: ConfigSesion, rng: random.Random | None = None,
         # Colocar combinaciones en los huecos libres.
         t = inicio + PREPARACION
         while True:
-            combo = generador.siguiente()
+            combo, pendiente = pendiente or generador.siguiente(), None
             d = duracion_estimada(combo.acciones)
             while (choque := _solapa(t, t + d, reservados)):
                 t = choque[1] + MARGEN
             if t + d > fin:
+                pendiente = combo
                 break
             eventos.append(Evento(round(t, 2), "combo", n, d, combo.texto,
                                   [a.id for a in combo.acciones]))

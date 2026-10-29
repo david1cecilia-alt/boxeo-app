@@ -51,20 +51,40 @@ test("migrar dos veces no cambia nada", () => {
 
 test("completa campos que falten en datos v1 a medias", () => {
   const { datos } = migrar({ version: 1, perfil: { estilo: { cardio: "bueno" } } });
+  assert.equal(datos.perfil.estilo.cardio, "bueno");
+  assert.equal(datos.perfil.estilo.distancia, "no_se");
+  assert.deepEqual(datos.sesiones, []);
+});
+
+test("v2 → v3: el perfil gana voz «nombres» y ritmo 3, y conserva lo demás", () => {
+  const v2 = { ...vacio(), version: 2, sesiones: [{ id: "a" }],
+    perfil: { ...vacio().perfil, focos: ["jab"], estilo: { ...vacio().perfil.estilo, mi_estilo: "boxer" } } };
+  delete v2.perfil.sesion;
+  const { datos, migrado } = migrar(v2);
+  assert.equal(migrado, true);
+  assert.equal(datos.version, 3);
+  assert.deepEqual(datos.perfil.sesion, { voz: "nombres", ritmo: 3 });
+  assert.equal(datos.perfil.estilo.mi_estilo, "boxer");
+  assert.deepEqual(datos.perfil.focos, ["jab"]);
+  assert.deepEqual(datos.sesiones, [{ id: "a" }]);
+});
+
+test("v1 llega a v3 pasando por todas las migraciones", () => {
+  const { datos } = migrar({ version: 1, sesiones: [], perfil: { estilo: { cardio: "bueno" } } });
+  assert.equal(datos.version, 3);
+  assert.equal(datos.perfil.estilo.mi_estilo, "no_se");
+  assert.deepEqual(datos.perfil.sesion, { voz: "nombres", ritmo: 3 });
+});
 
 test("v1 → v2: el perfil gana «Mi estilo» sin elegir y conserva lo demás", () => {
   const v1 = { ...vacio(), version: 1, perfil: { ...vacio().perfil, estilo: { cardio: "bueno", distancia: "media" } } };
   delete v1.perfil.estilo.mi_estilo;
   const { datos, migrado } = migrar(v1);
   assert.equal(migrado, true);
-  assert.equal(datos.version, 2);
+  assert.equal(datos.version, VERSION);
   assert.equal(datos.perfil.estilo.mi_estilo, "no_se");
   assert.equal(datos.perfil.estilo.cardio, "bueno");
   assert.equal(datos.perfil.estilo.distancia, "media");
-});
-  assert.equal(datos.perfil.estilo.cardio, "bueno");
-  assert.equal(datos.perfil.estilo.distancia, "no_se");
-  assert.deepEqual(datos.sesiones, []);
 });
 
 test("datos de una versión más nueva no se tocan ni se sobrescriben", () => {

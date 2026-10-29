@@ -4,11 +4,14 @@
 // Esquema versionado: si cambia, se sube VERSION y se añade una migración en MIGRACIONES.
 // Si el almacenamiento falla, todo sigue funcionando en memoria y `persistente` pasa a false.
 
-export const VERSION = 2;
+export const VERSION = 3;
 const CLAVE = "boxeo";
 const CLAVE_V0 = "boxeo.historial"; // versión 0: un array de sesiones, antes del almacén
 
 export const NO_SE = "no_se";
+
+// Cómo se dicen las combinaciones y a qué ritmo: se eligen antes de cada sesión y se recuerdan.
+export const SESION_POR_DEFECTO = Object.freeze({ voz: "nombres", ritmo: 3 });
 
 export function perfilPorDefecto() {
   return {
@@ -20,6 +23,7 @@ export function perfilPorDefecto() {
     },
     focos: [],
     pesos: null, // null = los de data/perfil.json
+    sesion: { ...SESION_POR_DEFECTO },
   };
 }
 
@@ -51,6 +55,13 @@ const MIGRACIONES = {
     version: 2,
     perfil: { ...v1.perfil, estilo: { ...v1.perfil?.estilo, mi_estilo: NO_SE } },
   }),
+  // v2 → v3: el perfil recuerda «Cómo te las digo» y el ritmo (perfil.sesion); hasta ahora
+  // se decían siempre por su nombre.
+  2: (v2) => ({
+    ...v2,
+    version: 3,
+    perfil: { ...v2.perfil, sesion: { ...SESION_POR_DEFECTO } },
+  }),
 };
 
 // Rellena lo que falte con los valores por defecto (datos escritos a mano o a medias).
@@ -65,6 +76,7 @@ function completar(datos) {
       ...perfil,
       basicos: { ...base.perfil.basicos, ...perfil.basicos },
       estilo: { ...base.perfil.estilo, ...perfil.estilo },
+      sesion: { ...base.perfil.sesion, ...perfil.sesion },
     },
   };
 }

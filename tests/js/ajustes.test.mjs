@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { perfilPorDefecto } from "../../static/almacen.js";
-import { nuevoGuion, perfilGenerador, preferencias } from "../../static/ajustes.js";
+import { nuevoGuion, perfilGenerador, preferencias, recordarSesion } from "../../static/ajustes.js";
 import { accionesPorIds } from "../../static/motor/acciones.js";
 import { crearAzar } from "../../static/motor/azar.js";
 import { ultimoGolpe } from "../../static/motor/reglas.js";
@@ -57,7 +57,17 @@ for (const [peso, condicion] of [
 
 test("nivel y guardia del perfil se proponen al entrenar; «No lo sé» usa data/perfil.json", () => {
   const p = perfilPorDefecto();
-  assert.deepEqual(preferencias(p), { nivel: datos.perfil.nivel, zurdo: datos.perfil.guardia === "zurda" });
+  assert.deepEqual(preferencias(p),
+    { nivel: datos.perfil.nivel, zurdo: datos.perfil.guardia === "zurda", voz: "nombres", ritmo: 3 });
   p.basicos = { ...p.basicos, nivel: "3", guardia: "zurda" };
-  assert.deepEqual(preferencias(p), { nivel: 3, zurdo: true });
+  p.sesion = { voz: "ambos", ritmo: 5 };
+  assert.deepEqual(preferencias(p), { nivel: 3, zurdo: true, voz: "ambos", ritmo: 5 });
+});
+
+test("recordarSesion guarda voz y ritmo en el perfil y conserva lo demás", () => {
+  const guardados = [];
+  const perfil = { ...perfilPorDefecto(), focos: ["jab"] };
+  const almacen = { datos: { perfil }, guardarPerfil: (p) => guardados.push(p) };
+  recordarSesion(almacen, { voz: "numeros", ritmo: 1 });
+  assert.deepEqual(guardados, [{ ...perfil, sesion: { voz: "numeros", ritmo: 1 } }]);
 });

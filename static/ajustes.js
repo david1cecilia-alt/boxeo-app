@@ -19,12 +19,20 @@ export function nuevoGuion(config, perfilUsuario, azar) {
   return construirGuion(config, azar, generador);
 }
 
-// Nivel y guardia que se proponen al entrenar: los del perfil, o los de data/perfil.json si "No lo sé".
+// Lo que se propone al entrenar: nivel y guardia del perfil (o los de data/perfil.json si
+// "No lo sé"), y el modo de voz y el ritmo de la última sesión.
 export function preferencias(perfilUsuario) {
   const base = datos().perfil;
   const { guardia, nivel } = perfilUsuario.basicos;
   return {
     nivel: nivel === NO_SE ? base.nivel : Number(nivel),
     zurdo: (guardia === NO_SE ? base.guardia : guardia) === "zurda",
+    voz: perfilUsuario.sesion.voz,
+    ritmo: perfilUsuario.sesion.ritmo,
   };
+}
+
+// Guarda en el perfil el modo de voz y el ritmo elegidos (sin tocar lo demás).
+export function recordarSesion(almacen, { voz, ritmo }) {
+  almacen.guardarPerfil({ ...almacen.datos.perfil, sesion: { voz, ritmo } });
 }

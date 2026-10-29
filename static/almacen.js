@@ -1,5 +1,6 @@
 // Almacén de los datos del usuario en el navegador (localStorage): sesiones sin servidor,
-// valoraciones, perfil (con la voz elegida en Ajustes), notas del entrenador y revisiones. Nunca va al repo ni a data/.
+// valoraciones, perfil (con la voz elegida en Ajustes y cómo se agrupa el Historial), notas del
+// entrenador y revisiones. Nunca va al repo ni a data/.
 //
 // Esquema versionado: si cambia, se sube VERSION y se añade una migración en MIGRACIONES.
 // Si el almacenamiento falla, todo sigue funcionando en memoria y `persistente` pasa a false.
@@ -36,6 +37,11 @@ export function vozPorDefecto() {
   return { id: null, velocidad: "normal" };
 }
 
+// Cómo se agrupa la lista del Historial: "semana", "mes" o "ano" (AGRUPACIONES de vistas/resumen.js).
+export function historialPorDefecto() {
+  return { agrupar: "semana" };
+}
+
 export function perfilPorDefecto() {
   return {
     basicos: { guardia: NO_SE, nivel: NO_SE, inicio: null, altura_cm: null, peso_kg: null, alcance_cm: null },
@@ -47,6 +53,7 @@ export function perfilPorDefecto() {
     pesos: null, // null = los de data/perfil.json
     sesion: sesionPorDefecto(),
     voz: vozPorDefecto(),
+    historial: historialPorDefecto(),
   };
 }
 
@@ -96,10 +103,10 @@ const MIGRACIONES = {
     },
   }),
   // v4 → v5: el perfil recuerda la voz y su velocidad (Ajustes), con la automática y la velocidad
-  // de siempre; los focos de trabajo desaparecen.
+  // de siempre, y cómo se agrupa el Historial (por semana); los focos de trabajo desaparecen.
   4: (v4) => {
     const { focos, ...perfil } = v4.perfil ?? {};
-    return { ...v4, version: 5, perfil: { ...perfil, voz: vozPorDefecto() } };
+    return { ...v4, version: 5, perfil: { ...perfil, voz: vozPorDefecto(), historial: historialPorDefecto() } };
   },
 };
 
@@ -121,6 +128,7 @@ function completar(datos) {
         personalizada: { ...base.perfil.sesion.personalizada, ...perfil.sesion?.personalizada },
       },
       voz: { ...base.perfil.voz, ...perfil.voz },
+      historial: { ...base.perfil.historial, ...perfil.historial },
     },
   };
 }

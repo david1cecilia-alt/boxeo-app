@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { VERSION, claveSesion, crearAlmacen, migrar, sesionPorDefecto, vacio, vozPorDefecto } from "../../static/almacen.js";
+import { VERSION, claveSesion, crearAlmacen, historialPorDefecto, migrar, sesionPorDefecto, vacio, vozPorDefecto } from "../../static/almacen.js";
 
 // localStorage falso. `roto: true` simula un navegador que no deja guardar.
 function almacenamiento(inicial = {}, { roto = false } = {}) {
@@ -79,7 +79,7 @@ test("v1 llega a la versión actual pasando por todas las migraciones", () => {
 
 // Almacén v3 completo, como lo tenía quien usaba la app antes de la v4.
 function almacenV3() {
-  const { voz, ...perfil } = vacio().perfil;
+  const { voz, historial, ...perfil } = vacio().perfil;
   return {
     version: 3,
     sesiones: [{ ...SESION_V0, id: "s-1", ritmo: 4, voz: "numeros" }],
@@ -113,7 +113,7 @@ test("v3 → v4: nivel y zurdo salen de «Tus datos» y se conserva todo lo dem�
   assert.deepEqual(datos.valoraciones, v3.valoraciones);
   assert.deepEqual(datos.notas_entrenador, v3.notas_entrenador);
   assert.deepEqual(datos.revisiones, v3.revisiones);
-  const { sesion, voz, ...resto } = datos.perfil;
+  const { sesion, voz, historial, ...resto } = datos.perfil;
   const { sesion: _, focos, ...restoV3 } = v3.perfil;
   assert.deepEqual(resto, restoV3);
 });
@@ -156,7 +156,7 @@ test("importar una copia v3 la migra a la versión actual conservando revisiones
 // Almacén v4 completo, como lo tiene hoy quien ya usa la app.
 function almacenV4() {
   const v4 = migrar(almacenV3()).datos;
-  const { voz, ...perfil } = v4.perfil;
+  const { voz, historial, ...perfil } = v4.perfil;
   return {
     ...v4,
     version: 4,
@@ -168,14 +168,15 @@ function almacenV4() {
   };
 }
 
-test("v4 → v5: voz automática a velocidad normal, sin focos, y se conserva todo lo demás", () => {
+test("v4 → v5: voz automática a velocidad normal, Historial por semana, sin focos, y se conserva todo lo demás", () => {
   const v4 = almacenV4();
   const { datos, migrado } = migrar(structuredClone(v4));
   assert.equal(migrado, true);
   assert.equal(datos.version, 5);
   assert.deepEqual(datos.perfil.voz, { id: null, velocidad: "normal" });
+  assert.deepEqual(datos.perfil.historial, { agrupar: "semana" });
   assert.equal("focos" in datos.perfil, false);
-  const { voz, ...perfil } = datos.perfil;
+  const { voz, historial, ...perfil } = datos.perfil;
   const { focos, ...perfilV4 } = v4.perfil;
   assert.deepEqual(perfil, perfilV4);
   for (const campo of ["sesiones", "valoraciones", "notas_entrenador", "revisiones"]) {
@@ -197,6 +198,7 @@ test("al abrir un almacén v4 se guarda en v5 sin focos y sin perder nada", () =
   assert.equal(guardado.version, 5);
   assert.deepEqual(guardado, almacen.datos);
   assert.equal("focos" in guardado.perfil, false);
+  assert.deepEqual(guardado.perfil.historial, { agrupar: "semana" });
   assert.deepEqual(guardado.perfil.sesion, v4.perfil.sesion);
   assert.deepEqual(guardado.notas_entrenador, v4.notas_entrenador);
 });
@@ -207,6 +209,7 @@ test("importar una copia v4 la deja en v5", () => {
   almacen.importar({ app: "boxeo", version: 4, datos: v4 });
   assert.equal(almacen.datos.version, 5);
   assert.deepEqual(almacen.datos.perfil.voz, vozPorDefecto());
+  assert.deepEqual(almacen.datos.perfil.historial, historialPorDefecto());
   assert.deepEqual(almacen.datos.valoraciones, v4.valoraciones);
 });
 
@@ -217,6 +220,17 @@ test("la voz elegida se guarda y se relee; a medias se completa", () => {
   assert.deepEqual(crearAlmacen({ storage }).datos.perfil.voz, { id: "urn:voz-helena", velocidad: "rapida" });
   almacen.guardarPerfil({ ...almacen.datos.perfil, voz: { velocidad: "lenta" } });
   assert.deepEqual(almacen.datos.perfil.voz, { id: null, velocidad: "lenta" });
+});
+
+test("la agrupación del Historial se guarda y se relee; un v5 sin ella (anterior a este cambio) la completa", () => {
+  const storage = almacenamiento();
+  const almacen = crearAlmacen({ storage });
+  almacen.guardarPerfil({ ...almacen.datos.perfil, historial: { agrupar: "mes" } });
+  assert.deepEqual(crearAlmacen({ storage }).datos.perfil.historial, { agrupar: "mes" });
+  const { historial, ...perfil } = vacio().perfil;
+  const { datos, migrado } = migrar({ ...vacio(), perfil });
+  assert.equal(migrado, false);
+  assert.deepEqual(datos.perfil.historial, { agrupar: "semana" });
 });
 
 test("completa la sesión personalizada a medias con los valores por defecto", () => {

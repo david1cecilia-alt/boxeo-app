@@ -157,13 +157,16 @@ py -3.12 -m venv .venv
 Los iconos se regeneran desde `static/iconos/guante.svg` con `herramientas\generar_iconos.py`
 (usa Edge o Chrome headless).
 
-El maniquí 3D (`static/maniqui/maniqui.glb`) se crea con Blender 4.5 LTS y la extensión MPFB
-(MakeHuman para Blender), y el script reescribe también el esqueleto de `data/posturas.json`:
+El maniquí 3D (`static/maniqui/maniqui.glb`) se crea con Blender 4.5 LTS a partir del hombre
+Superhero de Quaternius (Universal Base Characters, CC0), que no va en el repo, y el script reescribe
+también el esqueleto de `data/posturas.json`:
 
 ```powershell
-blender --online-mode --command extension install mpfb --enable   # una vez
-blender --background --python herramientas\blender\crear_maniqui.py
+blender --background --factory-startup --python herramientas\blender\crear_maniqui_quaternius.py -- ruta\Superhero_Male_FullBody.gltf
 ```
+
+Sin ruta usa la variable `MANIQUI_QUATERNIUS` o `Descargas\quaternius-superhero-male\`. El maniquí
+anterior, de MPFB, sigue en `herramientas\blender\crear_maniqui.py`.
 
 ## Estructura
 

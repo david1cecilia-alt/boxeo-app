@@ -17,11 +17,14 @@ con `herramientas/convertir_imagenes.py`.
 Anton e Inter, con licencia SIL Open Font License 1.1 (`static/fuentes/OFL-*.txt`), tomadas de Fontsource.
 
 ## Maniquí 3D
-`static/maniqui/maniqui.glb` sale de `herramientas/blender/crear_maniqui.py` con MPFB 2.0.18
-(MakeHuman para Blender): la malla base, los targets (macros y forma del cuerpo) y el esqueleto
-«game engine» de MakeHuman tienen licencia **CC0 1.0** (dominio público). El código de MPFB
-(GPL-3.0) solo se usa en Blender para generarlo: no se distribuye con la app. Guantes, botas,
-pantalón, cabeza y cuello de maniquí y puntos rojos los añade el script.
+Personaje base: Quaternius, Universal Base Characters (CC0).
+`static/maniqui/maniqui.glb` sale de `herramientas/blender/crear_maniqui_quaternius.py` a partir del
+hombre Superhero del kit (licencia **CC0 1.0**, dominio público; el glTF original no va en el repo).
+Guantes, botas, pantalón y puntos rojos los añade el script, con las piezas de `crear_maniqui.py`.
+
+`herramientas/blender/crear_maniqui.py` sigue sirviendo para el maniquí anterior, hecho con MPFB
+2.0.18 (MakeHuman para Blender): su malla base, targets y esqueleto «game engine» son **CC0 1.0** y
+el código de MPFB (GPL-3.0) solo se usa en Blender para generarlo.
 
 ## Bibliotecas
 Three.js r170, con licencia MIT (`static/vendor/three/LICENSE`), y sus módulos `GLTFLoader`,

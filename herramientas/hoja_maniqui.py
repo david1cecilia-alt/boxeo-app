@@ -34,7 +34,7 @@ PAGINA = """<!doctype html><meta charset="utf-8">
 </style>
 <canvas id="trabajo"></canvas>
 <section class="referencia"><h2>Referencia: guardia.png</h2><img id="referencia" alt=""></section>
-<section id="hoja"><h2>Maniquí GLB (MPFB) · ortodoxa</h2></section>
+<section id="hoja"><h2>Maniquí GLB (Quaternius) · ortodoxa</h2></section>
 <script type="module">
 import * as THREE from "./vendor/three/three.module.min.js";
 import { crearEscena } from "./maniqui/escena.js";

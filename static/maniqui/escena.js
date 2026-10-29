@@ -1,8 +1,9 @@
 // Escena 3D del maniquí (Three.js). Solo se carga con import() al abrir una ficha con
 // postura: la app arranca sin Three.js.
 // El maniquí es un GLB (maniqui.glb, comprimido con Draco) que crea
-// herramientas/blender/crear_maniqui.py con MPFB: cuerpo de 1,86 m blanco mate, cabeza de maniquí,
-// guantes y botas gris oscuro, pantalón negro con cinturilla roja y punto rojo en las juntas.
+// herramientas/blender/crear_maniqui_quaternius.py con el hombre Superhero de Quaternius: cuerpo de
+// 1,86 m blanco mate con su mapa de normales (el músculo), sin cejas ni ojos, guantes y botas gris
+// oscuro, pantalón negro con cinturilla roja y punto rojo en las juntas.
 // Cada articulación de data/posturas.json mueve su `hueso` del GLB (y los que cuelgan de él sin
 // articulación propia). Material satinado con oclusión ambiental suave en las juntas, líneas
 // finas de unión de maniquí (cuello, hombros, cintura, codos, muñecas y rodillas), borde de luz
@@ -128,8 +129,11 @@ function acabado(material, uniformes, { halo = false, lineas = false } = {}) {
       reflectedLight.directSpecular *= ao;`)
       .replace("#include <tonemapping_fragment>", `#include <tonemapping_fragment>
       #ifdef CON_HALO
-      float fresnel = pow(1.0 - saturate(dot(normal, normalize(vViewPosition))), ${HALO.dureza.toFixed(1)});
-      float hacia = saturate(1.6 * dot(nMundo, espalda) + 0.8 * max(dot(nMundo, arribaPecho), 0.0) - 0.1);
+      // Con la normal sin el mapa de normales: el borde sigue la silueta, no el músculo.
+      vec3 nSilueta = normalize(nonPerturbedNormal);
+      float fresnel = pow(1.0 - saturate(dot(nSilueta, normalize(vViewPosition))), ${HALO.dureza.toFixed(1)});
+      vec3 nSiluetaMundo = normalize(inverseTransformDirection(nSilueta, viewMatrix));
+      float hacia = saturate(1.6 * dot(nSiluetaMundo, espalda) + 0.8 * max(dot(nSiluetaMundo, arribaPecho), 0.0) - 0.1);
       gl_FragColor.rgb = mix(gl_FragColor.rgb, colorHalo, saturate(fresnel * hacia * ${HALO.fuerza.toFixed(1)}));
       #endif`);
   };
@@ -259,7 +263,13 @@ export async function crearEscena(lienzo, datos) {
   const porNombre = { ...materiales, rojo };
   modelo.traverse((o) => {
     if (!o.isMesh) return;
+    // El mapa de normales del GLB (piel y espalda) pasa a nuestro material.
+    const normales = o.material.normalMap;
     o.material = porNombre[o.material.name] ?? materiales.piel;
+    if (normales && !o.material.normalMap) {
+      o.material.normalMap = normales;
+      o.material.needsUpdate = true;
+    }
     o.castShadow = true;
     o.frustumCulled = false; // la caja de la malla es la del reposo, no la de la postura
   });

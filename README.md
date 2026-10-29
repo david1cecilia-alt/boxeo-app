@@ -20,8 +20,9 @@ es una PWA instalable y todo se calcula en el dispositivo.
 
 ## Qué hace
 
-- **Tres pestañas** con barra inferior: *Entrenar*, *Historial* y *Perfil*. Rutas por hash
-  (`#historial`), así que funcionan en GitHub Pages y sin conexión.
+- **Tres pestañas** con barra inferior: *Entrenar*, *Historial* y *Perfil*, y **Ajustes** aparte
+  (engranaje arriba a la derecha en el móvil; entrada en el menú lateral en el PC). Rutas por hash
+  (`#historial`, `#ajustes`), así que funcionan en GitHub Pages y sin conexión.
 - **Pensada para usar con guantes a 1–2 m del móvil**: reloj enorme, combinación en grande,
   botones de 76 px y un color por fase (asalto, últimos 10 s, descanso, reacción, pausa).
   Durante la sesión solo se ve lo esencial.
@@ -30,7 +31,7 @@ es una PWA instalable y todo se calcula en el dispositivo.
 - **Entrenar recuerda tus elecciones**: asalto, nivel, ritmo, «Nombrar combinaciones», zurdo y
   Reacción quedan como los dejaste. La sesión **Personalizada** (asaltos, duración y descanso) se
   guarda sola al cambiarla y no se pierde al elegir Amateur o Prueba. Cambiar la guardia o el nivel
-  en Perfil también los cambia en Entrenar; elegirlos en Entrenar no toca el Perfil.
+  en Ajustes también los cambia en Entrenar; elegirlos en Entrenar no toca Ajustes.
 - **Asaltos configurables** (preset amateur 3×3 min con 1 min de descanso): campana al empezar y
   acabar, tablillas y aviso por voz a los 10 s del final.
 - **Combinaciones con sentido técnico**, dichas como elijas en «Nombrar combinaciones»: por **Números**
@@ -50,16 +51,23 @@ es una PWA instalable y todo se calcula en el dispositivo.
 - **Historial** con resumen semanal y mensual, dos gráficos SVG hechos a mano (asaltos por
   semana y RPE medio, con el mismo eje de semanas), detalle de cada sesión, notas editables y
   borrado.
-- **Perfil**: guardia, nivel, estilo (cada pregunta admite «No lo sé»), focos de trabajo, notas del
-  entrenador y los puntos marcados `REVISAR CON ENTRENADOR` en el motor para apuntar su respuesta.
-  Los **pesos del sorteo** (más finales en gancho, más bloquear-y-devolver, más entradas con
-  jab) se ajustan con deslizadores, sustituyen a los de `data/perfil.json` y deciden qué
-  combinaciones de la biblioteca salen más.
+- **Ajustes** (lo que cambia el entreno):
+  - **Voz**: cualquiera de las voces en español del dispositivo o «Automática», a velocidad Lenta
+    (0,9), Normal (1,1) o Rápida (1,3), con «Probar voz». Si la voz guardada no existe en otro móvil
+    o PC, se usa la automática. Entrenar muestra la voz que de verdad suena, y el motor alarga o
+    acorta su estimación de lo que tarda la voz según la velocidad.
+  - **Tus datos**: guardia y nivel actual.
+  - **Qué te dicta la app**: los **pesos del sorteo** (más finales en gancho, más
+    bloquear-y-devolver, más entradas con jab) se ajustan con deslizadores, sustituyen a los de
+    `data/perfil.json` y deciden qué combinaciones de la biblioteca salen más.
+- **Perfil** (informativo): estilo (cada pregunta admite «No lo sé»), sobre ti (fecha de inicio y
+  medidas opcionales), notas del entrenador y los puntos marcados `REVISAR CON ENTRENADOR` en el
+  motor para apuntar su respuesta.
 - **Sin conexión**: service worker con la app entera en caché.
 
 ## Tus datos
 
-Perfil, últimas elecciones de Entrenar, notas y valoraciones se guardan **solo en el navegador** (`localStorage`); nunca van al
+Perfil, ajustes (voz incluida), últimas elecciones de Entrenar, notas y valoraciones se guardan **solo en el navegador** (`localStorage`); nunca van al
 repositorio ni a `data/`. El almacén (`static/almacen.js`) tiene esquema versionado con
 migraciones: las sesiones guardadas con versiones anteriores siguen apareciendo. Si el navegador
 no deja guardar, la app sigue funcionando en memoria y avisa. Como `localStorage` se borra al
@@ -119,7 +127,7 @@ valida con el de Python:
 | Qué se comprueba | Cómo |
 |---|---|
 | Ninguna combinación JS rompe una regla | 5.000 por nivel, ortodoxas y zurdas, pasan `reglas.validar()` de Python |
-| Los guiones JS respetan los tiempos | 35 guiones (con y sin modo reacción, zurdo, pausas extremas) cumplen los mismos invariantes que los de Python: sin solapes, aviso a 10 s, duraciones, pausas y descansos |
+| Los guiones JS respetan los tiempos | 50 guiones (con y sin modo reacción, zurdo, pausas extremas, las tres velocidades de voz) cumplen los mismos invariantes que los de Python: sin solapes, aviso a 10 s, duraciones, pausas y descansos |
 | El perfil pesa igual | Frecuencia de finales en gancho, bloquear-y-devolver y entrada con jab: JS a ±5 puntos de Python (5.000 muestras; la diferencia real es < 2) |
 | El espejo zurdo es idéntico | `espejo()` da exactamente lo mismo en los dos sobre todo el catálogo |
 | JS es reproducible | Misma semilla ⇒ misma salida, byte a byte |
@@ -137,7 +145,7 @@ solo comando lo cubra todo:
 |---|---|
 | Pausa y reanudación | Con un reloj falso y pausas en mitad de combos y descansos, cada evento del guion se lanza una sola vez, en orden y en su segundo de sesión |
 | Los pesos del perfil llegan al generador | Subir cada peso aumenta la proporción de esas combinaciones en el guion; los pesos sustituyen a los de `perfil.json` |
-| Migración del almacén | El historial anterior (v0) pasa a v1 conservando las sesiones; v3 pasa a v4 tomando nivel y guardia del perfil y conservando historial, valoraciones, notas y revisiones; migrar dos veces no cambia nada; datos dañados o de una versión más nueva no se sobrescriben |
+| Migración del almacén | El historial anterior (v0) pasa a v1 conservando las sesiones; v3 pasa a v4 tomando nivel y guardia del perfil y conservando historial, valoraciones, notas y revisiones; v4 pasa a v5 con la voz automática a velocidad normal, sin los focos de trabajo y sin tocar lo demás; migrar dos veces no cambia nada; datos dañados o de una versión más nueva no se sobrescriben |
 | Copia de seguridad | Exportar → JSON → importar da exactamente los mismos datos |
 | Ids sin colisiones | Las sesiones locales usan UUID: borrar o importar no mezcla valoraciones |
 | Contraste | Los colores de `estilos.css` cumplen AA (texto 4,5:1; bordes, foco y gráficos 3:1) |
@@ -173,7 +181,7 @@ Los iconos se regeneran desde `static/iconos/guante.svg` con `herramientas\gener
 |---|---|
 | `motor/` | Lógica pura en Python: acciones y espejo, reglas, generador, ritmo, temporizador |
 | `static/motor/` | Port JS del motor |
-| `static/vistas/` | Las tres pestañas, el formulario post-sesión y el gráfico SVG |
+| `static/vistas/` | Las tres pestañas, Ajustes, el formulario post-sesión y el gráfico SVG |
 | `static/` | Arranque, rutas, almacén, reproductor, voz, sonido, estilos, service worker y manifest |
 | `app/` | API FastAPI y acceso a SQLite |
 | `data/` | Vocabulario, biblioteca de combinaciones por niveles, perfil por defecto, presets y puntos a revisar (JSON): fuente única para los dos motores |

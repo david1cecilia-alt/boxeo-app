@@ -743,7 +743,7 @@ dialog::backdrop { background: var(--velo); }
   .config-tarjeta { padding: 24px; gap: 18px; }
   .presets { display: flex; align-items: center; gap: 16px; }
   .presets .fila-chips { flex: none; flex-wrap: nowrap; } /* siempre en una fila */
-  .resumen-presets { flex: none; margin-left: auto; }
+  .resumen-presets { display: none; } /* ya sale en «Tu sesión» (los lectores lo siguen oyendo en los chips) */
   .niveles label span { min-height: 84px; font-size: 0.875rem; }
   .niveles b { font-size: 32px; }
   .config-sesion {

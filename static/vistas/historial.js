@@ -118,6 +118,7 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
           ${dato("Asaltos completados", s.asaltos)}
           ${dato("Asalto / descanso", `${minutos(s.duracion_asalto)} / ${minutos(s.descanso)}`)}
           ${s.pausa != null ? dato("Pausa entre combos", `${s.pausa} s`) : ""}
+          ${s.ritmo != null ? dato("Ritmo", `${s.ritmo} de 5`) : ""}
           ${s.modo_reaccion != null ? dato("Modo reacción", s.modo_reaccion ? "Sí" : "No") : ""}
         </dl>
       </section>

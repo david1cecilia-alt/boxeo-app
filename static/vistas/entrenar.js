@@ -1,17 +1,19 @@
 // Pestaña Entrenar: configuración antes de empezar y pantalla de sesión (para usar con
 // guantes a 1–2 m del móvil). No contiene reglas de boxeo: el guion lo genera el motor y
 // el reproductor lo lanza en tiempo de sesión (con pausa).
-import { nuevoGuion, preferencias } from "../ajustes.js";
-import { catalogo, nombreCorto } from "../motor/acciones.js";
+import { nuevoGuion, preferencias, recordarSesion } from "../ajustes.js";
+import { catalogo, nombreCorto, numero } from "../motor/acciones.js";
 import { crearAzar, semillaAleatoria } from "../motor/azar.js";
 import { datos } from "../motor/datos.js";
-import { PAUSA_POR_NIVEL } from "../motor/ritmo.js";
+import { PAUSA_POR_RITMO } from "../motor/ritmo.js";
 import { validarConfig } from "../motor/temporizador.js";
 import { crearReproductor } from "../reproductor.js";
 import { activarSonido, campana, pitido, tablillas } from "../sonido.js";
 import { $, anunciar, esc, minutos } from "./dom.js";
 
 const SEGUNDOS_FINAL = 10;
+const NOMBRE_RITMO = { 1: "Calmado", 2: "Tranquilo", 3: "Constante", 4: "Vivo", 5: "Intenso" };
+const decimal = (x) => String(x).replace(".", ",");
 const TEXTO_FASE = {
   asalto: "En asalto", final: "Últimos 10 s", descanso: "Descanso", reaccion: "¡Reacción!", pausa: "En pausa",
 };
@@ -44,18 +46,27 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     resumir();
   }
 
-  // Nivel y guardia del perfil (solo cuando el perfil cambia, para no pisar lo que se elija aquí).
+  // Nivel, guardia, voz y ritmo del perfil (solo cuando el perfil cambia, para no pisar lo que
+  // se elija aquí).
   function aplicarPerfil() {
     if (perfilAplicado === almacen.datos.perfil) return;
     perfilAplicado = almacen.datos.perfil;
-    const { nivel, zurdo } = preferencias(perfilAplicado);
+    const { nivel, zurdo, voz, ritmo } = preferencias(perfilAplicado);
     $(`input[name="nivel"][value="${nivel}"]`).checked = true;
+    $(`input[name="voz"][value="${voz}"]`).checked = true;
+    $("#ritmo").value = ritmo;
     $("#zurdo").checked = zurdo;
     resumir();
   }
 
+  // Voz y ritmo se recuerdan para la próxima sesión.
+  function recordar() {
+    const { voz, ritmo } = leerConfig();
+    recordarSesion(almacen, { voz, ritmo });
+    perfilAplicado = almacen.datos.perfil;
+  }
+
   function leerConfig() {
-    const pausa = $("#pausa-combos").value;
     return {
       asaltos: Number($("#asaltos").value),
       duracion_asalto: Number($("#duracion").value),
@@ -63,14 +74,18 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       nivel: Number($('input[name="nivel"]:checked').value),
       zurdo: $("#zurdo").checked,
       modo_reaccion: $("#reaccion").checked,
-      pausa: pausa === "" ? null : Number(pausa),
+      pausa: null, // la del ritmo
+      ritmo: Number($("#ritmo").value),
+      voz: $('input[name="voz"]:checked')?.value ?? "nombres",
     };
   }
 
   function resumir() {
     const c = leerConfigSegura();
     if (!c) return;
-    $("#pausa-combos").placeholder = `${PAUSA_POR_NIVEL[c.nivel]} (la del nivel)`;
+    const [min, max] = PAUSA_POR_RITMO[c.ritmo];
+    $("#resumen-ritmo").textContent = `${NOMBRE_RITMO[c.ritmo]} · ${decimal(min)}–${decimal(max)} s entre combinaciones`;
+    $("#ritmo").style.setProperty("--lleno", `${(c.ritmo - 1) * 25}%`);
     const resumen = `${c.asaltos} × ${minutos(c.duracion_asalto)} · descanso ${minutos(c.descanso)}`;
     $("#resumen-config").textContent = resumen;
     $("#resumen-grande").textContent = resumen;
@@ -89,7 +104,11 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   for (const id of ["asaltos", "duracion", "descanso"]) {
     $(`#${id}`).addEventListener("input", () => { marcarPreset(""); resumir(); });
   }
-  form.addEventListener("change", resumir);
+  form.addEventListener("change", (e) => {
+    if (e.target.name === "voz" || e.target.id === "ritmo") recordar();
+    resumir();
+  });
+  $("#ritmo").addEventListener("input", resumir);
   form.addEventListener("submit", (e) => { e.preventDefault(); empezar(); });
 
   // ---------- Sesión ----------
@@ -207,9 +226,10 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     }
   }
 
-  // En grande lo actual, paso a paso y numerado con el tipo de cada acción (golpe, defensa,
-  // pies) y su nombre corto; en pequeño, la combinación anterior (las señales no cuentan).
-  // Los ids ya vienen en espejo para el zurdo y el catálogo tiene las dos versiones.
+  // En grande lo actual, paso a paso con el tipo de cada acción (golpe, defensa, pies) y su
+  // nombre corto; en pequeño, la combinación anterior (las señales no cuentan). Con Números o
+  // Ambos, cada golpe lleva su número (el del zurdo, por su mano adelantada/trasera); con
+  // Nombres, el círculo solo marca el tipo. Los ids ya vienen en espejo para el zurdo.
   function mostrarCombo(texto, ids) {
     const acciones = ids.map((id) => catalogo().get(id));
     const anterior = estado.ultimoCombo;
@@ -218,10 +238,12 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       estado.ultimoCombo = texto;
       return mostrarTexto(texto);
     }
+    const { voz, zurdo } = estado.config;
     const cortos = acciones.map(nombreCorto);
-    estado.ultimoCombo = cortos.join(" · ");
+    const numeros = acciones.map((a) => (voz === "nombres" ? null : numero(a, zurdo)));
+    estado.ultimoCombo = cortos.map((c, i) => (numeros[i] ? `${numeros[i]} ${c}` : c)).join(" · ");
     $("#combo").innerHTML = `<ol class="pasos" aria-label="${esc(texto)}">${acciones.map((a, i) =>
-      `<li class="paso-${a.tipo}"><i aria-hidden="true">${i + 1}</i>${esc(cortos[i])}</li>`).join("")}</ol>`;
+      `<li class="paso-${a.tipo}"><i aria-hidden="true">${numeros[i] ?? ""}</i>${esc(cortos[i])}</li>`).join("")}</ol>`;
     $("#leyenda").hidden = false;
   }
 
@@ -274,6 +296,8 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       duracion_asalto: sesion.config.duracion_asalto,
       descanso: sesion.config.descanso,
       pausa: sesion.config.pausa,
+      ritmo: sesion.config.ritmo,
+      voz: sesion.config.voz,
       modo_reaccion: sesion.config.modo_reaccion,
       combinaciones: sesion.dictadas,
     };

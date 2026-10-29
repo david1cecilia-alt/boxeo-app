@@ -40,9 +40,22 @@
           <div class="tarjeta cristal config-tarjeta">
             <fieldset class="niveles">
               <legend><span>Nivel</span><span id="resumen-config" class="resumen-config"></span></legend>
-              <label><input type="radio" name="nivel" value="1"><span><b>1</b>Principiante</span></label>
-              <label><input type="radio" name="nivel" value="2"><span><b>2</b>Intermedio</span></label>
+              <label><input type="radio" name="nivel" value="1"><span><b>1</b>Básico</span></label>
+              <label><input type="radio" name="nivel" value="2"><span><b>2</b>Medio</span></label>
               <label><input type="radio" name="nivel" value="3"><span><b>3</b>Avanzado</span></label>
+            </fieldset>
+            <hr>
+            <div class="ritmo">
+              <label for="ritmo" class="cabeza-campo"><span>Ritmo</span><span id="resumen-ritmo" class="resumen-config"></span></label>
+              <input type="range" id="ritmo" min="1" max="5" step="1" value="3" aria-describedby="resumen-ritmo">
+              <div class="marcas-ritmo" aria-hidden="true"><span>Calmado</span><span>Intenso</span></div>
+            </div>
+            <hr>
+            <fieldset class="niveles modos-voz">
+              <legend><span>Cómo te las digo</span></legend>
+              <label><input type="radio" name="voz" value="numeros"><span><b>1 · 2</b>Números</span></label>
+              <label><input type="radio" name="voz" value="nombres"><span><b>Jab</b>Nombres</span></label>
+              <label><input type="radio" name="voz" value="ambos"><span><b>1 jab</b>Ambos</span></label>
             </fieldset>
             <hr>
             <div class="interruptores">
@@ -57,7 +70,6 @@
                 <label class="campo">Asaltos <input id="asaltos" type="number" inputmode="numeric" min="1" max="20"></label>
                 <label class="campo">Asalto (s) <input id="duracion" type="number" inputmode="numeric" min="20" max="600" step="10"></label>
                 <label class="campo">Descanso (s) <input id="descanso" type="number" inputmode="numeric" min="0" max="300" step="5"></label>
-                <label class="campo">Pausa entre combos (s) <input id="pausa-combos" type="number" inputmode="decimal" min="0" max="30" step="0.5"></label>
               </div>
             </details>
           </div>

@@ -234,11 +234,34 @@ hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
 
 /* Nivel: tres botones grandes (radios); el elegido, en rojo. */
 .niveles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.niveles legend {
+.niveles legend, .cabeza-campo {
   display: flex; justify-content: space-between; align-items: baseline; gap: 8px; width: 100%;
-  margin-bottom: 14px; font-size: 0.8125rem;
+  margin-bottom: 14px; font-size: 0.8125rem; color: var(--suave);
 }
-.niveles legend span:first-child { font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+:is(.niveles legend, .cabeza-campo) span:first-child { font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.modos-voz b { font-size: 20px; white-space: nowrap; }
+
+/* Ritmo: barra 1-5, de Calmado a Intenso. */
+.ritmo input[type="range"] {
+  appearance: none; -webkit-appearance: none; display: block; width: 100%; height: 44px; margin: 0;
+  padding: 0; border: 0; background: transparent; cursor: pointer;
+  --lleno: 50%;
+}
+.ritmo input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px; border-radius: 3px;
+  background: linear-gradient(to right, var(--acento-relleno) var(--lleno), rgba(255, 255, 255, 0.14) var(--lleno));
+}
+.ritmo input[type="range"]::-moz-range-track { height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.14); }
+.ritmo input[type="range"]::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--acento-relleno); }
+.ritmo input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 28px; height: 28px; margin-top: -11px; border-radius: 50%;
+  background: var(--texto); border: 4px solid var(--acento-relleno);
+}
+.ritmo input[type="range"]::-moz-range-thumb {
+  width: 20px; height: 20px; border-radius: 50%; background: var(--texto); border: 4px solid var(--acento-relleno);
+}
+.ritmo input[type="range"]:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; border-radius: 8px; }
+.marcas-ritmo { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--suave); }
 .niveles label { position: relative; }
 .niveles label span {
   display: grid; place-content: center; text-align: center; min-height: 68px; padding: 6px 2px;

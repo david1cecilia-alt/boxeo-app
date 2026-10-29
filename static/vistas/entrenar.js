@@ -1,7 +1,9 @@
 // Pestaña Entrenar: configuración antes de empezar y pantalla de sesión (para usar con
 // guantes a 1–2 m del móvil). No contiene reglas de boxeo: el guion lo genera el motor y
 // el reproductor lo lanza en tiempo de sesión (con pausa).
-import { PERSONALIZADO, nuevoGuion, personalizadaValida, preferencias, recordarSesion } from "../ajustes.js";
+import {
+  NOMBRE_RITMO, PERSONALIZADO, nuevoGuion, personalizadaValida, preferencias, recordarSesion, resumenElecciones,
+} from "../ajustes.js";
 import { crearAzar, semillaAleatoria } from "../motor/azar.js";
 import { datos } from "../motor/datos.js";
 import { PAUSA_POR_RITMO } from "../motor/ritmo.js";
@@ -14,7 +16,6 @@ import { $, anunciar, esc, minutos } from "./dom.js";
 import { pasosCombo } from "./pasos.js";
 
 const SEGUNDOS_FINAL = 10;
-const NOMBRE_RITMO = { 1: "Calmado", 2: "Tranquilo", 3: "Constante", 4: "Vivo", 5: "Intenso" };
 const decimal = (x) => String(x).replace(".", ",");
 const TEXTO_FASE = {
   asalto: "En asalto", final: "Últimos 10 s", descanso: "Descanso", reaccion: "¡Reacción!", pausa: "En pausa",
@@ -108,6 +109,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     const resumen = `${c.asaltos} × ${minutos(c.duracion_asalto)} · descanso ${minutos(c.descanso)}`;
     $("#resumen-config").textContent = resumen;
     $("#resumen-grande").textContent = resumen;
+    $("#resumen-elecciones").textContent = resumenElecciones(c);
   }
 
   function leerConfigSegura() {

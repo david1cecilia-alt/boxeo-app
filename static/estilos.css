@@ -345,7 +345,7 @@ input[type="file"].solo-lectores:focus-visible + *, label.boton:focus-within { o
 /* ---------- Entrenar ---------- */
 .config-opciones, .config-sesion { display: grid; gap: 14px; min-width: 0; }
 .config-tarjeta { display: grid; gap: 14px; padding: 16px; }
-.config-titulo, .resumen-grande { display: none; margin: 0; }
+.config-titulo, .resumen-grande, .resumen-elecciones { display: none; margin: 0; }
 .empezar {
   min-height: 64px; width: 100%; gap: 12px;
   font-family: var(--letra-titular); font-weight: 400; font-size: 26px; letter-spacing: 0.08em; text-transform: uppercase;
@@ -752,6 +752,7 @@ dialog::backdrop { background: var(--velo); }
   }
   .config-titulo { display: block; font-size: 2.25rem; }
   .resumen-grande { display: block; margin-top: -6px; color: var(--suave); font-size: 1.05rem; }
+  .resumen-elecciones { display: block; margin-top: -10px; color: var(--suave); font-size: 0.875rem; }
 
   /* Sesión: reloj y combinación centrados a pantalla completa. */
   #pantalla { padding: 32px 48px; align-items: center; }

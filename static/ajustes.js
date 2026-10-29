@@ -7,6 +7,17 @@ import { construirGuion, validarConfig } from "./motor/temporizador.js";
 
 export const PERSONALIZADO = "personalizado"; // el asalto que no es un preset de data/presets.json
 
+export const NOMBRE_NIVEL = { 1: "Básico", 2: "Medio", 3: "Avanzado" };
+export const NOMBRE_RITMO = { 1: "Calmado", 2: "Tranquilo", 3: "Constante", 4: "Vivo", 5: "Intenso" };
+export const NOMBRE_VOZ = { numeros: "Números", nombres: "Nombres", ambos: "Ambos" };
+
+// Lo elegido en una línea para «Tu sesión»: «Medio · Vivo · Números · Reacción». Zurdo y
+// Reacción solo si están activados.
+export function resumenElecciones({ nivel, ritmo, voz, zurdo, modo_reaccion }) {
+  return [NOMBRE_NIVEL[nivel], NOMBRE_RITMO[ritmo], NOMBRE_VOZ[voz], zurdo && "Zurdo", modo_reaccion && "Reacción"]
+    .filter(Boolean).join(" · ");
+}
+
 export const PESOS = ["termina_en_gancho", "bloquear_y_devolver", "entrada_con_jab"];
 
 // Perfil para el generador: los pesos editados SUSTITUYEN a los de data/perfil.json.

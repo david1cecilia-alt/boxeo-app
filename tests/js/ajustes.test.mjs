@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { crearAlmacen, perfilPorDefecto } from "../../static/almacen.js";
 import {
-  nuevoGuion, perfilGenerador, personalizadaValida, preferencias, recordarSesion, seguirBasicos,
+  nuevoGuion, perfilGenerador, personalizadaValida, preferencias, recordarSesion, resumenElecciones, seguirBasicos,
 } from "../../static/ajustes.js";
 import { accionesPorIds } from "../../static/motor/acciones.js";
 import { crearAzar } from "../../static/motor/azar.js";
@@ -176,4 +176,14 @@ test("tocar otras cosas del Perfil (pesos, focos, estilo, medidas) no pisa el ni
   almacen.guardarPerfil(p);
   assert.equal(preferencias(almacen.datos.perfil).nivel, 3);
   assert.equal(preferencias(almacen.datos.perfil).zurdo, true);
+});
+
+test("la línea de elecciones de «Tu sesión»: nivel · ritmo · voz, y Zurdo y Reacción solo si están", () => {
+  const base = { nivel: 2, ritmo: 4, voz: "numeros", zurdo: false, modo_reaccion: false };
+  assert.equal(resumenElecciones(base), "Medio · Vivo · Números");
+  assert.equal(resumenElecciones({ ...base, modo_reaccion: true }), "Medio · Vivo · Números · Reacción");
+  assert.equal(resumenElecciones({ ...base, zurdo: true }), "Medio · Vivo · Números · Zurdo");
+  assert.equal(resumenElecciones({ nivel: 1, ritmo: 1, voz: "nombres", zurdo: true, modo_reaccion: true }),
+    "Básico · Calmado · Nombres · Zurdo · Reacción");
+  assert.equal(resumenElecciones({ ...base, nivel: 3, ritmo: 5, voz: "ambos" }), "Avanzado · Intenso · Ambos");
 });

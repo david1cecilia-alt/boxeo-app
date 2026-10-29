@@ -597,7 +597,7 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
 .col-detalle > p { margin: 0; }
 
 /* ---------- Perfil ---------- */
-#perfil-contenido { display: grid; gap: 16px; }
+#perfil-contenido, .columna-perfil { display: grid; gap: 16px; align-content: start; min-width: 0; }
 /* Tarjeta roja con el resumen provisional del estilo. */
 .tarjeta.estilo-provisional {
   display: grid; gap: 6px; padding: 16px;
@@ -820,10 +820,12 @@ dialog::backdrop { background: var(--velo); }
   .columna-ajustes { gap: 24px; }
   #ajustes-contenido > .nota { grid-column: 1 / -1; }
 
-  /* Perfil: secciones en dos columnas. */
-  #perfil-contenido { columns: 2; column-gap: 24px; }
-  #perfil-contenido > * { break-inside: avoid; margin: 0 0 24px; }
-  #perfil-contenido > .nota { column-span: all; }
+  /* Perfil: estilo a la izquierda, Sobre ti y Notas a la derecha; los puntos a revisar debajo,
+     a todo el ancho y en dos columnas. */
+  #perfil-contenido { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
+  .columna-perfil { gap: 24px; }
+  #perfil-contenido > :not(.columna-perfil) { grid-column: 1 / -1; }
+  .lista-revisar { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; }
 }
 
 /* ---------- Animaciones sobrias ---------- */

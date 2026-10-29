@@ -68,6 +68,7 @@ export function iniciarPerfil({ almacen }) {
   function pintar() {
     const p = almacen.datos.perfil;
     raiz.innerHTML = `
+      <div class="columna-perfil">
       <section class="tarjeta estilo-provisional" aria-labelledby="t-estilo-provisional" aria-live="polite">
         <h2 id="t-estilo-provisional" class="antetitulo">Estilo provisional</h2>
         <p class="titular" id="estilo-titulo"></p>
@@ -78,7 +79,9 @@ export function iniciarPerfil({ almacen }) {
         ${chips("estilo", "mi_estilo", MI_ESTILO, p.estilo.mi_estilo)}
         ${Object.entries(ESTILO).map(([c, def]) => chips("estilo", c, def, p.estilo[c])).join("")}
       </form>
+      </div>
 
+      <div class="columna-perfil">
       <form class="tarjeta formulario" id="f-basicos" aria-labelledby="t-basicos">
         <h2 id="t-basicos">Sobre ti</h2>
         <label class="campo">Empecé a boxear
@@ -103,6 +106,7 @@ export function iniciarPerfil({ almacen }) {
             <button type="button" class="boton pequeno" data-borrar-nota="${esc(n.id)}" aria-label="Borrar nota del ${esc(n.fecha)}">Borrar</button></li>`).join("")}
         </ul>
       </section>
+      </div>
 
       <section class="tarjeta" aria-labelledby="t-revisar">
         <h2 id="t-revisar">Revisar con el entrenador</h2>

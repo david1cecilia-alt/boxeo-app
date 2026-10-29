@@ -14,7 +14,7 @@ es una PWA instalable y todo se calcula en el dispositivo.
 
 | Valoración | Historial | Perfil |
 |:---:|:---:|:---:|
-| <img src="docs/capturas/postsesion.png" width="190" alt="Formulario post-sesión con RPE del 1 al 10, sensación del 1 al 5 y notas"> | <img src="docs/capturas/historial.png" width="190" alt="Historial: resumen de la semana y del mes, asaltos por semana en barras y RPE medio en línea"> | <img src="docs/capturas/perfil.png" width="190" alt="Perfil: tarjeta roja con el estilo provisional (boxer-puncher de media distancia) y las preguntas de estilo en chips"> |
+| <img src="docs/capturas/postsesion.png" width="190" alt="Formulario post-sesión con RPE del 1 al 10, sensación del 1 al 5 y notas"> | <img src="docs/capturas/historial.png" width="190" alt="Historial: cifras del mes, asaltos por semana en barras y sesiones agrupadas por semana con la actual desplegada"> | <img src="docs/capturas/perfil.png" width="190" alt="Perfil: tarjeta roja con el estilo provisional (boxer-puncher de media distancia) y las preguntas de estilo en chips"> |
 
 <sub>Capturas con datos de ejemplo.</sub>
 
@@ -50,7 +50,9 @@ es una PWA instalable y todo se calcula en el dispositivo.
   qué corregir y qué combinaciones han costado. Se puede saltar y rellenar después.
 - **Historial** con resumen semanal y mensual, dos gráficos SVG hechos a mano (asaltos por
   semana y RPE medio, con el mismo eje de semanas), detalle de cada sesión, notas editables y
-  borrado.
+  borrado. La lista se agrupa por **semana, mes o año** (se recuerda la elección) en grupos
+  plegables con sus sesiones y minutos de asalto (asaltos completados × duración, sin descansos);
+  sale abierto el periodo actual y, al volver de una sesión, también el suyo.
 - **Ajustes** (lo que cambia el entreno):
   - **Voz**: cualquiera de las voces en español del dispositivo o «Automática», a velocidad Lenta
     (0,9), Normal (1,1) o Rápida (1,3), con «Probar voz». Si la voz guardada no existe en otro móvil
@@ -67,7 +69,7 @@ es una PWA instalable y todo se calcula en el dispositivo.
 
 ## Tus datos
 
-Perfil, ajustes (voz incluida), últimas elecciones de Entrenar, notas y valoraciones se guardan **solo en el navegador** (`localStorage`); nunca van al
+Perfil, ajustes (voz incluida), últimas elecciones de Entrenar, cómo se agrupa el Historial, notas y valoraciones se guardan **solo en el navegador** (`localStorage`); nunca van al
 repositorio ni a `data/`. El almacén (`static/almacen.js`) tiene esquema versionado con
 migraciones: las sesiones guardadas con versiones anteriores siguen apareciendo. Si el navegador
 no deja guardar, la app sigue funcionando en memoria y avisa. Como `localStorage` se borra al
@@ -145,7 +147,7 @@ solo comando lo cubra todo:
 |---|---|
 | Pausa y reanudación | Con un reloj falso y pausas en mitad de combos y descansos, cada evento del guion se lanza una sola vez, en orden y en su segundo de sesión |
 | Los pesos del perfil llegan al generador | Subir cada peso aumenta la proporción de esas combinaciones en el guion; los pesos sustituyen a los de `perfil.json` |
-| Migración del almacén | El historial anterior (v0) pasa a v1 conservando las sesiones; v3 pasa a v4 tomando nivel y guardia del perfil y conservando historial, valoraciones, notas y revisiones; v4 pasa a v5 con la voz automática a velocidad normal, sin los focos de trabajo y sin tocar lo demás; migrar dos veces no cambia nada; datos dañados o de una versión más nueva no se sobrescriben |
+| Migración del almacén | El historial anterior (v0) pasa a v1 conservando las sesiones; v3 pasa a v4 tomando nivel y guardia del perfil y conservando historial, valoraciones, notas y revisiones; v4 pasa a v5 con la voz automática a velocidad normal, el Historial agrupado por semana, sin los focos de trabajo y sin tocar lo demás; migrar dos veces no cambia nada; datos dañados o de una versión más nueva no se sobrescriben |
 | Copia de seguridad | Exportar → JSON → importar da exactamente los mismos datos |
 | Ids sin colisiones | Las sesiones locales usan UUID: borrar o importar no mezcla valoraciones |
 | Contraste | Los colores de `estilos.css` cumplen AA (texto 4,5:1; bordes, foco y gráficos 3:1) |

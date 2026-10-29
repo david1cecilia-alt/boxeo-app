@@ -807,12 +807,11 @@ dialog::backdrop { background: var(--velo); }
   .combo-texto { font-size: clamp(3rem, 5vw, 5rem); }
   #anterior { font-size: 1rem; }
 
-  /* Historial: resumen arriba a todo el ancho; lista y detalle en dos columnas. */
-  .maestro-detalle { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: start; }
-  /* Cifras a la izquierda y gráfico a la derecha, con ancho máximo. */
-  .resumen-historial, .con-detalle > .resumen-historial {
-    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 640px); gap: 24px; align-items: start;
-  }
+  /* Historial: resumen arriba a todo el ancho; lista y detalle en dos columnas (a partes iguales
+     hasta 1280 px, para que las tarjetas y las cabeceras de los grupos no se partan). */
+  .maestro-detalle { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  /* Cifras encima del gráfico; desde 1280 px, a su izquierda (a 1024 el gráfico las tapaba). */
+  .resumen-historial, .con-detalle > .resumen-historial { display: grid; gap: 24px; align-items: start; }
   .cifras dd { font-size: 52px; }
   .cifras div { padding: 20px 18px; }
   .con-detalle .col-lista, #historial-contenido:not(.con-detalle) .col-detalle { display: grid; }
@@ -821,6 +820,11 @@ dialog::backdrop { background: var(--velo); }
   .col-detalle > .vacio {
     display: grid; place-items: center; min-height: 240px; text-align: center;
     border: 1px dashed var(--linea); border-radius: var(--radio);
+  }
+
+  @media (min-width: 1280px) {
+    .maestro-detalle { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+    .resumen-historial, .con-detalle > .resumen-historial { grid-template-columns: minmax(0, 1fr) minmax(0, 640px); }
   }
 
   /* Ajustes: Voz y Tus datos a la izquierda, Qué te dicta a la derecha (a 1024 y a 1440 igual). */

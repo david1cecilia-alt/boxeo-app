@@ -16,6 +16,7 @@ const mesYAno = (d) => `${MES_LARGO.format(d)} ${d.getFullYear()}`; // "octubre 
 const fmt = (n) => n.toLocaleString("es-ES", { maximumFractionDigits: 1 });
 const plural = (n, una, varias) => `${n} ${n === 1 ? una : varias}`;
 const PERIODO_VACIO = { semana: "esta semana", mes: "este mes", ano: "este año" };
+const NOMBRE_AGRUPACION = { semana: "Semana", mes: "Mes", ano: "Año" };
 
 // Grupos desplegados de cada agrupación mientras la app está abierta (no se guardan).
 const abiertos = {};
@@ -62,7 +63,12 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
       <div class="maestro-detalle">
       <div class="col-lista">
       <section class="sesiones" aria-labelledby="t-sesiones">
-        <h2 id="t-sesiones">Sesiones</h2>
+        <div class="cabeza-sesiones">
+          <h2 id="t-sesiones">Sesiones</h2>
+          ${sesiones.length ? `<div class="selector" role="group" aria-label="Agrupar las sesiones por">
+            ${AGRUPACIONES.map((a) => `<button type="button" data-agrupar="${a}" aria-pressed="${a === modo}">${NOMBRE_AGRUPACION[a]}</button>`).join("")}
+          </div>` : ""}
+        </div>
         ${sesiones.length ? `<div class="grupos-sesiones">${grupos.map((g) => grupo(g, modo, v, clave)).join("")}</div>`
           : `<p class="nota">Aún no hay sesiones. Las que termines aparecerán aquí.</p>`}
         <p class="nota">Guardado ${esc(historial.descripcion)}. Las valoraciones y notas, en este navegador.</p>
@@ -84,6 +90,17 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
       </div>
       </div>`;
     activarGrafico(raiz, semanas);
+    for (const b of raiz.querySelectorAll("[data-agrupar]")) {
+      b.addEventListener("click", async () => {
+        if (b.dataset.agrupar === modo) return;
+        const perfil = structuredClone(almacen.datos.perfil);
+        perfil.historial = { ...perfil.historial, agrupar: b.dataset.agrupar };
+        almacen.guardarPerfil(perfil);
+        await pintar(clave);
+        raiz.querySelector(`[data-agrupar="${b.dataset.agrupar}"]`)?.focus();
+        anunciar(`Sesiones por ${NOMBRE_AGRUPACION[b.dataset.agrupar].toLowerCase()}`);
+      });
+    }
     for (const d of raiz.querySelectorAll("details[data-grupo]")) {
       d.addEventListener("toggle", () => abiertos[modo][d.open ? "add" : "delete"](d.dataset.grupo));
     }

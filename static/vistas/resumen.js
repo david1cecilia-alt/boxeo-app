@@ -1,6 +1,6 @@
 // Cálculos del resumen del historial (lógica pura, sin DOM): totales de la semana y
-// del mes (sesiones, asaltos y RPE medio), asaltos y RPE medio por semana (de lunes a domingo)
-// y la lista agrupada por semana, mes o año con sus sesiones y minutos.
+// del mes (sesiones, asaltos y RPE medio), asaltos y RPE medio por semana (de lunes a domingo),
+// mes o año para el gráfico, y los minutos de asalto.
 
 export function lunes(fecha) {
   const d = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
@@ -31,24 +31,47 @@ export function totales(sesiones, valoraciones = {}, hoy = new Date()) {
 
 // Las últimas `n` semanas, la más antigua primero: { inicio, asaltos, sesiones, rpe (media o null) }.
 export function porSemana(sesiones, valoraciones, { hoy = new Date(), n = 8 } = {}) {
-  const actual = lunes(hoy);
-  const semanas = Array.from({ length: n }, (_, i) => {
-    const inicio = new Date(actual);
-    inicio.setDate(inicio.getDate() - 7 * (n - 1 - i));
-    return { inicio, asaltos: 0, sesiones: 0, rpes: [] };
-  });
-  for (const s of sesiones) {
-    const semana = semanas.find((x) => mismoDia(x.inicio, lunes(new Date(s.fecha))));
-    if (!semana) continue;
-    semana.asaltos += s.asaltos;
-    semana.sesiones += 1;
-    const rpe = valoraciones[s.clave]?.rpe;
-    if (rpe != null) semana.rpes.push(rpe);
-  }
-  return semanas.map(({ rpes, ...s }) => ({ ...s, rpe: media(rpes) }));
+  return porPeriodo(sesiones, valoraciones, "semana", { hoy, n });
 }
 
-// ---- Agrupación de la lista del Historial ----
+// Cuántos periodos enseña el gráfico del Historial en cada escala. Los años van desde el
+// primero con sesiones hasta el actual (al menos ANOS_MINIMOS, como mucho ANOS_MAXIMOS).
+export const PERIODOS_GRAFICO = { semana: 8, mes: 12 };
+const ANOS_MINIMOS = 3;
+const ANOS_MAXIMOS = 10;
+
+function anosGrafico(sesiones, hoy) {
+  const primero = Math.min(hoy.getFullYear(), ...sesiones.map((s) => new Date(s.fecha).getFullYear()));
+  return Math.min(Math.max(hoy.getFullYear() - primero + 1, ANOS_MINIMOS), ANOS_MAXIMOS);
+}
+
+// Los últimos `n` periodos (semanas, meses o años), el más antiguo primero:
+// { inicio, asaltos, sesiones, rpe (media o null) }.
+export function porPeriodo(sesiones, valoraciones, escala, { hoy = new Date(), n = PERIODOS_GRAFICO[escala] ?? anosGrafico(sesiones, hoy) } = {}) {
+  const actual = inicioPeriodo(hoy, escala);
+  const periodos = Array.from({ length: n }, (_, i) => ({
+    inicio: moverPeriodo(actual, escala, i - (n - 1)), asaltos: 0, sesiones: 0, rpes: [],
+  }));
+  for (const s of sesiones) {
+    const inicio = inicioPeriodo(new Date(s.fecha), escala);
+    const periodo = periodos.find((x) => mismoDia(x.inicio, inicio));
+    if (!periodo) continue;
+    periodo.asaltos += s.asaltos;
+    periodo.sesiones += 1;
+    const rpe = valoraciones[s.clave]?.rpe;
+    if (rpe != null) periodo.rpes.push(rpe);
+  }
+  return periodos.map(({ rpes, ...p }) => ({ ...p, rpe: media(rpes) }));
+}
+
+// El inicio del periodo `pasos` periodos antes (negativo) o después (positivo).
+export function moverPeriodo(inicio, escala, pasos) {
+  if (escala === "ano") return new Date(inicio.getFullYear() + pasos, 0, 1);
+  if (escala === "mes") return new Date(inicio.getFullYear(), inicio.getMonth() + pasos, 1);
+  return new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + 7 * pasos);
+}
+
+// ---- Periodos del Historial ----
 
 export const AGRUPACIONES = ["semana", "mes", "ano"];
 
@@ -59,64 +82,10 @@ export function inicioPeriodo(fecha, modo) {
   return lunes(fecha);
 }
 
-const dosCifras = (n) => String(n).padStart(2, "0");
-function clavePeriodo(inicio, modo) {
-  const ano = inicio.getFullYear();
-  if (modo === "ano") return String(ano);
-  if (modo === "mes") return `${ano}-${dosCifras(inicio.getMonth() + 1)}`;
-  return `${ano}-${dosCifras(inicio.getMonth() + 1)}-${dosCifras(inicio.getDate())}`;
-}
-
-// Minutos de asalto de una sesión: asaltos completados × duración del asalto, sin descansos
-// (de un asalto cortado a medias no se guarda cuánto duró).
-const minutosAsalto = (s) => (s.asaltos * (s.duracion_asalto ?? 0)) / 60;
-
-// Grupos de la lista, el más reciente primero: { clave, inicio, actual, sesiones, minutos }.
-// El periodo actual sale siempre (arriba, aunque esté vacío); los pasados, solo si tienen sesiones.
-// Dentro de cada grupo las sesiones conservan el orden de la lista (la más reciente primero).
-export function agrupar(sesiones, modo, hoy = new Date()) {
-  const actual = inicioPeriodo(hoy, modo);
-  const grupos = new Map([[clavePeriodo(actual, modo), { inicio: actual, sesiones: [] }]]);
-  for (const s of sesiones) {
-    const inicio = inicioPeriodo(new Date(s.fecha), modo);
-    const clave = clavePeriodo(inicio, modo);
-    if (!grupos.has(clave)) grupos.set(clave, { inicio, sesiones: [] });
-    grupos.get(clave).sesiones.push(s);
-  }
-  return [...grupos.entries()]
-    .map(([clave, g]) => ({
-      clave, inicio: g.inicio, actual: mismoDia(g.inicio, actual), sesiones: g.sesiones,
-      minutos: Math.round(g.sesiones.reduce((n, s) => n + minutosAsalto(s), 0)),
-    }))
-    .sort((a, b) => b.inicio - a.inicio);
-}
-
-// Grupos desplegados al abrir: el actual y, si está vacío, el más reciente con sesiones.
-export function clavesAbiertas(grupos) {
-  const actual = grupos.find((g) => g.actual);
-  const abiertas = new Set(actual ? [actual.clave] : []);
-  if (!actual?.sesiones.length) {
-    const reciente = grupos.find((g) => g.sesiones.length);
-    if (reciente) abiertas.add(reciente.clave);
-  }
-  return abiertas;
-}
-
-// En la vista por semana se enseñan las últimas `limite` semanas con sesiones (el periodo actual,
-// siempre); «Ver semanas anteriores» sube el límite de SEMANAS_POR_TANDA en SEMANAS_POR_TANDA.
-// Si hay que enseñar un grupo más antiguo (`incluir`: el de la sesión elegida), el límite se
-// alarga hasta él para que la lista siga sin huecos. Devuelve { grupos, limite, quedan }.
-export const SEMANAS_POR_TANDA = 12;
-
-export function recortarSemanas(grupos, limite = SEMANAS_POR_TANDA, incluir = null) {
-  const conSesiones = grupos.filter((g) => g.sesiones.length);
-  const n = Math.max(limite, conSesiones.findIndex((g) => g.clave === incluir) + 1);
-  const mostradas = new Set(conSesiones.slice(0, n).map((g) => g.clave));
-  return {
-    grupos: grupos.filter((g) => g.actual || mostradas.has(g.clave)),
-    limite: n,
-    quedan: Math.max(conSesiones.length - n, 0),
-  };
+// Minutos de asalto de unas sesiones: asaltos completados × duración del asalto, sin descansos
+// (de un asalto cortado a medias no se guarda cuánto duró). Redondeados al minuto.
+export function minutosDeAsalto(sesiones) {
+  return Math.round(sesiones.reduce((n, s) => n + (s.asaltos * (s.duracion_asalto ?? 0)) / 60, 0));
 }
 
 // «54 min», «2 h», «3 h 12 min».
@@ -130,7 +99,7 @@ export function textoMinutos(minutos) {
 const MES_CORTO = new Intl.DateTimeFormat("es-ES", { month: "short" });
 const MES_LARGO = new Intl.DateTimeFormat("es-ES", { month: "long" });
 
-// Título del grupo: «Semana del 26 oct» (con el año si no es el actual), «Octubre 2026» o «2026».
+// Título del periodo: «Semana del 26 oct» (con el año si no es el actual), «Octubre 2026» o «2026».
 export function tituloGrupo(inicio, modo, hoy = new Date()) {
   if (modo === "ano") return String(inicio.getFullYear());
   if (modo === "mes") {

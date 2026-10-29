@@ -48,11 +48,13 @@ es una PWA instalable y todo se calcula en el dispositivo.
 - **Valoración tras cada sesión**: la app no puede saber si la técnica sale bien, así que la
   valoración es manual: esfuerzo percibido (RPE 1–10), cómo me he sentido, qué ha salido bien,
   qué corregir y qué combinaciones han costado. Se puede saltar y rellenar después.
-- **Historial** con resumen semanal y mensual, dos gráficos SVG hechos a mano (asaltos por
-  semana y RPE medio, con el mismo eje de semanas), detalle de cada sesión, notas editables y
-  borrado. La lista se agrupa por **semana, mes o año** (se recuerda la elección) en grupos
-  plegables con sus sesiones y minutos de asalto (asaltos completados × duración, sin descansos);
-  sale abierto el periodo actual y, al volver de una sesión, también el suyo.
+- **Historial** con las cifras del mes, un gráfico de barras (asaltos o RPE medio por **semana,
+  mes o año**), detalle de cada sesión, notas editables y borrado. Las sesiones se recorren
+  **como una galería de fotos**, por niveles de zoom: *Año* (12 meses) → *Mes* (sus semanas) →
+  *Semana* (sus 7 días, resaltados los que tienen sesiones) → *Día* (sus sesiones) → detalle,
+  con flechas ‹ › para cambiar de periodo y minutos de asalto (asaltos completados × duración,
+  sin descansos). Siempre abre en el periodo actual del nivel elegido (se recuerda), y el botón
+  *Volver* y el gesto atrás del navegador suben un nivel (`#historial/semana/2026-10-26`, `/dia/…`).
 - **Ajustes** (lo que cambia el entreno):
   - **Voz**: cualquiera de las voces en español del dispositivo o «Automática», a velocidad Lenta
     (0,9), Normal (1,1) o Rápida (1,3), con «Probar voz». Si la voz guardada no existe en otro móvil

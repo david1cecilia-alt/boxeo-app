@@ -530,7 +530,8 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
 
 /* Gráfico semanal: barras grises y la semana actual en rojo, con selector Asaltos / RPE. */
 .grafico-semanas { margin: 0; display: grid; gap: 14px; padding: 16px; }
-.cabeza-grafico { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.cabeza-grafico { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+.selectores-grafico { display: flex; flex-wrap: wrap; gap: 6px; }
 .titulo-grafico {
   margin: 0; font-family: var(--letra-texto); font-size: 0.9375rem; font-weight: 600;
   text-transform: none; letter-spacing: 0; line-height: 1.3;
@@ -571,15 +572,56 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
   color: var(--texto); text-decoration: none; transition: border-color 0.15s;
 }
 .lista-sesiones a:hover { border-color: var(--linea-chip); }
-/* Grupos plegables (semana, mes o año): título a la izquierda, sesiones y minutos a la derecha. */
-.grupos-sesiones { display: grid; gap: 4px; min-width: 0; }
-.grupo-sesiones { min-width: 0; }
-.grupo-sesiones > summary { flex-wrap: wrap; gap: 2px 10px; border-bottom: 1px solid var(--linea); }
-.grupo-sesiones[open] > summary { margin-bottom: 10px; }
-.titulo-grupo { flex: 1 1 auto; font-size: 0.9375rem; }
-.resumen-grupo { margin-left: auto; color: var(--suave); font-size: 0.8125rem; font-weight: 400; font-variant-numeric: tabular-nums; }
-.grupo-sesiones > .lista-sesiones, .grupo-sesiones > .nota { margin: 0 0 12px; }
-.ver-mas { width: 100%; }
+/* Galería: el periodo con flechas ‹ › y sus celdas (7 días, las semanas del mes o los 12 meses).
+   Con sesiones, la celda resalta y es un enlace; sin ellas, apagada. */
+.galeria { gap: 14px; }
+.periodo { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; gap: 8px; }
+.titulo-periodo { text-align: center; min-width: 0; }
+.titulo-periodo h3 {
+  margin: 0; color: var(--texto); font-size: 1rem; font-weight: 600; letter-spacing: 0; text-transform: none;
+}
+.titulo-periodo p { margin: 2px 0 0; color: var(--suave); font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+.flecha {
+  display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border-radius: 50%; cursor: pointer;
+  border: 1px solid var(--linea-chip); background: var(--secundario); color: var(--texto);
+}
+.flecha:hover:not(:disabled) { background: var(--secundario-hover); }
+.flecha:disabled { opacity: 0.35; cursor: default; }
+.flecha svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.celdas { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.celdas li { min-width: 0; }
+.celda {
+  position: relative; display: grid; align-content: center; justify-items: center; gap: 2px; height: 100%; min-height: 44px;
+  padding: 10px 4px; border-radius: 14px; border: 1px solid var(--linea-chip);
+  background: var(--superficie); color: var(--texto); text-decoration: none; transition: border-color 0.15s, background 0.15s;
+}
+a.celda:hover { border-color: var(--suave); background: var(--superficie-hover); }
+.celda.vacia { border-color: transparent; background: none; color: var(--suave); }
+.celda.hoy { box-shadow: inset 0 -3px 0 var(--acento); }
+.celda.elegida { border-color: var(--acento); background: var(--superficie-hover); }
+.celda b { font-family: var(--letra-titular); font-weight: 400; font-size: 24px; line-height: 1; }
+.celda.vacia b { color: var(--suave); }
+.celda span { font-size: 0.75rem; }
+.dias { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.dias .celda { grid-template-rows: auto auto 20px; align-content: start; min-height: 82px; padding: 8px 2px; }
+.dias .celda.vacia b { opacity: 0.6; }
+.dia-semana { color: var(--suave); font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.dias .cuenta {
+  display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px;
+  background: var(--acento-relleno); color: var(--sobre-acento); font-size: 0.6875rem; font-weight: 800;
+}
+.filas .celda { grid-template-columns: minmax(0, 1fr) auto; justify-items: start; gap: 4px 12px; padding: 12px 14px; }
+.filas .celda b { font-family: var(--letra-texto); font-size: 0.9375rem; font-weight: 600; }
+.filas .celda span { justify-self: end; color: var(--suave); font-size: 0.8125rem; text-align: right; }
+.filas .celda.vacia { border-color: var(--linea); }
+.meses { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.meses .celda { gap: 1px; padding: 12px 6px; }
+.meses .celda b { font-family: var(--letra-texto); font-size: 0.875rem; font-weight: 600; }
+.meses .celda span { color: var(--suave); }
+.meses .celda.vacia { border-color: var(--linea); }
+.dia-abierto { display: grid; gap: 10px; }
+.cabeza-dia { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0 12px; }
+.cabeza-dia h3 { margin: 0; color: var(--texto); font-size: 0.9375rem; letter-spacing: 0; text-transform: none; }
 .lista-sesiones a[aria-current="true"] { border-color: var(--acento); box-shadow: inset 3px 0 0 var(--acento); }
 .bloque-fecha {
   flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -608,6 +650,11 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
 }
 .etiqueta.ok { background: var(--ok-fondo); color: var(--ok); }
 .volver { display: inline-flex; min-height: 44px; align-items: center; }
+/* «Volver» como botón (sube un nivel en el Historial): se ve como los enlaces. */
+button.volver {
+  padding: 0; border: 0; background: none; cursor: pointer; font: inherit; color: var(--texto);
+  text-decoration: underline; text-decoration-color: var(--acento); text-underline-offset: 3px;
+}
 
 /* Maestro-detalle. Móvil: o la lista o el detalle (con su enlace de volver). */
 .maestro-detalle, .col-lista, .col-detalle { display: grid; gap: 16px; align-content: start; min-width: 0; }
@@ -828,6 +875,7 @@ dialog::backdrop { background: var(--velo); }
   .con-detalle .col-lista, #historial-contenido:not(.con-detalle) .col-detalle { display: grid; }
   .col-lista { position: sticky; top: 24px; }
   .volver-movil { display: none; }
+  .meses { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .col-detalle > .vacio {
     display: grid; place-items: center; min-height: 240px; text-align: center;
     border: 1px dashed var(--linea); border-radius: var(--radio);

@@ -207,6 +207,12 @@ input, select, textarea {
   width: 100%;
 }
 textarea { resize: vertical; min-height: 64px; }
+/* Flecha propia de los desplegables: la del sistema quedaba pegada al borde. */
+select {
+  appearance: none; -webkit-appearance: none; padding-right: 44px; text-overflow: ellipsis; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23a8a29e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 16px center; background-size: 12px 8px;
+}
 input[type="checkbox"], input[type="radio"] { width: auto; min-height: 0; accent-color: var(--acento-relleno); }
 fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 legend { color: var(--suave); font-size: 0.95rem; padding: 0; margin-bottom: 8px; }
@@ -707,7 +713,7 @@ dialog::backdrop { background: var(--velo); }
 .boton[data-play] svg path { fill: currentColor; stroke: none; }
 .boton[data-play][aria-pressed="true"] .icono-play, .boton[data-play][aria-pressed="false"] .icono-pausa { display: none; }
 .maniqui-velocidad { display: flex; align-items: center; gap: 8px; margin-left: auto; color: var(--suave); font-size: 0.95rem; }
-.maniqui-velocidad select { width: auto; min-height: 44px; padding: 8px 12px; }
+.maniqui-velocidad select { width: auto; min-height: 44px; padding: 8px 40px 8px 12px; background-position: right 14px center; }
 .maniqui-vistas { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip-vista {
   min-height: 44px; padding: 0 18px; font: inherit; font-weight: 600; cursor: pointer;

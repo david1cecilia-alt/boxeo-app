@@ -59,3 +59,18 @@ def test_sin_numero_se_dice_el_nombre_en_todos_los_modos():
     for a in catalogo().values():
         if a.numero is None and not a.orden:
             assert {palabra_hablada(a, m) for m in MODOS_VOZ} == {a.nombre_hablado}, a.id
+
+
+@pytest.mark.parametrize("voz", MODOS_VOZ)
+def test_el_guion_zurdo_dice_el_nombre_reflejado_y_no_solo_el_numero(voz):
+    import random
+
+    from motor.temporizador import ConfigSesion, construir_guion
+    config = ConfigSesion(asaltos=3, duracion_asalto=180, descanso=60, nivel=3, zurdo=True, voz=voz)
+    dichos = [palabra for e in construir_guion(config, random.Random(2)) if e.tipo == "combo"
+              for palabra in e.texto.split(", ")]
+    adelantados = {"numeros": {"tres", "cinco"}, "nombres": {"gancho de derecha", "uppercut de derecha"},
+                   "ambos": {"tres gancho de derecha", "cinco uppercut de derecha"}}[voz]
+    assert adelantados <= set(dichos)
+    if voz != "numeros":
+        assert not {"tres gancho de izquierda", "cinco uppercut de izquierda"} & set(dichos)

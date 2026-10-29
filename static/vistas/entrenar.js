@@ -2,7 +2,6 @@
 // guantes a 1–2 m del móvil). No contiene reglas de boxeo: el guion lo genera el motor y
 // el reproductor lo lanza en tiempo de sesión (con pausa).
 import { nuevoGuion, preferencias, recordarSesion } from "../ajustes.js";
-import { catalogo, nombreCorto, numero } from "../motor/acciones.js";
 import { crearAzar, semillaAleatoria } from "../motor/azar.js";
 import { datos } from "../motor/datos.js";
 import { PAUSA_POR_RITMO } from "../motor/ritmo.js";
@@ -10,6 +9,7 @@ import { validarConfig } from "../motor/temporizador.js";
 import { crearReproductor } from "../reproductor.js";
 import { activarSonido, campana, pitido, tablillas } from "../sonido.js";
 import { $, anunciar, esc, minutos } from "./dom.js";
+import { pasosCombo } from "./pasos.js";
 
 const SEGUNDOS_FINAL = 10;
 const NOMBRE_RITMO = { 1: "Calmado", 2: "Tranquilo", 3: "Constante", 4: "Vivo", 5: "Intenso" };
@@ -228,22 +228,18 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
 
   // En grande lo actual, paso a paso con el tipo de cada acción (golpe, defensa, pies) y su
   // nombre corto; en pequeño, la combinación anterior (las señales no cuentan). Con Números o
-  // Ambos, cada golpe lleva su número (el del zurdo, por su mano adelantada/trasera); con
-  // Nombres, el círculo solo marca el tipo. Los ids ya vienen en espejo para el zurdo.
+  // Ambos, cada golpe lleva su número; con Nombres, el círculo solo marca el tipo (pasos.js).
   function mostrarCombo(texto, ids) {
-    const acciones = ids.map((id) => catalogo().get(id));
+    const pasos = pasosCombo(ids, estado.config);
     const anterior = estado.ultimoCombo;
     $("#anterior").textContent = anterior ? `Anterior: ${anterior}` : "";
-    if (acciones.includes(undefined)) {
+    if (!pasos) {
       estado.ultimoCombo = texto;
       return mostrarTexto(texto);
     }
-    const { voz, zurdo } = estado.config;
-    const cortos = acciones.map(nombreCorto);
-    const numeros = acciones.map((a) => (voz === "nombres" ? null : numero(a, zurdo)));
-    estado.ultimoCombo = cortos.map((c, i) => (numeros[i] ? `${numeros[i]} ${c}` : c)).join(" · ");
-    $("#combo").innerHTML = `<ol class="pasos" aria-label="${esc(texto)}">${acciones.map((a, i) =>
-      `<li class="paso-${a.tipo}"><i aria-hidden="true">${numeros[i] ?? ""}</i>${esc(cortos[i])}</li>`).join("")}</ol>`;
+    estado.ultimoCombo = pasos.map((p) => (p.numero ? `${p.numero} ${p.texto}` : p.texto)).join(" · ");
+    $("#combo").innerHTML = `<ol class="pasos" aria-label="${esc(texto)}">${pasos.map((p) =>
+      `<li class="paso-${p.tipo}"><i aria-hidden="true">${p.numero ?? ""}</i>${esc(p.texto)}</li>`).join("")}</ol>`;
     $("#leyenda").hidden = false;
   }
 

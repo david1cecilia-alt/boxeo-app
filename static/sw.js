@@ -22,6 +22,7 @@ const FICHEROS = [
   "vistas/grafico.js",
   "vistas/historial.js",
   "vistas/opciones.js",
+  "vistas/pasos.js",
   "vistas/perfil.js",
   "vistas/postsesion.js",
   "vistas/resumen.js",

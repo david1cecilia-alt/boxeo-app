@@ -6,6 +6,7 @@ import { crearAzar, semillaAleatoria } from "../motor/azar.js";
 import { datos } from "../motor/datos.js";
 import { PAUSA_POR_RITMO } from "../motor/ritmo.js";
 import { validarConfig } from "../motor/temporizador.js";
+import { crearPantallaEncendida } from "../pantalla.js";
 import { crearReproductor } from "../reproductor.js";
 import { activarSonido, campana, pitido, tablillas } from "../sonido.js";
 import { $, anunciar, esc, minutos } from "./dom.js";
@@ -22,6 +23,8 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   const form = $("#config");
   const presets = datos().presets.presets;
   let estado = null;        // sesión en curso, o null
+  // Wake Lock de empezar a parar/terminar (pausa y descanso incluidos); se repide al volver.
+  const pantalla = crearPantallaEncendida();
   let perfilAplicado = null;
 
   // ---------- Configuración ----------
@@ -133,7 +136,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     };
     estado.reproductor = crearReproductor(eventos, { alLanzar: lanzar });
     estado.temporizador = setInterval(tic, 100);
-    pedirPantallaEncendida();
+    pantalla.encender();
     document.body.classList.add("entrenando");
     $("#pantalla").hidden = false;
     $("#progreso").innerHTML = "<i><b></b></i>".repeat(config.asaltos);
@@ -282,7 +285,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     sesion.reproductor.detener();
     document.body.classList.remove("entrenando");
     $("#pantalla").hidden = true;
-    liberarPantalla();
+    pantalla.apagar();
     $("#empezar").focus();
     if (!sesion.dictadas.length) return;
     const datosSesion = {
@@ -308,20 +311,6 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   $("#pausa").addEventListener("click", pausarOReanudar);
   $("#parar").addEventListener("click", parar);
 
-  // ---------- Pantalla encendida ----------
-  // Wake Lock durante toda la sesión, también en pausa. El navegador lo suelta al cambiar
-  // de app o bloquear el móvil, así que se vuelve a pedir al volver.
-  let bloqueoPantalla = null;
-  async function pedirPantallaEncendida() {
-    try { bloqueoPantalla = await navigator.wakeLock?.request("screen"); } catch { /* no soportado */ }
-  }
-  function liberarPantalla() {
-    bloqueoPantalla?.release();
-    bloqueoPantalla = null;
-  }
-  document.addEventListener("visibilitychange", () => {
-    if (estado && document.visibilityState === "visible") pedirPantallaEncendida();
-  });
 
   setTimeout(() => ($("#info-voz").textContent = `Voz: ${voz.descripcion}`), 500);
 

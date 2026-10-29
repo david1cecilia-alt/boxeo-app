@@ -12,6 +12,7 @@ const FICHEROS = [
   "ajustes.js",
   "almacen.js",
   "historial.js",
+  "pantalla.js",
   "reproductor.js",
   "rutas.js",
   "sonido.js",

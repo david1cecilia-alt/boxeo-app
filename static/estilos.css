@@ -472,6 +472,28 @@ body.entrenando main { padding: 0; max-width: none; }
 }
 #pestanas a:focus-visible { outline-offset: -4px; }
 .marca { display: none; }
+#pestanas .solo-escritorio { display: none; } /* en el móvil, Ajustes va en el engranaje */
+
+/* Engranaje de Ajustes (móvil): arriba a la derecha en las tres pestañas, sobre la foto o el
+   negro. En Ajustes, mientras se entrena y en el PC no se ve. */
+main { position: relative; }
+#ir-ajustes {
+  position: absolute; z-index: 5; top: calc(14px + env(safe-area-inset-top)); right: var(--hueco);
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
+  color: var(--texto); background: var(--barra); border: 1px solid var(--borde-cristal);
+}
+#ir-ajustes:hover { background: var(--superficie-hover); }
+#ir-ajustes svg {
+  width: 22px; height: 22px; fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: none; }
+
+/* ---------- Ajustes ---------- */
+#vista-ajustes .volver-movil { margin: 14px 0 -24px; }
+#vista-ajustes h1 { font-size: clamp(2.5rem, 11.8vw, 3.6rem); }
+#vista-ajustes .marca-agua { top: 6px; right: -10px; font-size: 140px; opacity: 0.04; }
+#ajustes-contenido { display: grid; gap: 16px; }
 
 /* ---------- Historial ---------- */
 #vista-historial { --alto-foto: 240px; --arriba-titular: 96px; --posicion-foto: 50% 35%; }
@@ -693,6 +715,8 @@ dialog::backdrop { background: var(--velo); }
     height: 52px; padding: 0 18px; border-radius: 26px; font-size: 0.9375rem;
   }
   #pestanas a:hover:not([aria-current]) { background: var(--superficie-hover); }
+  #pestanas .solo-escritorio { display: flex; }
+  #ir-ajustes { display: none; }
 
   main {
     max-width: 1200px;
@@ -770,6 +794,11 @@ dialog::backdrop { background: var(--velo); }
     display: grid; place-items: center; min-height: 240px; text-align: center;
     border: 1px dashed var(--linea); border-radius: var(--radio);
   }
+
+  /* Ajustes: como Perfil, secciones en dos columnas. */
+  #vista-ajustes h1 { font-size: 4.5rem; }
+  #ajustes-contenido { display: block; columns: 2; column-gap: 24px; }
+  #ajustes-contenido > * { break-inside: avoid; margin: 0 0 24px; }
 
   /* Perfil: secciones en dos columnas. */
   #perfil-contenido { columns: 2; column-gap: 24px; }

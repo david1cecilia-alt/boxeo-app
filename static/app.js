@@ -1,9 +1,10 @@
 // Arranque: carga los datos del motor y el almacén, decide de dónde salen las sesiones
-// (servidor o este dispositivo) y monta las tres pestañas. Sin reglas de boxeo.
+// (servidor o este dispositivo) y monta las tres pestañas y Ajustes. Sin reglas de boxeo.
 import { claveSesion, crearAlmacen } from "./almacen.js";
 import { crearHistorial } from "./historial.js";
 import { cargarDatos } from "./motor/datos.js";
 import { iniciarRutas } from "./rutas.js";
+import { iniciarAjustes } from "./vistas/ajustes.js";
 import { atajosEntrenar, iniciarEntrenar } from "./vistas/entrenar.js";
 import { iniciarHistorial } from "./vistas/historial.js";
 import { iniciarPerfil } from "./vistas/perfil.js";
@@ -35,6 +36,7 @@ async function arrancar() {
     entrenar,
     historial: iniciarHistorial({ almacen, historial, valoracion }),
     perfil: iniciarPerfil({ almacen }),
+    ajustes: iniciarAjustes({ almacen }),
   }, "entrenar");
 }
 

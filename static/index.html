@@ -20,6 +20,10 @@
   <p id="aviso-almacen" class="aviso fijo" role="alert" hidden></p>
 
   <main>
+    <!-- Ajustes en el móvil: engranaje arriba a la derecha (en el PC va en el menú). -->
+    <a id="ir-ajustes" href="#ajustes" aria-label="Ajustes">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></a>
+
     <!-- ============ Entrenar ============ -->
     <section id="vista-entrenar" class="vista con-foto" aria-labelledby="t-entrenar">
       <div class="foto-cabecera" aria-hidden="true">
@@ -144,6 +148,17 @@
       </header>
       <div id="perfil-contenido"></div>
     </section>
+
+    <!-- ============ Ajustes ============ -->
+    <section id="vista-ajustes" class="vista" aria-labelledby="t-ajustes" hidden>
+      <p class="volver-movil"><a href="#entrenar" class="volver" id="volver-ajustes">← Volver</a></p>
+      <header class="cabecera">
+        <span class="marca-agua" aria-hidden="true">Voz</span>
+        <p class="antetitulo">Lo que cambia tu entreno</p>
+        <h1 id="t-ajustes" tabindex="-1">Tus<br><span class="acento">ajustes</span></h1>
+      </header>
+      <div id="ajustes-contenido"></div>
+    </section>
   </main>
 
   <nav id="pestanas" aria-label="Secciones">
@@ -159,6 +174,10 @@
     <a href="#perfil">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
       <span>Perfil</span>
+    </a>
+    <a href="#ajustes" class="solo-escritorio">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span>Ajustes</span>
     </a>
   </nav>
 

@@ -19,6 +19,7 @@ const FICHEROS = [
   "sonido.js",
   "voz.js",
   "manifest.json",
+  "vistas/ajustes.js",
   "vistas/dom.js",
   "vistas/entrenar.js",
   "vistas/grafico.js",

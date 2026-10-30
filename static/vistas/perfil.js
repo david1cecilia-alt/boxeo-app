@@ -5,7 +5,7 @@
 import { NO_SE } from "../almacen.js";
 import { chips, conectarCampos } from "./campos.js";
 import { $, $$, anunciar, esc, hoyIso } from "./dom.js";
-import { recomendarEstilo, textoFaltan } from "./estilo.js";
+import { TEXTO_AFINAR, recomendarEstilo, textoEmpate, textoFaltan } from "./estilo.js";
 import { ESTILO, MI_ESTILO } from "./opciones.js";
 
 const MEDIDAS = {
@@ -17,16 +17,23 @@ const MEDIDAS = {
 // Nombres de los estilos (los de «Mi estilo»), sin «No lo sé».
 const NOMBRES_ESTILO = Object.fromEntries(MI_ESTILO.opciones.filter(([id]) => id !== NO_SE));
 
-// Recomendación: «Boxer», el porqué, «También encajas como …» y los avisos; o cuántas preguntas faltan.
+// Recomendación: «Boxer» (o «Encajas igual como … y como …» si empatan), el porqué, «También
+// encajas como …», los avisos y, si quedan preguntas, «Responde más…»; o cuántas preguntas faltan.
 function htmlRecomendacion(r, conMiEstilo) {
   if (r.faltan) {
     return `${conMiEstilo ? "" : '<p class="titular">Por definir</p>'}<p>${esc(textoFaltan(r.faltan))}</p>`;
   }
-  const nombre = conMiEstilo
-    ? `<p class="recomendado">Estilo recomendado: <b>${esc(r.nombre)}</b></p>`
-    : `<p class="titular">${esc(r.nombre)}</p>`;
+  let nombre;
+  if (r.empate) {
+    nombre = `<p class="${conMiEstilo ? "recomendado" : "empate"}">${esc(textoEmpate(r.empate))}</p>`;
+  } else {
+    nombre = conMiEstilo
+      ? `<p class="recomendado">Estilo recomendado: <b>${esc(r.nombre)}</b></p>`
+      : `<p class="titular">${esc(r.nombre)}</p>`;
+  }
   return [nombre, r.porque && `<p>${esc(r.porque)}</p>`, r.tambien && `<p>También encajas como ${esc(r.tambien)}.</p>`,
-    ...r.avisos.map((a) => `<p class="aviso-estilo">${esc(a)}</p>`)].filter(Boolean).join("");
+    ...r.avisos.map((a) => `<p class="aviso-estilo">${esc(a)}</p>`),
+    r.afinar && `<p class="afinar">${esc(TEXTO_AFINAR)}</p>`].filter(Boolean).join("");
 }
 
 // Tarjeta de estilo: con «Mi estilo» elegido, ese como su estilo y la recomendación debajo, más

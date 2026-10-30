@@ -678,6 +678,11 @@ button.volver {
 #estilo-resumen { display: grid; gap: 6px; }
 #estilo-resumen p, .nota-estilo { margin: 0; font-size: 0.8125rem; line-height: 1.4; }
 #estilo-resumen .titular { font-size: 28px; line-height: 1.05; }
+/* Empate exacto: la frase entera hace de titular, algo más pequeña para que quepa. */
+#estilo-resumen .empate {
+  font-family: var(--letra-titular); font-size: 22px; line-height: 1.1; text-transform: uppercase; letter-spacing: 0.01em;
+}
+#estilo-resumen .afinar { font-weight: 600; }
 .estilo-recomendado .recomendacion {
   display: grid; gap: 4px; margin-top: 4px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.35);
 }

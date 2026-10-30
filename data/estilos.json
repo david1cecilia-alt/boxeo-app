@@ -1,9 +1,18 @@
 {
   "_nota": "Estilo recomendado del Perfil (static/vistas/estilo.js). Cada respuesta suma 1 punto a cada estilo de su lista; gana el que más suma; si empatan en cabeza, se nombran todos sin elegir a uno («Encajas igual como … y como …»), y si hay un ganador claro y el segundo queda a 1 punto justo, también se nombra. Hace falta un mínimo de respuestas de las preguntas obligatorias. Cardio no puntúa: solo avisa si sale fajador. Los ids de los estilos son los de «Mi estilo» y los de las respuestas, los del Perfil. Las frases completan «Porque …». Orientativo, nunca una obligación. REVISAR CON ENTRENADOR: (1) la tabla de puntos de cada respuesta a cada estilo; (2) el umbral de 3 cm entre alcance y altura para hablar de alcance largo o corto; (3) que con cardio por mejorar se avise solo al fajador.",
   "_fuentes": [
-    "Wikipedia (en), «Boxing styles and technique»",
-    "FightCamp, «The 4 styles of boxing»",
-    "Expert Boxing, «How to beat a shorter boxer»"
+    {
+      "titulo": "Wikipedia (en), «Boxing styles and technique»",
+      "url": "https://en.wikipedia.org/wiki/Boxing_styles_and_technique"
+    },
+    {
+      "titulo": "FightCamp, «The 4 Different Boxing Styles - Which One Are You?»",
+      "url": "https://blog.joinfightcamp.com/training/the-4-styles-of-boxing-which-one-are-you/"
+    },
+    {
+      "titulo": "Expert Boxing, «How to Beat a Shorter Boxer»",
+      "url": "https://expertboxing.com/how-to-beat-a-shorter-boxer"
+    }
   ],
   "obligatorias": ["distancia", "presion", "volumen", "iniciativa", "defensa"],
   "minimo": 4,

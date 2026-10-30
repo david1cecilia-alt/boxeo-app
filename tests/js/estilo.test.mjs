@@ -22,6 +22,10 @@ test("la tabla usa los estilos de «Mi estilo» y las respuestas del Perfil, con
   assert.ok(tabla.obligatorias.every((p) => p in tabla.puntos));
   assert.match(tabla._nota, /REVISAR CON ENTRENADOR/);
   assert.equal(tabla._fuentes.length, 3);
+  for (const f of tabla._fuentes) {
+    assert.ok(f.titulo, "cada fuente con su título");
+    assert.match(f.url, /^https:\/\/[^\s]+$/, `url de ${f.titulo}`);
+  }
 });
 
 test("con menos de 4 obligatorias respondidas pide las que faltan", () => {

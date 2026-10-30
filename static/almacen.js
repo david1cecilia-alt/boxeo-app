@@ -37,7 +37,7 @@ export function vozPorDefecto() {
   return { id: null, velocidad: "normal" };
 }
 
-// Cómo se agrupa la lista del Historial: "semana", "mes" o "ano" (AGRUPACIONES de vistas/resumen.js).
+// Nivel con el que abre la galería del Historial: "semana", "mes" o "ano" (AGRUPACIONES de vistas/resumen.js).
 export function historialPorDefecto() {
   return { agrupar: "semana" };
 }

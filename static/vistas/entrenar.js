@@ -250,7 +250,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
         estado.reaccionHasta = e.t + e.duracion;
         pitido();
         const sesion = estado;
-        dictado.senal(e.texto, PARA_REACCIONAR).then(() => {
+        dictado.reaccion(e.texto).then(() => {
           sesion.reaccionHasta = Math.max(sesion.reaccionHasta, r.tiempo() + PARA_REACCIONAR);
         });
         break;

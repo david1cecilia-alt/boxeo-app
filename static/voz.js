@@ -1,7 +1,8 @@
 // Interfaz de voz. Cualquier implementación debe ofrecer:
-//   decir(texto)  -> habla el texto (interrumpe lo que se estuviera diciendo) y devuelve una
-//                    promesa que se resuelve con "fin" al terminar o "error" si falla o se corta
-//                    (nunca se rechaza). Puede no resolverse nunca: quien espera pone un tope.
+//   decir(texto, { velocidad }) -> habla el texto (interrumpe lo que se estuviera diciendo) y
+//                    devuelve una promesa que se resuelve con "fin" al terminar o "error" si falla
+//                    o se corta (nunca se rechaza). Puede no resolverse nunca: quien espera pone un
+//                    tope. `velocidad`, opcional: solo para este texto (si no, la configurada).
 //   callar()      -> corta la voz
 //   configurar({ id, velocidad }) -> cambia la voz elegida (null = automática) y la velocidad
 //   voces()       -> [{ id, nombre, idioma }] las voces en español que se pueden elegir
@@ -63,11 +64,11 @@ class VozNavegador {
     this._oyentes.push(fn);
   }
 
-  decir(texto) {
+  decir(texto, { velocidad = this.velocidad } = {}) {
     speechSynthesis.cancel();
     const frase = new SpeechSynthesisUtterance(texto);
     frase.lang = this.voz?.lang ?? this.idioma;
-    frase.rate = this.velocidad;
+    frase.rate = velocidad;
     if (this.voz) frase.voice = this.voz;
     return new Promise((ok) => {
       frase.onend = () => ok("fin");

@@ -8,6 +8,8 @@ import { catalogo, espejo } from "../../static/motor/acciones.js";
 import { crearAzar } from "../../static/motor/azar.js";
 import { GeneradorCombos, cargarPerfil } from "../../static/motor/generador.js";
 import { SorteoBiblioteca } from "../../static/motor/sorteo.js";
+import { datos } from "../../static/motor/datos.js";
+import { VELOCIDAD_SENAL, segundosHabla } from "../../static/motor/ritmo.js";
 import { construirGuion } from "../../static/motor/temporizador.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
 
@@ -70,4 +72,10 @@ CONFIGS.forEach((config, i) => {
 
 const espejos = Object.fromEntries([...catalogo().values()].map((a) => [a.id, accionPlana(espejo(a))]));
 
-writeFileSync(process.argv[2], JSON.stringify({ combos, guiones, espejos, refuerzos, sorteos }));
+// Señales de Reacción: la velocidad fija a la que se dicen y lo que se estima que tardan.
+const senales = {
+  velocidad: VELOCIDAD_SENAL,
+  segundos: Object.fromEntries(datos().presets.reacciones.map((r) => [r.texto, segundosHabla(r.texto, VELOCIDAD_SENAL)])),
+};
+
+writeFileSync(process.argv[2], JSON.stringify({ combos, guiones, espejos, refuerzos, sorteos, senales }));

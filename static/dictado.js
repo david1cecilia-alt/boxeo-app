@@ -2,12 +2,13 @@
 // (onend u onerror de la voz), no desde una estimación. La estimación solo sirve de tope por si
 // onend no llega (pasa en algunos Android): estimación a la velocidad de la voz + MARGEN_VOZ. Avisos y señales también
 // esperan a su voz: una combinación no empieza hasta que se callan (y, tras una señal, hasta que
-// pasa el tiempo para reaccionar).
+// pasa el tiempo para reaccionar). Las señales de Reacción van siempre a VELOCIDAD_SENAL; las
+// combinaciones y los avisos, a la velocidad de Ajustes (config.velocidad).
 //
 // Todo en tiempo de sesión (reproductor.programar): la pausa lo congela también. Sin DOM: quien
 // lo usa decide qué se ve en alDecir.
 import { MARGEN } from "./motor/temporizador.js";
-import { pausaEntreCombos, segundosHabla } from "./motor/ritmo.js";
+import { VELOCIDAD_SENAL, pausaEntreCombos, segundosHabla } from "./motor/ritmo.js";
 
 export const MARGEN_VOZ = 3.0;    // segundos de más sobre la estimación antes de dejar de esperar
 export const PARA_REACCIONAR = 1.0; // tras decir una señal, tiempo para reaccionar sin combinaciones
@@ -19,8 +20,9 @@ export function crearDictado({ reproductor, voz, config, azar, alDecir = () => {
 
   const esperar = (segundos) => new Promise((ok) => reproductor.programar(segundos, ok));
 
-  // Dice el texto y se resuelve con "fin", "error" o "maximo" (lo que llegue antes).
-  function hablar(texto) {
+  // Dice el texto (a `velocidad` o a la de Ajustes) y se resuelve con "fin", "error" o "maximo"
+  // (lo que llegue antes). El tope se estima a esa misma velocidad.
+  function hablar(texto, { velocidad = config.velocidad } = {}) {
     const promesa = new Promise((ok) => {
       let hecho = false;
       const acabar = (motivo) => {
@@ -29,8 +31,8 @@ export function crearDictado({ reproductor, voz, config, azar, alDecir = () => {
           ok(motivo);
         }
       };
-      Promise.resolve(voz.decir(texto)).then((r) => acabar(r === "error" ? "error" : "fin"), () => acabar("error"));
-      reproductor.programar(segundosHabla(texto, config.velocidad) + MARGEN_VOZ, () => acabar("maximo"));
+      Promise.resolve(voz.decir(texto, { velocidad })).then((r) => acabar(r === "error" ? "error" : "fin"), () => acabar("error"));
+      reproductor.programar(segundosHabla(texto, velocidad) + MARGEN_VOZ, () => acabar("maximo"));
     });
     hablando = promesa;
     promesa.then(() => {
@@ -57,11 +59,14 @@ export function crearDictado({ reproductor, voz, config, azar, alDecir = () => {
 
   // Avisos y señales: se dicen a su hora (la del guion) y retienen las combinaciones hasta que
   // se callan, más `despues` segundos.
-  async function senal(texto, despues = 0) {
-    const motivo = await hablar(texto);
+  async function senal(texto, despues = 0, { velocidad } = {}) {
+    const motivo = await hablar(texto, { velocidad });
     bloqueadoHasta = Math.max(bloqueadoHasta, reproductor.tiempo() + despues);
     return motivo;
   }
+
+  // Señal de Reacción («¡esquiva!»): sin lado, a VELOCIDAD_SENAL y con PARA_REACCIONAR después.
+  const reaccion = (texto) => senal(texto, PARA_REACCIONAR, { velocidad: VELOCIDAD_SENAL });
 
   // Dicta las combinaciones de un asalto en su orden. `reservados`: [[ini, fin]] de las señales
   // previstas del asalto, que una combinación no debe pisar; `fin`: final del asalto.
@@ -94,6 +99,7 @@ export function crearDictado({ reproductor, voz, config, azar, alDecir = () => {
   return {
     hablar,
     senal,
+    reaccion,
     asalto,
     // Al acabar el asalto o parar: lo que estuviera programado ya no dicta nada.
     cortar() {

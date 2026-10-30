@@ -12,6 +12,11 @@
       "texto": "rodar a la izquierda deja el peso a la izquierda → gancho de izquierda"
     },
     {
+      "id": "temporizador-bfe0e33f",
+      "origen": "motor/temporizador.py",
+      "texto": "tiempo para reaccionar tras la señal (hoy 1 s sin combinaciones)"
+    },
+    {
       "id": "acciones-635f79cf",
       "origen": "data/acciones.json",
       "texto": "peso_despues de cada golpe"

@@ -10,7 +10,10 @@ import {
 export const PREPARACION = 3.0;        // segundos al inicio del asalto antes del primer combo
 export const AVISO_ANTES_FIN = 10.0;   // aviso a los 10 s del final
 export const DURACION_AVISO = 1.5;     // lo que ocupa decir "diez segundos"
-export const DURACION_REACCION = 2.0;  // señal + tiempo para reaccionar
+// Lo que se reserva en el guion para decir una señal de Reacción (a VELOCIDAD_SENAL, cabe en 2 s).
+// Después, el dictado deja 1 s sin combinaciones (PARA_REACCIONAR en static/dictado.js).
+// REVISAR CON ENTRENADOR: tiempo para reaccionar tras la señal (hoy 1 s sin combinaciones).
+export const DURACION_REACCION = 2.0;
 export const INTERVALO_REACCION = [8.0, 20.0]; // separación aleatoria entre señales de reacción
 export const MARGEN = 0.5;             // hueco mínimo entre una combinación y una señal
 export const REINTENTOS = 5;           // combinaciones que se prueban si no cabe ninguna en un asalto aún vacío

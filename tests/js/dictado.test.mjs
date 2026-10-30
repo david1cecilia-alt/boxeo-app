@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { MARGEN_VOZ, crearDictado } from "../../static/dictado.js";
+import { MARGEN_VOZ, PARA_REACCIONAR, crearDictado } from "../../static/dictado.js";
 import { crearAzar } from "../../static/motor/azar.js";
-import { segundosHabla } from "../../static/motor/ritmo.js";
+import { VELOCIDADES, VELOCIDAD_SENAL, segundosHabla } from "../../static/motor/ritmo.js";
 import { crearReproductor } from "../../static/reproductor.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
 
@@ -19,8 +19,10 @@ function montar({ pausa = 1.0, ritmo = 3, velocidad, combos = [], reservados = [
   const reproductor = crearReproductor([], { alLanzar: () => {}, reloj: () => ms });
   const dichos = [];
   const voz = {
-    decir(texto) {
-      return new Promise((ok) => dichos.push({ texto, en: reproductor.tiempo(), onend: () => ok("fin"), onerror: () => ok("error") }));
+    decir(texto, { velocidad } = {}) {
+      return new Promise((ok) => dichos.push({
+        texto, velocidad, en: reproductor.tiempo(), onend: () => ok("fin"), onerror: () => ok("error"),
+      }));
     },
     callar() {},
   };
@@ -162,4 +164,42 @@ test("en Intenso la siguiente llega 1 s después de que la voz calle (menos de 1
   assert.equal(dichos.length, 2);
   const hueco = dichos[1].en - 6.5;
   assert.ok(hueco >= 1 - TOLERANCIA && hueco < 1.5, `hueco de ${hueco} s`);
+});
+
+test("las señales de Reacción van a 1.4 sea cual sea la velocidad de Ajustes; las combinaciones, a la de Ajustes", async () => {
+  assert.equal(VELOCIDAD_SENAL, 1.4);
+  for (const velocidad of Object.values(VELOCIDADES)) {
+    const { dichos, dictado, hasta } = montar({ velocidad });
+    await hasta(2.5);
+    dictado.reaccion("¡esquiva!");
+    dictado.asalto({ combos: COMBOS, reservados: [], fin: 180 });
+    await hasta(2.6);
+    assert.equal(dichos[0].velocidad, 1.4, `señal con Ajustes a ${velocidad}`);
+    dichos[0].onend();
+    await hasta(2.6 + PARA_REACCIONAR + 0.3);
+    assert.equal(dichos[1].texto, "jab, recto");
+    assert.equal(dichos[1].velocidad, velocidad, `combinación con Ajustes a ${velocidad}`);
+  }
+});
+
+test("el tope de una señal de Reacción sin onend se estima a 1.4, no a la velocidad de Ajustes", async () => {
+  const { dichos, dictado, hasta } = montar({ velocidad: 0.9 });
+  await hasta(2);
+  dictado.reaccion("¡cúbrete y devuelve!");
+  dictado.asalto({ combos: COMBOS, reservados: [], fin: 180 });
+  const tope = segundosHabla("¡cúbrete y devuelve!", 1.4) + MARGEN_VOZ;
+  assert.ok(tope < segundosHabla("¡cúbrete y devuelve!", 0.9) + MARGEN_VOZ);
+  await hasta(2 + tope + PARA_REACCIONAR - 0.2);
+  assert.equal(dichos.length, 1);
+  await hasta(2 + tope + PARA_REACCIONAR + 0.2);
+  assert.equal(dichos.length, 2);
+  assert.equal(dichos[1].velocidad, 0.9);
+});
+
+test("los avisos siguen a la velocidad de Ajustes", async () => {
+  const { dichos, dictado, hasta } = montar({ velocidad: 1.3 });
+  await hasta(1);
+  dictado.senal("diez segundos");
+  await hasta(1.2);
+  assert.equal(dichos[0].velocidad, 1.3);
 });

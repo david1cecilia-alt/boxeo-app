@@ -1,6 +1,7 @@
 // Pestaña Perfil: lo informativo que rellena el usuario (solo en este navegador): estilo (con el
-// recomendado según sus respuestas, de data/estilos.json), sobre ti, notas del entrenador y puntos a revisar. Se guarda al cambiar cada campo. Lo que cambia el
-// entreno (guardia, nivel, pesos y voz) está en Ajustes.
+// recomendado según sus respuestas, de data/estilos.json), sobre ti, notas del entrenador y puntos
+// a revisar. Se guarda al cambiar cada campo. Lo que cambia el entreno (guardia, nivel, pesos y
+// voz) está en Ajustes.
 import { NO_SE } from "../almacen.js";
 import { chips, conectarCampos } from "./campos.js";
 import { $, $$, anunciar, esc, hoyIso } from "./dom.js";
@@ -90,7 +91,8 @@ export function iniciarPerfil({ almacen }) {
       <section class="tarjeta estilo-recomendado" aria-labelledby="t-estilo">
         <h2 id="t-estilo" class="antetitulo">Estilo recomendado</h2>
         <div id="estilo-resumen" aria-live="polite"><p>Cargando…</p></div>
-        <p class="nota-estilo">Orientativo: el estilo se define con meses de práctica y sparring. Consúltalo con tu entrenador.</p>
+        <p class="nota-estilo">Orientativo: el estilo se define con meses de práctica y sparring.
+          Consúltalo con tu entrenador.</p>
       </section>
 
       <form class="grupos-estilo" id="f-estilo" aria-label="Tu estilo">
@@ -103,7 +105,8 @@ export function iniciarPerfil({ almacen }) {
       <form class="tarjeta formulario" id="f-basicos" aria-labelledby="t-basicos">
         <h2 id="t-basicos">Sobre ti</h2>
         <label class="campo">Empecé a boxear
-          <input type="date" data-grupo="basicos" data-campo="inicio" value="${esc(p.basicos.inicio ?? "")}" max="${hoyIso()}"></label>
+          <input type="date" data-grupo="basicos" data-campo="inicio" value="${esc(p.basicos.inicio ?? "")}"
+            max="${hoyIso()}"></label>
         <div class="rejilla">
           ${Object.entries(MEDIDAS).map(([c, [etiqueta, unidad, min, max]]) => `
             <label class="campo">${etiqueta} (${unidad}, opcional)
@@ -121,14 +124,16 @@ export function iniciarPerfil({ almacen }) {
         </form>
         <ul class="lista-editable notas">${almacen.datos.notas_entrenador.map((n) => `
           <li><div><time datetime="${esc(n.fecha)}">${esc(n.fecha)}</time><p>${esc(n.texto)}</p></div>
-            <button type="button" class="boton pequeno" data-borrar-nota="${esc(n.id)}" aria-label="Borrar nota del ${esc(n.fecha)}">Borrar</button></li>`).join("")}
+            <button type="button" class="boton pequeno" data-borrar-nota="${esc(n.id)}"
+              aria-label="Borrar nota del ${esc(n.fecha)}">Borrar</button></li>`).join("")}
         </ul>
       </section>
       </div>
 
       <section class="tarjeta" aria-labelledby="t-revisar">
         <h2 id="t-revisar">Revisar con el entrenador</h2>
-        <p class="nota">Puntos del motor marcados como dudosos. Lo que apuntes aquí es solo para ti: no cambia el motor.</p>
+        <p class="nota">Puntos del motor marcados como dudosos. Lo que apuntes aquí es solo para ti:
+          no cambia el motor.</p>
         <div id="lista-revisar"><p class="nota">Cargando…</p></div>
       </section>
 
@@ -176,7 +181,8 @@ export function iniciarPerfil({ almacen }) {
     contenedor.innerHTML = `<ul class="lista-revisar">${revisar.map((r) => {
       const resp = respuestas[r.id] ?? { respuesta: "", confirmado: false };
       return `<li>
-        <p class="punto">${esc(r.texto)} <span class="etiqueta ${resp.confirmado ? "ok" : ""}">${resp.confirmado ? "Confirmado" : "Pendiente"}</span></p>
+        <p class="punto">${esc(r.texto)} <span class="etiqueta ${resp.confirmado ? "ok" : ""}">${
+          resp.confirmado ? "Confirmado" : "Pendiente"}</span></p>
         <p class="nota">En <code>${esc(r.origen)}</code>${resp.fecha ? ` · actualizado el ${esc(resp.fecha)}` : ""}</p>
         <label class="campo">Respuesta del entrenador
           <textarea rows="2" maxlength="500" data-revision="${esc(r.id)}">${esc(resp.respuesta)}</textarea></label>

@@ -23,6 +23,7 @@ export function crearDictado({ reproductor, voz, config, alDecir = () => {} }) {
   let bloqueadoHasta = 0; // segundo de sesión hasta el que no empieza ninguna combinación
   let ronda = 0;          // sube al empezar o cortar un asalto: invalida lo programado antes
   let recientes = [];     // ids de las últimas dichas, que una coletilla no repite
+  const dichas = [];      // [{ asalto, texto, ids }] lo que se ha dicho de verdad, para guardar
   const huecoMinimo = rangoPausa(config.ritmo, config.pausa ?? null)[0];
 
   const esperar = (segundos) => new Promise((ok) => reproductor.programar(segundos, ok));
@@ -96,6 +97,7 @@ export function crearDictado({ reproductor, voz, config, alDecir = () => {} }) {
       }
       if (combo === cola[i]) i++;
       recientes = [...recientes, combo.ids].slice(-SIN_REPETIR);
+      dichas.push({ asalto: combo.asalto, texto: combo.texto, ids: combo.ids });
       alDecir(combo);
       await hablar(combo.texto);
       if (!viva()) return;
@@ -119,5 +121,7 @@ export function crearDictado({ reproductor, voz, config, alDecir = () => {} }) {
       ronda++;
     },
     get hablando() { return hablando !== null; },
+    // Lo que se guarda de la sesión (Historial, valoración): nunca las reservas sin decir.
+    get dichas() { return dichas.map((d) => ({ ...d })); },
   };
 }

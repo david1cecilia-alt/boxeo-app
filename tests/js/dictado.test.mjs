@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { crearAlmacen } from "../../static/almacen.js";
 import { MARGEN_VOZ, crearDictado } from "../../static/dictado.js";
+import { crearHistorial } from "../../static/historial.js";
 import { segundosHabla } from "../../static/motor/ritmo.js";
 import { crearReproductor } from "../../static/reproductor.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
@@ -189,4 +191,38 @@ test("al final, si no cabe la siguiente, dice una coletilla que quepa y que no s
   dichos[1].onend();
   await hasta(9);
   assert.deepEqual(dichos.map((d) => d.texto), ["larga", "corta"]);
+});
+
+test("se guarda solo lo que se dijo de verdad, nunca las reservas sin usar", async () => {
+  const reservas = ["reserva uno", "reserva dos", "reserva tres"].map((texto, k) => (
+    { t: 180, asalto: 1, duracion: 3.0, texto, ids: ["jab", `r${k}`], hueco: PAUSA, tipo: "reserva" }));
+  const { dichos, dictado, hasta } = montar({ combos: [...COMBOS, ...reservas] });
+  for (let k = 0; k < 3; k++) {
+    await hasta(3 + k * 2 + 1);
+    dichos[k].onend();
+  }
+  await hasta(8.5);
+  dictado.cortar(); // fin del asalto antes de la cuarta: «reserva dos» y «reserva tres» se quedan sin decir
+  await hasta(20);
+  const dichas = dictado.dichas;
+  assert.deepEqual(dichas.map((d) => d.texto), dichos.map((d) => d.texto));
+  assert.deepEqual(dichas, [
+    { asalto: 1, texto: "jab, recto", ids: ["jab", "directo"] },
+    { asalto: 1, texto: "uno, dos", ids: ["jab", "directo"] },
+    { asalto: 1, texto: "reserva uno", ids: ["jab", "r0"] },
+  ]);
+
+  // Lo mismo llega al almacén (y, con servidor, a SQLite: se manda lo mismo).
+  const mapa = new Map();
+  const storage = { getItem: (k) => mapa.get(k) ?? null, setItem: (k, v) => mapa.set(k, v), removeItem: (k) => mapa.delete(k) };
+  const fetchAntes = globalThis.fetch;
+  globalThis.fetch = async () => { throw new Error("sin red"); };
+  try {
+    const historial = await crearHistorial(crearAlmacen({ storage }));
+    const id = await historial.guardar({ asaltos: 1, combinaciones: dichas });
+    assert.deepEqual(await historial.combinaciones(id), dichas);
+    assert.equal((await historial.listar())[0].num_combinaciones, dichos.length);
+  } finally {
+    globalThis.fetch = fetchAntes;
+  }
 });

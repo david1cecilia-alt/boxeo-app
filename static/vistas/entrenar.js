@@ -157,7 +157,6 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       fase: "asalto",
       finFase: 0,
       reaccionHasta: -1,
-      dictadas: [],
       asalto: 0,
       asaltosCompletados: 0,
     };
@@ -167,10 +166,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     estado.reproductor = crearReproductor(estado.fijos, { alLanzar: lanzar });
     estado.dictado = crearDictado({
       reproductor: estado.reproductor, voz, config,
-      alDecir: (c) => {
-        mostrarCombo(c.texto, c.ids);
-        estado.dictadas.push({ asalto: c.asalto, texto: c.texto, ids: c.ids });
-      },
+      alDecir: (c) => mostrarCombo(c.texto, c.ids),
     });
     estado.temporizador = setInterval(tic, 100);
     pantalla.encender();
@@ -344,7 +340,8 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     $("#pantalla").hidden = true;
     pantalla.apagar();
     $("#empezar").focus();
-    if (!sesion.dictadas.length) return;
+    const dichas = sesion.dictado.dichas; // solo lo que se dijo: nunca las reservas sin usar
+    if (!dichas.length) return;
     const datosSesion = {
       asaltos: sesion.asaltosCompletados,
       nivel: sesion.config.nivel,
@@ -355,11 +352,11 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       ritmo: sesion.config.ritmo,
       voz: sesion.config.voz,
       modo_reaccion: sesion.config.modo_reaccion,
-      combinaciones: sesion.dictadas,
+      combinaciones: dichas,
     };
     try {
       const id = await historial.guardar(datosSesion);
-      alTerminar({ id, combinaciones: sesion.dictadas });
+      alTerminar({ id, combinaciones: dichas });
     } catch (e) {
       alert(`No se pudo guardar la sesión: ${e.message}`);
     }

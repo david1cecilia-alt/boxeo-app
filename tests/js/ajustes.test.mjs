@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { crearAlmacen, perfilPorDefecto } from "../../static/almacen.js";
 import {
-  nuevoGuion, opcionesVoz, perfilGenerador, personalizadaValida, preferencias, recordarSesion, resumenElecciones, seguirBasicos,
+  nuevoGuion, opcionesVoz, perfilSorteo, personalizadaValida, preferencias, recordarSesion, resumenElecciones, seguirBasicos,
 } from "../../static/ajustes.js";
 import { accionesPorIds } from "../../static/motor/acciones.js";
 import { crearAzar } from "../../static/motor/azar.js";
@@ -33,14 +33,14 @@ const empiezaConJab = (c) => c[0].id === "jab";
 const NEUTRO = { termina_en_gancho: 1, bloquear_y_devolver: 1, entrada_con_jab: 1 };
 
 test("sin pesos propios se usan los de data/perfil.json", () => {
-  assert.equal(perfilGenerador(perfilPorDefecto()), datos.perfil);
+  assert.equal(perfilSorteo(perfilPorDefecto()), datos.perfil);
 });
 
 test("los pesos del perfil sustituyen a los de data/perfil.json (no se mezclan)", () => {
   const pesos = { termina_en_gancho: 1.2, bloquear_y_devolver: 0.5, entrada_con_jab: 3 };
-  const perfil = perfilGenerador(perfilCon(pesos));
+  const perfil = perfilSorteo(perfilCon(pesos));
   assert.deepEqual(perfil.pesos, pesos);
-  assert.equal(perfil.proporcion_clasicos, datos.perfil.proporcion_clasicos);
+  assert.equal(perfil.guardia, datos.perfil.guardia);
 });
 
 for (const [peso, condicion] of [

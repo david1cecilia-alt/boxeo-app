@@ -37,8 +37,7 @@ es una PWA instalable y todo se calcula en el dispositivo.
 - **Combinaciones con sentido técnico**, dichas como elijas en «Nombrar combinaciones»: por **Números**
   ("uno, dos, tres"), por **Nombres** ("jab, recto, crochet de izquierda") o **Ambos** ("uno jab,
   dos recto"). La sesión las sortea de una biblioteca por niveles (`data/combinaciones.json`) que
-  pasa las reglas técnicas del motor; el generador por reglas sigue en el motor, pero hoy solo lo
-  usan los tests.
+  pasa las reglas técnicas del motor.
 - **3 niveles**: longitud y golpes disponibles cambian con el nivel; la pausa entre combinaciones
   depende del ritmo.
 - **Ritmo a tu medida**: golpeas mientras oyes la combinación; la siguiente llega tras un hueco desde
@@ -87,7 +86,7 @@ local (FastAPI), las sesiones siguen en SQLite y la copia las incluye como refer
 flowchart LR
     datos[("data/*.json<br>vocabulario, combos,<br>perfil, presets")]
     subgraph Python["Python: referencia"]
-        motor["motor/<br>reglas · generador<br>ritmo · temporizador"]
+        motor["motor/<br>reglas · sorteo<br>ritmo · temporizador"]
         api["app/ (FastAPI)<br>historial en SQLite"]
     end
     subgraph Navegador["Navegador / PWA"]
@@ -133,15 +132,15 @@ valida con el de Python:
 
 | Qué se comprueba | Cómo |
 |---|---|
-| Ninguna combinación JS rompe una regla | 5.000 por nivel, ortodoxas y zurdas, pasan `reglas.validar()` de Python |
+| El sorteo JS saca lo mismo | 5.000 por nivel, ortodoxas y zurdas: todas de la biblioteca del nivel, sin repetir en 5, los golpes del 1 al 6 en las 6 primeras y el zurdo es el espejo |
 | Los guiones JS respetan los tiempos | 50 guiones (con y sin modo reacción, zurdo, pausas extremas, las tres velocidades de voz) cumplen los mismos invariantes que los de Python: sin solapes, aviso a 10 s, duraciones, pausas y descansos |
-| El perfil pesa igual | Frecuencia de finales en gancho, bloquear-y-devolver y entrada con jab: JS a ±5 puntos de Python (5.000 muestras; la diferencia real es < 2) |
+| El perfil pesa igual | Frecuencia de defensa, de cada golpe del 1 al 6, de finales en crochet, de bloqueos, de entradas con jab y del refuerzo de «Practicar»: JS a ±5 puntos de Python (5.000 muestras; la diferencia real es < 2) |
 | El espejo zurdo es idéntico | `espejo()` da exactamente lo mismo en los dos sobre todo el catálogo |
 | JS es reproducible | Misma semilla ⇒ misma salida, byte a byte |
 
 Los invariantes de guion se aplican también a los guiones de Python: así se comprueba que
 describen de verdad al motor de referencia. Además, se probó a meter errores a propósito en el
-port (pausa, margen, espejo, pesos, longitud, validación) y en cada caso falló al menos un test.
+port (pausa, margen, espejo, pesos) y en cada caso falló al menos un test.
 
 ### Tests de la interfaz y los datos
 
@@ -151,7 +150,7 @@ solo comando lo cubra todo:
 | Qué se comprueba | Cómo |
 |---|---|
 | Pausa y reanudación | Con un reloj falso y pausas en mitad de combos y descansos, cada evento del guion se lanza una sola vez, en orden y en su segundo de sesión |
-| Los pesos del perfil llegan al generador | Subir cada peso aumenta la proporción de esas combinaciones en el guion; los pesos sustituyen a los de `perfil.json` |
+| Los pesos del perfil llegan al sorteo | Subir cada peso aumenta la proporción de esas combinaciones en el guion; los pesos sustituyen a los de `perfil.json` |
 | Migración del almacén | El historial anterior (v0) pasa a v1 conservando las sesiones; v3 pasa a v4 tomando nivel y guardia del perfil y conservando historial, valoraciones, notas y revisiones; v4 pasa a v5 con la voz automática a velocidad normal, el Historial agrupado por semana, sin los focos de trabajo y sin tocar lo demás; migrar dos veces no cambia nada; datos dañados o de una versión más nueva no se sobrescriben |
 | Copia de seguridad | Exportar → JSON → importar da exactamente los mismos datos |
 | Ids sin colisiones | Las sesiones locales usan UUID: borrar o importar no mezcla valoraciones |
@@ -186,7 +185,7 @@ Los iconos se regeneran desde `static/iconos/guante.svg` con `herramientas\gener
 
 | Carpeta | Qué contiene |
 |---|---|
-| `motor/` | Lógica pura en Python: acciones y espejo, reglas, generador, ritmo, temporizador |
+| `motor/` | Lógica pura en Python: acciones y espejo, reglas, sorteo, ritmo, temporizador |
 | `static/motor/` | Port JS del motor |
 | `static/vistas/` | Las tres pestañas, Ajustes, el formulario post-sesión y el gráfico SVG |
 | `static/` | Arranque, rutas, almacén, reproductor, voz, sonido, estilos, service worker y manifest |

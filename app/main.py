@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app import db
 from app.esquemas import PeticionGuion, SesionNueva
-from motor.generador import cargar_perfil
+from motor.sorteo import cargar_perfil
 from motor.ritmo import PAUSA_POR_RITMO
 from motor.temporizador import ConfigSesion, cargar_presets, construir_guion, guion_a_dict
 

@@ -38,7 +38,6 @@ const FICHEROS = [
   "motor/acciones.js",
   "motor/azar.js",
   "motor/datos.js",
-  "motor/generador.js",
   "motor/reglas.js",
   "motor/sorteo.js",
   "motor/ritmo.js",

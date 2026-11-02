@@ -1,4 +1,4 @@
-// Textos de la interfaz para las opciones cerradas del perfil y los pesos del generador.
+// Textos de la interfaz para las opciones cerradas del perfil y los pesos del sorteo.
 // Todas las preguntas admiten "No lo sé" (NO_SE), que es el valor por defecto.
 import { NO_SE } from "../almacen.js";
 

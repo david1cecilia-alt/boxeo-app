@@ -4,17 +4,38 @@
 // - Hasta que hayan salido todos los golpes del 1 al 6, solo saca las que añaden alguno (en las
 //   6 primeras están todos seguro).
 // - La proporción de combinaciones con defensa es la del nivel (defensaPorNivel).
-// - Los pesos del perfil y el refuerzo de "Practicar" pesan como en el generador.
+// - Los pesos del perfil y el refuerzo de "Practicar" multiplican la probabilidad de cada una.
 // Todo en ortodoxo; si es zurdo se refleja al final con espejo().
-import { biblioteca, defensaPorNivel, espejoCombo } from "./acciones.js";
-import { cargarPerfil, pesoPerfil, textoCombo } from "./generador.js";
+import { biblioteca, defensaPorNivel, espejoCombo, textoHablado } from "./acciones.js";
+import { datos } from "./datos.js";
+import { ultimoGolpe } from "./reglas.js";
 
 export const SIN_REPETIR = 5;
 export const NUMEROS = [1, 2, 3, 4, 5, 6];
 
+export const PERFIL_NEUTRO = { pesos: {} };
+
+export function cargarPerfil() {
+  return datos().perfil;
+}
+
+// Multiplica los pesos del perfil que cumple la combinación (ortodoxa).
+// `refuerzo` ({ acciones: [ids], factor }) sube las combinaciones que llevan alguna de esas
+// acciones: es el "Practicar" de una ficha, solo para una sesión.
+export function pesoPerfil(combo, pesos, refuerzo = null) {
+  let peso = 1.0;
+  const ultimo = ultimoGolpe(combo);
+  if (ultimo && ultimo.familia === "gancho") peso *= pesos.termina_en_gancho ?? 1.0;
+  if (combo.some((a) => a.familia === "bloqueo")) peso *= pesos.bloquear_y_devolver ?? 1.0;
+  if (combo[0].id === "jab") peso *= pesos.entrada_con_jab ?? 1.0;
+  if (refuerzo && combo.some((a) => refuerzo.acciones.includes(a.id))) peso *= refuerzo.factor;
+  return peso;
+}
+
 export const numeros = (combo) => new Set(combo.acciones.map((a) => a.numero).filter(Boolean));
 
-// Da la siguiente combinación de la biblioteca (misma interfaz que GeneradorCombos).
+// Da la siguiente combinación de la biblioteca para un nivel y perfil.
+// Devuelve { acciones, origen: "biblioteca", nombre, texto }.
 export class SorteoBiblioteca {
   constructor(nivel, { perfil = null, zurdo = false, azar }) {
     this.nivel = nivel;
@@ -50,6 +71,6 @@ export class SorteoBiblioteca {
     this.recientes = [...this.recientes, elegida].slice(-SIN_REPETIR);
     for (const n of numeros(elegida)) this.faltan.delete(n);
     const acciones = this.zurdo ? espejoCombo(elegida.acciones) : elegida.acciones;
-    return { acciones, origen: "biblioteca", nombre: elegida.nombre ?? elegida.notacion, texto: textoCombo(acciones) };
+    return { acciones, origen: "biblioteca", nombre: elegida.nombre ?? elegida.notacion, texto: textoHablado(acciones) };
   }
 }

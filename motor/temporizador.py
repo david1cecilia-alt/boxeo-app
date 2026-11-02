@@ -79,10 +79,10 @@ def _reacciones(inicio: float, limite: float, rng: random.Random,
 
 
 def construir_guion(config: ConfigSesion, rng: random.Random | None = None,
-                    generador=None) -> list[Evento]:
-    """`generador`: cualquier objeto con siguiente() (por defecto, el sorteo de la biblioteca)."""
+                    sorteo=None) -> list[Evento]:
+    """`sorteo`: cualquier objeto con siguiente() (por defecto, el sorteo de la biblioteca)."""
     rng = rng or random.Random()
-    generador = generador or SorteoBiblioteca(config.nivel, zurdo=config.zurdo, rng=rng)
+    sorteo = sorteo or SorteoBiblioteca(config.nivel, zurdo=config.zurdo, rng=rng)
     reacciones = cargar_presets()["reacciones"]
     eventos: list[Evento] = []
     t_asalto = 0.0
@@ -110,7 +110,7 @@ def construir_guion(config: ConfigSesion, rng: random.Random | None = None,
         t = inicio + PREPARACION
         vacio = True
         while True:
-            combo, pendiente = pendiente or generador.siguiente(), None
+            combo, pendiente = pendiente or sorteo.siguiente(), None
             texto, d = texto_y_duracion(combo)
             empieza = _hueco(t, d, reservados)
             # Asalto muy corto y aún vacío: la que no cabe espera al siguiente y se prueba otra.
@@ -118,7 +118,7 @@ def construir_guion(config: ConfigSesion, rng: random.Random | None = None,
                 if empieza + d <= fin:
                     break
                 pendiente = pendiente or combo
-                combo = generador.siguiente()
+                combo = sorteo.siguiente()
                 texto, d = texto_y_duracion(combo)
                 empieza = _hueco(t, d, reservados)
             if empieza + d > fin:

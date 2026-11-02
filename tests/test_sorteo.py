@@ -4,8 +4,7 @@ import random
 import pytest
 
 from motor.acciones import acciones_por_ids, biblioteca, defensa_por_nivel, espejo_combo, numero
-from motor.generador import PERFIL_NEUTRO, cargar_perfil
-from motor.sorteo import NUMEROS, SIN_REPETIR, SorteoBiblioteca
+from motor.sorteo import NUMEROS, PERFIL_NEUTRO, SIN_REPETIR, SorteoBiblioteca, cargar_perfil
 from motor.temporizador import ConfigSesion, cargar_presets, construir_guion
 
 N = 3000

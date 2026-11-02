@@ -1,7 +1,7 @@
 """Reglas técnicas que debe cumplir toda combinación (en guardia ortodoxa).
 
 validar() devuelve la lista de infracciones; lista vacía = combinación válida.
-El generador y los tests usan este mismo validador.
+Los tests usan este validador.
 """
 from motor.acciones import Accion, espejo_combo, repeticiones_permitidas
 

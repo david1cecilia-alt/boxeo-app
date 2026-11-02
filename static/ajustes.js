@@ -1,4 +1,4 @@
-// Une los datos del usuario (almacén) con el motor: qué perfil usa el generador y
+// Une los datos del usuario (almacén) con el motor: qué perfil usa el sorteo y
 // qué se propone al entrenar (lo último elegido). Sin reglas de boxeo.
 import { NO_SE, PERSONALIZADA_POR_DEFECTO, sesionDesdeBasicos } from "./almacen.js";
 import { datos } from "./motor/datos.js";
@@ -30,16 +30,16 @@ export function opcionesVoz(perfilUsuario) {
 
 export const PESOS = ["termina_en_gancho", "bloquear_y_devolver", "entrada_con_jab"];
 
-// Perfil para el generador: los pesos editados SUSTITUYEN a los de data/perfil.json.
-export function perfilGenerador(perfilUsuario) {
+// Perfil para el sorteo: los pesos editados SUSTITUYEN a los de data/perfil.json.
+export function perfilSorteo(perfilUsuario) {
   const base = datos().perfil;
   return perfilUsuario?.pesos ? { ...base, pesos: { ...perfilUsuario.pesos } } : base;
 }
 
 export function nuevoGuion(config, perfilUsuario, azar) {
-  const generador = new SorteoBiblioteca(config.nivel,
-    { perfil: perfilGenerador(perfilUsuario), zurdo: config.zurdo, azar });
-  return construirGuion(config, azar, generador);
+  const sorteo = new SorteoBiblioteca(config.nivel,
+    { perfil: perfilSorteo(perfilUsuario), zurdo: config.zurdo, azar });
+  return construirGuion(config, azar, sorteo);
 }
 
 // Lo que se propone al entrenar: lo último que se eligió en Entrenar. Nivel y guardia, si no se

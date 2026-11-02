@@ -1,7 +1,7 @@
 """Equivalencia entre el motor JS (static/motor/) y el de Python (la referencia).
 
-tests/js/exportar.mjs genera con el motor JS combinaciones, guiones y el espejo del
-catálogo, y aquí se validan con motor/. No se exige la misma secuencia aleatoria
+tests/js/exportar.mjs genera con el motor JS sorteos de la biblioteca, guiones y el espejo
+del catálogo, y aquí se validan con motor/. No se exige la misma secuencia aleatoria
 (cada motor tiene su PRNG), sino las mismas reglas, invariantes y proporciones.
 """
 import json
@@ -14,11 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from motor.acciones import (Accion, acciones_por_ids, biblioteca, catalogo, espejo, espejo_combo,
-                            texto_hablado)
-from motor.generador import GeneradorCombos, cargar_perfil
-from motor.sorteo import NUMEROS, SIN_REPETIR, SorteoBiblioteca
-from motor.reglas import ultimo_golpe, validar
+from motor.acciones import Accion, acciones_por_ids, biblioteca, catalogo, espejo, espejo_combo, texto_hablado
+from motor.reglas import ultimo_golpe
+from motor.sorteo import NUMEROS, SIN_REPETIR, SorteoBiblioteca, cargar_perfil
 from motor.ritmo import VELOCIDADES, duracion_estimada, rango_pausa
 from motor.temporizador import (AVISO_ANTES_FIN, DURACION_AVISO, DURACION_REACCION, MARGEN,
                                 PREPARACION, ConfigSesion, cargar_presets, construir_guion,
@@ -52,47 +50,6 @@ def ruta_js(tmp_path_factory):
 @pytest.fixture(scope="module")
 def js(ruta_js):
     return json.loads(ruta_js.read_text(encoding="utf-8"))
-
-
-def _acciones(lista: list[dict]) -> list[Accion]:
-    return [Accion(**a) for a in lista]
-
-
-# ---------- Combinaciones ----------
-
-@pytest.mark.parametrize("nivel", NIVELES)
-@pytest.mark.parametrize("guardia", ["ortodoxo", "zurdo"])
-def test_combinaciones_js_pasan_las_reglas_de_python(js, nivel, guardia):
-    combos = js["combos"][str(nivel)][guardia]
-    assert len(combos) == MUESTRAS
-    for c in combos:
-        acciones = _acciones(c["acciones"])
-        errores = validar(acciones, nivel, zurdo=guardia == "zurdo")
-        assert errores == [], f"nivel {nivel} {guardia}: '{c['texto']}' -> {errores}"
-        assert c["texto"] == texto_hablado(acciones)
-
-
-@pytest.mark.parametrize("nivel", NIVELES)
-def test_combinaciones_js_ortodoxas_son_acciones_del_catalogo(js, nivel):
-    cat = catalogo()
-    for c in js["combos"][str(nivel)]["ortodoxo"]:
-        assert _acciones(c["acciones"]) == [cat[a["id"]] for a in c["acciones"]]
-
-
-@pytest.mark.parametrize("nivel", NIVELES)
-def test_zurdo_js_es_el_espejo_python_del_ortodoxo_js(js, nivel):
-    combos = js["combos"][str(nivel)]
-    for o, z in zip(combos["ortodoxo"], combos["zurdo"], strict=True):
-        assert _acciones(z["acciones"]) == espejo_combo(_acciones(o["acciones"]))
-
-
-@pytest.mark.parametrize("nivel", NIVELES)
-def test_js_usa_reglas_y_clasicos_y_no_repite_seguido(js, nivel):
-    combos = js["combos"][str(nivel)]["ortodoxo"]
-    assert {c["origen"] for c in combos} == {"reglas", "clasico"}
-    ids = [[a["id"] for a in c["acciones"]] for c in combos]
-    for a, b in zip(ids, ids[1:]):
-        assert a != b
 
 
 # ---------- Sorteo de la biblioteca ----------
@@ -141,27 +98,14 @@ def _proporcion(muestra: list[list[Accion]], condicion) -> float:
     return sum(1 for acciones in muestra if condicion(acciones)) / len(muestra)
 
 
-@pytest.mark.parametrize("nivel", NIVELES)
-@pytest.mark.parametrize("condicion", CONDICIONES, ids=str)
-def test_proporciones_del_perfil_iguales_en_js_y_python(js, nivel, condicion):
-    gen = GeneradorCombos(nivel, rng=random.Random(nivel))  # perfil de data/perfil.json
-    python = [list(gen.siguiente().acciones) for _ in range(MUESTRAS)]
-    javascript = [_acciones(c["acciones"]) for c in js["combos"][str(nivel)]["ortodoxo"]]
-    p_py = _proporcion(python, CONDICIONES[condicion])
-    p_js = _proporcion(javascript, CONDICIONES[condicion])
-    assert abs(p_js - p_py) <= TOLERANCIA_PROPORCION, \
-        f"nivel {nivel}, {condicion}: JS {p_js:.1%} vs Python {p_py:.1%}"
-
-
 @pytest.mark.parametrize("i", range(5))
 def test_refuerzo_de_practicar_igual_en_js_y_python(js, i):
     caso = js["refuerzos"][i]
     perfil = {**cargar_perfil(), "refuerzo": {"acciones": caso["ids"], "factor": 3.0}}
-    gen = GeneradorCombos(2, perfil=perfil, rng=random.Random(200))
-    python = [list(gen.siguiente().acciones) for _ in range(MUESTRAS)]
-    javascript = [_acciones(c["acciones"]) for c in caso["combos"]]
-    for acciones in javascript:
-        assert validar(acciones, 2) == [], acciones
+    sorteo = SorteoBiblioteca(2, perfil=perfil, rng=random.Random(200))
+    python = [list(sorteo.siguiente().acciones) for _ in range(MUESTRAS)]
+    javascript = [acciones_por_ids(ids) for ids in caso["sorteo"]]
+    assert {tuple(a.id for a in c) for c in javascript} <= _biblioteca_hasta(2)
     def lleva(acciones): return any(a.id in caso["ids"] for a in acciones)
     p_py, p_js = _proporcion(python, lleva), _proporcion(javascript, lleva)
     assert abs(p_js - p_py) <= TOLERANCIA_PROPORCION, f"{caso['ids']}: JS {p_js:.1%} vs Python {p_py:.1%}"

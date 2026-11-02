@@ -79,10 +79,10 @@ function reaccionesEntre(inicio, limite, azar, reacciones, asalto) {
   return eventos;
 }
 
-// `generador`: cualquier objeto con siguiente() (por defecto, el sorteo de la biblioteca).
-export function construirGuion(config, azar, generador = null) {
+// `sorteo`: cualquier objeto con siguiente() (por defecto, el sorteo de la biblioteca).
+export function construirGuion(config, azar, sorteo = null) {
   config = { ...CONFIG_POR_DEFECTO, ...config };
-  generador = generador ?? new SorteoBiblioteca(config.nivel, { zurdo: config.zurdo, azar });
+  sorteo = sorteo ?? new SorteoBiblioteca(config.nivel, { zurdo: config.zurdo, azar });
   const reacciones = datos().presets.reacciones;
   let eventos = [];
   let tAsalto = 0.0;
@@ -112,14 +112,14 @@ export function construirGuion(config, azar, generador = null) {
     let t = inicio + PREPARACION;
     let vacio = true;
     while (true) {
-      let combo = pendiente ?? generador.siguiente();
+      let combo = pendiente ?? sorteo.siguiente();
       pendiente = null;
       let [texto, d] = textoYDuracion(combo);
       let empieza = hueco(t, d, reservados);
       // Asalto muy corto y aún vacío: la que no cabe espera al siguiente y se prueba otra.
       for (let i = 0; vacio && i < REINTENTOS && empieza + d > fin; i++) {
         pendiente = pendiente ?? combo;
-        combo = generador.siguiente();
+        combo = sorteo.siguiente();
         [texto, d] = textoYDuracion(combo);
         empieza = hueco(t, d, reservados);
       }

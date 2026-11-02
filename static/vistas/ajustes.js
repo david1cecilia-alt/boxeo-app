@@ -1,6 +1,6 @@
 // Pantalla Ajustes (#ajustes): lo que cambia el entreno. Se guarda al cambiar cada campo, solo en
 // este navegador. En el móvil se entra por el engranaje y «Volver» lleva a la pestaña de antes.
-// Los pesos sustituyen a los de data/perfil.json en el generador. La voz y su velocidad se aplican
+// Los pesos sustituyen a los de data/perfil.json en el sorteo. La voz y su velocidad se aplican
 // al momento (también a la línea «Voz: …» de Entrenar).
 import { NOMBRE_VELOCIDAD, PESOS, opcionesVoz } from "../ajustes.js";
 import { accionesPorIds, textoHablado } from "../motor/acciones.js";

@@ -57,8 +57,8 @@ export const PESOS_TEXTO = {
     ayuda: "Más combinaciones cuyo último golpe es un crochet (aunque después venga una salida).",
   },
   bloquear_y_devolver: {
-    etiqueta: "Bloquear y devolver",
-    ayuda: "Más combinaciones con «bloqueo» seguido de un golpe.",
+    etiqueta: "Bloquear",
+    ayuda: "Más combinaciones con bloqueo.",
   },
   entrada_con_jab: {
     etiqueta: "Entrar con el jab",

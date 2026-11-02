@@ -6,7 +6,7 @@ const PALABRA = { izq: "izquierda", der: "derecha" };
 const PALABRA_CORTA = { izq: "izq.", der: "dcha." };
 const LADO_CONTRARIO = { izq: "der", der: "izq" };
 const CAMPOS = ["id", "familia", "plantilla", "tipo", "mano", "objetivo", "peso_despues",
-  "nivel_minimo", "lado", "poder", "plantilla_corta", "numero", "orden"];
+  "lado", "poder", "plantilla_corta", "numero", "orden"];
 
 export function nombreHablado(a) {
   // El nombre se genera a partir de mano/lado, nunca reemplazando texto.
@@ -28,7 +28,7 @@ function desdeJson(d, textos) {
   const t = textosDe(d, textos);
   return Object.freeze({
     id: d.id, familia: d.familia, plantilla: t.hablado, tipo: d.tipo, mano: d.mano,
-    objetivo: d.objetivo, peso_despues: d.peso_despues, nivel_minimo: d.nivel_minimo,
+    objetivo: d.objetivo, peso_despues: d.peso_despues,
     lado: d.lado ?? "ninguno", poder: d.poder ?? false, plantilla_corta: t.corto,
     numero: d.numero ?? null, orden: t.orden ?? "",
   });

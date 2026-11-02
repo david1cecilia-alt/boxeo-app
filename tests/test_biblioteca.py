@@ -1,4 +1,4 @@
-"""La biblioteca (data/combinaciones.json) está bien formada y pasa las reglas técnicas.
+"""La biblioteca (data/combinaciones.json) está bien formada y pasa las reglas del motor.
 
 Si alguna combinación falla, NO se cambia la regla: se avisa al usuario.
 """
@@ -7,7 +7,7 @@ import json
 import pytest
 
 from motor.acciones import RUTA_DATOS, biblioteca, defensa_por_nivel, notacion
-from motor.reglas import REGLAS_TECNICAS, validar
+from motor.reglas import validar
 
 NUMEROS = set(range(1, 7))
 VENTANA = 5  # el sorteo no repite ninguna de las 5 últimas
@@ -20,8 +20,8 @@ def crudo():
 
 
 @pytest.mark.parametrize("combo", biblioteca(), ids=lambda c: c.notacion)
-def test_cada_combinacion_pasa_las_reglas_tecnicas(combo):
-    errores = validar(list(combo.acciones), combo.nivel, reglas=REGLAS_TECNICAS)
+def test_cada_combinacion_pasa_las_reglas(combo):
+    errores = validar(list(combo.acciones))
     assert not errores, f"«{combo.notacion}» no pasa las reglas: {errores}"
 
 

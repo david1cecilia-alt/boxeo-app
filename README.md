@@ -37,9 +37,9 @@ es una PWA instalable y todo se calcula en el dispositivo.
 - **Combinaciones con sentido técnico**, dichas como elijas en «Nombrar combinaciones»: por **Números**
   ("uno, dos, tres"), por **Nombres** ("jab, recto, crochet de izquierda") o **Ambos** ("uno jab,
   dos recto"). La sesión las sortea de una biblioteca por niveles (`data/combinaciones.json`) que
-  pasa las reglas técnicas del motor.
-- **3 niveles**: longitud y golpes disponibles cambian con el nivel; la pausa entre combinaciones
-  depende del ritmo.
+  pasa las reglas del motor.
+- **3 niveles** (básico, medio y avanzado): cada combinación de la biblioteca tiene el suyo; la
+  pausa entre combinaciones depende del ritmo.
 - **Ritmo a tu medida**: golpeas mientras oyes la combinación; la siguiente llega tras un hueco desde
   que la voz acaba, de 5–7 s (Calmado, para mover los pies) a 1 s (Intenso, para encadenar).
 - **Modo reacción**: señales aleatorias ("¡esquiva!", "¡sal!") que nunca pisan una combinación.
@@ -109,9 +109,8 @@ flowchart LR
 **El motor de Python es la referencia; el de JS es un port que tiene que demostrar que se comporta igual.**
 
 - **`motor/` (Python)** es lógica pura y testeada: las reglas de boxeo viven aquí y las nuevas se
-  escriben primero aquí. Ejemplo de regla, *cargar y soltar*: tras esquivar a la derecha el peso
-  queda cargado a la derecha, así que el siguiente golpe se suelta con esa mano (directo o
-  uppercut de derecha).
+  escriben primero aquí. Las reglas son solo estructurales (toda combinación lleva al menos un
+  golpe): el boxeo es situacional, así que tras una defensa puede ir cualquier golpe.
 - **`static/motor/` (JS)** es un port fiel para que el móvil no necesite servidor. Lee **los mismos
   JSON**: el vocabulario no se duplica.
 - **El guion es un dato**: el motor genera una lista de eventos con su segundo exacto

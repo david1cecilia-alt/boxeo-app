@@ -21,7 +21,6 @@ class Accion:
     mano: str            # izq | der | ninguna
     objetivo: str        # cabeza | cuerpo | ninguno
     peso_despues: str    # delante | detras | izq | der | centro
-    nivel_minimo: int
     lado: str = "ninguno"  # lado de defensas/movimientos (izq | der | ninguno)
     poder: bool = False
     plantilla_corta: str = ""  # nombre para la pantalla de la sesión
@@ -51,7 +50,7 @@ def _desde_json(d: dict, textos: dict) -> Accion:
     t = _textos(d, textos)
     return Accion(id=d["id"], familia=d["familia"], plantilla=t["hablado"],
                   tipo=d["tipo"], mano=d["mano"], objetivo=d["objetivo"],
-                  peso_despues=d["peso_despues"], nivel_minimo=d["nivel_minimo"],
+                  peso_despues=d["peso_despues"],
                   lado=d.get("lado", "ninguno"), poder=d.get("poder", False),
                   plantilla_corta=t["corto"], numero=d.get("numero"),
                   orden=t.get("orden", ""))

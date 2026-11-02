@@ -38,7 +38,8 @@
   Los ids no cambian aunque cambie el nombre (`gancho_*` es el crochet; `uppercut_*`, el gancho).
 
 ## Reglas de boxeo
-- Las reglas están en `motor/reglas.py` (`validar`). Si un combo clásico no las pasa, **avisar**, no cambiar la regla.
+- Las reglas están en `motor/reglas.py` (`validar`) y son solo estructurales (al menos un golpe): el boxeo es
+  situacional. Si un combo clásico no las pasa, **avisar**, no cambiar la regla.
 - Lo dudoso técnicamente se marca con `# REVISAR CON ENTRENADOR`; no inventar.
 
 ## Tests

@@ -2,14 +2,9 @@
   "_nota": "Generado por herramientas/extraer_revisar.py: no editar a mano.",
   "puntos": [
     {
-      "id": "reglas-dbd1d8ab",
+      "id": "reglas-704d1805",
       "origen": "motor/reglas.py",
-      "texto": "tras \"parada\" (para el jab) no impongo ningún golpe concreto"
-    },
-    {
-      "id": "reglas-611a5023",
-      "origen": "motor/reglas.py",
-      "texto": "rodar a la izquierda deja el peso a la izquierda → gancho de izquierda"
+      "texto": "¿alguna acción no es para principiantes?"
     },
     {
       "id": "acciones-635f79cf",

@@ -1,4 +1,4 @@
-"""Tests unitarios de cada regla con ejemplos a mano (válidos e inválidos)."""
+"""Las reglas son solo estructurales: al menos un golpe. El resto lo decide la situación."""
 from motor.acciones import acciones_por_ids, catalogo
 from motor.reglas import es_valida, ultimo_golpe, validar
 
@@ -7,104 +7,38 @@ def combo(*ids):
     return acciones_por_ids(list(ids))
 
 
-# --- Ejemplos que pediste explícitamente ---
-
-def test_jab_directo_es_valida_en_nivel_1():
-    assert validar(combo("jab", "directo"), 1) == []
-
-
-def test_esquiva_final_como_salida_es_valida_en_nivel_2():
-    assert validar(combo("jab", "directo", "gancho_izq", "esquiva_der"), 2) == []
-
-
-# --- Longitud y nivel ---
-
-def test_longitud_por_nivel():
-    assert not es_valida(combo("jab"), 1)
-    assert not es_valida(combo("jab", "directo", "gancho_izq", "directo"), 1)
-    assert not es_valida(combo("jab", "directo"), 2)
-
-
-def test_cuerpo_solo_desde_nivel_2_y_uppercuts_a_la_cabeza_desde_el_1():
-    for accion in catalogo().values():
-        if accion.objetivo == "cuerpo":
-            assert accion.nivel_minimo >= 2, accion.id
-        elif accion.familia == "uppercut":
-            assert accion.nivel_minimo == 1, accion.id
-    assert es_valida(combo("jab", "uppercut_der"), 1)
-    assert not es_valida(combo("jab", "directo_cuerpo"), 1)
+def test_jab_directo_es_valida():
+    assert validar(combo("jab", "directo")) == []
 
 
 def test_sin_golpes_no_es_combinacion():
-    assert not es_valida(combo("esquiva_der", "pivote"), 1)
+    assert validar(combo("esquiva_der", "pivote")) == ["no hay ningún golpe"]
 
 
-# --- Cargar y soltar ---
-
-def test_esquiva_derecha_carga_la_derecha():
-    assert es_valida(combo("esquiva_der", "directo"), 1)
-    assert not es_valida(combo("esquiva_der", "gancho_izq"), 1)
-
-
-def test_esquiva_izquierda_carga_la_izquierda():
-    assert es_valida(combo("esquiva_izq", "gancho_izq"), 1)
-    assert not es_valida(combo("esquiva_izq", "directo"), 1)
+def test_tras_una_defensa_puede_ir_cualquier_golpe():
+    for defensa in ("esquiva_der", "esquiva_izq", "rodar_izq", "rodar_der", "paso_atras", "bloqueo", "parada"):
+        for golpe in ("jab", "directo", "gancho_izq", "gancho_der", "uppercut_izq", "uppercut_der"):
+            assert es_valida(combo(defensa, golpe)), (defensa, golpe)
 
 
-def test_paso_atras_va_con_directo_de_contra():
-    assert es_valida(combo("paso_atras", "directo"), 1)
-    assert not es_valida(combo("paso_atras", "jab"), 1)
+def test_se_puede_acabar_bloqueando_y_repetir_mano():
+    assert es_valida(combo("jab", "directo", "bloqueo"))
+    assert es_valida(combo("bloqueo", "pivote", "jab"))
+    assert es_valida(combo("directo", "directo"))
+    assert es_valida(combo("jab", "uppercut_izq"))
 
 
-def test_rodar_gancho_del_lado_cargado():
-    assert es_valida(combo("rodar_izq", "gancho_izq", "pivote"), 2)
-    assert es_valida(combo("rodar_der", "gancho_der", "pivote"), 2)
-    assert not es_valida(combo("rodar_izq", "gancho_der", "pivote"), 2)
+def test_se_puede_acabar_en_golpe_de_poder_o_en_cualquier_defensa():
+    assert es_valida(combo("jab", "directo", "gancho_izq"))
+    assert es_valida(combo("jab", "directo", "gancho_izq", "paso_atras"))
+    assert es_valida(combo("jab", "directo", "gancho_izq", "parada"))
 
 
-def test_rodar_solo_desde_nivel_2():
-    for lado in ("izq", "der"):
-        assert catalogo()[f"rodar_{lado}"].nivel_minimo == 2
-    assert not es_valida(combo("rodar_izq", "gancho_izq"), 1)
-    assert not es_valida(combo("jab", "rodar_izq"), 1)
-
-
-# --- Bloquear y devolver ---
-
-def test_bloqueo_nunca_termina_y_va_seguido_de_golpe():
-    assert not es_valida(combo("jab", "bloqueo"), 1)
-    assert not es_valida(combo("bloqueo", "pivote", "jab"), 1)
-    assert es_valida(combo("bloqueo", "gancho_izq"), 1)
-
-
-# --- Alternar manos ---
-
-def test_repetir_mano_solo_en_excepciones():
-    assert es_valida(combo("jab", "jab", "directo"), 1)                   # doble jab
-    assert not es_valida(combo("directo", "directo"), 1)
-    assert es_valida(combo("jab", "gancho_izq"), 1)                       # 1-3
-    assert not es_valida(combo("jab", "uppercut_izq"), 1)                 # 1-5: no
-    assert not es_valida(combo("directo", "uppercut_der"), 1)             # 2-6: no
-    assert es_valida(combo("jab", "directo", "gancho_izq", "gancho_izq_cuerpo", "salir"), 3)
-    assert es_valida(combo("jab", "jab", "jab"), 1)                       # triple jab
-    assert not es_valida(combo("jab", "jab", "gancho_izq"), 1)            # otros tríos: no
-
-
-# --- Salida tras golpe de poder ---
-
-def test_nivel_2_y_3_salen_tras_golpe_de_poder():
-    assert not es_valida(combo("jab", "directo", "gancho_izq"), 2)
-    assert es_valida(combo("jab", "directo", "gancho_izq", "pivote"), 2)
-    assert es_valida(combo("directo", "gancho_izq", "directo", "jab"), 2)  # termina en jab: no es de poder
-
-
-def test_salidas_validas_tras_golpe_de_poder():
-    base = ("jab", "directo", "gancho_izq")
-    for salida in ("pivote", "paso_lateral_izq", "paso_lateral_der", "esquiva_der",
-                   "esquiva_izq", "rodar_izq", "rodar_der", "salir"):
-        assert es_valida(combo(*base, salida), 2), salida
-    assert not es_valida(combo(*base, "paso_atras"), 2)
-    assert not es_valida(combo(*base, "parada"), 2)
+def test_ninguna_accion_tiene_nivel_minimo():
+    # Golpes al cuerpo y todas las defensas valen desde básico: el nivel lo da solo la longitud.
+    assert es_valida(combo("jab", "directo_cuerpo"))
+    assert es_valida(combo("rodar_izq", "gancho_izq"))
+    assert not any(hasattr(a, "nivel_minimo") for a in catalogo().values())
 
 
 def test_salir_se_dice_cambio_de_angulo():
@@ -113,3 +47,4 @@ def test_salir_se_dice_cambio_de_angulo():
 
 def test_ultimo_golpe_ignora_la_salida():
     assert ultimo_golpe(combo("jab", "directo", "gancho_izq", "esquiva_der")).id == "gancho_izq"
+    assert ultimo_golpe(combo("esquiva_der", "pivote")) is None

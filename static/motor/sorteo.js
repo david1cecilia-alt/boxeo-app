@@ -5,6 +5,8 @@
 //   6 primeras están todos seguro).
 // - La proporción de combinaciones con defensa es la del nivel (defensaPorNivel).
 // - Los pesos del perfil y el refuerzo de "Practicar" multiplican la probabilidad de cada una.
+// - Coletillas: las cortas (2-3 acciones) del nivel básico, para rellenar el final de un asalto
+//   donde ya no cabe una del nivel.
 // Todo en ortodoxo; si es zurdo se refleja al final con espejo().
 import { biblioteca, defensaPorNivel, espejoCombo, textoHablado } from "./acciones.js";
 import { datos } from "./datos.js";
@@ -12,6 +14,8 @@ import { ultimoGolpe } from "./reglas.js";
 
 export const SIN_REPETIR = 5;
 export const NUMEROS = [1, 2, 3, 4, 5, 6];
+export const NIVEL_COLETILLA = 1;
+export const ACCIONES_COLETILLA = [2, 3]; // mínimo y máximo
 
 export const PERFIL_NEUTRO = { pesos: {} };
 
@@ -70,7 +74,37 @@ export class SorteoBiblioteca {
       candidatas.map((c) => pesoPerfil(c.acciones, this.pesos, this.refuerzo) * Math.max(1, nuevos(c))));
     this.recientes = [...this.recientes, elegida].slice(-SIN_REPETIR);
     for (const n of numeros(elegida)) this.faltan.delete(n);
-    const acciones = this.zurdo ? espejoCombo(elegida.acciones) : elegida.acciones;
-    return { acciones, origen: "biblioteca", nombre: elegida.nombre ?? elegida.notacion, texto: textoHablado(acciones) };
+    return this.combinacion(elegida);
+  }
+
+  combinacion(combo) {
+    const acciones = this.zurdo ? espejoCombo(combo.acciones) : combo.acciones;
+    return { acciones, origen: "biblioteca", nombre: combo.nombre ?? combo.notacion, texto: textoHablado(acciones) };
+  }
+
+  // Todas las coletillas en un orden al azar ponderado por el perfil: la primera de la lista que
+  // cumpla una condición sale con la probabilidad de su peso entre las que la cumplen. No cambia
+  // lo que recuerda el sorteo (recientes ni golpes que faltan).
+  coletillas() {
+    const [minimo, maximo] = ACCIONES_COLETILLA;
+    const cortas = biblioteca().filter((c) => c.nivel === NIVEL_COLETILLA
+      && c.acciones.length >= minimo && c.acciones.length <= maximo);
+    // u^(1/peso): ordenar por ella es sortear sin reemplazo con esos pesos.
+    const clave = (peso) => {
+      const u = this.azar.random();
+      return peso > 0 ? u ** (1 / peso) : 0.0;
+    };
+    const claves = new Map(cortas.map((c) => [c, clave(pesoPerfil(c.acciones, this.pesos, this.refuerzo))]));
+    return [...cortas].sort((a, b) => claves.get(b) - claves.get(a)).map((c) => this.combinacion(c));
+  }
+
+  // Lo que recuerda el sorteo, para sacar reservas sin que cuenten (ver restaurar).
+  guardar() {
+    return [[...this.recientes], new Set(this.faltan)];
+  }
+
+  restaurar([recientes, faltan]) {
+    this.recientes = [...recientes];
+    this.faltan = new Set(faltan);
   }
 }

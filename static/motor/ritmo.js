@@ -43,6 +43,11 @@ export function duracionEstimada(combo, texto = null, velocidad = VELOCIDAD_MEDI
   return redondear(segundosHabla(texto ?? textoHablado(combo), velocidad));
 }
 
+// Hueco mínimo y máximo que puede salir.
+export function rangoPausa(ritmo, pausa = null) {
+  return pausa !== null ? [pausa, pausa] : PAUSA_POR_RITMO[ritmo];
+}
+
 // Hueco tras una combinación: el fijo del usuario o, si no hay, uno al azar del ritmo.
 export function pausaEntreCombos(ritmo, azar, pausa = null) {
   if (pausa !== null) return pausa;

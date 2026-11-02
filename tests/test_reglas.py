@@ -16,7 +16,7 @@ def test_sin_golpes_no_es_combinacion():
 
 
 def test_tras_una_defensa_puede_ir_cualquier_golpe():
-    for defensa in ("esquiva_der", "esquiva_izq", "rodar_izq", "rodar_der", "paso_atras", "bloqueo", "parada"):
+    for defensa in [a.id for a in catalogo().values() if a.tipo == "defensa"]:
         for golpe in ("jab", "directo", "gancho_izq", "gancho_der", "uppercut_izq", "uppercut_der"):
             assert es_valida(combo(defensa, golpe)), (defensa, golpe)
 

@@ -56,7 +56,8 @@ def test_las_defensas_se_dicen_como_orden_corta_con_su_lado():
             assert {palabra_hablada(a, m) for m in MODOS_VOZ} == {{
                 "esquiva_der": "esquiva derecha", "esquiva_izq": "esquiva izquierda",
                 "rodar_der": "esquiva abajo derecha", "rodar_izq": "esquiva abajo izquierda",
-                "paso_atras": "paso atrás", "bloqueo": "bloqueo", "parada": "parada"}[a.id]}, a.id
+                "paso_atras": "paso atrás", "bloqueo": "bloqueo", "parada": "parada",
+                "ballesteo": "ballesteo", "flexion": "flexión"}[a.id]}, a.id
 
 
 def test_sin_numero_se_dice_el_nombre_en_todos_los_modos():
@@ -78,3 +79,12 @@ def test_el_guion_zurdo_dice_el_nombre_reflejado_y_no_solo_el_numero(voz):
     assert adelantados <= set(dichos)
     if voz != "numeros":
         assert not {"tres crochet de izquierda", "cinco gancho de izquierda"} & set(dichos)
+
+
+def test_ballesteo_y_flexion_son_defensas_sin_lado():
+    cat = catalogo()
+    for id_, dicho in (("ballesteo", "ballesteo"), ("flexion", "flexión")):
+        a = cat[id_]
+        assert (a.tipo, a.lado, a.mano) == ("defensa", "ninguno", "ninguna")
+        assert espejo(a) == a
+        assert texto_hablado(acciones_por_ids([id_, "directo"]), "ambos") == f"{dicho}, dos recto"

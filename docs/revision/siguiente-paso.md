@@ -1,0 +1,1 @@
+Siguiente: revisión de David de la propuesta (biblioteca-propuesta.md); luego Fase 3: combinaciones.json, sorteo solo de su nivel, PDF para Iván agrupado por familias, captura a 390 con 'croch. dcha. abajo'.

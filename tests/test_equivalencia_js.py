@@ -16,10 +16,10 @@ import pytest
 
 from motor.acciones import Accion, acciones_por_ids, biblioteca, catalogo, espejo, espejo_combo, texto_hablado
 from motor.reglas import nivel_de, ultimo_golpe
-from motor.sorteo import NUMEROS, SIN_REPETIR, SorteoBiblioteca, cargar_perfil
+from motor.sorteo import ACCIONES_COLETILLA, NIVEL_COLETILLA, NUMEROS, SIN_REPETIR, SorteoBiblioteca, cargar_perfil
 from motor.ritmo import VELOCIDADES, duracion_estimada, rango_pausa
-from motor.temporizador import (AVISO_ANTES_FIN, DURACION_AVISO, DURACION_REACCION, MARGEN,
-                                PREPARACION, ConfigSesion, cargar_presets, construir_guion,
+from motor.temporizador import (AVISO_ANTES_FIN, DURACION_AVISO, DURACION_REACCION, FACTOR_VOZ_RAPIDA,
+                                MARGEN, PREPARACION, ConfigSesion, cargar_presets, construir_guion,
                                 guion_a_dict)
 
 RAIZ = Path(__file__).resolve().parent.parent
@@ -30,6 +30,7 @@ MUESTRAS = 5000  # combinaciones por nivel (y por guardia) en cada motor
 # superan si el port genera de verdad otra distribución.
 TOLERANCIA_PROPORCION = 0.05
 REDONDEO = 0.011  # los tiempos se redondean a centésimas
+SILENCIO_FINAL = 3.0  # el silencio final es como mucho el hueco mínimo del ritmo más esto
 
 NODE = shutil.which("node")
 # En local sin Node se saltan; en CI (GitHub pone CI=true) tienen que ejecutarse siempre.
@@ -160,20 +161,37 @@ def comprobar_guion(eventos: list[dict], c: ConfigSesion) -> None:
 
         combos = de_tipo("combo")
         assert combos, f"asalto {n} sin combinaciones"
-        for k in combos:
+        reservas, coletillas = de_tipo("reserva"), de_tipo("coletilla")
+        minima, maxima = rango_pausa(c.ritmo, c.pausa)
+        for k in combos + reservas + coletillas:
             acciones = acciones_por_ids(k["ids"])
             ortodoxas = espejo_combo(acciones) if c.zurdo else acciones
             assert tuple(a.id for a in ortodoxas) in _biblioteca_hasta(c.nivel), "no es de la biblioteca"
             assert k["duracion"] == duracion_estimada(acciones, k["texto"], c.velocidad)
             assert k["texto"] == texto_hablado(acciones, c.voz, c.zurdo)
+            assert minima <= k["hueco"] <= maxima
+        cortas = {tuple(a.id for a in co.acciones) for co in biblioteca()
+                  if co.nivel == NIVEL_COLETILLA and ACCIONES_COLETILLA[0] <= len(co.acciones) <= ACCIONES_COLETILLA[1]}
+        for k in coletillas:
+            acciones = acciones_por_ids(k["ids"])
+            assert tuple(a.id for a in (espejo_combo(acciones) if c.zurdo else acciones)) in cortas
+        assert all(r["t"] == fin for r in reservas)
+        ahorro = (1 - FACTOR_VOZ_RAPIDA) * sum(k["duracion"] for k in combos)
+        assert sum(FACTOR_VOZ_RAPIDA * r["duracion"] + r["hueco"] for r in reservas) >= ahorro - REDONDEO
+
+        # Lo que dice el guion: las combinaciones y las coletillas con hora (las demás, en fin).
+        dichas = sorted(combos + [k for k in coletillas if k["t"] < fin], key=lambda k: k["t"])
+        for k in dichas:
             assert inicio + PREPARACION <= k["t"] and k["t"] + k["duracion"] <= fin
-        for a, b in zip(combos, combos[1:]):
-            minima, _ = rango_pausa(c.ritmo, c.pausa)
+        for a, b in zip(dichas, dichas[1:]):
             assert b["t"] >= a["t"] + a["duracion"] + minima - REDONDEO, "no respeta la pausa entre combos"
+        if c.duracion_asalto >= 60:
+            silencio = fin - dichas[-1]["t"] - dichas[-1]["duracion"]
+            assert silencio <= minima + SILENCIO_FINAL + REDONDEO, f"asalto {n}: {silencio:.2f} s callado al final"
 
         # Combos, reacciones y aviso nunca se pisan (combos con un margen respecto a señales).
         senales = [(e["t"], e["t"] + e["duracion"]) for e in reacciones + de_tipo("aviso")]
-        for k in combos:
+        for k in dichas:
             for ini, fin_senal in senales:
                 assert (k["t"] + k["duracion"] + MARGEN <= ini + REDONDEO
                         or fin_senal + MARGEN <= k["t"] + REDONDEO), f"combo en {k['t']} pisa {ini}-{fin_senal}"

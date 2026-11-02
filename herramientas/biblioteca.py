@@ -480,6 +480,15 @@ class Uniforme:
         self.recientes = (self.recientes + [c])[-5:]
         return Combinacion(tuple(c["acciones"]), "biblioteca", c["notacion"])
 
+    def coletillas(self):
+        return []  # solo cuenta las del nivel
+
+    def guardar(self):
+        return list(self.recientes)
+
+    def restaurar(self, estado):
+        self.recientes = list(estado)
+
 
 def por_sesion(combos, nivel):
     cuantas = []

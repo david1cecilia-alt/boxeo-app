@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { crearAlmacen } from "../../static/almacen.js";
 import { MARGEN_VOZ, crearDictado } from "../../static/dictado.js";
-import { crearAzar } from "../../static/motor/azar.js";
+import { crearHistorial } from "../../static/historial.js";
 import { segundosHabla } from "../../static/motor/ritmo.js";
 import { crearReproductor } from "../../static/reproductor.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
@@ -14,7 +15,7 @@ const TOLERANCIA = 0.11;
 const vaciar = () => new Promise((ok) => setImmediate(ok));
 
 // Voz de mentira: apunta qué se dice y cuándo; el test decide si llega onend, onerror o nada.
-function montar({ pausa = 1.0, ritmo = 3, velocidad, combos = [], reservados = [], fin = 180 } = {}) {
+function montar({ pausa = 1.0, ritmo = 3, velocidad, combos = [], coletillas = [], reservados = [], fin = 180 } = {}) {
   let ms = 0;
   const reproductor = crearReproductor([], { alLanzar: () => {}, reloj: () => ms });
   const dichos = [];
@@ -24,7 +25,7 @@ function montar({ pausa = 1.0, ritmo = 3, velocidad, combos = [], reservados = [
     },
     callar() {},
   };
-  const dictado = crearDictado({ reproductor, voz, config: { ritmo, pausa, velocidad }, azar: crearAzar(1) });
+  const dictado = crearDictado({ reproductor, voz, config: { ritmo, pausa, velocidad } });
   async function hasta(segundo) {
     while (reproductor.tiempo() < segundo - 1e-9) {
       ms += PASO;
@@ -32,16 +33,17 @@ function montar({ pausa = 1.0, ritmo = 3, velocidad, combos = [], reservados = [
       await vaciar();
     }
   }
-  if (combos.length) dictado.asalto({ combos, reservados, fin });
+  if (combos.length) dictado.asalto({ cola: combos, coletillas, reservados, desde: combos[0].t, fin });
   return { reproductor, dictado, dichos, hasta, real: (n) => (ms += n) };
 }
 
-// Dos combinaciones: "jab, recto" y otra. Se golpea mientras se oye: tras la voz solo va el hueco.
-const COMBOS = [
-  { t: 3, asalto: 1, duracion: 3.0, texto: "jab, recto", ids: ["jab", "directo"] },
-  { t: 99, asalto: 1, duracion: 3.0, texto: "uno, dos", ids: ["jab", "directo"] },
-];
+// Dos combinaciones: "jab, recto" y otra. Se golpea mientras se oye: tras la voz solo va el hueco
+// (el que sorteó el guion para cada una).
 const PAUSA = 1.0;
+const COMBOS = [
+  { t: 3, asalto: 1, duracion: 3.0, texto: "jab, recto", ids: ["jab", "directo"], hueco: PAUSA },
+  { t: 99, asalto: 1, duracion: 3.0, texto: "uno, dos", ids: ["jab", "directo"], hueco: PAUSA },
+];
 
 const cerca = (real, esperado) => assert.ok(Math.abs(real - esperado) <= TOLERANCIA, `${real} vs ${esperado}`);
 
@@ -106,7 +108,7 @@ test("tras una señal, la combinación espera a que se calle y al tiempo para re
   const { dichos, dictado, hasta } = montar();
   await hasta(2.5);
   dictado.senal("¡esquiva!", 1.0);
-  dictado.asalto({ combos: COMBOS, reservados: [], fin: 180 });
+  dictado.asalto({ cola: COMBOS, reservados: [], desde: 3, fin: 180 });
   await hasta(5);
   assert.deepEqual(dichos.map((d) => d.texto), ["¡esquiva!"]);
   dichos[0].onend();
@@ -121,7 +123,7 @@ test("tras el aviso, la combinación espera a que se calle (también si onend no
   const { dichos, dictado, hasta } = montar();
   await hasta(2.9);
   dictado.senal("diez segundos");
-  dictado.asalto({ combos: COMBOS, reservados: [], fin: 180 });
+  dictado.asalto({ cola: COMBOS, reservados: [], desde: 3, fin: 180 });
   const maximo = segundosHabla("diez segundos") + MARGEN_VOZ;
   await hasta(2.9 + maximo - 0.2);
   assert.equal(dichos.length, 1);
@@ -150,16 +152,77 @@ test("al cortar (fin del asalto o parar) no se dicta nada más", async () => {
   assert.equal(dichos.length, 1);
 });
 
-test("en Intenso la siguiente llega 1 s después de que la voz calle (menos de 1,5 s) y nunca antes", async () => {
-  const { dichos, hasta } = montar({ pausa: null, ritmo: 5, combos: COMBOS });
-  await hasta(3.05);
-  await hasta(6.5); // la voz tarda más de lo estimado: mientras habla no empieza otra
-  assert.equal(dichos.length, 1, "no se pisa la voz");
+test("el hueco es el del guion, no uno sorteado otra vez", async () => {
+  const combos = [{ ...COMBOS[0], hueco: 2.5 }, COMBOS[1]];
+  const { dichos, hasta } = montar({ pausa: null, ritmo: 5, combos }); // Intenso sortearía 1 s
+  await hasta(4);
   dichos[0].onend();
-  await hasta(6.5 + 0.9);
+  await hasta(4 + 2.3);
   assert.equal(dichos.length, 1);
-  await hasta(6.5 + 1.2);
+  await hasta(4 + 2.7);
   assert.equal(dichos.length, 2);
-  const hueco = dichos[1].en - 6.5;
-  assert.ok(hueco >= 1 - TOLERANCIA && hueco < 1.5, `hueco de ${hueco} s`);
+  cerca(dichos[1].en, 4 + 2.5);
+});
+
+test("si la voz va rápida y se acaban las del guion, sigue con las reservas en su orden", async () => {
+  const reservas = [
+    { t: 180, asalto: 1, duracion: 3.0, texto: "reserva uno", ids: ["jab", "gancho_izq"], hueco: PAUSA, tipo: "reserva" },
+    { t: 180, asalto: 1, duracion: 3.0, texto: "reserva dos", ids: ["directo", "gancho_izq"], hueco: PAUSA, tipo: "reserva" },
+  ];
+  const { dichos, hasta } = montar({ combos: [...COMBOS, ...reservas] });
+  for (let k = 0; k < 4; k++) {
+    await hasta(3 + k * 2 + 1);
+    dichos[k].onend(); // cada una dura 1 s de verdad, aunque se estimen 3
+  }
+  assert.deepEqual(dichos.map((d) => d.texto), ["jab, recto", "uno, dos", "reserva uno", "reserva dos"]);
+});
+
+test("al final, si no cabe la siguiente, dice una coletilla que quepa y que no sea reciente", async () => {
+  const larga = { t: 3, asalto: 1, duracion: 6.0, texto: "larga", ids: ["jab", "directo", "gancho_izq"], hueco: PAUSA };
+  const coletillas = [
+    { t: 20, asalto: 1, duracion: 2.0, texto: "reciente", ids: ["jab", "directo", "gancho_izq"], hueco: PAUSA, tipo: "coletilla" },
+    { t: 20, asalto: 1, duracion: 4.5, texto: "no cabe", ids: ["jab", "jab"], hueco: PAUSA, tipo: "coletilla" },
+    { t: 20, asalto: 1, duracion: 2.0, texto: "corta", ids: ["directo", "jab"], hueco: PAUSA, tipo: "coletilla" },
+  ];
+  const { dichos, hasta } = montar({ combos: [larga], coletillas, fin: 9 });
+  await hasta(4);
+  dichos[0].onend(); // a las 5 no queda ninguna del nivel: «no cabe» acabaría en 9,5 y «reciente» lo es
+  await hasta(6);
+  dichos[1].onend();
+  await hasta(9);
+  assert.deepEqual(dichos.map((d) => d.texto), ["larga", "corta"]);
+});
+
+test("se guarda solo lo que se dijo de verdad, nunca las reservas sin usar", async () => {
+  const reservas = ["reserva uno", "reserva dos", "reserva tres"].map((texto, k) => (
+    { t: 180, asalto: 1, duracion: 3.0, texto, ids: ["jab", `r${k}`], hueco: PAUSA, tipo: "reserva" }));
+  const { dichos, dictado, hasta } = montar({ combos: [...COMBOS, ...reservas] });
+  for (let k = 0; k < 3; k++) {
+    await hasta(3 + k * 2 + 1);
+    dichos[k].onend();
+  }
+  await hasta(8.5);
+  dictado.cortar(); // fin del asalto antes de la cuarta: «reserva dos» y «reserva tres» se quedan sin decir
+  await hasta(20);
+  const dichas = dictado.dichas;
+  assert.deepEqual(dichas.map((d) => d.texto), dichos.map((d) => d.texto));
+  assert.deepEqual(dichas, [
+    { asalto: 1, texto: "jab, recto", ids: ["jab", "directo"] },
+    { asalto: 1, texto: "uno, dos", ids: ["jab", "directo"] },
+    { asalto: 1, texto: "reserva uno", ids: ["jab", "r0"] },
+  ]);
+
+  // Lo mismo llega al almacén (y, con servidor, a SQLite: se manda lo mismo).
+  const mapa = new Map();
+  const storage = { getItem: (k) => mapa.get(k) ?? null, setItem: (k, v) => mapa.set(k, v), removeItem: (k) => mapa.delete(k) };
+  const fetchAntes = globalThis.fetch;
+  globalThis.fetch = async () => { throw new Error("sin red"); };
+  try {
+    const historial = await crearHistorial(crearAlmacen({ storage }));
+    const id = await historial.guardar({ asaltos: 1, combinaciones: dichas });
+    assert.deepEqual(await historial.combinaciones(id), dichas);
+    assert.equal((await historial.listar())[0].num_combinaciones, dichos.length);
+  } finally {
+    globalThis.fetch = fetchAntes;
+  }
 });

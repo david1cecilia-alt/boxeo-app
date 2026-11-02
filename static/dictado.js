@@ -4,18 +4,27 @@
 // esperan a su voz: una combinación no empieza hasta que se callan (y, tras una señal, hasta que
 // pasa el tiempo para reaccionar).
 //
+// Qué se dice y cuándo lo decide el motor (elegirSiguiente), con la hora real: si la voz va más
+// rápida que la estimación, tras las combinaciones del guion siguen sus reservas; si ya no cabe
+// una del nivel, una coletilla.
+//
 // Todo en tiempo de sesión (reproductor.programar): la pausa lo congela también. Sin DOM: quien
 // lo usa decide qué se ve en alDecir.
-import { MARGEN } from "./motor/temporizador.js";
-import { pausaEntreCombos, segundosHabla } from "./motor/ritmo.js";
+import { rangoPausa, segundosHabla } from "./motor/ritmo.js";
+import { SIN_REPETIR } from "./motor/sorteo.js";
+import { elegirSiguiente, siguienteTrasVoz } from "./motor/temporizador.js";
 
 export const MARGEN_VOZ = 3.0;    // segundos de más sobre la estimación antes de dejar de esperar
 export const PARA_REACCIONAR = 1.0; // tras decir una señal, tiempo para reaccionar sin combinaciones
+export const RETRASO_TIC = 0.2;     // lo que puede llegar tarde lo programado (los tics van cada 100 ms)
 
-export function crearDictado({ reproductor, voz, config, azar, alDecir = () => {} }) {
+export function crearDictado({ reproductor, voz, config, alDecir = () => {} }) {
   let hablando = null;    // promesa de lo que se está diciendo, o null
   let bloqueadoHasta = 0; // segundo de sesión hasta el que no empieza ninguna combinación
   let ronda = 0;          // sube al empezar o cortar un asalto: invalida lo programado antes
+  let recientes = [];     // ids de las últimas dichas, que una coletilla no repite
+  const dichas = [];      // [{ asalto, texto, ids }] lo que se ha dicho de verdad, para guardar
+  const huecoMinimo = rangoPausa(config.ritmo, config.pausa ?? null)[0];
 
   const esperar = (segundos) => new Promise((ok) => reproductor.programar(segundos, ok));
 
@@ -63,32 +72,44 @@ export function crearDictado({ reproductor, voz, config, azar, alDecir = () => {
     return motivo;
   }
 
-  // Dicta las combinaciones de un asalto en su orden. `reservados`: [[ini, fin]] de las señales
-  // previstas del asalto, que una combinación no debe pisar; `fin`: final del asalto.
-  function asalto({ combos, reservados, fin }) {
+  // Dicta un asalto desde el segundo `desde`. `cola`: sus combinaciones y, detrás, sus reservas,
+  // en orden; `coletillas`: las cortas, en su orden al azar (las del guion con t = fin); `reservados`: [[ini, fin]] de las
+  // señales previstas del asalto, que una combinación no debe pisar; `fin`: final del asalto.
+  function asalto({ cola, coletillas = [], reservados, desde, fin }) {
     const esta = ++ronda;
     const viva = () => esta === ronda;
+    let i = 0; // la próxima de la cola
 
-    async function intentar(i) {
-      const combo = combos[i];
-      if (!viva() || !combo) return;
+    // `previsto`: el segundo para el que se programó; si solo llega tarde por el tic, se decide
+    // con él (si no, una coletilla justa al final ya no cabría por unas centésimas).
+    async function intentar(previsto = null) {
+      if (!viva()) return;
       await libre();
       if (!viva()) return;
-      const ahora = reproductor.tiempo();
-      const choque = reservados.find(([ini, f]) => ahora < f + MARGEN && ini - MARGEN < ahora + combo.duracion);
-      if (choque) {
-        reproductor.programar(choque[1] + MARGEN - ahora, () => intentar(i));
+      const real = reproductor.tiempo();
+      const ahora = previsto !== null && real - previsto <= RETRASO_TIC ? Math.min(real, previsto) : real;
+      const eleccion = elegirSiguiente(ahora, cola[i] ?? null, coletillas, reservados, fin, recientes);
+      if (!eleccion) return; // ya no cabe nada: se acaba el asalto
+      const [combo, empieza] = eleccion;
+      if (empieza > ahora) {
+        reproductor.programar(empieza - real, () => intentar(empieza)); // tras una señal: a esa hora se vuelve a mirar
         return;
       }
-      if (ahora + combo.duracion > fin) return; // ya no cabe: se acaba el asalto
+      if (combo === cola[i]) i++;
+      recientes = [...recientes, combo.ids].slice(-SIN_REPETIR);
+      dichas.push({ asalto: combo.asalto, texto: combo.texto, ids: combo.ids });
       alDecir(combo);
       await hablar(combo.texto);
       if (!viva()) return;
-      // Se golpea mientras se oye: desde que la voz calla solo queda el hueco del ritmo.
-      reproductor.programar(pausaEntreCombos(config.ritmo, azar, config.pausa), () => intentar(i + 1));
+      // Se golpea mientras se oye: desde que la voz calla solo queda el hueco. Es el que sorteó el
+      // guion para esta combinación (no se sortea otra vez): si la voz tarda lo estimado, se dice
+      // lo mismo que en el guion; si no, el desfase solo viene de la voz.
+      const ya = reproductor.tiempo();
+      const despues = siguienteTrasVoz(ya, combo.hueco, huecoMinimo, cola[i] ?? null, coletillas, reservados, fin, recientes);
+      if (despues) reproductor.programar(Math.max(0, despues[1] - ya), () => intentar(despues[1]));
     }
 
-    if (combos.length) reproductor.programar(Math.max(0, combos[0].t - reproductor.tiempo()), () => intentar(0));
+    reproductor.programar(Math.max(0, desde - reproductor.tiempo()), () => intentar(desde));
   }
 
   return {
@@ -100,5 +121,7 @@ export function crearDictado({ reproductor, voz, config, azar, alDecir = () => {
       ronda++;
     },
     get hablando() { return hablando !== null; },
+    // Lo que se guarda de la sesión (Historial, valoración): nunca las reservas sin decir.
+    get dichas() { return dichas.map((d) => ({ ...d })); },
   };
 }

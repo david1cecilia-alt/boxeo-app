@@ -7,11 +7,11 @@ import {
 import { crearAzar, semillaAleatoria } from "../motor/azar.js";
 import { datos } from "../motor/datos.js";
 import { PAUSA_POR_RITMO } from "../motor/ritmo.js";
-import { validarConfig } from "../motor/temporizador.js";
+import { COMBINACIONES, PREPARACION, validarConfig } from "../motor/temporizador.js";
 import { PARA_REACCIONAR, crearDictado } from "../dictado.js";
 import { crearPantallaEncendida } from "../pantalla.js";
 import { crearReproductor } from "../reproductor.js";
-import { activarSonido, campana, pitido, tablillas } from "../sonido.js";
+import { activarSonido, campana, dejarDormir, mantenerDespierto, pitido, tablillas } from "../sonido.js";
 import { $, anunciar, esc, minutos } from "./dom.js";
 import { pasosCombo } from "./pasos.js";
 
@@ -157,20 +157,16 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       fase: "asalto",
       finFase: 0,
       reaccionHasta: -1,
-      dictadas: [],
       asalto: 0,
       asaltosCompletados: 0,
     };
     // Las combinaciones no van a hora fija: las dicta el dictado, que espera a que la voz termine.
-    estado.combos = eventos.filter((e) => e.tipo === "combo");
-    estado.fijos = eventos.filter((e) => e.tipo !== "combo");
+    estado.combos = eventos.filter((e) => COMBINACIONES.includes(e.tipo));
+    estado.fijos = eventos.filter((e) => !COMBINACIONES.includes(e.tipo));
     estado.reproductor = crearReproductor(estado.fijos, { alLanzar: lanzar });
     estado.dictado = crearDictado({
-      reproductor: estado.reproductor, voz, config, azar: crearAzar(semillaAleatoria()),
-      alDecir: (c) => {
-        mostrarCombo(c.texto, c.ids);
-        estado.dictadas.push({ asalto: c.asalto, texto: c.texto, ids: c.ids });
-      },
+      reproductor: estado.reproductor, voz, config,
+      alDecir: (c) => mostrarCombo(c.texto, c.ids),
     });
     estado.temporizador = setInterval(tic, 100);
     pantalla.encender();
@@ -238,10 +234,13 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
         $("#anterior").textContent = "";
         estado.ultimoCombo = null;
         campana(1);
+        mantenerDespierto(); // solo con el asalto en marcha: ni en pausa, ni en descanso, ni al acabar
         r.programar(1.2, () => dictado.senal(e.texto)); // que no pise la campana
         dictado.asalto({
-          combos: estado.combos.filter((c) => c.asalto === e.asalto),
+          cola: estado.combos.filter((c) => c.asalto === e.asalto && c.tipo !== "coletilla"),
+          coletillas: estado.combos.filter((c) => c.asalto === e.asalto && c.tipo === "coletilla" && c.t >= estado.finFase),
           reservados: reservados(e.asalto),
+          desde: e.t + PREPARACION,
           fin: estado.finFase,
         });
         break;
@@ -262,6 +261,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       case "fin_asalto":
         estado.asaltosCompletados = e.asalto;
         dictado.cortar();
+        dejarDormir();
         campana(3);
         break;
       case "descanso":
@@ -304,9 +304,11 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     if (!estado) return;
     if (estado.reproductor.pausado) {
       estado.reproductor.reanudar();
+      if (estado.fase === "asalto") mantenerDespierto();
       anunciar("Reanudado");
     } else {
       estado.reproductor.pausar();
+      dejarDormir();
       voz.callar();
       anunciar("En pausa");
     }
@@ -333,11 +335,13 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     clearInterval(sesion.temporizador);
     sesion.dictado.cortar();
     sesion.reproductor.detener();
+    dejarDormir();
     document.body.classList.remove("entrenando");
     $("#pantalla").hidden = true;
     pantalla.apagar();
     $("#empezar").focus();
-    if (!sesion.dictadas.length) return;
+    const dichas = sesion.dictado.dichas; // solo lo que se dijo: nunca las reservas sin usar
+    if (!dichas.length) return;
     const datosSesion = {
       asaltos: sesion.asaltosCompletados,
       nivel: sesion.config.nivel,
@@ -348,11 +352,11 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       ritmo: sesion.config.ritmo,
       voz: sesion.config.voz,
       modo_reaccion: sesion.config.modo_reaccion,
-      combinaciones: sesion.dictadas,
+      combinaciones: dichas,
     };
     try {
       const id = await historial.guardar(datosSesion);
-      alTerminar({ id, combinaciones: sesion.dictadas });
+      alTerminar({ id, combinaciones: dichas });
     } catch (e) {
       alert(`No se pudo guardar la sesión: ${e.message}`);
     }

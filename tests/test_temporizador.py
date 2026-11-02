@@ -58,7 +58,7 @@ def test_reacciones_nunca_se_solapan_con_combos_ni_con_el_aviso(semilla, nivel):
     guion = construir_guion(config, random.Random(semilla))
     reacciones = de_tipo(guion, "reaccion")
     assert reacciones
-    ocupados = [(e.t, e.t + e.duracion) for e in guion if e.tipo in ("combo", "aviso")]
+    ocupados = [(e.t, e.t + e.duracion) for e in guion if e.tipo in ("combo", "coletilla", "aviso")]
     for r in reacciones:
         for ini, fin in ocupados:
             assert r.t + r.duracion <= ini or fin <= r.t, f"reacción en {r.t} pisa intervalo {ini}-{fin}"

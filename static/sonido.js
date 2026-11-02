@@ -8,6 +8,33 @@ export function activarSonido() {
   if (ctx.state === "suspended") ctx.resume();
 }
 
+// Mientras el asalto está en marcha suena un zumbido grave casi a cero (unos −66 dB, inaudible)
+// para que la salida de audio no se duerma en los huecos entre combinaciones: en Android, sobre
+// todo con Bluetooth, al despertar se comía la primera palabra. Ceros exactos no valen: Chrome
+// los detecta como silencio y suelta la salida igual.
+const DESPIERTO_FRECUENCIA = 40;
+const DESPIERTO_VOLUMEN = 0.0005;
+let despierto = null; // el oscilador que suena, o null
+
+export function mantenerDespierto() {
+  if (!ctx || despierto) return;
+  if (ctx.state === "suspended") ctx.resume();
+  const osc = ctx.createOscillator();
+  const gan = ctx.createGain();
+  osc.frequency.value = DESPIERTO_FRECUENCIA;
+  gan.gain.value = DESPIERTO_VOLUMEN;
+  osc.connect(gan).connect(ctx.destination);
+  osc.start();
+  despierto = osc;
+}
+
+export function dejarDormir() {
+  if (!despierto) return;
+  despierto.stop();
+  despierto.disconnect();
+  despierto = null;
+}
+
 function tono({ frecuencia, inicio = 0, duracion = 0.3, tipo = "sine", volumen = 0.4 }) {
   if (!ctx) return;
   const t0 = ctx.currentTime + inicio;

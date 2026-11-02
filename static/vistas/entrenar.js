@@ -7,7 +7,7 @@ import {
 import { crearAzar, semillaAleatoria } from "../motor/azar.js";
 import { datos } from "../motor/datos.js";
 import { PAUSA_POR_RITMO } from "../motor/ritmo.js";
-import { validarConfig } from "../motor/temporizador.js";
+import { COMBINACIONES, PREPARACION, validarConfig } from "../motor/temporizador.js";
 import { PARA_REACCIONAR, crearDictado } from "../dictado.js";
 import { crearPantallaEncendida } from "../pantalla.js";
 import { crearReproductor } from "../reproductor.js";
@@ -162,11 +162,11 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       asaltosCompletados: 0,
     };
     // Las combinaciones no van a hora fija: las dicta el dictado, que espera a que la voz termine.
-    estado.combos = eventos.filter((e) => e.tipo === "combo");
-    estado.fijos = eventos.filter((e) => e.tipo !== "combo");
+    estado.combos = eventos.filter((e) => COMBINACIONES.includes(e.tipo));
+    estado.fijos = eventos.filter((e) => !COMBINACIONES.includes(e.tipo));
     estado.reproductor = crearReproductor(estado.fijos, { alLanzar: lanzar });
     estado.dictado = crearDictado({
-      reproductor: estado.reproductor, voz, config, azar: crearAzar(semillaAleatoria()),
+      reproductor: estado.reproductor, voz, config,
       alDecir: (c) => {
         mostrarCombo(c.texto, c.ids);
         estado.dictadas.push({ asalto: c.asalto, texto: c.texto, ids: c.ids });
@@ -241,8 +241,10 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
         mantenerDespierto(); // solo con el asalto en marcha: ni en pausa, ni en descanso, ni al acabar
         r.programar(1.2, () => dictado.senal(e.texto)); // que no pise la campana
         dictado.asalto({
-          combos: estado.combos.filter((c) => c.asalto === e.asalto),
+          cola: estado.combos.filter((c) => c.asalto === e.asalto && c.tipo !== "coletilla"),
+          coletillas: estado.combos.filter((c) => c.asalto === e.asalto && c.tipo === "coletilla" && c.t >= estado.finFase),
           reservados: reservados(e.asalto),
+          desde: e.t + PREPARACION,
           fin: estado.finFase,
         });
         break;

@@ -8,15 +8,16 @@ import random
 
 import pytest
 
-from motor.ritmo import VELOCIDADES
+from motor.ritmo import RITMO_POR_DEFECTO, VELOCIDADES, rango_pausa
 from motor.temporizador import ConfigSesion, construir_guion
 
-SILENCIO_MAXIMO = 5.0  # segundos; ver la propuesta de arreglo
+SILENCIO_MAXIMO = rango_pausa(RITMO_POR_DEFECTO)[0] + 3.0  # el hueco mínimo del ritmo más 3 s: 5 s
 SEMILLAS = range(30)
 
 
 def silencios_finales(guion) -> list[float]:
-    """Por asalto: fin del asalto menos el final de su última combinación."""
+    """Por asalto: fin del asalto menos el final de su última combinación (o coletilla dicha;
+    las que no se dicen van con t = fin)."""
     silencios = []
     for fin in (e for e in guion if e.tipo == "fin_asalto"):
         dichos = [e for e in guion if e.asalto == fin.asalto and e.tipo in ("combo", "coletilla") and e.t < fin.t]

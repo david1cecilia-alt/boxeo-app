@@ -13,22 +13,30 @@ export function nombreHablado(a) {
   return a.plantilla.replace("{mano}", PALABRA[a.mano] ?? "").replace("{lado}", PALABRA[a.lado] ?? "");
 }
 
-// Igual que el hablado pero abreviado ("gancho dcha."): lo que se lee en la sesión.
+// Igual que el hablado pero abreviado ("crochet dcha."): lo que se lee en la sesión.
 export function nombreCorto(a) {
   return a.plantilla_corta.replace("{mano}", PALABRA_CORTA[a.mano] ?? "").replace("{lado}", PALABRA_CORTA[a.lado] ?? "");
 }
 
-function desdeJson(d) {
+// Los textos de la familia de la acción (los de "al_cuerpo" si es un golpe al cuerpo).
+function textosDe(d, textos) {
+  const familia = textos[d.familia];
+  return d.objetivo === "cuerpo" ? familia.al_cuerpo : familia;
+}
+
+function desdeJson(d, textos) {
+  const t = textosDe(d, textos);
   return Object.freeze({
-    id: d.id, familia: d.familia, plantilla: d.nombre_hablado, tipo: d.tipo, mano: d.mano,
+    id: d.id, familia: d.familia, plantilla: t.hablado, tipo: d.tipo, mano: d.mano,
     objetivo: d.objetivo, peso_despues: d.peso_despues, nivel_minimo: d.nivel_minimo,
-    lado: d.lado ?? "ninguno", poder: d.poder ?? false, plantilla_corta: d.nombre_corto,
-    numero: d.numero ?? null, orden: d.orden ?? "",
+    lado: d.lado ?? "ninguno", poder: d.poder ?? false, plantilla_corta: t.corto,
+    numero: d.numero ?? null, orden: t.orden ?? "",
   });
 }
 
 // Todas las acciones ortodoxas indexadas por id (en el orden del JSON).
-export const catalogo = segunDatos((d) => new Map(d.acciones.acciones.map((a) => [a.id, desdeJson(a)])));
+export const catalogo = segunDatos(
+  (d) => new Map(d.acciones.acciones.map((a) => [a.id, desdeJson(a, d.acciones.textos)])));
 
 // Pares (o tríos) de la misma mano que sí están permitidos, como "id1|id2".
 export const repeticionesPermitidas = segunDatos(
@@ -92,12 +100,12 @@ export function espejoCombo(combo) {
 export const MODOS_VOZ = ["numeros", "nombres", "ambos"];
 
 // Número del golpe por mano adelantada/trasera. El de un zurdo se lee de su espejo
-// ortodoxo: su gancho de derecha es el gancho adelantado, el 3.
+// ortodoxo: su crochet de derecha es el crochet adelantado, el 3.
 export function numero(accion, zurdo = false) {
   return (zurdo ? espejo(accion) : accion).numero;
 }
 
-// La orden de una defensa con su lado si lo tiene: "esquiva izquierda", "atrás".
+// La orden de una defensa con su lado si lo tiene: "esquiva izquierda", "paso atrás".
 function ordenHablada(accion) {
   if (!accion.orden || !(accion.lado in PALABRA)) return accion.orden;
   return `${accion.orden} ${PALABRA[accion.lado]}`;

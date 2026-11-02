@@ -35,7 +35,7 @@ es una PWA instalable y todo se calcula en el dispositivo.
 - **Asaltos configurables** (preset amateur 3×3 min con 1 min de descanso): campana al empezar y
   acabar, tablillas y aviso por voz a los 10 s del final.
 - **Combinaciones con sentido técnico**, dichas como elijas en «Nombrar combinaciones»: por **Números**
-  ("uno, dos, tres"), por **Nombres** ("jab, recto, gancho de izquierda") o **Ambos** ("uno jab,
+  ("uno, dos, tres"), por **Nombres** ("jab, recto, crochet de izquierda") o **Ambos** ("uno jab,
   dos recto"). La sesión las sortea de una biblioteca por niveles (`data/combinaciones.json`) que
   pasa las reglas técnicas del motor; el generador por reglas sigue en el motor, pero hoy solo lo
   usan los tests.
@@ -61,7 +61,7 @@ es una PWA instalable y todo se calcula en el dispositivo.
     o PC, se usa la automática. Entrenar muestra la voz que de verdad suena, y el motor alarga o
     acorta su estimación de lo que tarda la voz según la velocidad.
   - **Tus datos**: guardia y nivel actual.
-  - **Qué te dicta la app**: los **pesos del sorteo** (más finales en gancho, más
+  - **Qué te dicta la app**: los **pesos del sorteo** (más finales en crochet, más
     bloquear-y-devolver, más entradas con jab) se ajustan con deslizadores, sustituyen a los de
     `data/perfil.json` y deciden qué combinaciones de la biblioteca salen más.
 - **Perfil** (informativo): estilo (cada pregunta admite «No lo sé») con un **estilo recomendado**

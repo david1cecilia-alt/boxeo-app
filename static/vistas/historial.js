@@ -14,6 +14,7 @@ import {
 } from "./galeria.js";
 import { activarGrafico, graficoSemanas } from "./grafico.js";
 import { SENSACION } from "./opciones.js";
+import { textoGuardado } from "./pasos.js";
 import { AGRUPACIONES, inicioPeriodo, lunes, minutosDeAsalto, porPeriodo, textoMinutos, tituloGrupo, totales } from "./resumen.js";
 
 const MES = new Intl.DateTimeFormat("es-ES", { month: "short" });
@@ -286,7 +287,9 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
       panel.innerHTML = `<p class="aviso">Esa sesión no existe.</p><p><a href="#historial">Volver al historial</a></p>`;
       return;
     }
-    const combinaciones = s.combinaciones ?? await historial.combinaciones(s.id);
+    // El texto se rehace desde los ids: el guardado puede llevar nombres que ya no se usan.
+    const combinaciones = (s.combinaciones ?? await historial.combinaciones(s.id))
+      .map((c) => ({ ...c, texto: textoGuardado(c, s) }));
     const v = almacen.valoracion(clave);
     const costosas = new Set(v?.costosas ?? []);
     const asaltos = [...new Set(combinaciones.map((c) => c.asalto))];

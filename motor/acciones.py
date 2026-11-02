@@ -25,7 +25,7 @@ class Accion:
     lado: str = "ninguno"  # lado de defensas/movimientos (izq | der | ninguno)
     poder: bool = False
     plantilla_corta: str = ""  # nombre para la pantalla de la sesión
-    numero: int | None = None  # número del golpe EN ORTODOXO (1 jab … 6 uppercut trasero)
+    numero: int | None = None  # número del golpe EN ORTODOXO (1 jab … 6 gancho trasero)
     orden: str = ""            # lo que se dice de una defensa en la sesión ("esquiva" + su lado)
 
     @property
@@ -36,18 +36,25 @@ class Accion:
 
     @property
     def nombre_corto(self) -> str:
-        # Igual que el hablado pero abreviado ("gancho dcha."): lo que se lee en la sesión.
+        # Igual que el hablado pero abreviado ("crochet dcha."): lo que se lee en la sesión.
         return self.plantilla_corta.format(mano=_PALABRA_CORTA.get(self.mano, ""),
                                            lado=_PALABRA_CORTA.get(self.lado, ""))
 
 
-def _desde_json(d: dict) -> Accion:
-    return Accion(id=d["id"], familia=d["familia"], plantilla=d["nombre_hablado"],
+def _textos(d: dict, textos: dict) -> dict:
+    """Los textos de la familia de la acción (los de "al_cuerpo" si es un golpe al cuerpo)."""
+    familia = textos[d["familia"]]
+    return familia["al_cuerpo"] if d["objetivo"] == "cuerpo" else familia
+
+
+def _desde_json(d: dict, textos: dict) -> Accion:
+    t = _textos(d, textos)
+    return Accion(id=d["id"], familia=d["familia"], plantilla=t["hablado"],
                   tipo=d["tipo"], mano=d["mano"], objetivo=d["objetivo"],
                   peso_despues=d["peso_despues"], nivel_minimo=d["nivel_minimo"],
                   lado=d.get("lado", "ninguno"), poder=d.get("poder", False),
-                  plantilla_corta=d["nombre_corto"], numero=d.get("numero"),
-                  orden=d.get("orden", ""))
+                  plantilla_corta=t["corto"], numero=d.get("numero"),
+                  orden=t.get("orden", ""))
 
 
 @lru_cache
@@ -59,7 +66,8 @@ def _leer_json() -> dict:
 @lru_cache
 def catalogo() -> dict[str, Accion]:
     """Todas las acciones ortodoxas indexadas por id."""
-    return {d["id"]: _desde_json(d) for d in _leer_json()["acciones"]}
+    datos = _leer_json()
+    return {d["id"]: _desde_json(d, datos["textos"]) for d in datos["acciones"]}
 
 
 @lru_cache
@@ -144,12 +152,12 @@ MODOS_VOZ = ("numeros", "nombres", "ambos")
 
 def numero(accion: Accion, zurdo: bool = False) -> int | None:
     """Número del golpe por mano adelantada/trasera. El de un zurdo se lee de su espejo
-    ortodoxo: su gancho de derecha es el gancho adelantado, el 3."""
+    ortodoxo: su crochet de derecha es el crochet adelantado, el 3."""
     return (espejo(accion) if zurdo else accion).numero
 
 
 def _orden_hablada(accion: Accion) -> str:
-    """La orden de una defensa con su lado si lo tiene: "esquiva izquierda", "atrás"."""
+    """La orden de una defensa con su lado si lo tiene: "esquiva izquierda", "paso atrás"."""
     if not accion.orden or accion.lado not in _PALABRA:
         return accion.orden
     return f"{accion.orden} {_PALABRA[accion.lado]}"

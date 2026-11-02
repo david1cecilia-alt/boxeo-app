@@ -72,10 +72,10 @@
     },
     "golpe_favorito": {
       "jab": "tu golpe favorito es el jab",
-      "gancho": "tu golpe favorito es el gancho",
+      "gancho": "tu golpe favorito es el crochet",
       "cuerpo": "te gustan los golpes al cuerpo",
       "directo": "tu golpe favorito es el directo",
-      "uppercut": "tu golpe favorito es el uppercut"
+      "uppercut": "tu golpe favorito es el gancho"
     }
   }
 }

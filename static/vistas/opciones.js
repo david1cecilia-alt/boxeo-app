@@ -28,8 +28,8 @@ export const ESTILO = {
   },
   golpe_favorito: {
     etiqueta: "Golpe favorito",
-    opciones: [NO_LO_SE, ["jab", "Jab"], ["directo", "Directo"], ["gancho", "Gancho"],
-      ["uppercut", "Uppercut"], ["cuerpo", "Golpes al cuerpo"]],
+    opciones: [NO_LO_SE, ["jab", "Jab"], ["directo", "Directo"], ["gancho", "Crochet"],
+      ["uppercut", "Gancho"], ["cuerpo", "Golpes al cuerpo"]],
   },
   volumen: {
     etiqueta: "Volumen",
@@ -53,12 +53,12 @@ export const ESTILO = {
 
 export const PESOS_TEXTO = {
   termina_en_gancho: {
-    etiqueta: "Acabar en gancho",
-    ayuda: "Más combinaciones cuyo último golpe es un gancho (aunque después venga una salida).",
+    etiqueta: "Acabar en crochet",
+    ayuda: "Más combinaciones cuyo último golpe es un crochet (aunque después venga una salida).",
   },
   bloquear_y_devolver: {
     etiqueta: "Bloquear y devolver",
-    ayuda: "Más combinaciones con «bloquea» seguido de un golpe.",
+    ayuda: "Más combinaciones con «bloqueo» seguido de un golpe.",
   },
   entrada_con_jab: {
     etiqueta: "Entrar con el jab",

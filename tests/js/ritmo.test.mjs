@@ -15,7 +15,7 @@ test("las mismas velocidades que motor/ritmo.py", () => {
 });
 
 test("la estimación de voz escala en proporción inversa a la velocidad", () => {
-  const texto = "jab, recto, gancho de izquierda";
+  const texto = "jab, recto, crochet de izquierda";
   const normal = segundosHabla(texto);
   assert.equal(segundosHabla(texto, 1.1), normal);
   assert.ok(Math.abs(segundosHabla(texto, 0.9) - (normal * 1.1) / 0.9) < 1e-9);

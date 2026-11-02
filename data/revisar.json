@@ -27,6 +27,11 @@
       "texto": "rodar a un lado deja el peso en ese mismo lado"
     },
     {
+      "id": "acciones-dbfd9eb2",
+      "origen": "data/acciones.json",
+      "texto": "«esquiva abajo» para el roll (antes «rueda»); puede acabar siendo otro término"
+    },
+    {
       "id": "combinaciones-51b13a23",
       "origen": "data/combinaciones.json",
       "texto": "toda la biblioteca (combinaciones, sus niveles, las proporciones de defensa y las combinaciones adaptadas o añadidas)"

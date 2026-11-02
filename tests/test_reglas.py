@@ -107,8 +107,8 @@ def test_salidas_validas_tras_golpe_de_poder():
     assert not es_valida(combo(*base, "parada"), 2)
 
 
-def test_salir_se_dice_sal_en_angulo():
-    assert catalogo()["salir"].nombre_hablado == "sal en ángulo"
+def test_salir_se_dice_cambio_de_angulo():
+    assert catalogo()["salir"].nombre_hablado == "cambio de ángulo"
 
 
 def test_ultimo_golpe_ignora_la_salida():

@@ -72,4 +72,4 @@ def test_sin_modo_reaccion_no_hay_senales():
 def test_zurdo_dicta_nombres_reflejados():
     config = ConfigSesion(asaltos=1, duracion_asalto=180, descanso=0, zurdo=True)
     combos = de_tipo(construir_guion(config, random.Random(0)), "combo")
-    assert any("gancho de derecha" in c.texto for c in combos)
+    assert any("crochet de derecha" in c.texto for c in combos)

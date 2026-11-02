@@ -9,7 +9,7 @@ def test_espejo_dos_veces_es_la_identidad():
 
 
 def test_acciones_con_lado_tienen_su_simetrica_en_el_catalogo():
-    # Comprueba que los datos son simétricos: el espejo de gancho_izq ES gancho_der.
+    # Comprueba que los datos son simétricos: el espejo de gancho_izq ES gancho_der (el crochet).
     cat = catalogo()
     for accion in cat.values():
         reflejada = espejo(accion)
@@ -20,9 +20,9 @@ def test_acciones_con_lado_tienen_su_simetrica_en_el_catalogo():
 
 def test_espejo_intercambia_mano_lado_y_peso():
     cat = catalogo()
-    assert espejo(cat["gancho_izq"]).nombre_hablado == "gancho de derecha"
-    assert espejo(cat["esquiva_der"]).nombre_hablado == "esquiva a la izquierda"
-    assert espejo(cat["uppercut_der_cuerpo"]).nombre_hablado == "uppercut de izquierda al cuerpo"
+    assert espejo(cat["gancho_izq"]).nombre_hablado == "crochet de derecha"
+    assert espejo(cat["esquiva_der"]).nombre_hablado == "esquiva izquierda"
+    assert espejo(cat["uppercut_der_cuerpo"]).nombre_hablado == "gancho de izquierda al cuerpo"
     assert espejo(cat["esquiva_der"]).peso_despues == "izq"
 
 
@@ -55,12 +55,12 @@ def test_todas_las_acciones_tienen_nombre_corto_de_18_caracteres_como_mucho():
 
 def test_el_espejo_zurdo_tambien_invierte_el_nombre_corto():
     cat = catalogo()
-    assert cat["uppercut_izq"].nombre_corto == "uppercut izq."
-    assert espejo(cat["uppercut_izq"]).nombre_corto == "uppercut dcha."
+    assert cat["uppercut_izq"].nombre_corto == "gancho izq."
+    assert espejo(cat["uppercut_izq"]).nombre_corto == "gancho dcha."
     assert espejo(cat["esquiva_der"]).nombre_corto == "esquiva izq."
     assert espejo(cat["paso_lateral_izq"]).nombre_corto == "paso lateral dcha."
-    assert cat["gancho_der_cuerpo"].nombre_corto == "gancho dcha. abajo"
-    assert espejo(cat["uppercut_der_cuerpo"]).nombre_corto == "upper izq. abajo"
+    assert cat["gancho_der_cuerpo"].nombre_corto == "croch. dcha. abajo"
+    assert espejo(cat["uppercut_der_cuerpo"]).nombre_corto == "gancho izq. abajo"
     assert espejo(cat["jab"]).nombre_corto == "jab"
     # En todo el catálogo: si el corto lleva lado, el del espejo lleva el contrario.
     for accion in cat.values():

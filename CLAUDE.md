@@ -29,11 +29,13 @@
 
 ## Datos
 - El vocabulario vive en `data/acciones.json`, nunca en el código. Los golpes se dicen por su nombre o, si el
-  usuario lo elige («Nombrar combinaciones»), por su número (`numero`: 1 jab … 6 uppercut trasero, por mano
+  usuario lo elige («Nombrar combinaciones»), por su número (`numero`: 1 jab … 6 gancho trasero, por mano
   adelantada/trasera y escrito en ortodoxo; el zurdo lo lee de su espejo con `motor.acciones.numero`).
-  Las defensas se dicen con su `orden` corta. `nombre_hablado` y `nombre_corto` nunca llevan cifras.
+  Las defensas se dicen con su `orden` corta. Los nombres (`hablado` y `corto`) nunca llevan cifras.
 - Todo se define en guardia **ortodoxa**; el zurdo se obtiene con `motor.acciones.espejo()`. No duplicar datos.
-- `nombre_hablado` es una plantilla (`{lado}`) que se rellena a partir de mano/lado.
+- Los textos de cada familia (`hablado`, `corto`, `orden`) están una sola vez en el bloque `textos` de
+  `data/acciones.json`; `hablado` es una plantilla (`{mano}`, `{lado}`) que se rellena a partir de mano/lado.
+  Los ids no cambian aunque cambie el nombre (`gancho_*` es el crochet; `uppercut_*`, el gancho).
 
 ## Reglas de boxeo
 - Las reglas están en `motor/reglas.py` (`validar`). Si un combo clásico no las pasa, **avisar**, no cambiar la regla.

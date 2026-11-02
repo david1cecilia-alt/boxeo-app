@@ -28,7 +28,7 @@ export const ESTILO = {
   },
   golpe_favorito: {
     etiqueta: "Golpe favorito",
-    opciones: [NO_LO_SE, ["jab", "Jab"], ["directo", "Directo"], ["gancho", "Crochet"],
+    opciones: [NO_LO_SE, ["jab", "Jab"], ["directo", "Recto"], ["gancho", "Crochet"],
       ["uppercut", "Gancho"], ["cuerpo", "Golpes al cuerpo"]],
   },
   volumen: {

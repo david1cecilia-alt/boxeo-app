@@ -78,3 +78,11 @@ test("alcance frente a altura: solo con las dos medidas y a partir de 3 cm", () 
   // La nota sale aunque aún falten respuestas.
   assert.match(recomendar({}, { altura_cm: 170, alcance_cm: 180 }).alcance, /10 cm mayor/);
 });
+
+test("el golpe favorito usa los nombres de la voz: recto, crochet y gancho", () => {
+  const textos = Object.fromEntries(ESTILO.golpe_favorito.opciones);
+  assert.deepEqual([textos.directo, textos.gancho, textos.uppercut], ["Recto", "Crochet", "Gancho"]);
+  const porque = tabla.frases.golpe_favorito;
+  assert.equal(porque.directo, "tu golpe favorito es el recto");
+  assert.ok(!Object.values(porque).some((t) => t.includes("directo")));
+});

@@ -9,7 +9,7 @@ def combo(*ids):
     return acciones_por_ids(list(ids))
 
 
-def test_jab_directo_es_valida():
+def test_jab_recto_es_valida():
     assert validar(combo("jab", "directo")) == []
 
 

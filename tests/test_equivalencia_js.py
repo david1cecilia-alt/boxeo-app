@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from motor.acciones import Accion, acciones_por_ids, biblioteca, catalogo, espejo, espejo_combo, texto_hablado
-from motor.reglas import ultimo_golpe
+from motor.reglas import nivel_de, ultimo_golpe
 from motor.sorteo import NUMEROS, SIN_REPETIR, SorteoBiblioteca, cargar_perfil
 from motor.ritmo import VELOCIDADES, duracion_estimada, rango_pausa
 from motor.temporizador import (AVISO_ANTES_FIN, DURACION_AVISO, DURACION_REACCION, MARGEN,
@@ -117,6 +117,14 @@ def test_espejo_js_identico_al_de_python_en_todo_el_catalogo(js):
     assert set(js["espejos"]) == set(catalogo())
     for id_, accion in catalogo().items():
         assert js["espejos"][id_] == asdict(espejo(accion)), id_
+
+
+# ---------- Nivel por número de acciones ----------
+
+def test_nivel_js_identico_al_de_python(js):
+    assert [len(c["ids"]) for c in js["niveles"]] == list(range(13))
+    for caso in js["niveles"]:
+        assert caso["nivel"] == nivel_de(acciones_por_ids(caso["ids"])), caso["ids"]
 
 
 # ---------- Guiones ----------

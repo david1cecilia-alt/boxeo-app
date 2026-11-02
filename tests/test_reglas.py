@@ -1,6 +1,8 @@
 """Las reglas son solo estructurales: al menos un golpe. El resto lo decide la situación."""
+import pytest
+
 from motor.acciones import acciones_por_ids, catalogo
-from motor.reglas import es_valida, ultimo_golpe, validar
+from motor.reglas import MAX_ACCIONES, es_valida, nivel_de, ultimo_golpe, validar
 
 
 def combo(*ids):
@@ -48,3 +50,23 @@ def test_salir_se_dice_cambio_de_angulo():
 def test_ultimo_golpe_ignora_la_salida():
     assert ultimo_golpe(combo("jab", "directo", "gancho_izq", "esquiva_der")).id == "gancho_izq"
     assert ultimo_golpe(combo("esquiva_der", "pivote")) is None
+
+
+# --- Nivel por número de acciones ---
+
+@pytest.mark.parametrize("n, nivel", [(0, None), (1, None), (2, 1), (4, 1), (5, 2), (6, 2), (7, 3), (10, 3), (11, None)])
+def test_nivel_por_numero_de_acciones_en_los_bordes(n, nivel):
+    assert nivel_de(combo(*["jab"] * n)) == nivel
+
+
+def test_cuentan_golpes_defensas_y_salidas_por_igual():
+    assert nivel_de(combo("jab", "gancho_izq", "rodar_der")) == 1
+    assert nivel_de(combo("jab", "gancho_izq", "rodar_der", "uppercut_der", "gancho_der")) == 2
+    assert nivel_de(combo("jab", "gancho_izq", "rodar_der", "uppercut_der", "gancho_der", "salir", "gancho_izq")) == 3
+    assert nivel_de(combo("bloqueo", "paso_atras", "pivote", "salir")) == 1  # sin golpe no es válida, pero tiene nivel
+
+
+def test_como_mucho_10_acciones():
+    assert MAX_ACCIONES == 10
+    assert nivel_de(combo(*["jab", "directo"] * 5)) == 3
+    assert nivel_de(combo(*["jab", "directo"] * 5, "salir")) is None

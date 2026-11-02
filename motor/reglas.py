@@ -6,6 +6,10 @@ validar() devuelve la lista de infracciones; lista vacía = combinación válida
 """
 from motor.acciones import Accion
 
+# Nivel por número total de acciones (golpes, defensas y salidas): 1 básico, 2 medio, 3 avanzado.
+ACCIONES_POR_NIVEL = {1: (2, 4), 2: (5, 6), 3: (7, 10)}
+MAX_ACCIONES = 10
+
 # Ninguna acción tiene nivel mínimo: los golpes al cuerpo y todas las defensas valen desde básico.
 # REVISAR CON ENTRENADOR: ¿alguna acción no es para principiantes?
 
@@ -25,6 +29,13 @@ def validar(combo: list[Accion]) -> list[str]:
 
 def es_valida(combo: list[Accion]) -> bool:
     return not validar(combo)
+
+
+def nivel_de(combo: list[Accion]) -> int | None:
+    """Nivel de una combinación por su número de acciones: 2-4 básico, 5-6 medio, 7-10 avanzado.
+    None si tiene menos de 2 o más de MAX_ACCIONES."""
+    return next((nivel for nivel, (minimo, maximo) in ACCIONES_POR_NIVEL.items()
+                 if minimo <= len(combo) <= maximo), None)
 
 
 def ultimo_golpe(combo: list[Accion]) -> Accion | None:

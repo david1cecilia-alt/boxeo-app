@@ -110,7 +110,9 @@ flowchart LR
 
 - **`motor/` (Python)** es lógica pura y testeada: las reglas de boxeo viven aquí y las nuevas se
   escriben primero aquí. Las reglas son solo estructurales (toda combinación lleva al menos un
-  golpe): el boxeo es situacional, así que tras una defensa puede ir cualquier golpe.
+  golpe): el boxeo es situacional, así que tras una defensa puede ir cualquier golpe. El nivel de
+  una combinación lo da su número de acciones (`reglas.nivel_de`: 2-4 básico, 5-6 medio, 7-10
+  avanzado; como mucho 10).
 - **`static/motor/` (JS)** es un port fiel para que el móvil no necesite servidor. Lee **los mismos
   JSON**: el vocabulario no se duplica.
 - **El guion es un dato**: el motor genera una lista de eventos con su segundo exacto
@@ -135,6 +137,7 @@ valida con el de Python:
 | Los guiones JS respetan los tiempos | 50 guiones (con y sin modo reacción, zurdo, pausas extremas, las tres velocidades de voz) cumplen los mismos invariantes que los de Python: sin solapes, aviso a 10 s, duraciones, pausas y descansos |
 | El perfil pesa igual | Frecuencia de defensa, de cada golpe del 1 al 6, de finales en crochet, de bloqueos, de entradas con jab y del refuerzo de «Practicar»: JS a ±5 puntos de Python (5.000 muestras; la diferencia real es < 2) |
 | El espejo zurdo es idéntico | `espejo()` da exactamente lo mismo en los dos sobre todo el catálogo |
+| El nivel es el mismo | `nivel_de()` da lo mismo en los dos para combinaciones de 0 a 12 acciones |
 | JS es reproducible | Misma semilla ⇒ misma salida, byte a byte |
 
 Los invariantes de guion se aplican también a los guiones de Python: así se comprueba que

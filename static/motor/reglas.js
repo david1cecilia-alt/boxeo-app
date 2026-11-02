@@ -3,6 +3,10 @@
 // golpe, se puede acabar bloqueando y se puede repetir mano. El nivel lo da la longitud.
 // validar() devuelve la lista de infracciones; lista vacía = combinación válida.
 
+// Nivel por número total de acciones (golpes, defensas y salidas): 1 básico, 2 medio, 3 avanzado.
+export const ACCIONES_POR_NIVEL = { 1: [2, 4], 2: [5, 6], 3: [7, 10] };
+export const MAX_ACCIONES = 10;
+
 // Ninguna acción tiene nivel mínimo: los golpes al cuerpo y todas las defensas valen desde básico.
 
 function reglaTieneGolpe(combo) {
@@ -18,6 +22,14 @@ export function validar(combo) {
 
 export function esValida(combo) {
   return validar(combo).length === 0;
+}
+
+// Nivel de una combinación por su número de acciones: 2-4 básico, 5-6 medio, 7-10 avanzado.
+// null si tiene menos de 2 o más de MAX_ACCIONES.
+export function nivelDe(combo) {
+  const nivel = Object.entries(ACCIONES_POR_NIVEL)
+    .find(([, [minimo, maximo]]) => minimo <= combo.length && combo.length <= maximo);
+  return nivel ? Number(nivel[0]) : null;
 }
 
 // El último GOLPE, aunque después vaya una salida (para los pesos del perfil).

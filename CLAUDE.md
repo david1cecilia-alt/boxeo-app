@@ -40,6 +40,8 @@
 ## Reglas de boxeo
 - Las reglas están en `motor/reglas.py` (`validar`) y son solo estructurales (al menos un golpe): el boxeo es
   situacional. Si un combo clásico no las pasa, **avisar**, no cambiar la regla.
+- El nivel de una combinación lo da solo su número de acciones: `motor.reglas.nivel_de` (2-4 básico, 5-6 medio,
+  7-10 avanzado, máximo 10; `None` fuera). Es la única función de nivel: la usarán la biblioteca y el futuro creador.
 - Lo dudoso técnicamente se marca con `# REVISAR CON ENTRENADOR`; no inventar.
 
 ## Tests

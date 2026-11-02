@@ -1,10 +1,12 @@
 // Genera con el motor JS lo que valida tests/test_equivalencia_js.py: sorteos de la biblioteca
-// por nivel y con refuerzo (Practicar), guiones de varias configuraciones y el espejo del catálogo.
+// por nivel y con refuerzo (Practicar), guiones de varias configuraciones, el espejo del catálogo
+// y el nivel por número de acciones.
 // Uso: node tests/js/exportar.mjs salida.json [combinaciones_por_nivel]
 import { writeFileSync } from "node:fs";
 
-import { catalogo, espejo } from "../../static/motor/acciones.js";
+import { accionesPorIds, catalogo, espejo } from "../../static/motor/acciones.js";
 import { crearAzar } from "../../static/motor/azar.js";
+import { nivelDe } from "../../static/motor/reglas.js";
 import { SorteoBiblioteca, cargarPerfil } from "../../static/motor/sorteo.js";
 import { construirGuion } from "../../static/motor/temporizador.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
@@ -54,4 +56,11 @@ CONFIGS.forEach((config, i) => {
 
 const espejos = Object.fromEntries([...catalogo().values()].map((a) => [a.id, accionPlana(espejo(a))]));
 
-writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, refuerzos, sorteos }));
+// Nivel de combinaciones de 0 a 12 acciones, alternando golpes, defensas y salidas.
+const MEZCLA = ["jab", "rodar_der", "gancho_izq", "salir", "uppercut_der", "bloqueo"];
+const niveles = Array.from({ length: 13 }, (_, n) => {
+  const ids = Array.from({ length: n }, (_, i) => MEZCLA[i % MEZCLA.length]);
+  return { ids, nivel: nivelDe(accionesPorIds(ids)) };
+});
+
+writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, refuerzos, sorteos }));

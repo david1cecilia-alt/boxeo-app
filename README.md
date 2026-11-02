@@ -194,7 +194,7 @@ Los iconos se regeneran desde `static/iconos/guante.svg` con `herramientas\gener
 | `app/` | API FastAPI y acceso a SQLite |
 | `data/` | Vocabulario, biblioteca de combinaciones por niveles, perfil por defecto, presets y puntos a revisar (JSON): fuente única para los dos motores |
 | `tests/` | pytest; `tests/js/` tiene los tests de JS y genera los datos de equivalencia |
-| `herramientas/` | Montar la web estática, generar iconos y extraer los puntos a revisar |
+| `herramientas/` | Montar la web estática, generar iconos, extraer los puntos a revisar y la propuesta de biblioteca nueva (`biblioteca.py`) |
 | `.github/workflows/` | Tests y despliegue en GitHub Pages |
 
 ## Límites conocidos

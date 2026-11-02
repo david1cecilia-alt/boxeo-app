@@ -42,7 +42,7 @@
       "rodilla_der": [60.5,0,0],
       "tobillo_der": [-16.3,4.8,14],
       "revisar": true,
-      "pendiente": "REVISAR CON ENTRENADOR: maniquí, guardia: flexión de rodillas, barbilla detrás del hombro izquierdo, guantes a la altura de los pómulos, codos cerrados, talón trasero algo levantado, separación y giro de los pies"
+      "pendiente": "REVISAR CON ENTRENADOR: maniquí, guardia: flexión de rodillas, barbilla al pecho, guantes a la altura de los pómulos, codos cerrados, talón trasero algo levantado, separación y giro de los pies"
     },
     "jab_salida": {
       "pos": [0,0.9,0.01],
@@ -63,7 +63,7 @@
       "rodilla_der": [60,0,0],
       "tobillo_der": [-16.4,4.9,14.4],
       "revisar": true,
-      "pendiente": "REVISAR CON ENTRENADOR: maniquí, jab a medio camino: puño recto a la altura del mentón, sin subir por encima del hombro, y codo abajo"
+      "pendiente": "REVISAR CON ENTRENADOR: maniquí, jab a medio camino: puño recto a la altura del mentón y codo abajo"
     },
     "jab_impacto": {
       "pos": [0,0.9,0.02],
@@ -84,7 +84,7 @@
       "rodilla_der": [59.4,0,0],
       "tobillo_der": [-16.3,5.1,14.9],
       "revisar": true,
-      "pendiente": "REVISAR CON ENTRENADOR: maniquí, jab al impacto: hombro arriba tapando la barbilla, giro del puño y extensión del brazo"
+      "pendiente": "REVISAR CON ENTRENADOR: maniquí, jab al impacto: hombro arriba tapando la barbilla, puño horizontal (nudillos arriba) y extensión del brazo"
     }
   }
 }

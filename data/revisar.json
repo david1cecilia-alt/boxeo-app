@@ -32,24 +32,24 @@
       "texto": "que con cardio por mejorar se avise solo al fajador"
     },
     {
-      "id": "posturas-d6a8608a",
+      "id": "posturas-62961772",
       "origen": "data/posturas.json",
-      "texto": "maniquí, guardia: flexión de rodillas, barbilla detrás del hombro izquierdo, guantes a la altura de los pómulos, codos cerrados, talón trasero algo levantado, separación y giro de los pies"
+      "texto": "maniquí, guardia: flexión de rodillas, barbilla al pecho, guantes a la altura de los pómulos, codos cerrados, talón trasero algo levantado, separación y giro de los pies"
     },
     {
-      "id": "posturas-1d852f03",
+      "id": "posturas-52a4e446",
       "origen": "data/posturas.json",
-      "texto": "maniquí, jab a medio camino: puño recto a la altura del mentón, sin subir por encima del hombro, y codo abajo"
+      "texto": "maniquí, jab a medio camino: puño recto a la altura del mentón y codo abajo"
     },
     {
-      "id": "posturas-0c8950e0",
+      "id": "posturas-0272fc00",
       "origen": "data/posturas.json",
-      "texto": "maniquí, jab al impacto: hombro arriba tapando la barbilla, giro del puño y extensión del brazo"
+      "texto": "maniquí, jab al impacto: hombro arriba tapando la barbilla, puño horizontal (nudillos arriba) y extensión del brazo"
     },
     {
-      "id": "tecnica-704f08d7",
+      "id": "tecnica-423ded03",
       "origen": "data/tecnica.json",
-      "texto": "jab, paso 3: puño girado al final (nudillos arriba) o puño vertical"
+      "texto": "jab, error «estirarse para llegar» (sustituye a «inclinarse hacia delante, con el peso en la pierna delantera»: el peso depende de la situación)"
     }
   ]
 }

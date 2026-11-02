@@ -11,7 +11,7 @@ import { validarConfig } from "../motor/temporizador.js";
 import { PARA_REACCIONAR, crearDictado } from "../dictado.js";
 import { crearPantallaEncendida } from "../pantalla.js";
 import { crearReproductor } from "../reproductor.js";
-import { activarSonido, campana, pitido, tablillas } from "../sonido.js";
+import { activarSonido, campana, dejarDormir, mantenerDespierto, pitido, tablillas } from "../sonido.js";
 import { $, anunciar, esc, minutos } from "./dom.js";
 import { pasosCombo } from "./pasos.js";
 
@@ -238,6 +238,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
         $("#anterior").textContent = "";
         estado.ultimoCombo = null;
         campana(1);
+        mantenerDespierto(); // solo con el asalto en marcha: ni en pausa, ni en descanso, ni al acabar
         r.programar(1.2, () => dictado.senal(e.texto)); // que no pise la campana
         dictado.asalto({
           combos: estado.combos.filter((c) => c.asalto === e.asalto),
@@ -262,6 +263,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       case "fin_asalto":
         estado.asaltosCompletados = e.asalto;
         dictado.cortar();
+        dejarDormir();
         campana(3);
         break;
       case "descanso":
@@ -304,9 +306,11 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     if (!estado) return;
     if (estado.reproductor.pausado) {
       estado.reproductor.reanudar();
+      if (estado.fase === "asalto") mantenerDespierto();
       anunciar("Reanudado");
     } else {
       estado.reproductor.pausar();
+      dejarDormir();
       voz.callar();
       anunciar("En pausa");
     }
@@ -333,6 +337,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     clearInterval(sesion.temporizador);
     sesion.dictado.cortar();
     sesion.reproductor.detener();
+    dejarDormir();
     document.body.classList.remove("entrenando");
     $("#pantalla").hidden = true;
     pantalla.apagar();

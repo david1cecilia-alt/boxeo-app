@@ -6,6 +6,8 @@
   6 primeras están todos seguro).
 - La proporción de combinaciones con defensa es la del nivel (defensa_por_nivel).
 - Los pesos del perfil y el refuerzo de "Practicar" multiplican la probabilidad de cada una.
+- Coletillas: las cortas (2-3 acciones) del nivel básico, para rellenar el final de un asalto
+  donde ya no cabe una del nivel.
 
 Todo en ortodoxo; si es zurdo se refleja al final con espejo().
 """
@@ -19,6 +21,8 @@ from motor.reglas import ultimo_golpe
 
 SIN_REPETIR = 5
 NUMEROS = frozenset(range(1, 7))
+NIVEL_COLETILLA = 1
+ACCIONES_COLETILLA = (2, 3)  # mínimo y máximo
 
 
 PERFIL_NEUTRO = {"pesos": {}}
@@ -97,5 +101,27 @@ class SorteoBiblioteca:
         elegida = self.rng.choices(candidatas, weights=pesos)[0]
         self.recientes = (self.recientes + [elegida])[-SIN_REPETIR:]
         self.faltan -= numeros(elegida)
-        acciones = tuple(espejo_combo(list(elegida.acciones))) if self.zurdo else elegida.acciones
-        return Combinacion(acciones, "biblioteca", elegida.nombre or elegida.notacion)
+        return self._combinacion(elegida)
+
+    def _combinacion(self, combo: ComboBiblioteca) -> Combinacion:
+        acciones = tuple(espejo_combo(list(combo.acciones))) if self.zurdo else combo.acciones
+        return Combinacion(acciones, "biblioteca", combo.nombre or combo.notacion)
+
+    def coletillas(self) -> list[Combinacion]:
+        """Todas las coletillas en un orden al azar ponderado por el perfil: la primera de la
+        lista que cumpla una condición sale con la probabilidad de su peso entre las que la
+        cumplen. No cambia lo que recuerda el sorteo (recientes ni golpes que faltan)."""
+        minimo, maximo = ACCIONES_COLETILLA
+        cortas = [c for c in biblioteca() if c.nivel == NIVEL_COLETILLA and minimo <= len(c.acciones) <= maximo]
+        def clave(peso):  # u^(1/peso): ordenar por ella es sortear sin reemplazo con esos pesos
+            u = self.rng.random()
+            return u ** (1 / peso) if peso > 0 else 0.0
+        claves = {id(c): clave(peso_perfil(list(c.acciones), self.pesos, self.refuerzo)) for c in cortas}
+        return [self._combinacion(c) for c in sorted(cortas, key=lambda c: claves[id(c)], reverse=True)]
+
+    def guardar(self):
+        """Lo que recuerda el sorteo, para sacar reservas sin que cuenten (ver restaurar)."""
+        return list(self.recientes), set(self.faltan)
+
+    def restaurar(self, estado) -> None:
+        self.recientes, self.faltan = list(estado[0]), set(estado[1])

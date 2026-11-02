@@ -43,9 +43,9 @@ Los clásicos 1-2-3-2, 1-3-2, 1-2-5-2, 1-2-1-2, 3-2-3, 1-2-3, 1-1-2 están en b�
 
 | Nivel | Combinaciones | Se dicen por sesión Amateur 3×3 (mín · media · máx) | Veces que sale cada una (media) | Con 25 | Con 15 |
 |---|---|---|---|---|---|
-| básico | 50 | 50 · 73 · 100 | 1,5 | 2,9 | 4,9 |
-| medio | 50 | 38 · 52 · 66 | 1,0 | 2,1 | 3,4 |
-| avanzado | 50 | 28 · 34 · 42 | 0,7 | 1,4 | 2,3 |
+| básico | 50 | 51 · 73 · 101 | 1,5 | 2,9 | 4,9 |
+| medio | 50 | 38 · 51 · 64 | 1,0 | 2,1 | 3,4 |
+| avanzado | 50 | 27 · 35 · 41 | 0,7 | 1,4 | 2,3 |
 
 Sale de simular 60 sesiones Amateur por nivel (ritmos 1, 3 y 5) con estas combinaciones, sorteando solo de su
 nivel y sin repetir ninguna de las 5 últimas. Las columnas «Con 25» y «Con 15» dicen cuántas veces saldría cada

@@ -18,12 +18,12 @@ def test_acciones_con_lado_tienen_su_simetrica_en_el_catalogo():
             assert replace(reflejada, id=accion.id) != accion
 
 
-def test_espejo_intercambia_mano_lado_y_peso():
+def test_espejo_intercambia_mano_y_lado():
     cat = catalogo()
     assert espejo(cat["gancho_izq"]).nombre_hablado == "crochet de derecha"
     assert espejo(cat["esquiva_der"]).nombre_hablado == "esquiva izquierda"
     assert espejo(cat["uppercut_der_cuerpo"]).nombre_hablado == "gancho de izquierda al cuerpo"
-    assert espejo(cat["esquiva_der"]).peso_despues == "izq"
+    assert espejo(cat["esquiva_der"]).lado == "izq"
 
 
 def test_jab_y_recto_cambian_de_mano_pero_no_de_nombre():

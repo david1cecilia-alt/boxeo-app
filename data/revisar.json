@@ -7,21 +7,6 @@
       "texto": "¿alguna acción no es para principiantes?"
     },
     {
-      "id": "acciones-635f79cf",
-      "origen": "data/acciones.json",
-      "texto": "peso_despues de cada golpe"
-    },
-    {
-      "id": "acciones-f07f6dc2",
-      "origen": "data/acciones.json",
-      "texto": "'poder' = todos los golpes menos el jab"
-    },
-    {
-      "id": "acciones-1b487d27",
-      "origen": "data/acciones.json",
-      "texto": "rodar a un lado deja el peso en ese mismo lado"
-    },
-    {
       "id": "acciones-dbfd9eb2",
       "origen": "data/acciones.json",
       "texto": "«esquiva abajo» para el roll (antes «rueda»); puede acabar siendo otro término"

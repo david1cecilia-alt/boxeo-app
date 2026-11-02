@@ -20,9 +20,7 @@ class Accion:
     tipo: str            # golpe | defensa | movimiento
     mano: str            # izq | der | ninguna
     objetivo: str        # cabeza | cuerpo | ninguno
-    peso_despues: str    # delante | detras | izq | der | centro
     lado: str = "ninguno"  # lado de defensas/movimientos (izq | der | ninguno)
-    poder: bool = False
     plantilla_corta: str = ""  # nombre para la pantalla de la sesión
     numero: int | None = None  # número del golpe EN ORTODOXO (1 jab … 6 gancho trasero)
     orden: str = ""            # lo que se dice de una defensa en la sesión ("esquiva" + su lado)
@@ -50,8 +48,7 @@ def _desde_json(d: dict, textos: dict) -> Accion:
     t = _textos(d, textos)
     return Accion(id=d["id"], familia=d["familia"], plantilla=t["hablado"],
                   tipo=d["tipo"], mano=d["mano"], objetivo=d["objetivo"],
-                  peso_despues=d["peso_despues"],
-                  lado=d.get("lado", "ninguno"), poder=d.get("poder", False),
+                  lado=d.get("lado", "ninguno"),
                   plantilla_corta=t["corto"], numero=d.get("numero"),
                   orden=t.get("orden", ""))
 
@@ -67,12 +64,6 @@ def catalogo() -> dict[str, Accion]:
     """Todas las acciones ortodoxas indexadas por id."""
     datos = _leer_json()
     return {d["id"]: _desde_json(d, datos["textos"]) for d in datos["acciones"]}
-
-
-@lru_cache
-def repeticiones_permitidas() -> dict[tuple[str, ...], str]:
-    """Pares (o tríos) de la misma mano que sí están permitidos: {(id1, id2): nombre}."""
-    return {tuple(r["ids"]): r["nombre"] for r in _leer_json()["repeticiones_permitidas"]}
 
 
 @lru_cache
@@ -125,15 +116,14 @@ def _contrario(valor: str) -> str:
 
 
 def espejo(accion: Accion) -> Accion:
-    """Refleja izquierda ↔ derecha (mano, lado y peso).
+    """Refleja izquierda ↔ derecha (mano y lado).
 
     Si en el catálogo existe la acción simétrica (gancho_izq ↔ gancho_der) se
     devuelve esa, con su id. Si no (jab, directo, paso atrás...) se devuelve la
     misma acción con los campos reflejados: el jab de un zurdo es con la derecha
     pero se sigue llamando "jab".
     """
-    reflejada = replace(accion, mano=_contrario(accion.mano), lado=_contrario(accion.lado),
-                        peso_despues=_contrario(accion.peso_despues))
+    reflejada = replace(accion, mano=_contrario(accion.mano), lado=_contrario(accion.lado))
     for candidata in catalogo().values():
         # El número no cuenta: el de gancho_izq (3) y el de gancho_der (4) son distintos.
         if replace(reflejada, id=candidata.id, numero=candidata.numero) == candidata:

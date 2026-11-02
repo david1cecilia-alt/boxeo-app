@@ -108,10 +108,10 @@ Jab, crochet, se esquiva abajo y se devuelve.
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | jab-crochet y esquiva abajo derecha | base | 1 · 3 · esquiva abajo derecha | 3 | 2 | 1 | — | final | básico | nueva |
 | 2 | jab-crochet y esquiva abajo izquierda | variante de #1 | 1 · 3 · esquiva abajo izquierda | 3 | 2 | 1 | — | final | básico | nueva |
-| 3 | jab-crochet, esquiva abajo y 6-4 | crece de #1 | 1 · 3 · esquiva abajo derecha · 6 · 4 | 5 | 4 | 1 | — | entre golpes | medio | nueva |
-| 4 | jab-crochet, esquiva abajo y 4-2 | variante de #3 | 1 · 3 · esquiva abajo derecha · 4 · 2 | 5 | 4 | 1 | — | entre golpes | medio | nueva |
-| 5 | esquiva abajo, 6-4, cambio de ángulo y crochet | crece de #3 | 1 · 3 · esquiva abajo derecha · 6 · 4 · cambio de ángulo · 3 | 7 | 5 | 1 | cambio de ángulo | entre golpes | avanzado | nueva |
-| 6 | esquiva abajo, 6-4, pivote y crochet | variante de #5 | 1 · 3 · esquiva abajo derecha · 6 · 4 · pivote · 3 | 7 | 5 | 1 | pivote | entre golpes | avanzado | nueva |
+| 3 | jab-crochet, esquiva abajo y gancho-crochet | crece de #1 | 1 · 3 · esquiva abajo derecha · 6 · 4 | 5 | 4 | 1 | — | entre golpes | medio | nueva |
+| 4 | jab-crochet, esquiva abajo y crochet-recto | variante de #3 | 1 · 3 · esquiva abajo derecha · 4 · 2 | 5 | 4 | 1 | — | entre golpes | medio | nueva |
+| 5 | esquiva abajo, gancho-crochet, cambio de ángulo y crochet | crece de #3 | 1 · 3 · esquiva abajo derecha · 6 · 4 · cambio de ángulo · 3 | 7 | 5 | 1 | cambio de ángulo | entre golpes | avanzado | nueva |
+| 6 | esquiva abajo, gancho-crochet, pivote y crochet | variante de #5 | 1 · 3 · esquiva abajo derecha · 6 · 4 · pivote · 3 | 7 | 5 | 1 | pivote | entre golpes | avanzado | nueva |
 
 ### F2. Jab-recto
 
@@ -124,7 +124,7 @@ La base de todo, a la que se le añaden esquivas y contras.
 | 9 | jab-recto, esquiva y gancho-recto | crece de #7 | 1 · 2 · esquiva izquierda · 5 · 2 | 5 | 4 | 1 | — | entre golpes | medio | nueva |
 | 10 | doble jab-recto, esquiva y gancho | variante de #9 | 1 · 1 · 2 · esquiva derecha · 6 | 5 | 4 | 1 | — | entre golpes | medio | cambia: amplía «1-1-2» |
 | 11 | jab-recto con esquiva, esquiva abajo, jab y paso lateral | crece de #9 | 1 · 2 · esquiva izquierda · 5 · 2 · esquiva abajo derecha · 1 · paso lateral izquierda | 8 | 5 | 2 | paso lateral izquierda | entre golpes | avanzado | nueva |
-| 12 | doble jab-recto, esquiva, crochet, bloqueo y gancho | variante de #11 | 1 · 1 · 2 · esquiva derecha · 6 · 3 · bloqueo · 6 | 8 | 6 | 2 | — | entre golpes | avanzado | cambia: amplía «1-1-2» |
+| 12 | doble jab-recto, esquiva, gancho-crochet, bloqueo y gancho | variante de #11 | 1 · 1 · 2 · esquiva derecha · 6 · 3 · bloqueo · 6 | 8 | 6 | 2 | — | entre golpes | avanzado | cambia: amplía «1-1-2» |
 
 ### F3. Ballesteo y contra
 
@@ -135,8 +135,8 @@ Se saca la cara hacia atrás y se contesta.
 | 13 | ballesteo y recto | base | ballesteo · 2 | 2 | 1 | 1 | — | inicio | básico | nueva |
 | 14 | ballesteo, jab y crochet de derecha | variante de #13 | ballesteo · 1 · 4 | 3 | 2 | 1 | — | inicio | básico | nueva |
 | 15 | jab, ballesteo, recto y doble crochet | crece de #13 | 1 · ballesteo · 2 · 3 · 4 | 5 | 4 | 1 | — | entre golpes | medio | nueva |
-| 16 | ballesteo, jab-recto, esquiva abajo y crochet | variante de #15 | ballesteo · 1 · 4 · esquiva abajo izquierda · 3 | 5 | 3 | 2 | — | inicio, entre golpes | medio | nueva |
-| 17 | doble ballesteo, gancho y pivote | crece de #15 | 1 · ballesteo · 2 · 3 · 4 · ballesteo · 5 · pivote | 8 | 5 | 2 | pivote | entre golpes | avanzado | nueva |
+| 16 | ballesteo, jab-crochet, esquiva abajo y crochet | variante de #15 | ballesteo · 1 · 4 · esquiva abajo izquierda · 3 | 5 | 3 | 2 | — | inicio, entre golpes | medio | nueva |
+| 17 | dos ballesteos, gancho y pivote | crece de #15 | 1 · ballesteo · 2 · 3 · 4 · ballesteo · 5 · pivote | 8 | 5 | 2 | pivote | entre golpes | avanzado | nueva |
 | 18 | ballesteo, esquiva abajo, flexión y paso lateral | variante de #17 | ballesteo · 1 · 4 · esquiva abajo izquierda · 3 · flexión · 4 al cuerpo · 3 · paso lateral derecha | 9 | 5 | 3 | paso lateral derecha | inicio, entre golpes | avanzado | nueva |
 
 ### F4. Parada y contra
@@ -188,9 +188,9 @@ Bloquear, devolver y, si toca, volver a bloquear.
 | 38 | bloqueo, gancho-recto y bloqueo | variante de #37 | bloqueo · 5 · 2 · bloqueo | 4 | 2 | 2 | — | inicio, final | básico | nueva |
 | 39 | jab-recto y bloqueo | variante de #37 | 1 · 2 · bloqueo | 3 | 2 | 1 | — | final | básico | nueva |
 | 40 | jab, bloqueo, crochet-recto, paso atrás y recto | crece de #37 | 1 · bloqueo · 3 · 2 · paso atrás · 2 | 6 | 4 | 2 | — | entre golpes | medio | cambia: amplía «bloqueo-3-2» |
-| 41 | doble bloqueo, jab y crochet | variante de #40 | bloqueo · 5 · 2 · bloqueo · 1 · 4 | 6 | 4 | 2 | — | inicio, entre golpes | medio | nueva |
+| 41 | dos bloqueos, jab y crochet | variante de #40 | bloqueo · 5 · 2 · bloqueo · 1 · 4 | 6 | 4 | 2 | — | inicio, entre golpes | medio | nueva |
 | 42 | bloqueo, paso atrás, esquiva, crochet y paso lateral | crece de #40 | 1 · bloqueo · 3 · 2 · paso atrás · 2 · esquiva derecha · 4 · paso lateral derecha | 9 | 5 | 3 | paso lateral derecha | entre golpes | avanzado | cambia: amplía «bloqueo-3-2» |
-| 43 | doble bloqueo, esquiva, gancho, ballesteo y recto | variante de #42 | bloqueo · 5 · 2 · bloqueo · 1 · 4 · esquiva izquierda · 5 · ballesteo · 2 | 10 | 6 | 4 | — | inicio, entre golpes | avanzado | nueva |
+| 43 | dos bloqueos, esquiva, gancho, ballesteo y recto | variante de #42 | bloqueo · 5 · 2 · bloqueo · 1 · 4 · esquiva izquierda · 5 · ballesteo · 2 | 10 | 6 | 4 | — | inicio, entre golpes | avanzado | nueva |
 
 ### F8. Paso atrás y contra
 
@@ -201,7 +201,7 @@ Se rompe la distancia y se contesta.
 | 44 | paso atrás y recto | base | paso atrás · 2 | 2 | 1 | 1 | — | inicio | básico | se queda (antes básico) |
 | 45 | paso atrás, jab-crochet y paso atrás | variante de #44 | paso atrás · 1 · 4 · paso atrás | 4 | 2 | 2 | — | inicio, final | básico | nueva |
 | 46 | doble jab, paso atrás y recto-gancho | crece de #44 | 1 · 1 · paso atrás · 2 · 5 | 5 | 4 | 1 | — | entre golpes | medio | nueva |
-| 47 | doble jab, paso atrás, recto-crochet y pivote | variante de #46 | 1 · 1 · paso atrás · 2 · 5 · pivote | 6 | 4 | 1 | pivote | entre golpes | medio | nueva |
+| 47 | doble jab, paso atrás, recto-gancho y pivote | variante de #46 | 1 · 1 · paso atrás · 2 · 5 · pivote | 6 | 4 | 1 | pivote | entre golpes | medio | nueva |
 | 48 | paso atrás, flexión, crochet al cuerpo, gancho y paso lateral | crece de #46 | 1 · 1 · paso atrás · 2 · 5 · flexión · 3 al cuerpo · 6 · paso lateral derecha | 9 | 6 | 2 | paso lateral derecha | entre golpes | avanzado | nueva |
 | 49 | paso atrás, pivote, esquiva y jab-gancho | variante de #48 | 1 · 1 · paso atrás · 2 · 5 · pivote · esquiva derecha · 1 · 5 | 9 | 6 | 2 | pivote | entre golpes | avanzado | nueva |
 
@@ -214,9 +214,9 @@ Ganchos (5 y 6) en la corta, rematados con crochet o recto.
 | 50 | gancho de derecha y crochet | base | 6 · 3 | 2 | 2 | 0 | — | — | básico | se queda (antes básico) |
 | 51 | crochet, gancho y recto | variante de #50 | 4 · 5 · 2 | 3 | 3 | 0 | — | — | básico | nueva |
 | 52 | jab-recto, gancho-crochet y esquiva abajo | crece de #50 | 1 · 2 · 6 · 3 · esquiva abajo izquierda | 5 | 4 | 1 | — | final | medio | nueva |
-| 53 | jab, recto-gancho-recto y esquiva abajo | variante de #52 | 1 · 4 · 5 · 2 · esquiva abajo derecha | 5 | 4 | 1 | — | final | medio | nueva |
+| 53 | jab-crochet-gancho-recto y esquiva abajo | variante de #52 | 1 · 4 · 5 · 2 · esquiva abajo derecha | 5 | 4 | 1 | — | final | medio | nueva |
 | 54 | jab-recto, gancho-crochet, esquiva abajo, jab-recto y esquiva | crece de #52 | 1 · 2 · 6 · 3 · esquiva abajo izquierda · 1 · 2 · esquiva izquierda | 8 | 6 | 2 | — | entre golpes, final | avanzado | nueva |
-| 55 | recto-gancho-recto, esquiva abajo, gancho al cuerpo y ballesteo | variante de #54 | 1 · 4 · 5 · 2 · esquiva abajo derecha · 5 al cuerpo · 3 · ballesteo | 8 | 6 | 2 | — | entre golpes, final | avanzado | nueva |
+| 55 | jab-crochet-gancho-recto, esquiva abajo, gancho al cuerpo y ballesteo | variante de #54 | 1 · 4 · 5 · 2 · esquiva abajo derecha · 5 al cuerpo · 3 · ballesteo | 8 | 6 | 2 | — | entre golpes, final | avanzado | nueva |
 
 ### F10. Doble jab
 
@@ -227,7 +227,7 @@ Doble jab para entrar, y lo que venga.
 | 56 | doble jab y gancho | base | 1 · 1 · 5 | 3 | 3 | 0 | — | — | básico | nueva |
 | 57 | doble jab, gancho y crochet | variante de #56 | 1 · 1 · 6 · 3 | 4 | 4 | 0 | — | — | básico | nueva |
 | 58 | doble jab, gancho, esquiva y crochet | crece de #56 | 1 · 1 · 5 · esquiva izquierda · 4 | 5 | 4 | 1 | — | entre golpes | medio | nueva |
-| 59 | doble jab, recto-crochet, ballesteo y recto | variante de #58 | 1 · 1 · 6 · 3 · ballesteo · 2 | 6 | 5 | 1 | — | entre golpes | medio | nueva |
+| 59 | doble jab, gancho-crochet, ballesteo y recto | variante de #58 | 1 · 1 · 6 · 3 · ballesteo · 2 | 6 | 5 | 1 | — | entre golpes | medio | nueva |
 | 60 | doble jab, esquiva, jab, esquiva abajo y crochet-gancho | crece de #58 | 1 · 1 · 5 · esquiva izquierda · 4 · 1 · esquiva abajo derecha · 4 · 5 | 9 | 7 | 2 | — | entre golpes | avanzado | nueva |
 | 61 | doble jab, ballesteo, bloqueo y jab-gancho | variante de #60 | 1 · 1 · 6 · 3 · ballesteo · 2 · bloqueo · 1 · 6 | 9 | 7 | 2 | — | entre golpes | avanzado | nueva |
 
@@ -239,7 +239,7 @@ Se baja con flexión y se ataca al cuerpo.
 |---|---|---|---|---|---|---|---|---|---|---|
 | 62 | flexión, crochet al cuerpo y gancho | base | flexión · 3 al cuerpo · 5 | 3 | 2 | 1 | — | inicio | básico | nueva |
 | 63 | flexión, gancho al cuerpo y crochet | variante de #62 | flexión · 6 al cuerpo · 3 | 3 | 2 | 1 | — | inicio | básico | nueva |
-| 64 | flexión, crochet abajo y arriba, recto y bloqueo | crece de #62 | flexión · 3 al cuerpo · 5 · 2 · bloqueo | 5 | 3 | 2 | — | inicio, final | medio | nueva |
+| 64 | flexión, crochet al cuerpo, gancho-recto y bloqueo | crece de #62 | flexión · 3 al cuerpo · 5 · 2 · bloqueo | 5 | 3 | 2 | — | inicio, final | medio | nueva |
 | 65 | flexión, gancho al cuerpo, esquiva abajo y jab-recto | variante de #64 | flexión · 6 al cuerpo · 3 · esquiva abajo derecha · 1 · 2 | 6 | 4 | 2 | — | inicio, entre golpes | medio | nueva |
 | 66 | flexión, bloqueo, gancho al cuerpo, crochet y esquiva | crece de #64 | flexión · 3 al cuerpo · 5 · 2 · bloqueo · 6 al cuerpo · 3 · esquiva izquierda | 8 | 5 | 3 | — | inicio, entre golpes, final | avanzado | nueva |
 | 67 | dos flexiones, esquiva abajo, jab al cuerpo y recto | variante de #66 | flexión · 6 al cuerpo · 3 · esquiva abajo derecha · 1 · 2 · flexión · 1 al cuerpo · 2 | 9 | 6 | 3 | — | inicio, entre golpes | avanzado | nueva |
@@ -253,7 +253,7 @@ Esquivar abajo, soltar y cambiar de lado.
 | 68 | esquiva abajo y crochet a los dos lados | base | esquiva abajo izquierda · 3 · esquiva abajo derecha · 4 | 4 | 2 | 2 | — | inicio, entre golpes | básico | nueva |
 | 69 | esquiva abajo derecha, crochet, esquiva abajo izquierda y gancho | variante de #68 | esquiva abajo derecha · 4 · esquiva abajo izquierda · 5 | 4 | 2 | 2 | — | inicio, entre golpes | básico | nueva |
 | 70 | esquivas abajo con crochet y jab-recto | crece de #68 | esquiva abajo izquierda · 3 · esquiva abajo derecha · 4 · 1 · 2 | 6 | 4 | 2 | — | inicio, entre golpes | medio | nueva |
-| 71 | esquivas abajo con recto y crochet, recto y flexión | variante de #70 | esquiva abajo derecha · 4 · esquiva abajo izquierda · 5 · 2 · flexión | 6 | 3 | 3 | — | inicio, entre golpes, final | medio | nueva |
+| 71 | esquivas abajo con crochet y gancho, recto y flexión | variante de #70 | esquiva abajo derecha · 4 · esquiva abajo izquierda · 5 · 2 · flexión | 6 | 3 | 3 | — | inicio, entre golpes, final | medio | nueva |
 | 72 | esquivas abajo, esquiva, jab y crochet al cuerpo | crece de #70 | esquiva abajo izquierda · 3 · esquiva abajo derecha · 4 · 1 · 2 · esquiva derecha · 1 · 4 al cuerpo | 9 | 6 | 3 | — | inicio, entre golpes | avanzado | nueva |
 | 73 | esquivas abajo, flexión, gancho abajo y arriba, paso atrás y recto | variante de #72 | esquiva abajo derecha · 4 · esquiva abajo izquierda · 5 · 2 · flexión · 5 al cuerpo · 5 · paso atrás · 2 | 10 | 6 | 4 | — | inicio, entre golpes | avanzado | nueva |
 
@@ -265,7 +265,7 @@ El jab cambia de altura para abrir hueco.
 |---|---|---|---|---|---|---|---|---|---|---|
 | 74 | jab arriba, jab abajo y gancho | base | 1 · 1 al cuerpo · 6 | 3 | 3 | 0 | — | — | básico | nueva |
 | 75 | jab abajo, jab arriba y crochet | variante de #74 | 1 al cuerpo · 1 · 3 | 3 | 3 | 0 | — | — | básico | nueva |
-| 76 | jab arriba y abajo, recto, esquiva y recto | crece de #74 | 1 · 1 al cuerpo · 6 · esquiva derecha · 2 | 5 | 4 | 1 | — | entre golpes | medio | nueva |
+| 76 | jab arriba y abajo, gancho, esquiva y recto | crece de #74 | 1 · 1 al cuerpo · 6 · esquiva derecha · 2 | 5 | 4 | 1 | — | entre golpes | medio | nueva |
 | 77 | jab abajo y arriba, crochet, paso atrás y gancho | variante de #76 | 1 al cuerpo · 1 · 3 · paso atrás · 6 | 5 | 4 | 1 | — | entre golpes | medio | nueva |
 | 78 | jab arriba y abajo, esquiva, jab, bloqueo y crochet abajo y arriba | crece de #76 | 1 · 1 al cuerpo · 6 · esquiva derecha · 2 · 1 · bloqueo · 4 al cuerpo · 4 | 9 | 7 | 2 | — | entre golpes | avanzado | cambia: amplía «esquiva-2-1» |
 | 79 | jab abajo y arriba, paso atrás, flexión, ganchos y paso lateral | variante de #78 | 1 al cuerpo · 1 · 3 · paso atrás · 6 · flexión · 5 al cuerpo · 6 · paso lateral izquierda | 9 | 6 | 2 | paso lateral izquierda | entre golpes | avanzado | nueva |
@@ -278,7 +278,7 @@ Se para el jab y se contesta abajo.
 |---|---|---|---|---|---|---|---|---|---|---|
 | 80 | parada, recto al cuerpo y gancho | base | parada · 2 al cuerpo · 5 | 3 | 2 | 1 | — | inicio | básico | nueva |
 | 81 | parada, jab y recto al cuerpo | variante de #80 | parada · 1 · 2 al cuerpo | 3 | 2 | 1 | — | inicio | básico | nueva |
-| 82 | parada, recto al cuerpo, crochet, esquiva abajo y gancho-recto | crece de #80 | parada · 2 al cuerpo · 5 · esquiva abajo izquierda · 6 · 2 | 6 | 4 | 2 | — | inicio, entre golpes | medio | nueva |
+| 82 | parada, recto al cuerpo, gancho, esquiva abajo y gancho-recto | crece de #80 | parada · 2 al cuerpo · 5 · esquiva abajo izquierda · 6 · 2 | 6 | 4 | 2 | — | inicio, entre golpes | medio | nueva |
 | 83 | parada, jab, recto al cuerpo, ballesteo y crochet | variante de #82 | parada · 1 · 2 al cuerpo · ballesteo · 4 | 5 | 3 | 2 | — | inicio, entre golpes | medio | nueva |
 | 84 | parada, esquiva abajo, esquiva, jab y cambio de ángulo | crece de #82 | parada · 2 al cuerpo · 5 · esquiva abajo izquierda · 6 · 2 · esquiva derecha · 1 · cambio de ángulo | 9 | 5 | 3 | cambio de ángulo | inicio, entre golpes | avanzado | nueva |
 | 85 | parada, ballesteo, bloqueo, jab-recto y pivote | variante de #84 | parada · 1 · 2 al cuerpo · ballesteo · 4 · bloqueo · 1 · 2 · pivote | 9 | 5 | 3 | pivote | inicio, entre golpes | avanzado | nueva |
@@ -292,7 +292,7 @@ Se suelta, se cambia de ángulo y se ataca desde el nuevo sitio.
 | 86 | jab-recto y cambio de ángulo | base | 1 · 2 · cambio de ángulo | 3 | 2 | 0 | cambio de ángulo | — | básico | nueva |
 | 87 | doble crochet y cambio de ángulo | variante de #86 | 4 · 3 · cambio de ángulo | 3 | 2 | 0 | cambio de ángulo | — | básico | nueva |
 | 88 | jab-recto, cambio de ángulo, gancho-recto y esquiva | crece de #86 | 1 · 2 · cambio de ángulo · 5 · 2 · esquiva izquierda | 6 | 4 | 1 | cambio de ángulo | final | medio | nueva |
-| 89 | recto-crochet, cambio de ángulo, gancho y paso atrás | variante de #88 | 4 · 3 · cambio de ángulo · 5 · paso atrás | 5 | 3 | 1 | cambio de ángulo | final | medio | nueva |
+| 89 | doble crochet, cambio de ángulo, gancho y paso atrás | variante de #88 | 4 · 3 · cambio de ángulo · 5 · paso atrás | 5 | 3 | 1 | cambio de ángulo | final | medio | nueva |
 | 90 | cambio de ángulo, esquiva, gancho, bloqueo y gancho | crece de #88 | 1 · 2 · cambio de ángulo · 5 · 2 · esquiva izquierda · 5 · bloqueo · 6 | 9 | 6 | 2 | cambio de ángulo | entre golpes | avanzado | nueva |
 | 91 | cambio de ángulo, paso atrás, esquiva abajo y paso lateral | variante de #90 | 4 · 3 · cambio de ángulo · 5 · paso atrás · 1 · esquiva abajo derecha · 4 · paso lateral izquierda | 9 | 5 | 2 | cambio de ángulo, paso lateral izquierda | entre golpes | avanzado | nueva |
 
@@ -304,7 +304,7 @@ Se suelta y se pivota para no quedarse delante.
 |---|---|---|---|---|---|---|---|---|---|---|
 | 92 | crochet-gancho y pivote | base | 3 · 6 · pivote | 3 | 2 | 0 | pivote | — | básico | nueva |
 | 93 | doble crochet y pivote | variante de #92 | 4 · 3 · pivote | 3 | 2 | 0 | pivote | — | básico | nueva |
-| 94 | bloqueo, crochet-recto, pivote y jab | crece de #92 | bloqueo · 3 · 6 · pivote · 1 | 5 | 3 | 1 | pivote | inicio | medio | nueva |
+| 94 | bloqueo, crochet-gancho, pivote y jab | crece de #92 | bloqueo · 3 · 6 · pivote · 1 | 5 | 3 | 1 | pivote | inicio | medio | nueva |
 | 95 | doble crochet, pivote, esquiva abajo y gancho | variante de #94 | 4 · 3 · pivote · esquiva abajo derecha · 6 | 5 | 3 | 1 | pivote | entre golpes | medio | nueva |
 | 96 | bloqueo, pivote, esquiva, jab, ballesteo y gancho | crece de #94 | bloqueo · 3 · 6 · pivote · 1 · esquiva izquierda · 1 · ballesteo · 6 | 9 | 5 | 3 | pivote | inicio, entre golpes | avanzado | nueva |
 | 97 | doble crochet, pivote, esquiva abajo, flexión y esquiva | variante de #96 | 4 · 3 · pivote · esquiva abajo derecha · 6 · 3 · flexión · 6 al cuerpo · esquiva derecha | 9 | 5 | 3 | pivote | entre golpes, final | avanzado | nueva |

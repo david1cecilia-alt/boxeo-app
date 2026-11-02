@@ -43,3 +43,35 @@ test("si la voz guardada no está en este dispositivo, se usa la automática sin
 test("solo se ofrecen voces en español, primero las de España", () => {
   assert.deepEqual(vocesEspanol(VOCES), [ONLINE, HELENA, PABLO, SABINA]);
 });
+
+// speechSynthesis de mentira: apunta las llamadas; `speaking` lo decide el test.
+function montarNavegador() {
+  const llamadas = [];
+  globalThis.SpeechSynthesisUtterance = class { constructor(texto) { this.texto = texto; } };
+  globalThis.speechSynthesis = {
+    speaking: false,
+    pending: false,
+    getVoices: () => [HELENA],
+    addEventListener() {},
+    cancel: () => llamadas.push("cancel"),
+    speak: (frase) => llamadas.push(`speak ${frase.texto}`),
+  };
+  return llamadas;
+}
+
+test("decir no llama a cancel() si no suena nada (recortaría el principio en Android)", async () => {
+  const llamadas = montarNavegador();
+  const { crearVoz } = await import("../../static/voz.js");
+  crearVoz().decir("uno, dos");
+  assert.deepEqual(llamadas, ["speak uno, dos"]);
+});
+
+test("decir corta lo que esté sonando o en cola antes de hablar", async () => {
+  const { crearVoz } = await import("../../static/voz.js");
+  for (const estado of ["speaking", "pending"]) {
+    const llamadas = montarNavegador();
+    speechSynthesis[estado] = true;
+    crearVoz().decir("diez segundos");
+    assert.deepEqual(llamadas, ["cancel", "speak diez segundos"], estado);
+  }
+});

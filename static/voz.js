@@ -64,7 +64,9 @@ class VozNavegador {
   }
 
   decir(texto) {
-    speechSynthesis.cancel();
+    // Solo si hay algo que cortar: en Android, cancel() justo antes de speak() recorta el
+    // principio de la frase (el «uno» de «uno, dos»).
+    if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
     const frase = new SpeechSynthesisUtterance(texto);
     frase.lang = this.voz?.lang ?? this.idioma;
     frase.rate = this.velocidad;

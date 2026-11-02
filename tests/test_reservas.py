@@ -38,7 +38,8 @@ def test_las_coletillas_son_cortas_del_basico_y_estan_todas(semilla):
     cortas = {tuple(a.id for a in c.acciones) for c in biblioteca()
               if c.nivel == NIVEL_COLETILLA and minimo <= len(c.acciones) <= maximo}
     for n in range(1, CONFIG.asaltos + 1):
-        coletillas = [tuple(e.ids) for e in de_asalto(guion, n, "coletilla")]
+        fin = next(e.t for e in guion if e.tipo == "fin_asalto" and e.asalto == n)
+        coletillas = [tuple(e.ids) for e in de_asalto(guion, n, "coletilla") if e.t == fin]
         assert sorted(coletillas) == sorted(cortas)
 
 

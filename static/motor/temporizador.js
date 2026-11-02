@@ -21,8 +21,8 @@ export const FACTOR_VOZ_RAPIDA = 0.5;
 
 // Las reservas no tienen hora: van al final del asalto (t = fin) y solo se dicen si el dictado
 // llega a ellas, tras las combinaciones del asalto y en su orden. Las coletillas (cortas, para
-// rellenar el final donde ya no cabe una del nivel) llevan su hora si el guion las dice y, las
-// demás, t = fin; el dictado decide de nuevo cuáles dice, en este mismo orden.
+// rellenar el final donde ya no cabe una del nivel) van todas con t = fin, en su orden al azar: de
+// ahí elige el dictado. Las que dice el guion se repiten con su hora.
 export const COMBINACIONES = ["combo", "reserva", "coletilla"];
 
 export const CONFIG_POR_DEFECTO = {
@@ -76,8 +76,8 @@ const clave = (ids) => ids.join(" ");
 
 // Qué combinación decir desde el segundo t y cuándo: [combinación, empieza], o null si ya no cabe
 // ninguna en el asalto. La usan el guion (con lo estimado) y el dictado (con la voz real).
-// `siguiente`: la próxima del asalto (null si no quedan); `coletillas`: las cortas aún sin decir,
-// en su orden al azar; `recientes`: ids de las últimas dichas, que una coletilla no repite;
+// `siguiente`: la próxima del asalto (null si no quedan); `coletillas`: las cortas, en su orden
+// al azar; `recientes`: ids de las últimas dichas, que una coletilla no repite;
 // `reservados`: señales previstas, ordenadas (la última es el aviso).
 // Si la siguiente no cabe (pisaría una señal o se pasa del final) y ya solo queda el aviso por
 // delante, se dice la primera coletilla que quepa; si tampoco, se espera a que pase la señal.
@@ -172,8 +172,6 @@ export function construirGuion(config, azar, sorteo = null) {
       if (elegida === siguiente) {
         antes = sorteo.guardar();
         siguiente = aEvento(sorteo.siguiente(), "combo", n);
-      } else {
-        coletillas.splice(coletillas.indexOf(elegida), 1);
       }
       const dicha = { ...elegida, t: redondear(empieza) }; // una coletilla dicha sigue siendo coletilla
       dichas.push(dicha);

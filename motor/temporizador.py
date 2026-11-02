@@ -55,8 +55,8 @@ class Evento:
 
 # Las reservas no tienen hora: van al final del asalto (t = fin) y solo se dicen si el dictado
 # llega a ellas, tras las combinaciones del asalto y en su orden. Las coletillas (cortas, para
-# rellenar el final donde ya no cabe una del nivel) llevan su hora si el guion las dice y, las
-# demás, t = fin; el dictado decide de nuevo cuáles dice, en este mismo orden.
+# rellenar el final donde ya no cabe una del nivel) van todas con t = fin, en su orden al azar: de
+# ahí elige el dictado. Las que dice el guion se repiten con su hora.
 COMBINACIONES = ("combo", "reserva", "coletilla")
 
 
@@ -82,8 +82,8 @@ def elegir_siguiente(t: float, siguiente: Evento | None, coletillas: list[Evento
     """Qué combinación decir desde el segundo t y cuándo: (combinación, empieza), o None si ya no
     cabe ninguna en el asalto. La usan el guion (con lo estimado) y el dictado (con la voz real).
 
-    `siguiente`: la próxima del asalto (None si no quedan); `coletillas`: las cortas aún sin decir,
-    en su orden al azar; `recientes`: ids de las últimas dichas, que una coletilla no repite;
+    `siguiente`: la próxima del asalto (None si no quedan); `coletillas`: las cortas, en su orden
+    al azar; `recientes`: ids de las últimas dichas, que una coletilla no repite;
     `reservados`: señales previstas, ordenadas (la última es el aviso).
     Si la siguiente no cabe (pisaría una señal o se pasa del final) y ya solo queda el aviso por
     delante, se dice la primera coletilla que quepa; si tampoco, se espera a que pase la señal."""
@@ -177,8 +177,6 @@ def construir_guion(config: ConfigSesion, rng: random.Random | None = None,
             if elegida is siguiente:
                 antes = sorteo.guardar()
                 siguiente = a_evento(sorteo.siguiente(), "combo", n)
-            else:
-                coletillas.remove(elegida)
             dicha = replace(elegida, t=round(empieza, 2))  # una coletilla dicha sigue siendo coletilla
             dichas.append(dicha)
             recientes = (recientes + [tuple(dicha.ids)])[-SIN_REPETIR:]

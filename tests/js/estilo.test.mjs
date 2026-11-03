@@ -8,6 +8,8 @@ import { ESTILO, MI_ESTILO } from "../../static/vistas/opciones.js";
 const tabla = JSON.parse(readFileSync(new URL("../../data/estilos.json", import.meta.url), "utf-8"));
 const NOMBRES = Object.fromEntries(MI_ESTILO.opciones.filter(([id]) => id !== "no_se"));
 const recomendar = (estilo, basicos = {}) => recomendarEstilo(estilo, basicos, tabla, NOMBRES);
+// Empate exacto de los cuatro a 1 punto.
+const CUATRO = { distancia: "larga", presion: "intercambiar", volumen: "pocos_fuertes", iniciativa: "espero" };
 
 test("la tabla usa los estilos de «Mi estilo» y las respuestas del Perfil, con su frase y fuentes", () => {
   for (const [pregunta, respuestas] of Object.entries(tabla.puntos)) {
@@ -19,6 +21,13 @@ test("la tabla usa los estilos de «Mi estilo» y las respuestas del Perfil, con
     }
   }
   assert.ok(!("cardio" in tabla.puntos), "cardio no puntúa");
+  // Cardio solo desempata: cada respuesta (menos «No lo sé») con sus estilos y su frase.
+  const cardio = ESTILO.cardio.opciones.map(([v]) => v).filter((v) => v !== "no_se");
+  assert.deepEqual(Object.keys(tabla.desempate.cardio).sort(), [...cardio].sort());
+  for (const [respuesta, estilos] of Object.entries(tabla.desempate.cardio)) {
+    assert.ok(estilos.length && estilos.every((e) => e in NOMBRES), `cardio.${respuesta}`);
+    assert.ok(tabla.frases_desempate.cardio[respuesta], `frase de cardio.${respuesta}`);
+  }
   assert.ok(tabla.obligatorias.every((p) => p in tabla.puntos));
   assert.match(tabla._nota, /REVISAR CON ENTRENADOR/);
   assert.equal(tabla._fuentes.length, 3);
@@ -78,10 +87,50 @@ test("con empate exacto no se elige a ninguno por el orden: encajas igual como l
 });
 
 test("empate de más de dos: encajas igual como todos ellos", () => {
-  const r = recomendar({ distancia: "larga", presion: "intercambiar", volumen: "pocos_fuertes", iniciativa: "espero", cardio: "mejorar" });
+  const r = recomendar(CUATRO);
   assert.deepEqual(r.empate, ["Boxer", "Fajador", "Contragolpeador", "Boxer-puncher"]);
   assert.equal(textoEmpate(r.empate), "Encajas igual como Boxer, como Fajador, como Contragolpeador y como Boxer-puncher.");
-  assert.deepEqual(r.avisos, ["Este estilo exige mucho fondo."]); // el fajador está entre los empatados
+});
+
+test("sin cardio respondido (o con «No lo sé»), el empate exacto se queda como está", () => {
+  const respuestas = { distancia: "corta", presion: "salir", volumen: "combos_largos", iniciativa: "segun_rival" };
+  for (const cardio of [undefined, "no_se"]) {
+    const r = recomendar({ ...respuestas, cardio });
+    assert.equal(r.estilo, null);
+    assert.deepEqual(r.empate, ["Boxer", "Fajador"]);
+    assert.equal(textoEmpate(r.empate), "Encajas igual como Boxer y como Fajador.");
+  }
+  assert.deepEqual(recomendar(CUATRO).empate, ["Boxer", "Fajador", "Contragolpeador", "Boxer-puncher"]);
+});
+
+test("el cardio desempata un empate exacto: gana el de su lista y los demás «también encajan»", () => {
+  const r = recomendar({ ...CUATRO, cardio: "mejorar" });
+  assert.equal(r.nombre, "Contragolpeador");
+  assert.equal(r.empate, null);
+  assert.equal(r.tambien, "Boxer, Fajador y Boxer-puncher");
+  assert.equal(r.porque, "Porque esperas para contraatacar y tu cardio está por mejorar.");
+  assert.equal(recomendar({ ...CUATRO, cardio: "regular" }).nombre, "Boxer-puncher");
+  // Los puntos no cambian: el cardio no puntúa.
+  assert.deepEqual(r.puntos, recomendar(CUATRO).puntos);
+});
+
+test("si el cardio no deja a uno solo, siguen empatados los que quedan", () => {
+  const r = recomendar({ ...CUATRO, cardio: "bueno" });
+  assert.deepEqual(r.empate, ["Boxer", "Fajador"]);
+  assert.equal(r.tambien, null);
+  // Si ninguno de los empatados está en la lista de su cardio, el empate sigue entero.
+  const dos = { distancia: "corta", presion: "salir", volumen: "combos_largos", iniciativa: "segun_rival" };
+  assert.deepEqual(recomendar({ ...dos, cardio: "mejorar" }).empate, ["Boxer", "Fajador"]);
+  assert.deepEqual(recomendar({ ...dos, cardio: "bueno" }).empate, ["Boxer", "Fajador"]);
+});
+
+test("el cardio no cambia a un ganador claro", () => {
+  const boxer = { distancia: "larga", presion: "salir", volumen: "pocos_fuertes", iniciativa: "segun_rival" };
+  for (const cardio of ["bueno", "regular", "mejorar"]) {
+    const r = recomendar({ ...boxer, cardio });
+    assert.equal(r.nombre, "Boxer");
+    assert.ok(!r.porque.includes("cardio"));
+  }
 });
 
 test("«Responde más preguntas para afinar» solo si quedan preguntas de estilo sin contestar", () => {
@@ -93,13 +142,11 @@ test("«Responde más preguntas para afinar» solo si quedan preguntas de estilo
   assert.equal(TEXTO_AFINAR, "Responde más preguntas para afinar.");
 });
 
-test("fajador con cardio por mejorar avisa del fondo; con buen cardio, no", () => {
+test("ya no hay avisos: el fajador con cardio por mejorar sale sin más", () => {
   const fajador = { distancia: "corta", presion: "intercambiar", volumen: "combos_largos", iniciativa: "ataco", defensa: "bloqueo" };
-  assert.equal(recomendar({ ...fajador, cardio: "mejorar" }).nombre, "Fajador");
-  assert.deepEqual(recomendar({ ...fajador, cardio: "mejorar" }).avisos, ["Este estilo exige mucho fondo."]);
-  assert.deepEqual(recomendar({ ...fajador, cardio: "bueno" }).avisos, []);
-  const boxer = { distancia: "larga", presion: "salir", volumen: "pocos_fuertes", iniciativa: "segun_rival", cardio: "mejorar" };
-  assert.deepEqual(recomendar(boxer).avisos, []);
+  const r = recomendar({ ...fajador, cardio: "mejorar" });
+  assert.equal(r.nombre, "Fajador");
+  assert.ok(!("avisos" in r));
 });
 
 test("alcance frente a altura: solo con las dos medidas y a partir de 3 cm", () => {

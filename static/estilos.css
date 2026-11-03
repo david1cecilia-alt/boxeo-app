@@ -741,7 +741,6 @@ button.volver {
   display: grid; gap: 4px; margin-top: 4px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.35);
 }
 .estilo-recomendado .recomendado { font-size: 0.875rem; }
-.estilo-recomendado .aviso-estilo { font-weight: 700; }
 
 .grupos-estilo { display: grid; gap: 16px; }
 .grupo-chips legend { margin-bottom: 8px; color: var(--suave); font-size: 0.8125rem; font-weight: 600; }

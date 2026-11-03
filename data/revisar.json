@@ -142,9 +142,9 @@
       "texto": "el umbral de 3 cm entre alcance y altura para hablar de alcance largo o corto"
     },
     {
-      "id": "estilos-b296c13e",
+      "id": "estilos-9ec79ecc",
       "origen": "data/estilos.json",
-      "texto": "que con cardio por mejorar se avise solo al fajador"
+      "texto": "los estilos de cada respuesta de cardio en «desempate.cardio» (bueno: fajador y boxer; regular: boxer-puncher; por mejorar: contragolpeador)"
     },
     {
       "id": "posturas-62961772",

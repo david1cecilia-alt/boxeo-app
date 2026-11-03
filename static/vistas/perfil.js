@@ -18,7 +18,7 @@ const MEDIDAS = {
 const NOMBRES_ESTILO = Object.fromEntries(MI_ESTILO.opciones.filter(([id]) => id !== NO_SE));
 
 // Recomendación: «Boxer» (o «Encajas igual como … y como …» si empatan), el porqué, «También
-// encajas como …», los avisos y, si quedan preguntas, «Responde más…»; o cuántas preguntas faltan.
+// encajas como …» y, si quedan preguntas, «Responde más…»; o cuántas preguntas faltan.
 function htmlRecomendacion(r, conMiEstilo) {
   if (r.faltan) {
     return `${conMiEstilo ? "" : '<p class="titular">Por definir</p>'}<p>${esc(textoFaltan(r.faltan))}</p>`;
@@ -32,7 +32,6 @@ function htmlRecomendacion(r, conMiEstilo) {
       : `<p class="titular">${esc(r.nombre)}</p>`;
   }
   return [nombre, r.porque && `<p>${esc(r.porque)}</p>`, r.tambien && `<p>También encajas como ${esc(r.tambien)}.</p>`,
-    ...r.avisos.map((a) => `<p class="aviso-estilo">${esc(a)}</p>`),
     r.afinar && `<p class="afinar">${esc(TEXTO_AFINAR)}</p>`].filter(Boolean).join("");
 }
 

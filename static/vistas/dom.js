@@ -29,6 +29,10 @@ export function hoyIso() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+// Singular o plural según la cifra: palabra(1, "sesión", "sesiones") → «sesión»; plural(…) → «1 sesión».
+export const palabra = (n, una, varias) => (n === 1 ? una : varias);
+export const plural = (n, una, varias) => `${n} ${palabra(n, una, varias)}`;
+
 export function minutos(segundos) {
   const s = Math.round(segundos);
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;

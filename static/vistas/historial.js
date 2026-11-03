@@ -8,7 +8,7 @@
 // muestra solo la galería o, si hay una sesión elegida, solo su detalle.
 import { ErrorAlmacen } from "../almacen.js";
 import { datos } from "../motor/datos.js";
-import { $, aFecha, anunciar, esc, fechaLarga, hoyIso, minutos } from "./dom.js";
+import { $, aFecha, anunciar, esc, fechaLarga, hoyIso, minutos, palabra, plural } from "./dom.js";
 import {
   alCambiarDeNivel, diaDeLaVista, diasDeSemana, escribirRuta, etiquetaFila, leerRuta, mesesDelAno, rutaDeArriba,
   rutaDelDia, semanasDelMes, vecinos, vistaDeLaGaleria,
@@ -24,7 +24,6 @@ const DIA_LARGO = new Intl.DateTimeFormat("es-ES", { weekday: "long", day: "nume
 const mesYAno = (d) => `${MES_LARGO.format(d)} ${d.getFullYear()}`; // "octubre 2026", sin el "de"
 const mayuscula = (t) => `${t.charAt(0).toUpperCase()}${t.slice(1)}`;
 const fmt = (n) => n.toLocaleString("es-ES", { maximumFractionDigits: 1 });
-const plural = (n, una, varias) => `${n} ${n === 1 ? una : varias}`;
 const NOMBRE_NIVEL = { semana: "Semana", mes: "Mes", ano: "Año" };
 const mesCorto = (d) => mayuscula(MES.format(d).replace(".", ""));
 const FLECHAS = {
@@ -107,8 +106,8 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
       <div class="resumen-historial">
         <h2 class="solo-lectores">Resumen de ${esc(mesActual)}</h2>
         <dl class="cifras">
-          <div class="destacada"><dt>sesiones / mes</dt><dd>${mes.sesiones}</dd></div>
-          <div><dt>asaltos / mes</dt><dd>${mes.asaltos}</dd></div>
+          <div class="destacada"><dt>${palabra(mes.sesiones, "sesión", "sesiones")} / mes</dt><dd>${mes.sesiones}</dd></div>
+          <div><dt>${palabra(mes.asaltos, "asalto", "asaltos")} / mes</dt><dd>${mes.asaltos}</dd></div>
           <div><dt>RPE medio</dt><dd>${mes.rpe == null ? "–" : `${fmt(mes.rpe)}<small>/10</small>`}</dd></div>
         </dl>
         ${graficoSemanas(series)}
@@ -245,10 +244,11 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
   // Las cifras del mes que se ve, debajo del calendario.
   function cifrasMes(delMes) {
     const asaltos = delMes.reduce((n, s) => n + (s.asaltos ?? 0), 0);
+    const minutosMes = minutosDeAsalto(delMes);
     return `<dl class="cifras cifras-mes">
-          <div><dt>sesiones</dt><dd>${delMes.length}</dd></div>
-          <div><dt>asaltos</dt><dd>${asaltos}</dd></div>
-          <div><dt>minutos</dt><dd>${fmt(minutosDeAsalto(delMes))}</dd></div>
+          <div><dt>${palabra(delMes.length, "sesión", "sesiones")}</dt><dd>${delMes.length}</dd></div>
+          <div><dt>${palabra(asaltos, "asalto", "asaltos")}</dt><dd>${asaltos}</dd></div>
+          <div><dt>${palabra(minutosMes, "minuto", "minutos")}</dt><dd>${fmt(minutosMes)}</dd></div>
         </dl>`;
   }
 
@@ -262,7 +262,7 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
       const nombre = mayuscula(MES_LARGO.format(m.inicio));
       const visible = `<b aria-hidden="true"><span class="nombre-largo">${esc(nombre)}</span>`
         + `<span class="nombre-corto">${esc(mesCorto(m.inicio))}</span></b>`
-        + `<span class="cuenta-mes" aria-hidden="true">${n ? `<strong>${n}</strong> ${n === 1 ? "sesión" : "sesiones"}` : "sin sesiones"}</span>`;
+        + `<span class="cuenta-mes" aria-hidden="true">${n ? `<strong>${n}</strong> ${palabra(n, "sesión", "sesiones")}` : "sin sesiones"}</span>`;
       const etiqueta = esc(`${nombre}${m.actual ? " (este mes)" : ""}: ${n ? plural(n, "sesión", "sesiones") : "sin sesiones"}`);
       return m.futuro
         ? `<li><span class="${clases}">${visible}<span class="solo-lectores">${etiqueta}</span></span></li>`

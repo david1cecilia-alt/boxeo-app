@@ -4,6 +4,7 @@
 // La vista va en la ruta (#historial/<ruta>), así el gesto atrás del navegador también funciona:
 //   semana/2026-10-26 · dia/2026-10-28 · mes/2026-10 · ano/2026 · <clave de la sesión>
 // Sin ruta, el periodo actual del nivel elegido (perfil.historial.agrupar).
+import { plural } from "./dom.js";
 import { AGRUPACIONES, inicioPeriodo, lunes, minutosDeAsalto, moverPeriodo } from "./resumen.js";
 
 const dosCifras = (n) => String(n).padStart(2, "0");
@@ -102,7 +103,7 @@ export function textoSemana(inicio, fin) {
 // Lo que se lee de una fila del calendario: «Semana del 21 al 27 de octubre, 3 sesiones».
 export function etiquetaFila(semana) {
   const n = semana.sesiones.length;
-  const cuantas = n ? `${n} ${n === 1 ? "sesión" : "sesiones"}` : "sin sesiones";
+  const cuantas = n ? plural(n, "sesión", "sesiones") : "sin sesiones";
   return `Semana del ${textoSemana(semana.inicio, semana.fin)}, ${cuantas}${semana.actual ? " (esta semana)" : ""}`;
 }
 

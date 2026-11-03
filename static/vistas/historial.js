@@ -1,6 +1,7 @@
 // Pestaña Historial: resumen y gráfico, las sesiones como una galería de fotos (Año → Mes →
 // Semana → Día → sesión; lógica en galeria.js), detalle con valoración (editable), borrado y copia
-// de seguridad (exportar / importar). «Volver» siempre sube un nivel.
+// de seguridad (exportar / importar). «Volver» siempre sube un nivel y solo hay uno (con una sesión
+// abierta, el del detalle).
 // La vista va en la ruta (#historial/semana/…, /dia/…, /mes/…, /ano/…, /<clave>): bajar de nivel
 // añade una entrada al historial del navegador y las flechas o el selector la sustituyen, así el
 // gesto atrás sube un nivel. En PC la galería y el detalle van en dos columnas; en móvil el CSS
@@ -156,7 +157,8 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
   function galeria(v) {
     const g = periodoVisible();
     const escala = g.nivel === "dia" ? "semana" : g.nivel;
-    const arriba = rutaDeArriba(g, sesiones, vista.nivel === "sesion" ? null : rutaPrevia);
+    // Con una sesión abierta, el único «Volver» es el del detalle (sube un nivel desde la sesión).
+    const arriba = vista.nivel === "sesion" ? null : rutaDeArriba(g, sesiones, rutaPrevia);
     return `
       <section class="sesiones galeria" aria-labelledby="t-sesiones">
         <div class="cabeza-sesiones">

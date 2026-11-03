@@ -5,14 +5,16 @@
 import { MAX_PRACTICAR, NOMBRE_VELOCIDAD, cambiarPracticar, opcionesVoz, preferencias } from "../ajustes.js";
 import { accionesPorIds, catalogo, espejo, nombreHablado, textoHablado } from "../motor/acciones.js";
 import { VELOCIDADES } from "../motor/ritmo.js";
-import { FACTOR_PRACTICAR, movimiento, movimientos } from "../motor/sorteo.js";
+import { movimiento, movimientos } from "../motor/sorteo.js";
 import { nombreCortoVoz } from "../voz.js";
 import { chips, conectarCampos } from "./campos.js";
 import { $, $$, anunciar, esc } from "./dom.js";
 import { BASICOS } from "./opciones.js";
 
 const GRUPOS_PRACTICAR = { golpe: "Golpes", defensa: "Defensas", movimiento: "Salidas" };
-const CUANTO = { poco: "Un poco", bastante: "Bastante" };
+// Cuánto más, sin el factor del sorteo (×2, ×4): la frecuencia exacta no se enseña.
+const CUANTO = { poco: "Un poco más", bastante: "Bastante más" };
+const ICONO_CERRAR = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
 
 // Los movimientos de «Practicar más» con su nombre y su grupo. Los golpes llevan su número y la
 // mano de la guardia de Entrenar («3 crochet de izquierda»; al zurdo, «de derecha»).
@@ -25,6 +27,90 @@ function movimientosPracticar(zurdo) {
       : m === "cuerpo" ? "golpes al cuerpo" : a.orden || a.plantilla.replace(" {lado}", "");
     return { movimiento: m, nombre, grupo: a.tipo };
   });
+}
+
+// Hueco lleno: el movimiento, cuánto más (dos botones) y quitarlo.
+function huecoLleno(elegido, i, nombre) {
+  return `<div class="hueco lleno" data-hueco="${i}" role="group" aria-labelledby="hueco-${i}" tabindex="-1">
+    <div class="hueco-cabecera">
+      <h3 id="hueco-${i}">${esc(nombre)}</h3>
+      <button type="button" class="quitar-practicar" data-quitar="${esc(elegido.movimiento)}"
+        aria-label="Quitar ${esc(nombre)}">${ICONO_CERRAR}</button>
+    </div>
+    <fieldset class="segmentado"><legend class="solo-lectores">Cuánto más</legend>
+      ${Object.entries(CUANTO).map(([clave, texto]) => `<label>
+        <input type="radio" name="cuanto-${i}" data-cuanto="${clave}" data-movimiento="${esc(elegido.movimiento)}"
+          ${elegido.cuanto === clave ? "checked" : ""}><span>${texto}</span></label>`).join("")}
+    </fieldset>
+  </div>`;
+}
+
+// Panel para elegir (<dialog> nativo: hoja inferior en el móvil, centrado en el PC), con una pestaña
+// por grupo. Golpes: del 1 al 6 en rejilla y «golpes al cuerpo» aparte, a todo el ancho; defensas y
+// salidas, en lista. Lo ya elegido sale marcado y no se puede volver a elegir.
+function panelPracticar(lista, elegidos) {
+  const elegido = (m) => elegidos.some((e) => e.movimiento === m);
+  const ficha = (m) => `<li><button type="button" class="ficha" data-elegir="${esc(m.movimiento)}"
+    ${elegido(m.movimiento) ? 'aria-disabled="true"' : ""}><span>${esc(m.nombre)}</span>${elegido(m.movimiento)
+      ? '<span class="marca-elegido" aria-hidden="true">✓</span><span class="solo-lectores"> (ya elegido)</span>' : ""}</button></li>`;
+  const fichas = (clase, ms) => `<ul class="fichas ${clase}">${ms.map(ficha).join("")}</ul>`;
+  const grupos = Object.entries(GRUPOS_PRACTICAR);
+  return `<div class="hoja-contenido">
+    <div class="hoja-cabecera">
+      <h2 id="t-elegir">Añadir movimiento</h2>
+      <button type="button" class="cerrar-hoja" data-cerrar aria-label="Cerrar">${ICONO_CERRAR}</button>
+    </div>
+    <div role="tablist" class="pestanas-hoja" aria-label="Tipo de movimiento">
+      ${grupos.map(([grupo, titulo], i) => `<button type="button" role="tab" id="pestana-${grupo}"
+        aria-controls="panel-${grupo}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${titulo}</button>`).join("")}
+    </div>
+    <div class="paneles-hoja">
+      ${grupos.map(([grupo], i) => {
+        const delGrupo = lista.filter((m) => m.grupo === grupo);
+        return `<div role="tabpanel" id="panel-${grupo}" aria-labelledby="pestana-${grupo}" ${i ? "hidden" : ""}>
+          ${grupo === "golpe"
+            ? fichas("numeros", delGrupo.filter((m) => m.movimiento !== "cuerpo"))
+              + fichas("lista aparte", delGrupo.filter((m) => m.movimiento === "cuerpo"))
+            : fichas("lista", delGrupo)}</div>`;
+      }).join("")}
+    </div>
+  </div>`;
+}
+
+function elegirPestana(pestana) {
+  for (const p of $$('[role="tab"]', pestana.parentElement)) {
+    const activa = p === pestana;
+    p.setAttribute("aria-selected", String(activa));
+    p.tabIndex = activa ? 0 : -1;
+    document.getElementById(p.getAttribute("aria-controls")).hidden = !activa;
+  }
+}
+
+// El <dialog> modal deja el resto de la página inerte, pero con Tab el foco puede irse a la barra
+// del navegador: del último se vuelve al primero (y al revés con Mayús+Tab).
+function atraparFoco(e) {
+  if (e.key !== "Tab") return;
+  const enfocables = $$("button, input", e.currentTarget)
+    .filter((el) => el.tabIndex >= 0 && el.getClientRects().length && !el.closest("[hidden]"));
+  const [primero, ultimo] = [enfocables[0], enfocables.at(-1)];
+  if (e.shiftKey ? document.activeElement === primero : document.activeElement === ultimo) {
+    e.preventDefault();
+    (e.shiftKey ? ultimo : primero).focus();
+  }
+}
+
+// Pestañas con el teclado: flechas (en círculo), Inicio y Fin; solo la activa está en el orden de Tab.
+function teclasPestanas(e) {
+  const pestana = e.target.closest?.('[role="tab"]');
+  if (!pestana) return;
+  const pestanas = $$('[role="tab"]', pestana.parentElement);
+  const i = pestanas.indexOf(pestana);
+  const destino = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: pestanas.length - 1 }[e.key];
+  if (destino === undefined) return;
+  e.preventDefault();
+  const nueva = pestanas[(destino + pestanas.length) % pestanas.length];
+  elegirPestana(nueva);
+  nueva.focus();
 }
 
 const EJEMPLO = ["jab", "directo", "gancho_izq"]; // lo que dice «Probar voz»
@@ -85,67 +171,89 @@ export function iniciarAjustes({ almacen, voz }) {
       </div>
 
       <form class="tarjeta formulario" id="f-practicar" aria-labelledby="t-practicar"></form>
+      <dialog id="elegir-practicar" class="hoja" aria-labelledby="t-elegir"></dialog>
 
       <p class="nota pie-perfil">Tus ajustes se guardan solo en este dispositivo. <span id="guardado-ajustes"></span></p>`;
     pintarVoces();
     pintarPracticar();
+    conectarPracticar();
     conectar();
   }
 
-  // «Practicar más»: los movimientos como chips (hasta MAX_PRACTICAR; con todos elegidos, los demás
-  // desactivados) y, por cada elegido, cuánto más.
+  // «Practicar más»: siempre MAX_PRACTICAR huecos del mismo tamaño, llenos por orden de elección. Uno
+  // vacío abre el panel para elegir; uno lleno dice el movimiento y cuánto más, y se puede quitar.
   function pintarPracticar() {
     const elegidos = almacen.datos.perfil.practicar;
-    const lleno = elegidos.length >= MAX_PRACTICAR;
     const lista = movimientosPracticar(preferencias(almacen.datos.perfil).zurdo);
     const nombre = new Map(lista.map((m) => [m.movimiento, m.nombre]));
-    const elegido = (m) => elegidos.some((e) => e.movimiento === m);
+    const huecos = Array.from({ length: MAX_PRACTICAR }, (_, i) => elegidos[i]);
     $("#f-practicar").innerHTML = `
       <div>
         <h2 id="t-practicar" tabindex="-1">Practicar más</h2>
         <p class="nota">Elige hasta ${MAX_PRACTICAR} movimientos: las combinaciones que los llevan saldrán más a menudo.
           Nunca se quita ninguna.</p>
       </div>
-      ${Object.entries(GRUPOS_PRACTICAR).map(([grupo, titulo]) => `
-        <fieldset class="grupo-chips"><legend>${titulo}</legend><div class="chips-fila">
-          ${lista.filter((m) => m.grupo === grupo).map((m) => `<label class="chip-opcion">
-            <input type="checkbox" data-practicar="${m.movimiento}" ${elegido(m.movimiento) ? "checked" : ""}
-              ${lleno && !elegido(m.movimiento) ? "disabled" : ""}><span>${esc(m.nombre)}</span></label>`).join("")}
-        </div></fieldset>`).join("")}
-      <p class="nota" id="practicar-estado">${elegidos.length
-        ? `${elegidos.length} de ${MAX_PRACTICAR} elegidos.${lleno ? " Quita uno para elegir otro." : ""}`
-        : "Ahora todas salen igual de a menudo."}</p>
-      ${elegidos.length ? `<ul class="lista-practicar">
-        ${elegidos.map((e, i) => `<li><fieldset class="cuanto-practicar"><legend>${esc(nombre.get(e.movimiento) ?? e.movimiento)}</legend>
-          <div class="chips-fila velocidades">
-          ${Object.entries(CUANTO).map(([clave, texto]) => `<label class="chip-opcion">
-            <input type="radio" name="cuanto-${i}" data-cuanto="${clave}" data-movimiento="${esc(e.movimiento)}"
-              ${e.cuanto === clave ? "checked" : ""}><span>${texto} más <small>×${FACTOR_PRACTICAR[clave]}</small></span></label>`).join("")}
-          </div></fieldset></li>`).join("")}
+      <ul class="huecos-practicar">
+        ${huecos.map((e, i) => `<li>${e ? huecoLleno(e, i, nombre.get(e.movimiento) ?? e.movimiento) : `
+          <button type="button" class="hueco vacio" data-hueco="${i}" aria-haspopup="dialog">
+            <span aria-hidden="true">+</span> Añadir movimiento</button>`}</li>`).join("")}
       </ul>
-      <button type="button" id="practicar-quitar" class="boton pequeno">Quitar todo</button>` : ""}`;
-    conectarPracticar();
+      <p class="nota" id="practicar-estado">${elegidos.length
+        ? `${elegidos.length} de ${MAX_PRACTICAR} elegidos.` : "Ahora todas salen igual de a menudo."}</p>`;
+    $("#elegir-practicar").innerHTML = panelPracticar(lista, elegidos);
   }
 
-  function guardarPracticar(movimiento_, cuanto, foco) {
+  function guardarPracticar(movimiento_, cuanto) {
     guardar((p) => (p.practicar = cambiarPracticar(p.practicar, movimiento_, cuanto)));
-    pintarPracticar();
-    $(foco)?.focus();
   }
 
+  // Se conecta una vez por pintar(): el formulario y el panel se rehacen por dentro, no ellos.
   function conectarPracticar() {
-    for (const c of $$("[data-practicar]", raiz)) {
-      c.addEventListener("change", () => guardarPracticar(c.dataset.practicar, c.checked ? "poco" : null,
-        `[data-practicar="${c.dataset.practicar}"]`));
-    }
-    for (const r of $$("[data-cuanto]", raiz)) {
-      r.addEventListener("change", () => guardarPracticar(r.dataset.movimiento, r.dataset.cuanto,
-        `[data-movimiento="${r.dataset.movimiento}"][data-cuanto="${r.dataset.cuanto}"]`));
-    }
-    $("#practicar-quitar")?.addEventListener("click", () => {
-      guardar((p) => (p.practicar = []));
+    const formulario = $("#f-practicar");
+    const panel = $("#elegir-practicar");
+    let origen = 0; // el hueco desde el que se abrió el panel: ahí vuelve el foco si no se elige nada
+
+    formulario.addEventListener("click", (e) => {
+      const vacio = e.target.closest(".hueco.vacio");
+      if (vacio) {
+        origen = Number(vacio.dataset.hueco);
+        panel.returnValue = "";
+        panel.showModal();
+        $('[role="tab"][aria-selected="true"]', panel).focus();
+        return;
+      }
+      const quitar = e.target.closest("[data-quitar]");
+      if (!quitar) return;
+      guardarPracticar(quitar.dataset.quitar, null);
       pintarPracticar();
-      $("#t-practicar").focus();
+      // El hueco que queda vacío es el primero sin elegir: los demás suben.
+      $(`[data-hueco="${almacen.datos.perfil.practicar.length}"]`).focus();
+    });
+    formulario.addEventListener("change", (e) => {
+      const r = e.target.closest("[data-cuanto]");
+      if (!r) return;
+      guardarPracticar(r.dataset.movimiento, r.dataset.cuanto);
+      pintarPracticar();
+      $(`[data-movimiento="${r.dataset.movimiento}"][data-cuanto="${r.dataset.cuanto}"]`).focus();
+    });
+
+    panel.addEventListener("click", (e) => {
+      // Fuera del contenido (el velo) o en «Cerrar», se cierra sin elegir.
+      if (e.target === panel || e.target.closest("[data-cerrar]")) return panel.close();
+      const pestana = e.target.closest('[role="tab"]');
+      if (pestana) return elegirPestana(pestana);
+      const ficha = e.target.closest("[data-elegir]");
+      if (!ficha || ficha.getAttribute("aria-disabled") === "true") return;
+      guardarPracticar(ficha.dataset.elegir, "poco");
+      panel.close("elegido");
+    });
+    panel.addEventListener("keydown", teclasPestanas);
+    panel.addEventListener("keydown", atraparFoco);
+    // Esc, «Cerrar» o elegir: se repinta y el foco vuelve a la tarjeta (la recién llenada, si se eligió).
+    panel.addEventListener("close", () => {
+      pintarPracticar();
+      const hueco = panel.returnValue === "elegido" ? almacen.datos.perfil.practicar.length - 1 : origen;
+      $(`[data-hueco="${hueco}"]`)?.focus();
     });
   }
 

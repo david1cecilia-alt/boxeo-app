@@ -759,15 +759,105 @@ button.volver {
 #voz-aviso { margin: -6px 0 0; }
 .sin-cortar { white-space: nowrap; }
 #f-voz > .boton { justify-self: start; }
-#f-practicar > .boton { justify-self: start; }
-/* «Practicar más»: con los elegidos al tope, los demás chips apagados; cuánto más, en dos botones. */
-.chip-opcion input:disabled { cursor: not-allowed; }
-.chip-opcion input:disabled + span { opacity: 0.4; }
+/* «Practicar más»: tres huecos del mismo tamaño (filas iguales: la pantalla mide siempre lo mismo),
+   uno por fila en el móvil y en fila de tres desde 720 px. */
 #practicar-estado { margin: -4px 0 0; }
-.lista-practicar { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
-.lista-practicar li { border-top: 1px solid var(--linea); padding-top: 12px; }
-.cuanto-practicar legend { margin-bottom: 8px; font-size: 0.875rem; font-weight: 600; }
-.cuanto-practicar .chips-fila { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.huecos-practicar {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-auto-rows: minmax(148px, 1fr); gap: 12px;
+}
+.huecos-practicar > li { display: grid; min-width: 0; }
+.hueco { border-radius: 16px; min-width: 0; }
+.hueco.vacio {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font: inherit; font-weight: 600; color: var(--suave); cursor: pointer;
+  background: transparent; border: 1px dashed var(--linea-chip);
+  transition: background-color 0.15s, color 0.15s;
+}
+.hueco.vacio:hover { background: var(--secundario); color: var(--texto); }
+.hueco.vacio span { color: var(--acento); font-size: 1.4rem; font-weight: 400; line-height: 1; }
+.hueco.lleno {
+  display: grid; align-content: space-between; gap: 12px; padding: 12px 8px 14px 14px;
+  background: var(--campo); border: 1px solid var(--linea-chip); container-type: inline-size;
+}
+.hueco.lleno:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
+.hueco-cabecera { display: flex; align-items: flex-start; justify-content: space-between; gap: 4px; }
+.hueco-cabecera h3 {
+  margin: 12px 0 0; color: var(--texto); font-size: 1rem; font-weight: 600; line-height: 1.3;
+  letter-spacing: 0; text-transform: none; overflow-wrap: anywhere;
+}
+/* Quitar y cerrar: el icono pequeño, el área de toque de 48 px. */
+:is(.quitar-practicar, .cerrar-hoja) {
+  display: grid; place-items: center; flex: none; width: 48px; height: 48px; padding: 0;
+  color: var(--suave); background: transparent; border: 0; border-radius: 50%; cursor: pointer;
+}
+:is(.quitar-practicar, .cerrar-hoja):hover { color: var(--texto); background: var(--secundario); }
+:is(.quitar-practicar, .cerrar-hoja) svg {
+  width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round;
+}
+/* Cuánto más: selector segmentado de dos (radios); el elegido, en claro como los chips. */
+.segmentado {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px;
+  margin: 0 6px 0 0; padding: 3px; border: 0; border-radius: 16px; background: var(--secundario);
+}
+.segmentado label { position: relative; display: grid; }
+.segmentado input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.segmentado span {
+  display: grid; place-items: center; min-height: 42px; padding: 4px 6px; border-radius: 13px;
+  font-size: 0.8125rem; line-height: 1.2; text-align: center; color: var(--suave);
+}
+.segmentado input:checked + span { background: var(--chip-activo); color: var(--sobre-chip-activo); font-weight: 600; }
+.segmentado input:focus-visible + span { outline: 3px solid var(--foco); outline-offset: 1px; }
+/* En la tarjeta estrecha (tres en fila a 1024) la letra baja un punto: «Bastante más» en una línea. */
+@container (max-width: 200px) {
+  .segmentado { margin-right: 0; }
+  .segmentado span { padding-inline: 0; font-size: 0.75rem; }
+}
+@media (min-width: 720px) {
+  .huecos-practicar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* Panel para elegir: hoja inferior en el móvil y diálogo centrado desde 720 px. Las pestañas
+   comparten celda (la del panel más alto): la hoja no cambia de alto al cambiar de pestaña. */
+dialog.hoja { padding: 0; }
+.hoja-contenido { display: grid; gap: 14px; padding: 8px 8px 20px 20px; }
+.hoja-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.hoja-cabecera h2 { margin: 0; font-size: 1.25rem; }
+.pestanas-hoja {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-right: 12px;
+  padding: 3px; border-radius: 16px; background: var(--secundario);
+}
+.pestanas-hoja [role="tab"] {
+  min-height: 44px; padding: 0 8px; border: 0; border-radius: 13px; cursor: pointer;
+  font: inherit; font-size: 0.875rem; color: var(--suave); background: transparent;
+}
+.pestanas-hoja [aria-selected="true"] { background: var(--chip-activo); color: var(--sobre-chip-activo); font-weight: 600; }
+.paneles-hoja { display: grid; margin-right: 12px; }
+.paneles-hoja > [role="tabpanel"] { grid-area: 1 / 1; display: grid; align-content: start; gap: 16px; }
+.paneles-hoja > [hidden] { visibility: hidden; }
+.fichas { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.fichas.numeros { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; }
+.fichas li { display: grid; min-width: 0; }
+.ficha {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  min-height: 48px; padding: 8px 14px; text-align: left;
+  font: inherit; font-size: 0.9375rem; color: var(--texto); cursor: pointer;
+  background: var(--campo); border: 1px solid var(--linea-chip); border-radius: 14px;
+}
+.fichas.numeros .ficha { min-height: 56px; }
+.ficha:hover:not([aria-disabled="true"]) { border-color: var(--acento-relleno); }
+.ficha[aria-disabled="true"] { cursor: not-allowed; color: var(--suave); border-style: dashed; }
+.marca-elegido { flex: none; color: var(--acento); font-weight: 700; }
+@media (max-width: 719.98px) {
+  dialog.hoja {
+    width: 100%; max-width: none; max-height: 85dvh; margin: auto 0 0;
+    border-bottom: 0; border-radius: var(--radio) var(--radio) 0 0;
+  }
+  .hoja-contenido { padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+}
+@media (min-width: 720px) {
+  .fichas.numeros { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 
 .lista-editable { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
 .lista-editable li {
@@ -971,11 +1061,12 @@ dialog::backdrop { background: var(--velo); }
     .col-detalle { grid-column: 2; grid-row: 3; }
   }
 
-  /* Ajustes: Voz y Tus datos a la izquierda, Qué te dicta a la derecha (a 1024 y a 1440 igual). */
+  /* Ajustes: Voz y Tus datos lado a lado; «Practicar más» debajo, a todo el ancho, con sus tres
+     huecos en fila (a 1024 y a 1440 igual). */
   #vista-ajustes h1 { font-size: 4.5rem; }
   #ajustes-contenido { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
-  .columna-ajustes { gap: 24px; }
-  #ajustes-contenido > .nota { grid-column: 1 / -1; }
+  .columna-ajustes { display: contents; }
+  #ajustes-contenido > :is(#f-practicar, .nota) { grid-column: 1 / -1; }
 
   /* Perfil: estilo a la izquierda, Sobre ti y Notas a la derecha; los puntos a revisar debajo,
      a todo el ancho y en dos columnas. */

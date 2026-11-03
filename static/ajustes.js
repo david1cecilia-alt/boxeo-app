@@ -1,6 +1,6 @@
 // Une los datos del usuario (almacén) con el motor: qué perfil usa el sorteo y
 // qué se propone al entrenar (lo último elegido). Sin reglas de boxeo.
-import { NO_SE, PERSONALIZADA_POR_DEFECTO } from "./almacen.js";
+import { PERSONALIZADA_POR_DEFECTO } from "./almacen.js";
 import { datos } from "./motor/datos.js";
 import { VELOCIDADES, VELOCIDAD_POR_DEFECTO } from "./motor/ritmo.js";
 import { SorteoBiblioteca } from "./motor/sorteo.js";
@@ -56,16 +56,15 @@ export function nuevoGuion(config, perfilUsuario, azar) {
 }
 
 // Lo que se propone al entrenar: lo último que se eligió en Entrenar. Nivel y guardia, si no se
-// han elegido nunca, son los del perfil (o los de data/perfil.json si "No lo sé").
+// han elegido nunca, son los de data/perfil.json.
 export function preferencias(perfilUsuario) {
   const base = datos().perfil;
-  const { guardia, nivel } = perfilUsuario.basicos;
   const s = perfilUsuario.sesion;
   const asaltos = [...datos().presets.presets.map((p) => p.id), PERSONALIZADO];
   return {
     asalto: asaltos.includes(s.asalto) ? s.asalto : asaltos[0],
-    nivel: s.nivel ?? (nivel === NO_SE ? base.nivel : Number(nivel)),
-    zurdo: s.zurdo ?? (guardia === NO_SE ? base.guardia : guardia) === "zurda",
+    nivel: s.nivel ?? base.nivel,
+    zurdo: s.zurdo ?? base.guardia === "zurda",
     voz: s.voz,
     ritmo: s.ritmo,
     reaccion: s.reaccion === true,
@@ -81,7 +80,7 @@ export function personalizadaValida(p) {
     .length;
 }
 
-// Guarda en el perfil lo elegido en Entrenar: solo los campos que llegan, sin tocar «Tus datos».
+// Guarda en el perfil lo elegido en Entrenar: solo los campos que llegan.
 export function recordarSesion(almacen, cambios) {
   const perfil = almacen.datos.perfil;
   almacen.guardarPerfil({ ...perfil, sesion: { ...perfil.sesion, ...cambios } });

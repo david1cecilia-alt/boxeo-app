@@ -14,7 +14,7 @@
 - El guion de la sesión lo genera siempre el motor JS en el navegador (funciona sin servidor, PWA).
   El resto de `static/` solo presenta (se migrará a Tauri + React).
 - Historial: SQLite vía FastAPI si hay servidor; si no, el almacén (`static/historial.js`).
-- Perfil, valoraciones, notas y revisiones: SIEMPRE en el almacén del navegador (`static/almacen.js`),
+- Perfil y valoraciones: SIEMPRE en el almacén del navegador (`static/almacen.js`),
   nunca en el repo ni en `data/`. Nada de datos personales en `data/`: se publica tal cual con la web.
 - El almacén tiene esquema versionado: si cambia, sube `VERSION` y añade una migración en `MIGRACIONES`
   con su test. Las sesiones locales usan `crypto.randomUUID()`.

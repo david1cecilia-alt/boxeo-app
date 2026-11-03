@@ -54,23 +54,18 @@ function cambiarEnPerfil(almacen, grupo, campo, valor) {
   almacen.guardarPerfil(p);
 }
 
-test("sin nada elegido en Entrenar: Amateur, nivel y guardia del perfil, voz y ritmo de siempre", () => {
+test("sin nada elegido en Entrenar: Amateur, nivel y guardia de data/perfil.json, voz y ritmo de siempre", () => {
   const p = perfilPorDefecto();
   assert.deepEqual(preferencias(p), {
     asalto: "amateur", nivel: datos.perfil.nivel, zurdo: datos.perfil.guardia === "zurda", voz: "nombres", ritmo: 3,
     reaccion: false, personalizada: { asaltos: 3, duracion_asalto: 180, descanso: 60 },
   });
+  // Lo que quede de «Tus datos» (datos escritos a mano) ya no cuenta: solo Entrenar.
   p.basicos = { ...p.basicos, nivel: "3", guardia: "zurda" };
-  assert.equal(preferencias(p).nivel, 3);
-  assert.equal(preferencias(p).zurdo, true);
-});
-
-test("lo elegido en Entrenar manda sobre «Tus datos»", () => {
-  const p = perfilPorDefecto();
-  p.basicos = { ...p.basicos, nivel: "3", guardia: "zurda" };
-  p.sesion = { ...p.sesion, nivel: 1, zurdo: false };
+  assert.equal(preferencias(p).nivel, datos.perfil.nivel);
+  p.sesion = { ...p.sesion, nivel: 1, zurdo: true };
   assert.equal(preferencias(p).nivel, 1);
-  assert.equal(preferencias(p).zurdo, false);
+  assert.equal(preferencias(p).zurdo, true);
 });
 
 test("cada elección de Entrenar se guarda y se lee igual al recargar", () => {

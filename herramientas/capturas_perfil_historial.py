@@ -1,8 +1,7 @@
 """Capturas del Perfil (390 y 1440) y del Historial (390, 1024 y 1440, con Asaltos y con RPE).
 
 Monta la web en una carpeta temporal (sin fotos del maniquí) y la abre en Chromium headless con datos
-de prueba solo en su localStorage: unas respuestas de estilo, una nota del entrenador (que no debe
-verse) y sesiones de las últimas semanas, con una semana sin sesiones y otra sin valorar. Guarda en
+de prueba solo en su localStorage: unas respuestas de estilo y sesiones de las últimas semanas, con una semana sin sesiones y otra sin valorar. Guarda en
 .playwright-mcp/capturas/ (no se versiona):
 - perfil-<ancho>.png
 - historial-asaltos-<ancho>.png y historial-rpe-<ancho>.png
@@ -31,11 +30,11 @@ localStorage.clear();
 let n = 0;
 const almacen = crearAlmacen({ crearId: () => `prueba-${++n}` });
 const perfil = structuredClone(almacen.datos.perfil);
-perfil.basicos = { ...perfil.basicos, guardia: "ortodoxa", nivel: "2", altura_cm: 178, alcance_cm: 183 };
+perfil.basicos = { ...perfil.basicos, altura_cm: 178, alcance_cm: 183 };
+perfil.sesion = { ...perfil.sesion, nivel: 2, zurdo: false };
 perfil.estilo = { ...perfil.estilo, distancia: "larga", presion: "contraatacar", golpe_favorito: "jab",
   volumen: "combos_largos", cardio: "bueno", defensa: "esquiva", iniciativa: "espero" };
 almacen.guardarPerfil(perfil);
-almacen.anadirNotaEntrenador("Baja la barbilla", "2026-10-20");
 const historial = await crearHistorial(almacen);
 const hace = (dias) => {
   const d = new Date();

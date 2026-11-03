@@ -22,7 +22,7 @@ function movimientosPracticar(zurdo) {
   return movimientos().map((m) => {
     const a = primera.get(m);
     const nombre = a.numero ? `${a.numero} ${nombreHablado(zurdo ? espejo(a) : a)}`
-      : m === "cuerpo" ? "Golpes al cuerpo" : a.orden || a.plantilla.replace(" {lado}", "");
+      : m === "cuerpo" ? "golpes al cuerpo" : a.orden || a.plantilla.replace(" {lado}", "");
     return { movimiento: m, nombre, grupo: a.tipo };
   });
 }

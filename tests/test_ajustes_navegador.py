@@ -53,7 +53,7 @@ def test_con_tres_elegidos_los_demas_se_desactivan_y_se_guarda(pagina):
     assert _guardado(pagina) == [{"movimiento": "6", "cuanto": "poco"}, {"movimiento": "cuerpo", "cuanto": "poco"},
                                  {"movimiento": "rodar", "cuanto": "bastante"}]
     assert pagina.locator(".cuanto-practicar legend").all_inner_texts() == [
-        "6 gancho de derecha", "Golpes al cuerpo", "esquiva abajo"]
+        "6 gancho de derecha", "golpes al cuerpo", "esquiva abajo"]
     # Al quitar uno se puede elegir otro; «Quitar todo» lo deja como al principio.
     _chip(pagina, "cuerpo").uncheck()
     assert pagina.locator("[data-practicar]:disabled").count() == 0

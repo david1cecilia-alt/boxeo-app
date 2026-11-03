@@ -125,7 +125,7 @@ def test_el_titulo_enfocado_se_subraya_sin_recuadro(pagina, ruta, titulo):
 
 
 # Lo mismo en el título de cada vista (al llegar desde otra, el foco va a su h1) y en los que
-# reciben el foco dentro de Perfil y Ajustes. El foco no se quita: solo cambia cómo se ve.
+# reciben el foco dentro de Ajustes. El foco no se quita: solo cambia cómo se ve.
 @pytest.mark.parametrize("vista, desde", [("entrenar", "perfil"), ("historial", "entrenar"),
                                           ("perfil", "entrenar"), ("ajustes", "entrenar")])
 def test_el_titulo_de_cada_vista_se_subraya_sin_recuadro(pagina, vista, desde):
@@ -138,13 +138,13 @@ def test_el_titulo_de_cada_vista_se_subraya_sin_recuadro(pagina, vista, desde):
     assert pagina.evaluate(FOCO_DEL_TITULO, f"#t-{vista}") == [True, "none", "underline"]
 
 
-@pytest.mark.parametrize("vista, titulo", [("perfil", "#t-notas"), ("ajustes", "#t-practicar")])
-def test_los_titulos_de_perfil_y_ajustes_se_subrayan_sin_recuadro(pagina, vista, titulo):
+@pytest.mark.parametrize("vista, titulo", [("ajustes", "#t-practicar")])
+def test_los_titulos_de_ajustes_se_subrayan_sin_recuadro(pagina, vista, titulo):
     pagina.set_viewport_size({"width": 1440, "height": 900})
     pagina.goto(f"{ORIGEN}/index.html#{vista}")
     pagina.wait_for_selector(titulo, state="attached")
     pagina.keyboard.press("Shift")
-    pagina.evaluate(f"document.querySelector('{titulo}').focus()")  # como tras añadir una nota o restablecer
+    pagina.evaluate(f"document.querySelector('{titulo}').focus()")  # como tras restablecer
     assert pagina.evaluate(FOCO_DEL_TITULO, titulo) == [True, "none", "underline"]
 
 

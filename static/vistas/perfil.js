@@ -1,10 +1,10 @@
 // Pestaña Perfil: lo informativo que rellena el usuario (solo en este navegador): estilo (con el
-// recomendado según sus respuestas, de data/estilos.json), sobre ti, notas del entrenador y puntos
-// a revisar. Se guarda al cambiar cada campo. Lo que cambia el entreno (guardia, nivel, «Practicar
+// recomendado según sus respuestas, de data/estilos.json) y sobre ti. Se guarda al cambiar cada
+// campo. Las notas del entrenador y las revisiones guardadas siguen en el almacén, sin mostrarse. Lo que cambia el entreno (guardia, nivel, «Practicar
 // más» y voz) está en Ajustes.
 import { NO_SE } from "../almacen.js";
 import { chips, conectarCampos } from "./campos.js";
-import { $, $$, anunciar, esc, hoyIso } from "./dom.js";
+import { $, anunciar, esc, hoyIso } from "./dom.js";
 import { TEXTO_AFINAR, recomendarEstilo, textoEmpate, textoFaltan } from "./estilo.js";
 import { ESTILO, MI_ESTILO } from "./opciones.js";
 
@@ -57,7 +57,6 @@ function contexto({ guardia, nivel }) {
 
 export function iniciarPerfil({ almacen }) {
   const raiz = $("#perfil-contenido");
-  let revisar = null; // data/revisar.json, cargado la primera vez
   let estilos = null; // data/estilos.json (tabla del estilo recomendado), cargado la primera vez
 
   // Copia del perfil para editar y guardar entero.
@@ -119,96 +118,12 @@ export function iniciarPerfil({ almacen }) {
                 data-grupo="basicos" data-campo="${c}" data-numero value="${p.basicos[c] ?? ""}"></label>`).join("")}
         </div>
       </form>
-
-      <section class="tarjeta" aria-labelledby="t-notas">
-        <h2 id="t-notas" tabindex="-1">Notas del entrenador</h2>
-        <form id="f-nota" class="formulario">
-          <label class="campo">Fecha <input type="date" name="fecha" value="${hoyIso()}" required></label>
-          <label class="campo">Nota <textarea name="texto" rows="3" maxlength="1000" required></textarea></label>
-          <button type="submit" class="boton secundario">Añadir nota</button>
-        </form>
-        <ul class="lista-editable notas">${almacen.datos.notas_entrenador.map((n) => `
-          <li><div><time datetime="${esc(n.fecha)}">${esc(n.fecha)}</time><p>${esc(n.texto)}</p></div>
-            <button type="button" class="boton pequeno" data-borrar-nota="${esc(n.id)}"
-              aria-label="Borrar nota del ${esc(n.fecha)}">Borrar</button></li>`).join("")}
-        </ul>
-      </section>
       </div>
-
-      <section class="tarjeta" aria-labelledby="t-revisar">
-        <h2 id="t-revisar">Revisar con el entrenador</h2>
-        <p class="nota">Puntos del motor marcados como dudosos. Lo que apuntes aquí es solo para ti:
-          no cambia el motor.</p>
-        <div id="lista-revisar"><p class="nota">Cargando…</p></div>
-      </section>
 
       <p class="nota pie-perfil">Tus datos se guardan solo en este dispositivo. <span id="guardado-perfil"></span></p>`;
     pintarResumen();
     cargarEstilos();
-    conectar();
-    pintarRevisar();
-  }
-
-  function conectar() {
     conectarCampos(raiz, guardar);
-
-    $("#f-nota").addEventListener("submit", (e) => {
-      e.preventDefault();
-      const texto = e.target.texto.value.trim();
-      if (!texto) return;
-      almacen.anadirNotaEntrenador(texto, e.target.fecha.value);
-      anunciar("Nota añadida");
-      pintar();
-      $("#t-notas").focus();
-    });
-    for (const b of $$("[data-borrar-nota]", raiz)) {
-      b.addEventListener("click", () => {
-        if (!confirm("¿Borrar esta nota?")) return;
-        almacen.borrarNotaEntrenador(b.dataset.borrarNota);
-        anunciar("Nota borrada");
-        pintar();
-        $("#t-notas").focus();
-      });
-    }
-  }
-
-  async function pintarRevisar() {
-    const contenedor = $("#lista-revisar");
-    try {
-      revisar ??= (await (await fetch("data/revisar.json")).json()).puntos;
-    } catch {
-      contenedor.innerHTML = `<p class="aviso">No se pudo cargar la lista de puntos.</p>`;
-      return;
-    }
-    // Si mientras se cargaba se repintó la pestaña, este contenedor ya no está en la página.
-    if (!contenedor.isConnected) return;
-    const respuestas = almacen.datos.revisiones;
-    contenedor.innerHTML = `<ul class="lista-revisar">${revisar.map((r) => {
-      const resp = respuestas[r.id] ?? { respuesta: "", confirmado: false };
-      return `<li>
-        <p class="punto">${esc(r.texto)} <span class="etiqueta ${resp.confirmado ? "ok" : ""}">${
-          resp.confirmado ? "Confirmado" : "Pendiente"}</span></p>
-        <p class="nota">En <code>${esc(r.origen)}</code>${resp.fecha ? ` · actualizado el ${esc(resp.fecha)}` : ""}</p>
-        <label class="campo">Respuesta del entrenador
-          <textarea rows="2" maxlength="500" data-revision="${esc(r.id)}">${esc(resp.respuesta)}</textarea></label>
-        <label class="check"><input type="checkbox" data-confirmado="${esc(r.id)}" ${resp.confirmado ? "checked" : ""}>
-          <span>Confirmado</span></label>
-      </li>`;
-    }).join("")}</ul>`;
-    for (const r of revisar) {
-      const respuesta = $(`[data-revision="${r.id}"]`, contenedor);
-      const confirmado = $(`[data-confirmado="${r.id}"]`, contenedor);
-      const guardarRevision = () => {
-        almacen.guardarRevision(r.id, { respuesta: respuesta.value.trim(), confirmado: confirmado.checked });
-        anunciar("Guardado");
-      };
-      respuesta.addEventListener("change", guardarRevision);
-      confirmado.addEventListener("change", async () => {
-        guardarRevision();
-        await pintarRevisar();
-        $(`[data-confirmado="${r.id}"]`)?.focus(); // el repintado no debe perder el foco
-      });
-    }
   }
 
   return { mostrar: pintar };

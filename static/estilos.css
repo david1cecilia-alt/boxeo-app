@@ -698,7 +698,6 @@ a.fila-semana:hover { border-color: var(--suave); background: var(--superficie-h
   display: inline-block; font-size: 0.8rem; font-weight: 600; padding: 1px 8px; border-radius: 999px;
   background: var(--aviso-fondo); color: var(--aviso); vertical-align: middle;
 }
-.etiqueta.ok { background: var(--ok-fondo); color: var(--ok); }
 .volver { display: inline-flex; min-height: 44px; align-items: center; }
 /* «Volver» como botón (sube un nivel en el Historial): se ve como los enlaces. */
 button.volver {
@@ -768,18 +767,7 @@ button.volver {
 .cuanto-practicar legend { margin-bottom: 8px; font-size: 0.875rem; font-weight: 600; }
 .cuanto-practicar .chips-fila { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
-.lista-editable { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
-.lista-editable li {
-  display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
-  background: var(--campo); border: 1px solid var(--linea); border-radius: 14px; padding: 10px 12px;
-}
-.lista-editable li p { margin: 4px 0 0; white-space: pre-wrap; }
-.notas time { color: var(--suave); font-size: 0.9rem; }
-.lista-revisar { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
-.lista-revisar li { border-top: 1px solid var(--linea); padding-top: 12px; display: grid; gap: 8px; }
-.lista-revisar .punto { margin: 0; font-weight: 600; }
 .pie-perfil { margin: 0; text-align: center; font-size: 0.75rem; }
-code { font-size: 0.85em; }
 
 /* ---------- Diálogo post-sesión ---------- */
 dialog {
@@ -976,12 +964,10 @@ dialog::backdrop { background: var(--velo); }
   .columna-ajustes { gap: 24px; }
   #ajustes-contenido > .nota { grid-column: 1 / -1; }
 
-  /* Perfil: estilo a la izquierda, Sobre ti y Notas a la derecha; los puntos a revisar debajo,
-     a todo el ancho y en dos columnas. */
+  /* Perfil: estilo a la izquierda y Sobre ti a la derecha; el pie, debajo a todo el ancho. */
   #perfil-contenido { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
   .columna-perfil { gap: 24px; }
   #perfil-contenido > :not(.columna-perfil) { grid-column: 1 / -1; }
-  .lista-revisar { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; }
 }
 
 /* ---------- Animaciones sobrias ---------- */

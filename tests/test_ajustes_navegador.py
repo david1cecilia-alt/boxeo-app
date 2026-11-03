@@ -339,3 +339,48 @@ def test_a_1024_tres_huecos_en_fila_y_el_panel_centrado(ajustes):
         _cerrar(pagina, lambda: pagina.keyboard.press("Escape"))
     finally:
         pagina.set_viewport_size({"width": 390, "height": 844})
+
+
+def test_ajustes_queda_con_voz_y_practicar_mas_sin_tus_datos_ni_zurdo(ajustes):
+    pagina = ajustes
+    formularios = pagina.eval_on_selector_all("#ajustes-contenido > form", "els => els.map(e => e.id)")
+    assert formularios == ["f-voz", "f-practicar"]
+    texto = pagina.locator("#ajustes-contenido").inner_text().lower()
+    for frase in ("tus datos", "guardia", "nivel", "zurd"):
+        assert frase not in texto, frase
+    assert pagina.locator('#vista-ajustes [data-grupo="basicos"], #vista-ajustes #zurdo').count() == 0
+
+
+def test_a_390_volver_se_queda_fijo_arriba_al_bajar_sin_tapar_nada_al_empezar(ajustes):
+    pagina = ajustes
+    volver = pagina.locator("#volver-ajustes")
+    pagina.evaluate("window.scrollTo(0, 0)")
+    pagina.wait_for_timeout(400)  # la entrada de la vista se anima 0,28 s
+    caja = pagina.locator("#vista-ajustes .volver-movil").bounding_box()
+    cabecera = pagina.locator("#vista-ajustes .cabecera .antetitulo").bounding_box()
+    assert caja["y"] + caja["height"] <= cabecera["y"]  # arriba del todo, no pisa el antetítulo
+    pagina.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)")
+    pagina.wait_for_timeout(100)
+    assert pagina.evaluate("window.scrollY") > 200
+    fija = pagina.locator("#vista-ajustes .volver-movil").bounding_box()
+    assert abs(fija["y"]) <= 1 and volver.is_visible()
+    # Con fondo: lo que pasa por debajo no se transparenta.
+    assert pagina.locator("#vista-ajustes .volver-movil").evaluate("e => getComputedStyle(e).backgroundColor") \
+        not in ("rgba(0, 0, 0, 0)", "transparent")
+    pagina.evaluate("window.scrollTo(0, 0)")
+
+
+@pytest.mark.parametrize("ancho", (1024, 1440))
+def test_en_escritorio_voz_a_todo_el_ancho_en_dos_columnas_y_nada_fijo(ajustes, ancho):
+    pagina = ajustes
+    pagina.set_viewport_size({"width": ancho, "height": 900})
+    try:
+        assert not pagina.locator("#volver-ajustes").is_visible()
+        voz = pagina.locator("#f-voz").bounding_box()
+        practicar = pagina.locator("#f-practicar").bounding_box()
+        assert abs(voz["x"] - practicar["x"]) <= 1 and abs(voz["width"] - practicar["width"]) <= 1
+        eleccion = pagina.locator(".voz-eleccion").bounding_box()
+        velocidad = pagina.locator(".voz-velocidad").bounding_box()
+        assert abs(eleccion["y"] - velocidad["y"]) <= 1 and velocidad["x"] > eleccion["x"] + eleccion["width"]
+    finally:
+        pagina.set_viewport_size({"width": 390, "height": 844})

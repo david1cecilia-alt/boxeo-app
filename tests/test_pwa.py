@@ -19,10 +19,22 @@ def _precache(sitio) -> list[str]:
     return re.findall(r'"([^"]+)"', lista)
 
 
+# Se publican pero no se precachean: data/revisar.json (las dudas para el entrenador) no lo usa la app.
+SIN_PRECACHE = {"sw.js", "data/revisar.json"}
+
+
 def test_el_service_worker_precachea_todos_los_ficheros_del_sitio(sitio):
     en_sitio = {p.relative_to(sitio).as_posix() for p in sitio.rglob("*") if p.is_file()}
-    en_sitio -= {"sw.js"}
-    assert set(_precache(sitio)) - {"./"} == en_sitio
+    assert set(_precache(sitio)) - {"./"} == en_sitio - SIN_PRECACHE
+
+
+def test_revisar_json_se_publica_pero_no_va_a_la_precache(sitio):
+    assert (sitio / "data" / "revisar.json").is_file()
+    assert "data/revisar.json" not in _precache(sitio)
+    # Nada de la app lo pide.
+    for js in sitio.rglob("*.js"):
+        if js.name != "sw.js" and "vendor" not in js.parts:
+            assert "revisar.json" not in js.read_text(encoding="utf-8"), js.name
 
 
 def test_cada_version_estrena_cache(sitio):

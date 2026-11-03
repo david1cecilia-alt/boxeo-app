@@ -1,6 +1,6 @@
 // Estilo recomendado del Perfil (lógica pura, sin DOM). La tabla de puntos, las frases y los
 // umbrales viven en data/estilos.json (se inyecta como `tabla`): cada respuesta suma 1 punto a
-// cada estilo de su lista.
+// cada estilo de su lista. El cardio no puntúa: solo desempata un empate exacto en cabeza.
 
 const fmt = (n) => n.toLocaleString("es-ES", { maximumFractionDigits: 1 });
 const MAX_RAZONES = 3;
@@ -28,9 +28,11 @@ export function notaAlcance(basicos, tabla) {
 }
 
 // `estilo`: perfil.estilo; `basicos`: perfil.basicos; `nombres`: { id: «Boxer», … } (los de «Mi estilo»).
-// Devuelve { faltan, puntos, estilo, nombre, empate, porque, tambien, afinar, avisos, alcance }:
-// con `faltan` > 0 aún no hay recomendación (estilo null). Con empate exacto en cabeza no se elige
-// a ninguno por el orden: estilo y nombre null y `empate` con los nombres empatados.
+// Devuelve { faltan, puntos, estilo, nombre, empate, porque, tambien, afinar, alcance }:
+// con `faltan` > 0 aún no hay recomendación (estilo null). Con empate exacto en cabeza desempata el
+// cardio (tabla.desempate.cardio): se quedan los empatados de la lista de su respuesta. Si así no
+// queda uno solo, no se elige a ninguno por el orden: estilo y nombre null y `empate` con los
+// nombres que siguen empatados.
 // `afinar`: quedan preguntas que puntúan sin contestar (o con «No lo sé»).
 export function recomendarEstilo(estilo, basicos, tabla, nombres) {
   const alcance = notaAlcance(basicos, tabla);
@@ -44,23 +46,35 @@ export function recomendarEstilo(estilo, basicos, tabla, nombres) {
   if (faltan) return { faltan, puntos, estilo: null, alcance };
   const maximo = Math.max(...Object.values(puntos));
   // Los de cabeza en el orden de «Mi estilo» (solo para escribirlos siempre igual).
-  const cabeza = Object.keys(nombres).filter((id) => puntos[id] === maximo);
-  const segundo = Object.keys(nombres).filter((id) => puntos[id] === maximo - 1);
+  let cabeza = Object.keys(nombres).filter((id) => puntos[id] === maximo);
+  const { quedan, fuera } = desempatar(cabeza, estilo, tabla);
+  cabeza = quedan;
+  // Con un ganador claro, el segundo a 1 punto justo; si ha ganado por el cardio, los que empataban.
+  const segundo = fuera.length ? fuera : Object.keys(nombres).filter((id) => puntos[id] === maximo - 1);
   const razones = Object.keys(tabla.puntos)
     .filter((p) => respondida(estilo, tabla, p) && tabla.puntos[p][estilo[p]].some((id) => cabeza.includes(id)))
     .map((p) => tabla.frases[p][estilo[p]])
     .slice(0, MAX_RAZONES);
-  const avisos = cabeza.includes("fajador") && estilo.cardio === "mejorar" ? ["Este estilo exige mucho fondo."] : [];
+  if (fuera.length) razones.push(tabla.frases_desempate.cardio[estilo.cardio]);
   const unico = cabeza.length === 1 ? cabeza[0] : null;
   return {
     faltan: 0, puntos, estilo: unico, nombre: unico && nombres[unico],
     empate: unico ? null : cabeza.map((id) => nombres[id]),
     porque: razones.length ? `Porque ${enumerar(razones)}.` : "",
     // Solo con un ganador claro y el segundo a 1 punto justo.
-    tambien: unico && segundo.length && maximo > 1 ? enumerar(segundo.map((id) => nombres[id])) : null,
+    tambien: unico && segundo.length && (fuera.length || maximo > 1) ? enumerar(segundo.map((id) => nombres[id])) : null,
     afinar: Object.keys(tabla.puntos).some((p) => !respondida(estilo, tabla, p)),
-    avisos, alcance,
+    alcance,
   };
+}
+
+// Empate exacto en cabeza: se quedan los de la lista del cardio respondido. Si el cardio no está
+// respondido, o no deja fuera a nadie, o deja fuera a todos, el empate sigue como estaba.
+function desempatar(cabeza, estilo, tabla) {
+  const lista = cabeza.length > 1 ? tabla.desempate.cardio[estilo.cardio] : null;
+  const quedan = lista ? cabeza.filter((id) => lista.includes(id)) : cabeza;
+  if (!quedan.length || quedan.length === cabeza.length) return { quedan: cabeza, fuera: [] };
+  return { quedan, fuera: cabeza.filter((id) => !quedan.includes(id)) };
 }
 
 // «Encajas igual como Boxer y como Fajador» (o «como A, como B y como C»).

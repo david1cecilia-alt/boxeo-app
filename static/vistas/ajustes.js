@@ -1,5 +1,6 @@
-// Pantalla Ajustes (#ajustes): lo que cambia el entreno. Se guarda al cambiar cada campo, solo en
-// este navegador. En el móvil se entra por el engranaje y «Volver» lleva a la pestaña de antes.
+// Pantalla Ajustes (#ajustes): la voz y «Practicar más». Se guarda al cambiar cada campo, solo en
+// este navegador. En el móvil se entra por el engranaje y «Volver» (fijo arriba al bajar) lleva a la
+// pestaña de antes. Guardia y nivel se eligen en Entrenar.
 // «Practicar más» pasa al sorteo lo elegido (ajustes.js). La voz y su velocidad se aplican al
 // momento (también a la línea «Voz: …» de Entrenar).
 import { MAX_PRACTICAR, NOMBRE_VELOCIDAD, cambiarPracticar, opcionesVoz, preferencias } from "../ajustes.js";
@@ -7,9 +8,7 @@ import { accionesPorIds, catalogo, espejo, nombreHablado, textoHablado } from ".
 import { VELOCIDADES } from "../motor/ritmo.js";
 import { movimiento, movimientos } from "../motor/sorteo.js";
 import { nombreCortoVoz } from "../voz.js";
-import { chips, conectarCampos } from "./campos.js";
 import { $, $$, anunciar, esc } from "./dom.js";
-import { BASICOS } from "./opciones.js";
 
 const GRUPOS_PRACTICAR = { golpe: "Golpes", defensa: "Defensas", movimiento: "Salidas" };
 // Cuánto más, sin el factor del sorteo (×2, ×4): la frecuencia exacta no se enseña.
@@ -145,30 +144,24 @@ export function iniciarAjustes({ almacen, voz }) {
     $("#volver-ajustes").href = vuelta;
     const p = almacen.datos.perfil;
     raiz.innerHTML = `
-      <div class="columna-ajustes">
       <form class="tarjeta formulario" id="f-voz" aria-labelledby="t-voz">
-        <div>
+        <div class="voz-cabeza">
           <h2 id="t-voz">Voz</h2>
           <p class="nota">La que te dicta las combinaciones.</p>
         </div>
-        <label class="campo">Voz <select id="voz-id" aria-describedby="voz-aviso"></select></label>
-        <p class="nota" id="voz-aviso"></p>
-        <fieldset class="grupo-chips"><legend>Velocidad</legend><div class="chips-fila velocidades">
-          ${Object.entries(VELOCIDADES).map(([clave, valor]) => `<label class="chip-opcion">
-            <input type="radio" name="voz-velocidad" value="${clave}" ${p.voz.velocidad === clave ? "checked" : ""}>
-            <span>${NOMBRE_VELOCIDAD[clave]} <small>${numeroEs(valor)}</small></span></label>`).join("")}
-        </div></fieldset>
-        <button type="button" id="probar-voz" class="boton secundario">Probar voz</button>
-      </form>
-
-      <form class="tarjeta formulario" id="f-tus-datos" aria-labelledby="t-tus-datos">
-        <div>
-          <h2 id="t-tus-datos">Tus datos</h2>
-          <p class="nota">Lo que se propone en Entrenar. Si lo cambias aquí, Entrenar se pone igual.</p>
+        <div class="voz-eleccion">
+          <label class="campo">Voz <select id="voz-id" aria-describedby="voz-aviso"></select></label>
+          <p class="nota" id="voz-aviso"></p>
         </div>
-        ${Object.entries(BASICOS).map(([c, def]) => chips("basicos", c, def, p.basicos[c])).join("")}
+        <div class="voz-velocidad">
+          <fieldset class="grupo-chips"><legend>Velocidad</legend><div class="chips-fila velocidades">
+            ${Object.entries(VELOCIDADES).map(([clave, valor]) => `<label class="chip-opcion">
+              <input type="radio" name="voz-velocidad" value="${clave}" ${p.voz.velocidad === clave ? "checked" : ""}>
+              <span>${NOMBRE_VELOCIDAD[clave]} <small>${numeroEs(valor)}</small></span></label>`).join("")}
+          </div></fieldset>
+          <button type="button" id="probar-voz" class="boton secundario">Probar voz</button>
+        </div>
       </form>
-      </div>
 
       <form class="tarjeta formulario" id="f-practicar" aria-labelledby="t-practicar"></form>
       <dialog id="elegir-practicar" class="hoja" aria-labelledby="t-elegir"></dialog>
@@ -276,8 +269,6 @@ export function iniciarAjustes({ almacen, voz }) {
   }
 
   function conectar() {
-    conectarCampos(raiz, guardar);
-
     $("#voz-id").addEventListener("change", (e) => guardarVoz({ id: e.target.value || null }));
     for (const r of $$('input[name="voz-velocidad"]', raiz)) {
       r.addEventListener("change", () => guardarVoz({ velocidad: r.value }));

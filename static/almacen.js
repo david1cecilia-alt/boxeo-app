@@ -1,18 +1,18 @@
 // Almacén de los datos del usuario en el navegador (localStorage): sesiones sin servidor,
-// valoraciones, perfil (con la voz elegida en Ajustes y cómo se agrupa el Historial), notas del
-// entrenador y revisiones. Nunca va al repo ni a data/.
+// valoraciones y perfil (con lo elegido en Entrenar, la voz y «Practicar más» de Ajustes y cómo se
+// agrupa el Historial). Nunca va al repo ni a data/.
 //
 // Esquema versionado: si cambia, se sube VERSION y se añade una migración en MIGRACIONES.
 // Si el almacenamiento falla, todo sigue funcionando en memoria y `persistente` pasa a false.
 
-export const VERSION = 6;
+export const VERSION = 7;
 const CLAVE = "boxeo";
 const CLAVE_V0 = "boxeo.historial"; // versión 0: un array de sesiones, antes del almacén
 
 export const NO_SE = "no_se";
 
 // Lo que se elige en Entrenar y se recuerda para la próxima sesión. `nivel` y `zurdo` en null:
-// los de «Tus datos» del perfil (o los de data/perfil.json si «No lo sé»).
+// los de data/perfil.json (aún no se han elegido).
 export const PERSONALIZADA_POR_DEFECTO = Object.freeze({ asaltos: 3, duracion_asalto: 180, descanso: 60 });
 
 export function sesionPorDefecto() {
@@ -22,7 +22,8 @@ export function sesionPorDefecto() {
   };
 }
 
-// Nivel y zurdo de Entrenar a partir de «Tus datos» del perfil (null si «No lo sé»).
+// Nivel y zurdo de Entrenar a partir de la guardia y el nivel que tenía «Tus datos» hasta la v6
+// (null si «No lo sé»). Solo lo usan las migraciones.
 export function sesionDesdeBasicos(basicos) {
   const { nivel, guardia } = basicos ?? {};
   return {
@@ -44,7 +45,7 @@ export function historialPorDefecto() {
 
 export function perfilPorDefecto() {
   return {
-    basicos: { guardia: NO_SE, nivel: NO_SE, inicio: null, altura_cm: null, peso_kg: null, alcance_cm: null },
+    basicos: { inicio: null, altura_cm: null, peso_kg: null, alcance_cm: null },
     estilo: {
       mi_estilo: NO_SE, // el que elige el usuario: la app no clasifica
       distancia: NO_SE, presion: NO_SE, golpe_favorito: NO_SE, volumen: NO_SE,
@@ -63,8 +64,6 @@ export function vacio() {
     sesiones: [],
     valoraciones: {},
     perfil: perfilPorDefecto(),
-    notas_entrenador: [],
-    revisiones: {},
   };
 }
 
@@ -113,6 +112,18 @@ const MIGRACIONES = {
   5: (v5) => {
     const { pesos, ...perfil } = v5.perfil ?? {};
     return { ...v5, version: 6, perfil: { ...perfil, practicar: [] } };
+  },
+  // v6 → v7: fuera lo que ya no se usa: las notas del entrenador y las revisiones, y la guardia y el
+  // nivel de «Tus datos» (ya solo se eligen en Entrenar). Si Entrenar aún no los tenía elegidos, se
+  // quedan los de «Tus datos» para que al actualizar no cambie nada.
+  6: (v6) => {
+    const { notas_entrenador, revisiones, ...resto } = v6;
+    const { guardia, nivel, ...basicos } = v6.perfil?.basicos ?? {};
+    const desde = sesionDesdeBasicos({ guardia, nivel });
+    const sesion = { ...v6.perfil?.sesion };
+    sesion.nivel ??= desde.nivel;
+    sesion.zurdo ??= desde.zurdo;
+    return { ...resto, version: 7, perfil: { ...v6.perfil, basicos, sesion } };
   },
 };
 
@@ -235,21 +246,9 @@ export function crearAlmacen({
       guardar();
     },
 
-    // ---- Perfil, notas del entrenador y revisiones ----
+    // ---- Perfil ----
     guardarPerfil(perfil) {
       datos.perfil = completar({ perfil }).perfil;
-      guardar();
-    },
-    anadirNotaEntrenador(texto, fecha = ahora().slice(0, 10)) {
-      datos.notas_entrenador.unshift({ id: crearId(), fecha, texto });
-      guardar();
-    },
-    borrarNotaEntrenador(id) {
-      datos.notas_entrenador = datos.notas_entrenador.filter((n) => n.id !== id);
-      guardar();
-    },
-    guardarRevision(id, revision) {
-      datos.revisiones[id] = { ...revision, fecha: ahora().slice(0, 10) };
       guardar();
     },
 

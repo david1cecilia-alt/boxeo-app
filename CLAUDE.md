@@ -14,14 +14,15 @@
 - El guion de la sesión lo genera siempre el motor JS en el navegador (funciona sin servidor, PWA).
   El resto de `static/` solo presenta (se migrará a Tauri + React).
 - Historial: SQLite vía FastAPI si hay servidor; si no, el almacén (`static/historial.js`).
-- Perfil, valoraciones, notas y revisiones: SIEMPRE en el almacén del navegador (`static/almacen.js`),
+- Perfil y valoraciones: SIEMPRE en el almacén del navegador (`static/almacen.js`),
   nunca en el repo ni en `data/`. Nada de datos personales en `data/`: se publica tal cual con la web.
 - El almacén tiene esquema versionado: si cambia, sube `VERSION` y añade una migración en `MIGRACIONES`
   con su test. Las sesiones locales usan `crypto.randomUUID()`.
 - `static/vistas/` solo presenta; `reproductor.js` lleva el tiempo de sesión; `ajustes.js` une perfil y motor.
   `dictado.js` dicta las combinaciones: la pausa cuenta desde el `onend`/`onerror` real de la voz (la
   estimación del motor + 3 s es solo el tope si no llega); avisos y señales también esperan a su voz.
-- Todo fichero nuevo de `static/` o `data/` va al precache de `static/sw.js` (lo comprueba `tests/test_pwa.py`).
+- Todo fichero nuevo de `static/` o `data/` va al precache de `static/sw.js` (lo comprueba `tests/test_pwa.py`),
+  salvo `data/revisar.json`, que se publica pero la app no usa.
 - Sin WebGL el maniquí muestra fotos WebP que pinta `herramientas/fotos_maniqui.py` con la propia escena 3D al
   montar el sitio (Playwright). No se versionan ni se dibujan aparte: cambian solas con `posturas.json`.
 - Si cambia un `# REVISAR CON ENTRENADOR`, regenera `data/revisar.json` con `herramientas/extraer_revisar.py`.

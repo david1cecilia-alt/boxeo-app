@@ -515,10 +515,16 @@ main { position: relative; }
 body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: none; }
 
 /* ---------- Ajustes ---------- */
-#vista-ajustes .volver-movil { margin: 14px 0 -24px; }
+/* «Volver», fijo arriba al bajar (en el móvil; en el PC la barra lateral ya está siempre a la vista). */
+#vista-ajustes .volver-movil {
+  position: sticky; top: 0; z-index: 5; margin: 0 calc(-1 * var(--hueco)) -24px;
+  padding: calc(8px + env(safe-area-inset-top, 0px)) var(--hueco) 8px; background: var(--fondo);
+}
+#vista-ajustes .volver-movil .volver { display: inline-flex; align-items: center; min-height: 44px; }
 #vista-ajustes h1 { font-size: clamp(2.5rem, 11.8vw, 3.6rem); }
 #vista-ajustes .marca-agua { top: 6px; right: -10px; font-size: 140px; opacity: 0.04; }
-#ajustes-contenido, .columna-ajustes { display: grid; gap: 16px; align-content: start; min-width: 0; }
+#ajustes-contenido { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.voz-eleccion, .voz-velocidad { display: grid; gap: 14px; align-content: start; min-width: 0; }
 
 /* ---------- Historial ---------- */
 #vista-historial { --alto-foto: 240px; --arriba-titular: 96px; --posicion-foto: 50% 35%; }
@@ -718,8 +724,9 @@ button.volver {
 .col-detalle > p { margin: 0; }
 
 /* ---------- Perfil ---------- */
-#perfil-contenido, .columna-perfil { display: grid; gap: 16px; align-content: start; min-width: 0; }
-/* Tarjeta roja con el estilo recomendado (o el elegido y, debajo y más pequeña, la recomendación). */
+#perfil-contenido { display: grid; gap: 16px; align-content: start; min-width: 0; }
+/* Tarjeta roja con el estilo recomendado (o el elegido y, si las respuestas apuntan a otro, una línea
+   pequeña y neutra «Según tus respuestas: …»). */
 .tarjeta.estilo-recomendado {
   display: grid; gap: 6px; padding: 16px;
   background: var(--acento-relleno); border-color: transparent; color: var(--sobre-acento);
@@ -737,11 +744,22 @@ button.volver {
   font-family: var(--letra-titular); font-size: 22px; line-height: 1.1; text-transform: uppercase; letter-spacing: 0.01em;
 }
 #estilo-resumen .afinar { font-weight: 600; }
-.estilo-recomendado .recomendacion {
-  display: grid; gap: 4px; margin-top: 4px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.35);
+
+/* «Sobre ti» y «Mi estilo»: secciones plegables. El título va en la letra de los titulares, con lo
+   respondido (o el estilo elegido) a la derecha; con el teclado, el subrayado rojo de los títulos. */
+.plegable { padding: 0 18px; }
+.plegable > summary { min-height: 60px; gap: 12px; }
+.plegable > summary::before { color: var(--acento); }
+.titulo-plegable {
+  font-family: var(--letra-titular); font-size: 1.375rem; font-weight: 400; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1;
 }
-.estilo-recomendado .recomendado { font-size: 0.875rem; }
-.estilo-recomendado .aviso-estilo { font-weight: 700; }
+.resumen-plegable { margin-left: auto; color: var(--suave); font-size: 0.8125rem; font-weight: 400; text-align: right; }
+.plegable > summary:focus-visible { outline: none; }
+.plegable > summary:focus-visible .titulo-plegable {
+  text-decoration: underline 3px var(--acento); text-underline-offset: 6px;
+}
+.cuerpo-plegable { display: grid; gap: 20px; padding: 4px 0 20px; }
+#f-mi-estilo legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 .grupos-estilo { display: grid; gap: 16px; }
 .grupo-chips legend { margin-bottom: 8px; color: var(--suave); font-size: 0.8125rem; font-weight: 600; }
@@ -757,11 +775,11 @@ button.volver {
 .velocidades input:checked + span small { color: inherit; }
 
 #f-practicar { gap: 14px; }
-:is(#f-practicar, #f-tus-datos, #f-voz) h2 { margin: 0; }
-:is(#f-practicar, #f-tus-datos, #f-voz) .nota { margin-top: 4px; font-size: 0.8125rem; }
+:is(#f-practicar, #f-voz) h2 { margin: 0; }
+:is(#f-practicar, #f-voz) .nota { margin-top: 4px; font-size: 0.8125rem; }
 #voz-aviso { margin: -6px 0 0; }
+.voz-velocidad > .boton { justify-self: start; }
 .sin-cortar { white-space: nowrap; }
-#f-voz > .boton { justify-self: start; }
 /* «Practicar más»: tres huecos del mismo tamaño (filas iguales: la pantalla mide siempre lo mismo),
    uno por fila en el móvil y en fila de tres desde 720 px. */
 #practicar-estado { margin: -4px 0 0; }
@@ -1045,17 +1063,16 @@ dialog::backdrop { background: var(--velo); }
     .resumen-historial > .cifras div { padding-inline: 14px; } /* columna estrecha: sitio para «sesiones / mes» */
   }
 
-  /* Ajustes: Voz y Tus datos lado a lado; «Practicar más» debajo, a todo el ancho, con sus tres
-     huecos en fila (a 1024 y a 1440 igual). */
+  /* Ajustes: Voz a todo el ancho, con la voz a la izquierda y la velocidad y «Probar voz» a la
+     derecha; «Practicar más» debajo, del mismo ancho, con sus tres huecos en fila (a 1024 y a 1440). */
   #vista-ajustes h1 { font-size: 4.5rem; }
-  #ajustes-contenido { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
-  .columna-ajustes { display: contents; }
-  #ajustes-contenido > :is(#f-practicar, .nota) { grid-column: 1 / -1; }
+  #ajustes-contenido { gap: 24px; }
+  #f-voz { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 32px; }
+  .voz-cabeza { grid-column: 1 / -1; }
 
-  /* Perfil: estilo a la izquierda y Sobre ti a la derecha; el pie, debajo a todo el ancho. */
-  #perfil-contenido { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
-  .columna-perfil { gap: 24px; }
-  #perfil-contenido > :not(.columna-perfil) { grid-column: 1 / -1; }
+  /* Perfil: una sola columna (rectángulo, Sobre ti, Mi estilo), del ancho de una lectura cómoda. */
+  #perfil-contenido { max-width: 760px; gap: 20px; }
+  .plegable { padding: 0 24px; }
 }
 
 /* ---------- Animaciones sobrias ---------- */

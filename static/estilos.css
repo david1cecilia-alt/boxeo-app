@@ -927,8 +927,8 @@ dialog::backdrop { background: var(--velo); }
   .maestro-detalle { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
   /* Cifras encima del gráfico; desde 1280 px, a su izquierda (a 1024 el gráfico las tapaba). */
   .resumen-historial, .con-detalle > .resumen-historial { display: grid; gap: 24px; align-items: start; }
-  .cifras dd { font-size: 52px; }
-  .cifras div { padding: 20px 18px; }
+  .resumen-historial > .cifras dd { font-size: 52px; }
+  .resumen-historial > .cifras div { padding: 20px 18px; }
   .con-detalle .col-lista, #historial-contenido:not(.con-detalle) .col-detalle { display: grid; }
   .col-lista { position: sticky; top: 24px; }
   .volver-movil { display: none; }
@@ -953,7 +953,7 @@ dialog::backdrop { background: var(--velo); }
       gap: 24px; align-items: start;
     }
     .resumen-historial, .con-detalle > .resumen-historial, .maestro-detalle { display: contents; }
-    .cifras { grid-column: 1; grid-row: 1; }
+    .resumen-historial > .cifras { grid-column: 1; grid-row: 1; } /* las del resumen, no las del mes */
     .grafico-semanas { grid-column: 2; grid-row: 1 / span 2; }
     .col-lista { grid-column: 1; grid-row: 2 / span 2; }
     .col-detalle { grid-column: 2; grid-row: 3; }

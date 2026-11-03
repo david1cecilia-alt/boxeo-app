@@ -713,8 +713,7 @@ button.volver {
 
 /* Maestro-detalle. Móvil: o la lista o el detalle (con su enlace de volver). */
 .maestro-detalle, .col-lista, .col-detalle { display: grid; gap: 16px; align-content: start; min-width: 0; }
-.con-detalle > .resumen-historial, .con-detalle .col-lista,
-#historial-contenido:not(.con-detalle) .col-detalle { display: none; }
+.con-detalle .col-lista, #historial-contenido:not(.con-detalle) .col-detalle { display: none; }
 #historial-contenido { display: grid; gap: 18px; }
 .col-detalle > p { margin: 0; }
 
@@ -924,15 +923,16 @@ dialog::backdrop { background: var(--velo); }
   .combo-texto { font-size: clamp(3rem, 5vw, 5rem); }
   #anterior { font-size: 1rem; }
 
-  /* Historial: resumen arriba a todo el ancho; lista y detalle en dos columnas (a partes iguales
-     hasta 1280 px, para que las tarjetas y las cabeceras de los grupos no se partan). */
+  /* Historial: a la izquierda la galería, el gráfico, las cifras y la copia; a la derecha el
+     detalle (a partes iguales hasta 1280 px, para que las tarjetas y las cabeceras de los grupos no
+     se partan). */
   .maestro-detalle { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
-  /* Cifras encima del gráfico; desde 1280 px, a su izquierda (a 1024 el gráfico las tapaba). */
-  .resumen-historial, .con-detalle > .resumen-historial { display: grid; gap: 24px; align-items: start; }
-  .resumen-historial > .cifras dd { font-size: 52px; }
-  .resumen-historial > .cifras div { padding: 20px 18px; }
+  .resumen-historial { gap: 24px; }
+  /* Las cifras van en la columna izquierda (media a 1024): poco relleno a los lados para que
+     «sesiones / mes» no tenga que encoger. */
+  .resumen-historial > .cifras dd { font-size: 46px; }
+  .resumen-historial > .cifras div { padding: 18px 12px; }
   .con-detalle .col-lista, #historial-contenido:not(.con-detalle) .col-detalle { display: grid; }
-  .col-lista { position: sticky; top: 24px; }
   .volver-movil { display: none; }
   .meses { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   /* A 1024 px la galería es media columna: casillas de ~78 px, donde «Septiembre» (5,6 veces su
@@ -948,20 +948,10 @@ dialog::backdrop { background: var(--velo); }
     border: 1px dashed var(--linea); border-radius: var(--radio);
   }
 
-  /* Desde 1280 px, una sola rejilla: cifras y lista a la izquierda, gráfico y detalle a la
-     derecha. La lista sigue justo debajo de las cifras sin esperar al gráfico, que es más alto
-     (la última fila, 1fr, absorbe lo que mida la lista de más). */
+  /* Desde 1280 px, la columna izquierda es 2/5 del ancho y el detalle, 3/5. */
   @media (min-width: 1280px) {
-    #historial-contenido {
-      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); grid-template-rows: auto auto 1fr;
-      gap: 24px; align-items: start;
-    }
-    .resumen-historial, .con-detalle > .resumen-historial, .maestro-detalle { display: contents; }
-    .resumen-historial > .cifras { grid-column: 1; grid-row: 1; } /* las del resumen, no las del mes */
+    .maestro-detalle { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 24px; }
     .resumen-historial > .cifras div { padding-inline: 14px; } /* columna estrecha: sitio para «sesiones / mes» */
-    .grafico-semanas { grid-column: 2; grid-row: 1 / span 2; }
-    .col-lista { grid-column: 1; grid-row: 2 / span 2; }
-    .col-detalle { grid-column: 2; grid-row: 3; }
   }
 
   /* Ajustes: Voz y Tus datos a la izquierda, Qué te dicta a la derecha (a 1024 y a 1440 igual). */

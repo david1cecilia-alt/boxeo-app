@@ -1,6 +1,6 @@
 """El gráfico del Historial en un navegador de verdad (Chromium headless con Playwright).
 
-Arriba a la derecha, Asaltos / RPE: cambia título, unidad y
+Va debajo de la galería de sesiones. Arriba a la derecha, Asaltos / RPE: cambia título, unidad y
 barras, se guarda en perfil.historial.grafica y, si lo guardado no vale, muestra asaltos. Con RPE,
 los periodos sin RPE salen sin barra y con «–», nunca como un 0. Sin Playwright se salta en local;
 en CI falla.
@@ -156,6 +156,16 @@ def test_asaltos_rpe_arriba_a_la_derecha_con_area_de_toque_de_48(pagina, ancho):
     assert botones[0]["x"] > tarjeta["x"] + tarjeta["width"] / 2
     assert botones[0]["y"] < titulo["y"] + titulo["height"] and titulo["y"] < botones[0]["y"] + 48
     assert tarjeta["x"] + tarjeta["width"] - (botones[1]["x"] + botones[1]["width"]) <= 17
+
+
+@pytest.mark.parametrize("ancho", ANCHOS)
+def test_el_buscador_de_clases_va_encima_del_grafico(pagina, ancho):
+    _abrir(pagina, ancho)
+    galeria = pagina.locator(".galeria").bounding_box()
+    grafico = pagina.locator(".grafico-semanas").bounding_box()
+    assert galeria["y"] + galeria["height"] <= grafico["y"]
+    ancho_pagina, util = pagina.evaluate("[document.documentElement.scrollWidth, document.documentElement.clientWidth]")
+    assert ancho_pagina <= util
 
 
 def test_asaltos_rpe_funciona_con_teclado_y_el_foco_se_ve(pagina):

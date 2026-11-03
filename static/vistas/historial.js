@@ -1,6 +1,6 @@
-// Pestaña Historial: resumen y gráfico, las sesiones como una galería de fotos (Año → Mes →
-// Semana → Día → sesión; lógica en galeria.js), detalle con valoración (editable), borrado y copia
-// de seguridad (exportar / importar). «Volver» siempre sube un nivel y solo hay uno (con una sesión
+// Pestaña Historial: arriba las sesiones como una galería de fotos (Año → Mes → Semana → Día →
+// sesión; lógica en galeria.js); debajo el gráfico, las cifras del mes y la copia de seguridad
+// (exportar / importar); y el detalle con valoración (editable) y borrado. «Volver» siempre sube un nivel y solo hay uno (con una sesión
 // abierta, el del detalle).
 // La vista va en la ruta (#historial/semana/…, /dia/…, /mes/…, /ano/…, /<clave>): bajar de nivel
 // añade una entrada al historial del navegador y las flechas o el selector la sustituyen, así el
@@ -104,19 +104,19 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
     const clave = vista.nivel === "sesion" ? vista.clave : "";
     raiz.classList.toggle("con-detalle", Boolean(clave));
     raiz.innerHTML = `
+      <div class="maestro-detalle">
+      <div class="col-lista">
+      ${galeria(v)}
+
       <div class="resumen-historial">
+        ${graficoSemanas(series, graficaElegida(almacen.datos.perfil))}
         <h2 class="solo-lectores">Resumen de ${esc(mesActual)}</h2>
         <dl class="cifras">
           <div class="destacada"><dt>${palabra(mes.sesiones, "sesión", "sesiones")} / mes</dt><dd>${mes.sesiones}</dd></div>
           <div><dt>${palabra(mes.asaltos, "asalto", "asaltos")} / mes</dt><dd>${mes.asaltos}</dd></div>
           <div><dt>RPE medio</dt><dd>${mes.rpe == null ? "–" : `${fmt(mes.rpe)}<small>/10</small>`}</dd></div>
         </dl>
-        ${graficoSemanas(series, graficaElegida(almacen.datos.perfil))}
       </div>
-
-      <div class="maestro-detalle">
-      <div class="col-lista">
-      ${galeria(v)}
 
       <section class="tarjeta copia" aria-labelledby="t-copia">
         <h2 id="t-copia">Copia de seguridad</h2>

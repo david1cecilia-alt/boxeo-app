@@ -75,6 +75,11 @@ export function moverPeriodo(inicio, escala, pasos) {
 
 export const AGRUPACIONES = ["semana", "mes", "ano"];
 
+// Qué muestra el gráfico del Historial (perfil.historial.grafica). Sin guardar o no válido, asaltos.
+export const GRAFICAS = ["asaltos", "rpe"];
+export const graficaElegida = (perfil) =>
+  (GRAFICAS.includes(perfil?.historial?.grafica) ? perfil.historial.grafica : "asaltos");
+
 // Inicio del periodo (semana de lunes a domingo, mes o año natural) al que pertenece la fecha.
 export function inicioPeriodo(fecha, modo) {
   if (modo === "mes") return new Date(fecha.getFullYear(), fecha.getMonth(), 1);

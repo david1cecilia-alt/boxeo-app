@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { lunes, minutosDeAsalto, moverPeriodo, porPeriodo, porSemana, textoMinutos, tituloGrupo, totales } from "../../static/vistas/resumen.js";
+import { GRAFICAS, graficaElegida, lunes, minutosDeAsalto, moverPeriodo, porPeriodo, porSemana, textoMinutos, tituloGrupo, totales } from "../../static/vistas/resumen.js";
 
 const HOY = new Date(2026, 9, 28, 18, 0); // miércoles 28 de octubre de 2026
 const sesiones = [
@@ -77,4 +77,14 @@ test("títulos de los periodos y minutos en texto", () => {
   assert.equal(textoMinutos(120), "2 h");
   assert.equal(textoMinutos(192), "3 h 12 min");
   assert.equal(textoMinutos(0), "0 min");
+});
+
+test("la gráfica del Historial muestra lo guardado en perfil.historial.grafica o, si no vale, asaltos", () => {
+  assert.deepEqual(GRAFICAS, ["asaltos", "rpe"]);
+  assert.equal(graficaElegida({ historial: { agrupar: "mes", grafica: "rpe" } }), "rpe");
+  assert.equal(graficaElegida({ historial: { grafica: "asaltos" } }), "asaltos");
+  for (const perfil of [undefined, {}, { historial: {} }, { historial: { grafica: "RPE" } },
+    { historial: { grafica: 7 } }, { historial: { grafica: null } }, { historial: null }]) {
+    assert.equal(graficaElegida(perfil), "asaltos", JSON.stringify(perfil));
+  }
 });

@@ -301,6 +301,16 @@ test("la agrupación del Historial se guarda y se relee; un v5 sin ella (anterio
   assert.deepEqual(datos.perfil.historial, { agrupar: "semana" });
 });
 
+test("la gráfica del Historial (asaltos o RPE) se guarda y se relee sin cambiar la versión", () => {
+  const storage = almacenamiento();
+  const almacen = crearAlmacen({ storage });
+  almacen.guardarPerfil({ ...almacen.datos.perfil, historial: { ...almacen.datos.perfil.historial, grafica: "rpe" } });
+  const releido = crearAlmacen({ storage }).datos;
+  assert.deepEqual(releido.perfil.historial, { agrupar: "semana", grafica: "rpe" });
+  assert.equal(releido.version, VERSION);
+  assert.equal(VERSION, 6);
+});
+
 test("completa la sesión personalizada a medias con los valores por defecto", () => {
   const datos = { ...vacio(), perfil: { ...vacio().perfil, sesion: { voz: "numeros", personalizada: { asaltos: 5 } } } };
   const { sesion } = migrar(datos).datos.perfil;

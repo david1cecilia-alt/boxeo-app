@@ -63,6 +63,30 @@ def test_con_tres_elegidos_los_demas_se_desactivan_y_se_guarda(pagina):
     assert pagina.evaluate("document.activeElement.id") == "t-practicar"
 
 
+def test_al_pasar_a_zurdo_el_chip_cambia_de_mano_pero_lo_guardado_no(pagina):
+    pagina.goto(f"{ORIGEN}/index.html#ajustes")
+    pagina.wait_for_selector("#t-practicar")
+    chip = pagina.locator('label:has([data-practicar="4"])')
+    assert chip.inner_text().strip() == "4 crochet de derecha"
+    _chip(pagina, "4").check()
+    antes = _guardado(pagina)
+    assert antes == [{"movimiento": "4", "cuanto": "poco"}]  # la clave del movimiento: ni el texto ni la mano
+    pagina.goto(f"{ORIGEN}/index.html#entrenar")
+    pagina.locator("#zurdo").check()
+    pagina.goto(f"{ORIGEN}/index.html#ajustes")
+    pagina.wait_for_selector("#t-practicar")
+    assert chip.inner_text().strip() == "4 crochet de izquierda"
+    assert _chip(pagina, "4").is_checked()
+    assert pagina.locator(".cuanto-practicar legend").all_inner_texts() == ["4 crochet de izquierda"]
+    assert _guardado(pagina) == antes
+    # Vuelta a diestro y sin nada elegido, para las demás pruebas.
+    pagina.goto(f"{ORIGEN}/index.html#entrenar")
+    pagina.locator("#zurdo").uncheck()
+    pagina.goto(f"{ORIGEN}/index.html#ajustes")
+    pagina.wait_for_selector("#t-practicar")
+    pagina.click("#practicar-quitar")
+
+
 def test_nada_se_sale_de_la_pantalla_a_390(pagina):
     pagina.goto(f"{ORIGEN}/index.html#ajustes")
     pagina.wait_for_selector("#t-practicar")

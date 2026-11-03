@@ -47,7 +47,6 @@
   --suave: #a8a29e;           /* texto secundario */
   --terciario: #d6d3d1;
   --tenue: #8c8783;           /* días y meses futuros: más apagado que --suave, aún 4,5:1 */
-  --apagado: #5c5855;         /* días de otro mes en el calendario: solo adorno (aria-hidden) */
   --acento: #ff3b30;          /* rojo de texto: palabra roja, contexto, cifras */
   --acento-relleno: #d7192a;  /* rojo de relleno: botones, pestaña activa, chip destacado (texto blanco) */
   --acento-relleno-hover: #b81424;
@@ -609,8 +608,8 @@ a.celda:hover { border-color: var(--suave); background: var(--superficie-hover);
 
 /* Un día (semana y calendario del mes). Con sesiones: número en rojo, en negrita y con un punto
    debajo (no depende solo del color). Hoy: el número en un círculo. Pasados sin sesión, en gris
-   suave; futuros, más apagados (--tenue, aún 4,5:1); de otro mes, casi borrados (solo adorno: la
-   fila lleva su etiqueta). */
+   suave; futuros, más apagados (--tenue, aún 4,5:1). Los de otro mes, en el calendario, casilla
+   vacía (la fila lleva su etiqueta). */
 .dia { display: grid; justify-items: center; align-content: start; gap: 3px; min-width: 0; color: var(--suave); }
 .dia b {
   display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
@@ -622,9 +621,6 @@ a.celda:hover { border-color: var(--suave); background: var(--superficie-hover);
 .dia.con-sesion .punto { background: var(--acento); }
 .dia.hoy b { box-shadow: inset 0 0 0 2px var(--texto); }
 .dia.futuro { color: var(--tenue); }
-.dia.otro-mes { color: var(--apagado); }
-.dia.otro-mes.con-sesion .punto { background: var(--apagado); }
-.dia.otro-mes.hoy b { box-shadow: inset 0 0 0 2px var(--apagado); }
 
 /* Semana: L M X J V S D con el número debajo; con sesiones, un enlace del alto de un dedo. */
 .dias { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }

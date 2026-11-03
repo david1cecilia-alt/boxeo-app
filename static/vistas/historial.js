@@ -194,10 +194,9 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
         ${nivel === "mes" ? cifrasMes(delPeriodo) : ""}`;
   }
 
-  // Clases de un día: con sesiones (rojo, en negrita y con punto), hoy, futuro y de otro mes.
+  // Clases de un día: con sesiones (rojo, en negrita y con punto), hoy y futuro.
   const clasesDia = (d, extra = []) => [
-    d.sesiones.length ? "con-sesion" : "", d.hoy ? "hoy" : "", d.futuro ? "futuro" : "",
-    d.delMes === false ? "otro-mes" : "", ...extra,
+    d.sesiones.length ? "con-sesion" : "", d.hoy ? "hoy" : "", d.futuro ? "futuro" : "", ...extra,
   ].filter(Boolean).join(" ");
   const numeroDia = (d) => `<b>${d.fecha.getDate()}</b><span class="punto"></span>`;
 
@@ -226,7 +225,9 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
   // Las semanas que aún no han llegado, sin enlace.
   function calendarioMes(inicio) {
     const filas = semanasDelMes(sesiones, inicio).map((s) => {
-      const dias = s.dias.map((d) => `<span class="dia ${clasesDia(d)}">${numeroDia(d)}</span>`).join("");
+      // Los días de otro mes, casilla vacía: la cuadrícula no se mueve y no se confunden con los del mes.
+      const dias = s.dias.map((d) => (d.delMes ? `<span class="dia ${clasesDia(d)}">${numeroDia(d)}</span>`
+        : '<span class="dia otro-mes"></span>')).join("");
       const etiqueta = esc(etiquetaFila(s));
       const clases = `fila-semana${s.actual ? " actual" : ""}${s.futuro ? " futuro" : ""}`;
       const visible = `<span class="dias-fila" aria-hidden="true">${dias}</span>`;

@@ -96,10 +96,12 @@ test("bordes, foco y marcas de gráficos con 3:1", () => {
   }
 });
 
-test("en la galería, lo futuro se ve más apagado que lo pasado sin sesiones, y lo de otro mes aún más", () => {
+// Los días de otro mes ya no llevan color: su casilla del calendario va vacía.
+test("en la galería, lo futuro se ve más apagado que lo pasado sin sesiones", () => {
   const fondo = rgb("fondo");
-  const [suave, tenue, apagado] = ["suave", "tenue", "apagado"].map((t) => luminancia(rgb(t, fondo)));
-  assert.ok(suave > tenue && tenue > apagado);
+  const [suave, tenue] = ["suave", "tenue"].map((t) => luminancia(rgb(t, fondo)));
+  assert.ok(suave > tenue);
+  assert.equal(tokens.apagado, undefined);
 });
 
 test("el fondo rojo completo es solo de los últimos 10 s", () => {

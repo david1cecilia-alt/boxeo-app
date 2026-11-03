@@ -6,11 +6,14 @@ main no tiene nada que no esté en la rama.
 
 ## Antes de unir
 
-1. **David revisa las 22 dudas de técnica** marcadas en `revisar` (REVISAR CON ENTRENADOR). Eran 20; la
-   #52 y la #54 se añadieron después. Por cada una: se queda, se cambia o sale. Si cambia algo, regenerar
-   la propuesta, `data/combinaciones.json` y `data/revisar.json` con `herramientas/biblioteca.py` y
-   `herramientas/extraer_revisar.py`.
+1. ~~David revisa las 22 dudas de técnica~~ **Hecho**: David las ha revisado y la biblioteca se queda como está.
+   No bloquean la unión. Siguen marcadas en `revisar` (REVISAR CON ENTRENADOR), pendientes de Iván. Si
+   Iván cambia algo, regenerar la propuesta, `data/combinaciones.json` y `data/revisar.json` con
+   `herramientas/biblioteca.py` y `herramientas/extraer_revisar.py` (sus comprobaciones dicen si un cambio
+   rompe el crecimiento de la familia, el reparto de golpes o un nombre).
 2. `.venv\Scripts\python -m pytest -q` en verde.
+
+## Dudas pendientes de Iván (revisadas por David)
 
 | # | Nivel | Nombre | Acciones | Duda |
 |---|---|---|---|---|
@@ -36,6 +39,17 @@ main no tiene nada que no esté en la rama.
 | 113 | básico | jab, ballesteo, gancho y flexión | 1 · ballesteo · 6 · flexión | tras el ballesteo, gancho y no recto |
 | 144 | avanzado | jab, bloqueo, gancho, flexión, ballesteo y paso atrás | 1 · bloqueo · 5 · flexión · 2 al cuerpo · ballesteo · 6 · paso atrás | tras el bloqueo, gancho y no recto |
 | 146 | avanzado | dos bloqueos, esquiva, gancho, flexión y crochet al cuerpo | bloqueo · 1 · bloqueo · 5 · esquiva izquierda · 5 · flexión · 3 al cuerpo | tras el bloqueo, gancho y no recto |
+
+## Preguntas para Iván
+
+Sin cambiar ninguna combinación hasta que conteste.
+
+- **#52 y #54:** ¿recto y gancho de derecha seguidos (2 · 6) o mejor 5 · 4? Si cambia, afecta a la base F9-B
+  («gancho-crochet», 6 · 3), de la que crecen.
+- **#75 (y #77 y #78, que heredan de ella):** ¿crochet de derecha tras dos jabs o mejor recto?
+- **#113 y #144:** tras el ballesteo, ¿gancho o recto?
+- **Ballesteo:** ¿cómo lo llama él, con paso o solo cuerpo, y es adecuado para el nivel de David?
+- **Flexión:** ¿qué es exactamente y en qué se diferencia de «esquiva abajo»?
 
 ## Aparcado (no bloquea la unión)
 

@@ -29,8 +29,15 @@ let n = 0;
 const historial = await crearHistorial(crearAlmacen({ crearId: () => `prueba-${++n}` }));
 const fechas = [...Array(12)].map((_, i) => `2026-09-${String(i + 1).padStart(2, "0")}T18:00:00`)
   .concat("2026-05-12T18:00:00", "2026-10-21T18:00:00");
+// La de mayo es vieja: sin voz guardada, dictada en Ambos y con los nombres de antes («gancho» era el
+// crochet y «rueda», la esquiva abajo).
+const VIEJA = [
+  { asalto: 1, texto: "uno jab, tres gancho de izquierda, rueda derecha", ids: ["jab", "gancho_izq", "rodar_der"] },
+  { asalto: 1, texto: "rueda izquierda, bloqueo", ids: ["rodar_izq", "bloqueo"] },
+];
 for (const fecha of fechas) {
-  await historial.guardar({ fecha, asaltos: 3, duracion_asalto: 180, descanso: 60, nivel: 2, combinaciones: [] });
+  await historial.guardar({ fecha, asaltos: 3, duracion_asalto: 180, descanso: 60, nivel: 2,
+    combinaciones: fecha.startsWith("2026-05") ? VIEJA : [] });
 }
 window.listo = true;
 </script>"""
@@ -113,3 +120,17 @@ def test_el_titulo_enfocado_se_subraya_sin_recuadro(pagina, ruta, titulo):
       return [t.matches(':focus-visible'), e.outlineStyle, e.textDecorationLine];
     }}""")
     assert foco == [True, "none", "underline"]
+
+
+# Sesión vieja (prueba-13, la de mayo): en el detalle y en su valoración, los números en cifra y
+# los nombres de hoy, con la voz deducida una vez para toda la sesión.
+def test_la_sesion_vieja_se_ve_con_cifras_y_nombres_de_hoy(pagina):
+    esperados = ["1 jab, 3 crochet de izquierda, esquiva abajo derecha", "esquiva abajo izquierda, bloqueo"]
+    _abrir_historial(pagina, 390, "local%3Aprueba-13", "#t-detalle")
+    detalle = pagina.locator("#historial-detalle ol li").all_inner_texts()
+    assert [t.strip() for t in detalle] == esperados
+    pagina.click("#valorar")
+    pagina.click("#postsesion details.costosas summary")  # «Combinaciones que me han costado»
+    valoracion = pagina.locator("#postsesion .grupo-combos label").all_inner_texts()
+    assert [t.strip() for t in valoracion] == esperados
+    pagina.keyboard.press("Escape")

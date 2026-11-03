@@ -1,7 +1,7 @@
 // Lo que se ve de cada paso de una combinación en la sesión: tipo, número del golpe y nombre
 // corto. Sin DOM, para poder probarlo en Node. Los ids ya vienen en espejo para el zurdo (su 3
 // es gancho_der) y el catálogo tiene las dos versiones; el número se lee por mano adelantada/trasera.
-import { catalogo, nombreCorto, numero, palabrasNumero, textoHablado } from "../motor/acciones.js";
+import { catalogo, nombreCorto, numero, palabraHablada, palabrasNumero } from "../motor/acciones.js";
 
 // null si algún id no está en el catálogo (p. ej. datos de una versión vieja).
 export function pasosCombo(ids, { voz, zurdo }) {
@@ -24,11 +24,35 @@ export function vozDelTexto(texto) {
   return "nombres";
 }
 
-// Texto de una combinación guardada, rehecho desde sus ids con los nombres de hoy: el de una
-// sesión vieja puede decir otra cosa (antes el crochet se llamaba «gancho»). Los ids ya vienen en
-// espejo para el zurdo. Si algún id no está en el catálogo, el texto guardado.
-export function textoGuardado(combo, { voz, zurdo }) {
-  const acciones = combo.ids.map((id) => catalogo().get(id));
-  if (!acciones.length || acciones.includes(undefined)) return combo.texto;
-  return textoHablado(acciones, voz ?? vozDelTexto(combo.texto), Boolean(zurdo));
+// Cómo se dictó una sesión guardada: la voz que guardó o, si no la guardó, deducida UNA vez de
+// todas sus combinaciones (no de cada una: una sin golpes con número no delata nada). Solo
+// cuentan las que llevan algún golpe con número; si no hay ninguna o no coinciden, «ambos»: en
+// pantalla da el número y el nombre, así no se pierde nada.
+export function vozDeSesion(sesion, combinaciones) {
+  if (sesion.voz) return sesion.voz;
+  const votos = new Set(combinaciones
+    .filter((c) => c.ids.some((id) => catalogo().get(id)?.numero != null))
+    .map((c) => vozDelTexto(c.texto)));
+  return votos.size === 1 ? [...votos][0] : "ambos";
+}
+
+// Lo que se ve de una acción en una lista: como se dice, pero con el número en cifra ("1 jab", "3").
+function palabraEscrita(accion, voz, zurdo) {
+  const nombre = palabraHablada(accion, "nombres", zurdo);
+  const n = numero(accion, zurdo);
+  if (n === null || voz === "nombres") return nombre;
+  return voz === "numeros" ? String(n) : `${n} ${nombre}`;
+}
+
+// Combinaciones guardadas listas para verlas (Historial, valoración): el texto se rehace desde
+// los ids con los nombres de hoy (antes el crochet se llamaba «gancho») y los números en cifra,
+// con una sola voz para toda la sesión. Los ids ya vienen en espejo para el zurdo. Si algún id no
+// está en el catálogo, esa combinación se queda con su texto guardado.
+export function combinacionesParaVer(sesion, combinaciones) {
+  const voz = vozDeSesion(sesion, combinaciones);
+  return combinaciones.map((c) => {
+    const acciones = c.ids.map((id) => catalogo().get(id));
+    if (!acciones.length || acciones.includes(undefined)) return c;
+    return { ...c, texto: acciones.map((a) => palabraEscrita(a, voz, Boolean(sesion.zurdo))).join(", ") };
+  });
 }

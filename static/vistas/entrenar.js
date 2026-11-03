@@ -13,7 +13,7 @@ import { crearPantallaEncendida } from "../pantalla.js";
 import { crearReproductor } from "../reproductor.js";
 import { activarSonido, campana, dejarDormir, mantenerDespierto, pitido, tablillas } from "../sonido.js";
 import { $, anunciar, esc, minutos } from "./dom.js";
-import { pasosCombo } from "./pasos.js";
+import { combinacionesParaVer, pasosCombo } from "./pasos.js";
 
 const SEGUNDOS_FINAL = 10;
 const decimal = (x) => String(x).replace(".", ",");
@@ -356,7 +356,8 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     };
     try {
       const id = await historial.guardar(datosSesion);
-      alTerminar({ id, combinaciones: dichas });
+      // En la valoración, como en el Historial: con los números en cifra («1 jab»).
+      alTerminar({ id, combinaciones: combinacionesParaVer(datosSesion, dichas) });
     } catch (e) {
       alert(`No se pudo guardar la sesión: ${e.message}`);
     }

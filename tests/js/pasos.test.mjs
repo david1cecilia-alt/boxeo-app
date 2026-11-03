@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { crearAzar } from "../../static/motor/azar.js";
 import { construirGuion } from "../../static/motor/temporizador.js";
-import { pasosCombo, textoGuardado, vozDelTexto } from "../../static/vistas/pasos.js";
+import { combinacionesParaVer, pasosCombo, vozDeSesion, vozDelTexto } from "../../static/vistas/pasos.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
 
 cargarDatosDeDisco();
@@ -58,16 +58,63 @@ test("la voz de un texto guardado se deduce de sus números", () => {
   assert.equal(vozDelTexto("cúbrete, gancho de izquierda"), "nombres");
 });
 
-test("el texto de una sesión vieja se rehace desde los ids con los nombres de hoy", () => {
-  // Antes el 3 era «gancho de izquierda» y la esquiva abajo, «rueda».
-  const vieja = { asalto: 1, texto: "jab, gancho de izquierda, rueda derecha", ids: ["jab", "gancho_izq", "rodar_der"] };
-  assert.equal(textoGuardado(vieja, { zurdo: false }), "jab, crochet de izquierda, esquiva abajo derecha");
-  assert.equal(textoGuardado({ ...vieja, texto: "uno jab, tres gancho de izquierda, rueda derecha" }, { zurdo: false }),
-    "uno jab, tres crochet de izquierda, esquiva abajo derecha");
-  // Con la voz guardada manda la voz; el zurdo guarda los ids ya en espejo (su 3 es gancho_der).
-  assert.equal(textoGuardado({ ...vieja, ids: ["jab", "gancho_der"] }, { voz: "ambos", zurdo: true }),
-    "uno jab, tres crochet de derecha");
-  // Ids que ya no existen o sin ids: el texto tal cual.
-  assert.equal(textoGuardado({ ...vieja, ids: ["jab", "golpe_borrado"] }, {}), vieja.texto);
-  assert.equal(textoGuardado({ ...vieja, ids: [] }, {}), vieja.texto);
+// Una sesión vieja (sin voz guardada, con los nombres de antes: el 3 era «gancho de izquierda» y
+// la esquiva abajo, «rueda»). La segunda combinación no lleva golpes con número: no delata la voz.
+const vieja = (textos) => ({
+  zurdo: false,
+  combinaciones: [
+    { asalto: 1, texto: textos[0], ids: ["jab", "gancho_izq", "rodar_der"] },
+    { asalto: 1, texto: textos[1], ids: ["rodar_izq", "bloqueo"] },
+    { asalto: 2, texto: textos[2], ids: ["directo", "gancho_izq"] },
+  ],
+});
+const verTextos = (s) => combinacionesParaVer(s, s.combinaciones).map((c) => c.texto);
+
+test("sesión vieja en Ambos: se ve con los números en cifra y los nombres de hoy, toda igual", () => {
+  const s = vieja(["uno jab, tres gancho de izquierda, rueda derecha", "rueda izquierda, bloqueo", "dos recto, tres gancho de izquierda"]);
+  assert.equal(vozDeSesion(s, s.combinaciones), "ambos");
+  assert.deepEqual(verTextos(s), [
+    "1 jab, 3 crochet de izquierda, esquiva abajo derecha",
+    "esquiva abajo izquierda, bloqueo",
+    "2 recto, 3 crochet de izquierda",
+  ]);
+});
+
+test("sesión vieja en Nombres: sin números", () => {
+  const s = vieja(["jab, gancho de izquierda, rueda derecha", "rueda izquierda, bloqueo", "recto, gancho de izquierda"]);
+  assert.equal(vozDeSesion(s, s.combinaciones), "nombres");
+  assert.deepEqual(verTextos(s), [
+    "jab, crochet de izquierda, esquiva abajo derecha",
+    "esquiva abajo izquierda, bloqueo",
+    "recto, crochet de izquierda",
+  ]);
+});
+
+test("sesión vieja en Números: solo la cifra de los golpes; las defensas, con su orden", () => {
+  const s = vieja(["uno, tres, rueda derecha", "rueda izquierda, bloqueo", "dos, tres"]);
+  assert.deepEqual(verTextos(s), ["1, 3, esquiva abajo derecha", "esquiva abajo izquierda, bloqueo", "2, 3"]);
+});
+
+test("sesión vieja ambigua (se contradice o no delata nada): Ambos, que no pierde nada", () => {
+  const mezcla = vieja(["uno jab, tres gancho de izquierda, rueda derecha", "rueda izquierda, bloqueo", "recto, gancho de izquierda"]);
+  assert.equal(vozDeSesion(mezcla, mezcla.combinaciones), "ambos");
+  const sinGolpes = { combinaciones: [{ asalto: 1, texto: "rueda izquierda, bloqueo", ids: ["rodar_izq", "bloqueo"] }] };
+  assert.equal(vozDeSesion(sinGolpes, sinGolpes.combinaciones), "ambos");
+  assert.deepEqual(verTextos(sinGolpes), ["esquiva abajo izquierda, bloqueo"]);
+});
+
+test("sesión nueva con voz guardada: manda la voz, no el texto; el zurdo guarda los ids en espejo", () => {
+  const s = { ...vieja(["jab, crochet de izquierda, esquiva abajo derecha", "esquiva abajo izquierda, bloqueo", "recto, crochet de izquierda"]), voz: "ambos" };
+  assert.equal(vozDeSesion(s, s.combinaciones), "ambos");
+  assert.equal(verTextos(s)[0], "1 jab, 3 crochet de izquierda, esquiva abajo derecha");
+  const zurdo = { voz: "numeros", zurdo: true, combinaciones: [{ asalto: 1, texto: "uno, tres", ids: ["jab", "gancho_der"] }] }; // su 3 es gancho_der
+  assert.deepEqual(verTextos(zurdo), ["1, 3"]);
+});
+
+test("ids que ya no existen o sin ids: el texto guardado tal cual", () => {
+  const s = { voz: "ambos", combinaciones: [
+    { asalto: 1, texto: "uno jab, golpe raro", ids: ["jab", "golpe_borrado"] },
+    { asalto: 1, texto: "sin ids", ids: [] },
+  ] };
+  assert.deepEqual(verTextos(s), ["uno jab, golpe raro", "sin ids"]);
 });

@@ -256,6 +256,21 @@ test("al abrir un almacén v5 se guarda en v6 sin pesos; importar una copia v5 t
   assert.deepEqual(otro.datos, almacen.datos);
 });
 
+test("importar una copia de seguridad v5 con pesos pasa por la migración: v6, sin pesos y sin nada en «Practicar más»", () => {
+  const v5 = almacenV5();
+  const copia = JSON.parse(JSON.stringify({ app: "boxeo", version: 5, exportado: "2026-10-30T10:00:00Z", datos: v5 }));
+  assert.equal(copia.datos.version, 5);
+  assert.ok(copia.datos.perfil.pesos);
+  const storage = almacenamiento();
+  const almacen = crearAlmacen({ storage });
+  assert.equal(almacen.importar(copia), true);
+  for (const datos of [almacen.datos, JSON.parse(storage.mapa.get("boxeo"))]) {
+    assert.equal(datos.version, 6);
+    assert.equal("pesos" in datos.perfil, false);
+    assert.deepEqual(datos.perfil.practicar, []);
+  }
+});
+
 test("«Practicar más» se guarda y se relee; si no es una lista vuelve a vacío", () => {
   const storage = almacenamiento();
   const almacen = crearAlmacen({ storage });

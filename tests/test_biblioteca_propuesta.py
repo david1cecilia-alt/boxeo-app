@@ -51,3 +51,18 @@ def test_reglas_de_los_nombres():
     assert fallos("jab, gancho y esquiva", "1-EI-6") == ["nombra algo que no está o en otro orden"]       # R3
     assert "dice la mano del golpe" in fallos("gancho de derecha y crochet", "6-3")                      # R4
     assert fallos("jab-recto con contra", "1-2") == ["palabras fuera del vocabulario: contra"]           # R5
+
+
+def test_como_mucho_cinco_con_dos_ganchos_seguidos_por_nivel():
+    from herramientas.biblioteca import MAX_DOS_GANCHOS, dos_ganchos_seguidos, ids
+    from motor.acciones import acciones_por_ids
+
+    def seguidos(notacion):
+        return dos_ganchos_seguidos(acciones_por_ids(ids(notacion)))
+
+    assert seguidos("1-5-6") and seguidos("6-5") and seguidos("6c-5") and seguidos("5-6c")
+    assert not seguidos("5c-5")                                     # gancho abajo y arriba: misma mano
+    assert not seguidos("5-B-6") and not seguidos("5-3-6")
+    combos, _ = preparar()
+    for nivel in (1, 2, 3):
+        assert sum(c["nivel"] == nivel and seguidos(c["notacion"]) for c in combos) <= MAX_DOS_GANCHOS

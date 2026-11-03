@@ -45,6 +45,7 @@ MIN_CUERPO = 6           # veces de cada golpe al cuerpo, en total
 MIN_DEFENSA = 12         # veces de cada tipo de defensa, en total
 MAX_DIFERENCIA_LADO = 20  # % entre derecha e izquierda de cada defensa con lado
 MIN_SALIDA = 6           # veces de cada salida, en total
+MAX_DOS_GANCHOS = 5      # combinaciones de cada nivel con 5-6 o 6-5 seguidos (a la cara o al cuerpo)
 DEFENSAS = ["esquiva", "rodar", "ballesteo", "flexion", "bloqueo", "parada", "paso_atras"]
 SALIDAS = ["pivote", "paso_lateral_izq", "paso_lateral_der", "salir"]
 
@@ -81,16 +82,16 @@ FAMILIAS = [
         ("F4-Bb", "variante", "F4-B", "P-6-3-B", "parada, gancho-crochet y bloqueo"),
         ("F4-M", "crece", "F4-B", "{F4-B}-ED-4-3", "parada, jab-recto, esquiva y doble crochet"),
         ("F4-Mb", "variante", "F4-M", "{F4-Bb}-1-6", "parada, bloqueo, jab y gancho"),
-        ("F4-A", "crece", "F4-M", "{F4-M}-B-5-6", "parada, esquiva, bloqueo y dos ganchos"),
+        ("F4-A", "crece", "F4-M", "{F4-M}-5-B-6", "parada, esquiva, gancho, bloqueo y gancho"),
         ("F4-Ab", "variante", "F4-A", "{F4-M}-PA-1-2-LI", "parada, esquiva, paso atrás, jab-recto y paso lateral"),
     ]),
     ("F5", "Abajo y arriba", "Golpes al cuerpo para bajar la guardia del rival y subir a la cara.", [
         ("F5-B", "base", None, "1c-2", "jab al cuerpo y recto"),
         ("F5-Bb", "variante", "F5-B", "6-3c-3", "gancho y crochet abajo y arriba"),
         ("F5-M", "crece", "F5-B", "{F5-B}-F-3c-3", "jab al cuerpo, recto, flexión y crochet abajo y arriba"),
-        ("F5-Mb", "variante", "F5-M", "{F5-Bb}-F-1-6", "gancho-crochet abajo y arriba, flexión y jab-gancho"),
+        ("F5-Mb", "variante", "F5-M", "{F5-Bb}-F-1-6", "gancho, crochet abajo y arriba, flexión y jab-gancho"),
         ("F5-A", "crece", "F5-M", "{F5-M}-AD-4c-6", "jab al cuerpo, flexión, crochet abajo y arriba, esquiva abajo y gancho"),
-        ("F5-Ab", "variante", "F5-A", "{F5-Mb}-B-6", "gancho-crochet abajo y arriba, flexión, bloqueo y gancho"),
+        ("F5-Ab", "variante", "F5-A", "{F5-Mb}-B-6", "gancho, crochet abajo y arriba, flexión, bloqueo y gancho"),
     ]),
     ("F6", "Esquiva a los dos lados", "Esquiva lateral, se suelta y se vuelve a esquivar.", [
         ("F6-B", "base", None, "ED-6-5-EI", "esquiva derecha, dos ganchos y esquiva izquierda"),
@@ -156,7 +157,8 @@ FAMILIAS = [
         ("F13-M", "crece", "F13-B", "{F13-B}-ED-2", "jab arriba y abajo, gancho, esquiva y recto"),
         ("F13-Mb", "variante", "F13-M", "{F13-Bb}-PA-6", "jab abajo y arriba, crochet, paso atrás y gancho"),
         ("F13-A", "crece", "F13-M", "{F13-M}-1-B-4c-4", "jab arriba y abajo, esquiva, jab, bloqueo y crochet abajo y arriba"),
-        ("F13-Ab", "variante", "F13-A", "{F13-Mb}-F-5c-6-LI", "jab abajo y arriba, paso atrás, flexión, ganchos y paso lateral"),
+        ("F13-Ab", "variante", "F13-A", "{F13-Mb}-F-3c-6-LI",
+         "jab abajo y arriba, paso atrás, flexión, crochet al cuerpo, gancho y paso lateral"),
     ]),
     ("F14", "Parada y al cuerpo", "Se para el jab y se contesta abajo.", [
         ("F14-B", "base", None, "P-2c-5", "parada, recto al cuerpo y gancho"),
@@ -169,15 +171,15 @@ FAMILIAS = [
     ("F15", "Cambio de ángulo", "Se suelta, se cambia de ángulo y se ataca desde el nuevo sitio.", [
         ("F15-B", "base", None, "1-2-CA", "jab-recto y cambio de ángulo"),
         ("F15-Bb", "variante", "F15-B", "4-3-CA", "doble crochet y cambio de ángulo"),
-        ("F15-M", "crece", "F15-B", "{F15-B}-5-6-EI", "jab-recto, cambio de ángulo, dos ganchos y esquiva"),
+        ("F15-M", "crece", "F15-B", "{F15-B}-5-EI-6", "jab-recto, cambio de ángulo, gancho, esquiva y gancho"),
         ("F15-Mb", "variante", "F15-M", "{F15-Bb}-5-PA", "doble crochet, cambio de ángulo, gancho y paso atrás"),
-        ("F15-A", "crece", "F15-M", "{F15-M}-5-B-6", "jab-recto, cambio de ángulo, esquiva, bloqueo y gancho"),
+        ("F15-A", "crece", "F15-M", "{F15-M}-B-4-5", "jab-recto, cambio de ángulo, esquiva, bloqueo y crochet-gancho"),
         ("F15-Ab", "variante", "F15-A", "{F15-Mb}-1-AD-4-LI", "doble crochet, cambio de ángulo, paso atrás, esquiva abajo y paso lateral"),
     ]),
     ("F16", "Pivote", "Se suelta y se pivota para no quedarse delante.", [
-        ("F16-B", "base", None, "5-6-PI", "dos ganchos y pivote"),  # REVISAR CON ENTRENADOR: dos ganchos seguidos
+        ("F16-B", "base", None, "6-3-PI", "gancho-crochet y pivote"),
         ("F16-Bb", "variante", "F16-B", "4-3-PI", "doble crochet y pivote"),
-        ("F16-M", "crece", "F16-B", "B-{F16-B}-1", "bloqueo, dos ganchos, pivote y jab"),
+        ("F16-M", "crece", "F16-B", "B-{F16-B}-1", "bloqueo, gancho-crochet, pivote y jab"),
         ("F16-Mb", "variante", "F16-M", "{F16-Bb}-AD-6", "doble crochet, pivote, esquiva abajo y gancho"),
         ("F16-A", "crece", "F16-M", "{F16-M}-EI-1-BA-6", "bloqueo, pivote, esquiva, jab, ballesteo y gancho"),
         ("F16-Ab", "variante", "F16-A", "{F16-Mb}-3-F-6c-ED", "doble crochet, pivote, esquiva abajo, flexión y esquiva"),
@@ -460,6 +462,11 @@ def problemas(combos):
         if diferencia(der, izq) > MAX_DIFERENCIA_LADO:
             malos.append(f"{f}: {der} a la derecha y {izq} a la izquierda ({diferencia(der, izq):.0f} %)")
     malos += [f"salida {s}: {usos[s]} veces (mínimo {MIN_SALIDA})" for s in SALIDAS if usos[s] < MIN_SALIDA]
+    for nivel in (1, 2, 3):
+        seguidos = [c["n"] for c in combos if c["nivel"] == nivel and dos_ganchos_seguidos(c["acciones"])]
+        if len(seguidos) > MAX_DOS_GANCHOS:
+            malos.append(f"{NIVEL[nivel]}: {len(seguidos)} con 5-6 o 6-5 seguidos (máximo {MAX_DOS_GANCHOS}): "
+                         + ", ".join(f"#{n}" for n in seguidos))
     avanzadas_1 = [c for c in combos if c["nivel"] == 3 and c["defensas"] == 1]
     if avanzadas_1 and all(c["familia"] == "F1" for c in avanzadas_1):
         malos.append("todas las de avanzado con 1 defensa son de la F1")
@@ -473,8 +480,9 @@ def empiezan_con_jab(combos):
 
 
 def dos_ganchos_seguidos(acciones):
-    """Si lleva dos ganchos (5 o 6, a la cara o al cuerpo) uno detrás de otro."""
-    return any(a.familia == b.familia == "uppercut" for a, b in zip(acciones, acciones[1:]))
+    """Si lleva un 5 y un 6 seguidos, en cualquier orden y a la cara o al cuerpo (el 5 al cuerpo y luego el 5 a la
+    cara es el gancho abajo y arriba, con la misma mano: no cuenta)."""
+    return any(a.familia == b.familia == "uppercut" and a.mano != b.mano for a, b in zip(acciones, acciones[1:]))
 
 
 def usos_por_id(combos):
@@ -704,8 +712,8 @@ def dudas(w, combos):
             w(f"| {c['n']} | {texto(c['acciones'])} | {marcas[cruda]} |")
     seguidos = [c for c in combos if dos_ganchos_seguidos(c["acciones"])]
     w("")
-    w(f"Con dos ganchos (5 o 6) seguidos hay {len(seguidos)}: "
-      + ", ".join(f"#{c['n']}" for c in seguidos) + ". ¿Son demasiadas?")
+    w(f"Con 5-6 o 6-5 seguidos (a la cara o al cuerpo; como mucho {MAX_DOS_GANCHOS} por nivel) hay {len(seguidos)}: "
+      + ", ".join(f"#{c['n']}" for c in seguidos) + ".")
     w("")
 
 

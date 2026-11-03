@@ -1,7 +1,8 @@
 // Gráfico del historial: una tarjeta con barras por semana, mes o año (selector Semanas / Meses /
-// Años) y otro selector Asaltos / RPE. Barras en HTML (no SVG): se ven nítidas a cualquier ancho.
-// El periodo actual va en rojo; cada barra lleva su valor encima y una etiqueta completa para
-// lectores de pantalla. Debajo, los mismos datos como tabla.
+// Años) y, arriba a la derecha, Asaltos / RPE (se guarda en perfil.historial.grafica). Barras en
+// HTML (no SVG): se ven nítidas a cualquier ancho. El periodo actual va en rojo; cada barra lleva
+// su valor encima (o «–» y sin barra si no hay RPE) y una etiqueta completa para lectores de
+// pantalla. Debajo, los mismos datos como tabla.
 import { diaCorto, esc, plural } from "./dom.js";
 import { tituloGrupo } from "./resumen.js";
 
@@ -10,8 +11,11 @@ const MES_CORTO = new Intl.DateTimeFormat("es-ES", { month: "short" });
 const mesCorto = (d) => MES_CORTO.format(d).replace(".", "");
 
 const MODOS = {
-  asaltos: { boton: "Asaltos", titulo: "Asaltos", valor: (s) => s.asaltos, max: (ss) => Math.max(4, ...ss.map((s) => s.asaltos)) },
-  rpe: { boton: "RPE", titulo: "Esfuerzo medio (RPE)", valor: (s) => s.rpe, max: () => 10 },
+  asaltos: {
+    boton: "Asaltos", titulo: "Asaltos", unidad: "asaltos",
+    valor: (s) => s.asaltos, max: (ss) => Math.max(4, ...ss.map((s) => s.asaltos)),
+  },
+  rpe: { boton: "RPE", titulo: "RPE medio", unidad: "RPE (0–10)", valor: (s) => s.rpe, max: () => 10 },
 };
 
 const ESCALAS = {
@@ -37,11 +41,12 @@ const ESCALAS = {
   },
 };
 
-// Se recuerdan al repintar el historial (no se guardan).
+// La escala se recuerda al repintar el historial (no se guarda); el modo llega del perfil.
 let modoElegido = "asaltos";
 let escalaElegida = "semana";
 
 const titulo = () => `${MODOS[modoElegido].titulo} ${ESCALAS[escalaElegida].por}`;
+const unidad = () => MODOS[modoElegido].unidad;
 
 function etiqueta(p, e) {
   const rpe = p.rpe == null ? "sin RPE" : `RPE medio ${fmt(p.rpe)}`;
@@ -81,36 +86,43 @@ function tabla(periodos) {
 function cuerpo(periodos) {
   return periodos.every((p) => p.sesiones === 0)
     ? `<p class="nota">Aún no hay sesiones ${ESCALAS[escalaElegida].vacio(periodos.length)}.</p>`
-    : `<ol class="barras" style="--semanas:${periodos.length}">${barras(periodos)}</ol>${tabla(periodos)}`;
+    : `<p class="unidad-grafico" aria-hidden="true">${esc(unidad())}</p>
+      <ol class="barras" style="--semanas:${periodos.length}">${barras(periodos)}</ol>${tabla(periodos)}`;
 }
 
 const botones = (lista, atributo, elegido) => Object.entries(lista).map(([id, x]) =>
   `<button type="button" ${atributo}="${id}" aria-pressed="${id === elegido}">${x.boton}</button>`).join("");
 
-// `series`: { semana: [...], mes: [...], ano: [...] } de porPeriodo (vistas/resumen.js).
-export function graficoSemanas(series) {
+// `series`: { semana: [...], mes: [...], ano: [...] } de porPeriodo (vistas/resumen.js);
+// `modo`: "asaltos" o "rpe" (graficaElegida de vistas/resumen.js).
+export function graficoSemanas(series, modo) {
+  modoElegido = modo;
   return `
   <figure class="tarjeta grafico-semanas" aria-labelledby="t-grafico">
     <div class="cabeza-grafico">
       <h2 id="t-grafico" class="titulo-grafico">${titulo()}</h2>
-      <div class="selectores-grafico">
-        <div class="selector" role="group" aria-label="Periodo de cada barra">${botones(ESCALAS, "data-escala", escalaElegida)}</div>
-        <div class="selector" role="group" aria-label="Qué muestra el gráfico">${botones(MODOS, "data-modo", modoElegido)}</div>
-      </div>
+      <div class="selector selector-modo" role="group" aria-label="Qué muestra el gráfico">${botones(MODOS, "data-modo", modoElegido)}</div>
     </div>
+    <div class="selector" role="group" aria-label="Periodo de cada barra">${botones(ESCALAS, "data-escala", escalaElegida)}</div>
     <div class="cuerpo-grafico">${cuerpo(series[escalaElegida])}</div>
   </figure>`;
 }
 
-// Los selectores cambian título y barras sin repintar el resto del historial.
-export function activarGrafico(raiz, series) {
+// Los selectores cambian título y barras sin repintar el resto del historial. `alCambiarModo(modo)`
+// guarda lo elegido en Asaltos / RPE.
+export function activarGrafico(raiz, series, { alCambiarModo = () => {} } = {}) {
   const figura = raiz.querySelector(".grafico-semanas");
   if (!figura) return;
   for (const boton of figura.querySelectorAll("[data-modo], [data-escala]")) {
     boton.addEventListener("click", () => {
       const atributo = boton.dataset.modo ? "data-modo" : "data-escala";
-      if (boton.dataset.modo) modoElegido = boton.dataset.modo;
-      else escalaElegida = boton.dataset.escala;
+      if (boton.getAttribute("aria-pressed") === "true") return;
+      if (boton.dataset.modo) {
+        modoElegido = boton.dataset.modo;
+        alCambiarModo(modoElegido);
+      } else {
+        escalaElegida = boton.dataset.escala;
+      }
       figura.querySelectorAll(`[${atributo}]`).forEach((b) => b.setAttribute("aria-pressed", String(b === boton)));
       figura.querySelector(".titulo-grafico").textContent = titulo();
       const abierta = figura.querySelector(".tabla-grafico")?.open;

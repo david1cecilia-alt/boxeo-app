@@ -16,7 +16,7 @@ import {
 import { activarGrafico, graficoSemanas } from "./grafico.js";
 import { SENSACION } from "./opciones.js";
 import { combinacionesParaVer } from "./pasos.js";
-import { AGRUPACIONES, inicioPeriodo, minutosDeAsalto, porPeriodo, textoMinutos, tituloGrupo, totales } from "./resumen.js";
+import { AGRUPACIONES, graficaElegida, inicioPeriodo, minutosDeAsalto, porPeriodo, textoMinutos, tituloGrupo, totales } from "./resumen.js";
 
 const MES = new Intl.DateTimeFormat("es-ES", { month: "short" });
 const MES_LARGO = new Intl.DateTimeFormat("es-ES", { month: "long" });
@@ -111,7 +111,7 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
           <div><dt>${palabra(mes.asaltos, "asalto", "asaltos")} / mes</dt><dd>${mes.asaltos}</dd></div>
           <div><dt>RPE medio</dt><dd>${mes.rpe == null ? "–" : `${fmt(mes.rpe)}<small>/10</small>`}</dd></div>
         </dl>
-        ${graficoSemanas(series)}
+        ${graficoSemanas(series, graficaElegida(almacen.datos.perfil))}
       </div>
 
       <div class="maestro-detalle">
@@ -133,7 +133,14 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
         <p class="nota vacio">Elige una sesión para ver su detalle.</p>
       </div>
       </div>`;
-    activarGrafico(raiz, series);
+    activarGrafico(raiz, series, {
+      alCambiarModo(modo) {
+        const perfil = structuredClone(almacen.datos.perfil);
+        perfil.historial = { ...perfil.historial, grafica: modo };
+        almacen.guardarPerfil(perfil);
+        anunciar(modo === "rpe" ? "Gráfico de RPE medio" : "Gráfico de asaltos");
+      },
+    });
     activarGaleria();
     $("#exportar").addEventListener("click", exportar);
     $("#importar").addEventListener("change", importar);

@@ -164,8 +164,9 @@ def comprobar_guion(eventos: list[dict], c: ConfigSesion) -> None:
             assert inicio + PREPARACION <= r["t"] and r["t"] + r["duracion"] <= aviso - MARGEN + REDONDEO
 
         combos = de_tipo("combo")
-        assert combos, f"asalto {n} sin combinaciones"
         reservas, coletillas = de_tipo("reserva"), de_tipo("coletilla")
+        # En un asalto muy corto de avanzado (7-10 acciones) puede no caber ninguna: solo coletillas.
+        assert combos or [k for k in coletillas if k["t"] < fin], f"asalto {n} sin nada que decir"
         minima, maxima = rango_pausa(c.ritmo, c.pausa)
         for k in combos + reservas + coletillas:
             acciones = acciones_por_ids(k["ids"])

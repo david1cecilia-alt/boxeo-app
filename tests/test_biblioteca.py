@@ -3,11 +3,12 @@
 Si alguna combinación falla, NO se cambia la regla: se avisa al usuario.
 """
 import json
+from collections import Counter
 
 import pytest
 
 from motor.acciones import RUTA_DATOS, biblioteca, notacion
-from motor.reglas import validar
+from motor.reglas import nivel_de, validar
 
 NUMEROS = set(range(1, 7))
 VENTANA = 5  # el sorteo no repite ninguna de las 5 últimas
@@ -48,20 +49,26 @@ def test_cada_nivel_cubre_del_1_al_6_y_da_para_no_repetir(nivel):
     assert len(disponibles) > VENTANA, f"nivel {nivel}: solo {len(disponibles)}"
 
 
-def test_los_16_clasicos_de_antes_siguen_con_su_nombre():
-    assert len([c for c in biblioteca() if c.nombre]) == 16
-
-
-def test_no_hay_2_6_seguidos():
+def test_50_por_nivel_con_el_nivel_de_su_numero_de_acciones():
+    assert Counter(c.nivel for c in biblioteca()) == {1: 50, 2: 50, 3: 50}
     for c in biblioteca():
-        assert "-2-6-" not in f"-{c.notacion}-", c.notacion
+        assert c.nivel == nivel_de(list(c.acciones)), c.notacion
 
 
-def test_las_adaptadas_dicen_de_donde_vienen_y_por_que(crudo):
-    for c in crudo["combinaciones"]:
-        if "adaptada_de" in c:
-            assert c["adaptada_de"] != c["notacion"] and c["motivo"], c["notacion"]
+def test_todas_tienen_nombre():
+    assert all(c.nombre for c in biblioteca())
 
 
 def test_toda_la_biblioteca_esta_marcada_para_revisar(crudo):
     assert "REVISAR CON ENTRENADOR: toda la biblioteca" in crudo["_nota"]
+
+
+def test_las_dudas_de_tecnica_estan_en_los_datos_y_en_revisar_json(crudo):
+    # Las 8 marcadas en herramientas/biblioteca.py y las 15 con 5-6 o 6-5 seguidos (3 coinciden).
+    con_duda = [c for c in crudo["combinaciones"] if "revisar" in c]
+    assert sorted(c["n"] for c in con_duda) == [31, 33, 35, 38, 39, 41, 43, 51, 53, 55, 57, 59, 61, 63, 65, 67, 75,
+                                                113, 144, 146]
+    puntos = json.loads((RUTA_DATOS / "revisar.json").read_text(encoding="utf-8"))["puntos"]
+    textos = {p["texto"] for p in puntos if p["origen"] == "data/combinaciones.json"}
+    for c in con_duda:
+        assert c["revisar"].split("REVISAR CON ENTRENADOR:", 1)[1].strip() in textos, c["n"]

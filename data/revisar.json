@@ -17,9 +17,109 @@
       "texto": "«esquiva abajo» para el roll (antes «rueda»); puede acabar siendo otro término"
     },
     {
-      "id": "combinaciones-51b13a23",
+      "id": "combinaciones-5f76dd4d",
       "origen": "data/combinaciones.json",
-      "texto": "toda la biblioteca (combinaciones, sus niveles, las proporciones de defensa y las combinaciones adaptadas o añadidas)"
+      "texto": "toda la biblioteca (combinaciones, nombres y niveles)"
+    },
+    {
+      "id": "combinaciones-84e75f35",
+      "origen": "data/combinaciones.json",
+      "texto": "#31 «esquiva derecha · 6 · 5 · esquiva izquierda»: dos ganchos seguidos"
+    },
+    {
+      "id": "combinaciones-39513a36",
+      "origen": "data/combinaciones.json",
+      "texto": "#33 «esquiva derecha · 6 · 5 · esquiva izquierda · 1 · 2»: dos ganchos seguidos"
+    },
+    {
+      "id": "combinaciones-d5bccafb",
+      "origen": "data/combinaciones.json",
+      "texto": "#35 «esquiva derecha · 6 · 5 · esquiva izquierda · 1 · 2 · esquiva abajo derecha · 4 · 5»: dos ganchos seguidos"
+    },
+    {
+      "id": "combinaciones-97549265",
+      "origen": "data/combinaciones.json",
+      "texto": "#38 «bloqueo · 5 · 6 · bloqueo»: dos ganchos seguidos"
+    },
+    {
+      "id": "combinaciones-9a782d8b",
+      "origen": "data/combinaciones.json",
+      "texto": "#39 «1 · 6 · bloqueo»: jab y gancho trasero"
+    },
+    {
+      "id": "combinaciones-591ddf0c",
+      "origen": "data/combinaciones.json",
+      "texto": "#41 «bloqueo · 5 · 6 · bloqueo · 1 · 4»: dos ganchos seguidos"
+    },
+    {
+      "id": "combinaciones-e03b874a",
+      "origen": "data/combinaciones.json",
+      "texto": "#43 «bloqueo · 5 · 6 · bloqueo · 1 · 4 · esquiva izquierda · 5 · ballesteo · 2»: dos ganchos seguidos"
+    },
+    {
+      "id": "combinaciones-885b7200",
+      "origen": "data/combinaciones.json",
+      "texto": "#51 «4 · 5 · 6»: dos ganchos seguidos"
+    },
+    {
+      "id": "combinaciones-5ed3de27",
+      "origen": "data/combinaciones.json",
+      "texto": "#53 «1 · 4 · 5 · 6 · esquiva abajo derecha»: dos ganchos seguidos"
+    },
+    {
+      "id": "combinaciones-c53b299b",
+      "origen": "data/combinaciones.json",
+      "texto": "#55 «1 · 4 · 5 · 6 · esquiva abajo derecha · 5 al cuerpo · 3 · ballesteo»: dos ganchos seguidos"
+    },
+    {
+      "id": "combinaciones-1c2981cd",
+      "origen": "data/combinaciones.json",
+      "texto": "#57 «1 · 1 · 6 · 5»: dos ganchos seguidos"
+    },
+    {
+      "id": "combinaciones-d1b54007",
+      "origen": "data/combinaciones.json",
+      "texto": "#59 «1 · 1 · 6 · 5 · ballesteo · 2»: dos ganchos seguidos"
+    },
+    {
+      "id": "combinaciones-efff719e",
+      "origen": "data/combinaciones.json",
+      "texto": "#61 «1 · 1 · 6 · 5 · ballesteo · 2 · bloqueo · 1 · 6»: dos ganchos seguidos"
+    },
+    {
+      "id": "combinaciones-859f063f",
+      "origen": "data/combinaciones.json",
+      "texto": "#63 «flexión · 6 al cuerpo · 5»: dos ganchos seguidos"
+    },
+    {
+      "id": "combinaciones-cf77df3c",
+      "origen": "data/combinaciones.json",
+      "texto": "#65 «flexión · 6 al cuerpo · 5 · esquiva abajo derecha · 1 · 2»: dos ganchos seguidos"
+    },
+    {
+      "id": "combinaciones-e12aeff1",
+      "origen": "data/combinaciones.json",
+      "texto": "#67 «flexión · 6 al cuerpo · 5 · esquiva abajo derecha · 1 · 2 · flexión · 1 al cuerpo · 2»: dos ganchos seguidos"
+    },
+    {
+      "id": "combinaciones-0790ab72",
+      "origen": "data/combinaciones.json",
+      "texto": "#75 «1 al cuerpo · 1 · 4»: crochet trasero tras dos jabs"
+    },
+    {
+      "id": "combinaciones-b3b40be7",
+      "origen": "data/combinaciones.json",
+      "texto": "#113 «1 · ballesteo · 6 · flexión»: tras el ballesteo, gancho y no recto"
+    },
+    {
+      "id": "combinaciones-c39e46e9",
+      "origen": "data/combinaciones.json",
+      "texto": "#144 «1 · bloqueo · 5 · flexión · 2 al cuerpo · ballesteo · 6 · paso atrás»: tras el bloqueo, gancho y no recto"
+    },
+    {
+      "id": "combinaciones-e502fce9",
+      "origen": "data/combinaciones.json",
+      "texto": "#146 «bloqueo · 1 · bloqueo · 5 · esquiva izquierda · 5 · flexión · 3 al cuerpo»: tras el bloqueo, gancho y no recto"
     },
     {
       "id": "estilos-da16430f",

@@ -1,7 +1,8 @@
 # Biblioteca nueva: propuesta para revisar
 
 > **REVISAR CON ENTRENADOR: toda esta propuesta.** Las combinaciones, sus familias y variantes, los nombres y el
-> reparto. Es una propuesta: `data/combinaciones.json` y el sorteo no cambian hasta que esté revisada.
+> reparto. Ya es la biblioteca de la app: `data/combinaciones.json` se genera desde aquí, con las dudas de técnica
+> en «revisar», y cada nivel sortea solo de sus 50.
 > Se genera con `python herramientas/biblioteca.py`: no editar a mano.
 
 ## Cómo leerla
@@ -19,7 +20,7 @@
 - **Nombre**: empieza por la primera acción, nombra al menos un golpe y lo que dice va en el mismo orden que las
   acciones, aunque se salte alguna. No dice la mano: «crochet» es el 3 o el 4 y «gancho», el 5 o el 6. Los golpes
   seguidos van con guion («jab-recto-crochet»).
-- **Respecto a la actual**: *se queda* (ya está en la biblioteca de hoy, igual), *cambia* (amplía una de hoy
+- **Respecto a la anterior**: *se queda* (ya estaba en la biblioteca de antes, igual), *cambia* (amplía una de antes
   de 3 o más acciones) o *nueva*.
 
 ## Resumen
@@ -107,7 +108,7 @@ solo el jab puede salir más.
 
 Jab, crochet, se esquiva abajo y se devuelve.
 
-| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la actual |
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | jab-crochet y esquiva abajo derecha | base | 1 · 3 · esquiva abajo derecha | 3 | 2 | 1 | — | final | básico | nueva |
 | 2 | jab-crochet y esquiva abajo izquierda | variante de #1 | 1 · 3 · esquiva abajo izquierda | 3 | 2 | 1 | — | final | básico | nueva |
@@ -120,7 +121,7 @@ Jab, crochet, se esquiva abajo y se devuelve.
 
 La base de todo, a la que se le añaden esquivas y contras.
 
-| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la actual |
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 7 | jab-recto | base | 1 · 2 | 2 | 2 | 0 | — | — | básico | se queda (antes básico) |
 | 8 | doble jab y recto | variante de #7 | 1 · 1 · 2 | 3 | 3 | 0 | — | — | básico | se queda (antes básico) |
@@ -133,7 +134,7 @@ La base de todo, a la que se le añaden esquivas y contras.
 
 Se saca la cara hacia atrás y se contesta.
 
-| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la actual |
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 13 | ballesteo y recto | base | ballesteo · 2 | 2 | 1 | 1 | — | inicio | básico | nueva |
 | 14 | ballesteo y jab-crochet | variante de #13 | ballesteo · 1 · 4 | 3 | 2 | 1 | — | inicio | básico | nueva |
@@ -146,7 +147,7 @@ Se saca la cara hacia atrás y se contesta.
 
 Se para el jab con la derecha y se contesta.
 
-| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la actual |
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 19 | parada y jab-recto | base | parada · 1 · 2 | 3 | 2 | 1 | — | inicio | básico | se queda (antes básico) |
 | 20 | parada, gancho-crochet y bloqueo | variante de #19 | parada · 6 · 3 · bloqueo | 4 | 2 | 2 | — | inicio, final | básico | nueva |
@@ -159,7 +160,7 @@ Se para el jab con la derecha y se contesta.
 
 Golpes al cuerpo para bajar la guardia del rival y subir a la cara.
 
-| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la actual |
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 25 | jab al cuerpo y recto | base | 1 al cuerpo · 2 | 2 | 2 | 0 | — | — | básico | nueva |
 | 26 | gancho y crochet abajo y arriba | variante de #25 | 6 · 3 al cuerpo · 3 | 3 | 3 | 0 | — | — | básico | nueva |
@@ -172,7 +173,7 @@ Golpes al cuerpo para bajar la guardia del rival y subir a la cara.
 
 Esquiva lateral, se suelta y se vuelve a esquivar.
 
-| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la actual |
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 31 | esquiva derecha, dos ganchos y esquiva izquierda | base | esquiva derecha · 6 · 5 · esquiva izquierda | 4 | 2 | 2 | — | inicio, final | básico | nueva |
 | 32 | esquiva izquierda, gancho-crochet y esquiva derecha | variante de #31 | esquiva izquierda · 5 · 4 · esquiva derecha | 4 | 2 | 2 | — | inicio, final | básico | nueva |
@@ -185,7 +186,7 @@ Esquiva lateral, se suelta y se vuelve a esquivar.
 
 Bloquear, devolver y, si toca, volver a bloquear.
 
-| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la actual |
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 37 | bloqueo y crochet-recto | base | bloqueo · 3 · 2 | 3 | 2 | 1 | — | inicio | básico | se queda (antes básico) |
 | 38 | bloqueo, dos ganchos y bloqueo | variante de #37 | bloqueo · 5 · 6 · bloqueo | 4 | 2 | 2 | — | inicio, final | básico | nueva |
@@ -199,7 +200,7 @@ Bloquear, devolver y, si toca, volver a bloquear.
 
 Se rompe la distancia y se contesta.
 
-| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la actual |
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 44 | paso atrás y recto | base | paso atrás · 2 | 2 | 1 | 1 | — | inicio | básico | se queda (antes básico) |
 | 45 | paso atrás, jab-crochet y paso atrás | variante de #44 | paso atrás · 1 · 4 · paso atrás | 4 | 2 | 2 | — | inicio, final | básico | nueva |
@@ -212,7 +213,7 @@ Se rompe la distancia y se contesta.
 
 Ganchos (5 y 6) en la corta, rematados con crochet o recto.
 
-| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la actual |
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 50 | gancho-crochet | base | 6 · 3 | 2 | 2 | 0 | — | — | básico | se queda (antes básico) |
 | 51 | crochet y dos ganchos | variante de #50 | 4 · 5 · 6 | 3 | 3 | 0 | — | — | básico | nueva |
@@ -225,7 +226,7 @@ Ganchos (5 y 6) en la corta, rematados con crochet o recto.
 
 Doble jab para entrar, y lo que venga.
 
-| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la actual |
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 56 | doble jab y gancho | base | 1 · 1 · 5 | 3 | 3 | 0 | — | — | básico | nueva |
 | 57 | doble jab y dos ganchos | variante de #56 | 1 · 1 · 6 · 5 | 4 | 4 | 0 | — | — | básico | nueva |
@@ -238,7 +239,7 @@ Doble jab para entrar, y lo que venga.
 
 Se baja con flexión y se ataca al cuerpo.
 
-| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la actual |
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 62 | flexión, crochet al cuerpo y gancho | base | flexión · 3 al cuerpo · 5 | 3 | 2 | 1 | — | inicio | básico | nueva |
 | 63 | flexión y gancho abajo y arriba | variante de #62 | flexión · 6 al cuerpo · 5 | 3 | 2 | 1 | — | inicio | básico | nueva |
@@ -251,7 +252,7 @@ Se baja con flexión y se ataca al cuerpo.
 
 Esquivar abajo, soltar y cambiar de lado.
 
-| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la actual |
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 68 | esquiva abajo y crochet a los dos lados | base | esquiva abajo izquierda · 3 · esquiva abajo derecha · 4 | 4 | 2 | 2 | — | inicio, entre golpes | básico | nueva |
 | 69 | esquiva abajo derecha, crochet, esquiva abajo izquierda y gancho | variante de #68 | esquiva abajo derecha · 4 · esquiva abajo izquierda · 5 | 4 | 2 | 2 | — | inicio, entre golpes | básico | nueva |
@@ -264,7 +265,7 @@ Esquivar abajo, soltar y cambiar de lado.
 
 El jab cambia de altura para abrir hueco.
 
-| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la actual |
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 74 | jab arriba, jab abajo y gancho | base | 1 · 1 al cuerpo · 6 | 3 | 3 | 0 | — | — | básico | nueva |
 | 75 | jab abajo, jab arriba y crochet | variante de #74 | 1 al cuerpo · 1 · 4 | 3 | 3 | 0 | — | — | básico | nueva |
@@ -277,7 +278,7 @@ El jab cambia de altura para abrir hueco.
 
 Se para el jab y se contesta abajo.
 
-| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la actual |
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 80 | parada, recto al cuerpo y gancho | base | parada · 2 al cuerpo · 5 | 3 | 2 | 1 | — | inicio | básico | nueva |
 | 81 | parada, jab y recto al cuerpo | variante de #80 | parada · 1 · 2 al cuerpo | 3 | 2 | 1 | — | inicio | básico | nueva |
@@ -290,7 +291,7 @@ Se para el jab y se contesta abajo.
 
 Se suelta, se cambia de ángulo y se ataca desde el nuevo sitio.
 
-| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la actual |
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 86 | jab-recto y cambio de ángulo | base | 1 · 2 · cambio de ángulo | 3 | 2 | 0 | cambio de ángulo | — | básico | nueva |
 | 87 | doble crochet y cambio de ángulo | variante de #86 | 4 · 3 · cambio de ángulo | 3 | 2 | 0 | cambio de ángulo | — | básico | nueva |
@@ -303,7 +304,7 @@ Se suelta, se cambia de ángulo y se ataca desde el nuevo sitio.
 
 Se suelta y se pivota para no quedarse delante.
 
-| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la actual |
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 92 | gancho-crochet y pivote | base | 6 · 3 · pivote | 3 | 2 | 0 | pivote | — | básico | nueva |
 | 93 | doble crochet y pivote | variante de #92 | 4 · 3 · pivote | 3 | 2 | 0 | pivote | — | básico | nueva |
@@ -316,7 +317,7 @@ Se suelta y se pivota para no quedarse delante.
 
 ### Básico
 
-| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la actual |
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 98 | jab-recto-crochet-recto | — | 1 · 2 · 3 · 2 | 4 | 4 | 0 | — | — | básico | se queda (antes medio) |
 | 99 | jab-crochet-recto | — | 1 · 3 · 2 | 3 | 3 | 0 | — | — | básico | se queda (antes medio) |
@@ -338,7 +339,7 @@ Se suelta y se pivota para no quedarse delante.
 
 ### Medio
 
-| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la actual |
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 115 | jab-recto, doble crochet y esquiva | — | 1 · 2 · 4 · 3 · esquiva izquierda | 5 | 4 | 1 | — | final | medio | nueva |
 | 116 | esquiva, crochet-gancho, esquiva abajo, jab y pivote | — | esquiva derecha · 4 · 5 · esquiva abajo izquierda · 1 · pivote | 6 | 3 | 2 | pivote | inicio, entre golpes | medio | nueva |
@@ -361,7 +362,7 @@ Se suelta y se pivota para no quedarse delante.
 
 ### Avanzado
 
-| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la actual |
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 133 | jab-recto-crochet-gancho, esquiva, gancho-crochet y paso lateral | — | 1 · 2 · 3 · 6 · esquiva derecha · 6 · 3 · paso lateral izquierda | 8 | 6 | 1 | paso lateral izquierda | entre golpes | avanzado | cambia: amplía «1-2-3-6» |
 | 134 | jab, crochet al cuerpo, recto-crochet, gancho-crochet y bloqueo | — | 1 · 4 al cuerpo · 2 · 3 · 5 · 4 · bloqueo | 7 | 6 | 1 | — | final | avanzado | nueva |
@@ -399,11 +400,11 @@ Golpes cambiados para cuadrar el balance que pueden no ser naturales. **REVISAR 
 
 Con 5-6 o 6-5 seguidos (a la cara o al cuerpo; como mucho 5 por nivel) hay 15: #31, #33, #35, #38, #41, #43, #51, #53, #55, #57, #59, #61, #63, #65, #67.
 
-## Las de la biblioteca actual que salen
+## Las de la biblioteca anterior que salen
 
-De las 83 de hoy se quedan 12 y salen 71. Las que salen, con su nivel de hoy, el que les daría `nivel_de` y si alguna nueva las amplía:
+De las 83 de antes se quedan 12 y salen 71. Las que salen, con su nivel de antes, el que les daría `nivel_de` y si alguna nueva las amplía:
 
-| Hoy | Nivel de hoy | Con nivel_de | Ampliada en la propuesta |
+| Antes | Nivel de antes | Con nivel_de | Ampliada en la propuesta |
 |---|---|---|---|
 | 1 | básico | ninguno | — |
 | 2 | básico | ninguno | — |

@@ -1,5 +1,5 @@
 """La propuesta de biblioteca nueva (herramientas/biblioteca.py) cuadra y su documento está al día."""
-from herramientas.biblioteca import SALIDA, documento, preparar
+from herramientas.biblioteca import DATOS, SALIDA, datos, documento, preparar
 
 
 def test_la_propuesta_cumple_reparto_clasicos_y_balance():
@@ -10,6 +10,11 @@ def test_la_propuesta_cumple_reparto_clasicos_y_balance():
 def test_el_documento_esta_al_dia():
     combos, _ = preparar()
     assert SALIDA.read_text(encoding="utf-8") == documento(combos), "Ejecuta: python herramientas/biblioteca.py"
+
+
+def test_data_combinaciones_esta_al_dia():
+    combos, _ = preparar()
+    assert DATOS.read_text(encoding="utf-8") == datos(combos), "Ejecuta: python herramientas/biblioteca.py"
 
 
 def test_el_nombre_tiene_que_decir_sus_golpes_en_orden():

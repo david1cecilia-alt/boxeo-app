@@ -1,10 +1,13 @@
-"""Biblioteca nueva de combinaciones: los datos de la propuesta, sus comprobaciones y el documento para revisar.
+"""Biblioteca de combinaciones: sus datos, sus comprobaciones y el documento para revisar.
 
-Escribe docs/revision/biblioteca-propuesta.md. Antes comprueba con el motor que todo cuadra (nivel con
+Escribe data/combinaciones.json (lo que sortea la app) y docs/revision/biblioteca-propuesta.md. Las dudas de
+técnica (las marcadas aquí con REVISAR CON ENTRENADOR y las de dos ganchos seguidos) pasan a los datos en
+«revisar»: después hay que regenerar data/revisar.json con herramientas/extraer_revisar.py. Antes comprueba con el motor que todo cuadra (nivel con
 motor.reglas.nivel_de, reparto de defensas exacto, clásicos, balance de golpes, defensas, lados y salidas, y las
 reglas de los nombres de fallos_del_nombre) y, si algo falla, no escribe nada y dice qué.
 Uso: python herramientas/biblioteca.py
 """
+import json
 import random
 import re
 import statistics
@@ -15,13 +18,17 @@ from pathlib import Path
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from motor.acciones import acciones_por_ids, biblioteca, catalogo, palabra_hablada  # noqa: E402
+from motor.acciones import ComboBiblioteca, acciones_por_ids, catalogo, notacion, palabra_hablada  # noqa: E402
 from motor.reglas import nivel_de, validar  # noqa: E402
 from motor.sorteo import Combinacion  # noqa: E402
 from motor.temporizador import ConfigSesion, construir_guion  # noqa: E402
 
 RAIZ = Path(__file__).resolve().parent.parent
 SALIDA = RAIZ / "docs" / "revision" / "biblioteca-propuesta.md"
+DATOS = RAIZ / "data" / "combinaciones.json"
+# La biblioteca de antes (83 combinaciones), para decir qué se queda, qué cambia y qué sale.
+ANTERIOR = RAIZ / "docs" / "revision" / "biblioteca-anterior.json"
+MARCA = "REVISAR CON ENTRENADOR:"
 
 # Notación corta de la propuesta: golpes por número ("3c" = 3 al cuerpo), defensas y salidas por sus siglas.
 FICHA = {
@@ -369,13 +376,19 @@ def contiguo(corta, larga):
     return any(larga[i:i + len(corta)] == corta for i in range(len(larga) - len(corta) + 1))
 
 
-ACTUAL = {tuple(a.id for a in c.acciones): c for c in biblioteca()}
+def _anterior():
+    crudo = json.loads(ANTERIOR.read_text(encoding="utf-8"))["combinaciones"]
+    return {tuple(c["ids"]): ComboBiblioteca(c["notacion"], c["nivel"], tuple(acciones_por_ids(c["ids"])), c.get("nombre"))
+            for c in crudo}
+
+
+ANTES = _anterior()
 
 
 def respecto(ids_):
-    if tuple(ids_) in ACTUAL:
-        return f"se queda (antes {NIVEL[ACTUAL[tuple(ids_)].nivel]})"
-    dentro = [c for k, c in ACTUAL.items() if len(k) >= 3 and contiguo(list(k), ids_)]
+    if tuple(ids_) in ANTES:
+        return f"se queda (antes {NIVEL[ANTES[tuple(ids_)].nivel]})"
+    dentro = [c for k, c in ANTES.items() if len(k) >= 3 and contiguo(list(k), ids_)]
     if dentro:
         return f"cambia: amplía «{max(dentro, key=lambda c: len(c.acciones)).notacion}»"
     return "nueva"
@@ -391,10 +404,11 @@ def preparar():
     for fid, _, _, miembros in FAMILIAS:
         for clave, papel, origen, notacion, nombre in miembros:
             por_clave[clave] = expandir(notacion, por_clave)
-            combos.append({"clave": clave, "familia": fid, "papel_crudo": (papel, origen),
+            combos.append({"clave": clave, "familia": fid, "papel_crudo": (papel, origen), "cruda": notacion,
                            "notacion": por_clave[clave], "nombre": nombre})
-    sueltas = [{"clave": None, "familia": None, "papel_crudo": None, "notacion": n, "nombre": nombre}
+    sueltas = [{"clave": None, "familia": None, "papel_crudo": None, "cruda": n, "notacion": n, "nombre": nombre}
                for n, nombre in SUELTAS]
+    marcadas = marcas()
     for c in combos + sueltas:
         c["ids"] = ids(c["notacion"])
         c["acciones"] = acciones_por_ids(c["ids"])
@@ -402,6 +416,7 @@ def preparar():
         c["golpes"] = sum(a.tipo == "golpe" for a in c["acciones"])
         c["defensas"] = sum(a.tipo == "defensa" for a in c["acciones"])
         c["respecto"] = respecto(c["ids"])
+        c["duda"] = marcadas.get(c["cruda"])
     combos += sorted(sueltas, key=lambda c: c["nivel"] or 0)
     for n, c in enumerate(combos, 1):
         c["n"] = n
@@ -545,7 +560,8 @@ def documento(combos):
     w("# Biblioteca nueva: propuesta para revisar")
     w("")
     w("> **REVISAR CON ENTRENADOR: toda esta propuesta.** Las combinaciones, sus familias y variantes, los nombres y el")
-    w("> reparto. Es una propuesta: `data/combinaciones.json` y el sorteo no cambian hasta que esté revisada.")
+    w("> reparto. Ya es la biblioteca de la app: `data/combinaciones.json` se genera desde aquí, con las dudas de técnica")
+    w("> en «revisar», y cada nivel sortea solo de sus 50.")
     w("> Se genera con `python herramientas/biblioteca.py`: no editar a mano.")
     w("")
     w("## Cómo leerla")
@@ -563,7 +579,7 @@ def documento(combos):
     w("- **Nombre**: empieza por la primera acción, nombra al menos un golpe y lo que dice va en el mismo orden que las")
     w("  acciones, aunque se salte alguna. No dice la mano: «crochet» es el 3 o el 4 y «gancho», el 5 o el 6. Los golpes")
     w("  seguidos van con guion («jab-recto-crochet»).")
-    w("- **Respecto a la actual**: *se queda* (ya está en la biblioteca de hoy, igual), *cambia* (amplía una de hoy")
+    w("- **Respecto a la anterior**: *se queda* (ya estaba en la biblioteca de antes, igual), *cambia* (amplía una de antes")
     w("  de 3 o más acciones) o *nueva*.")
     w("")
     w("## Resumen")
@@ -597,7 +613,7 @@ def documento(combos):
 
 def tabla(w, combos):
     w("| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel "
-      "| Respecto a la actual |")
+      "| Respecto a la anterior |")
     w("|---|---|---|---|---|---|---|---|---|---|---|")
     for c in combos:
         a = c["acciones"]
@@ -693,13 +709,25 @@ def resumen_vocabulario(w, combos):
     w(f"| cambio de ángulo | {usos['salir']} | — | — |")
 
 
-def dudas(w, combos):
-    """Las combinaciones marcadas con REVISAR CON ENTRENADOR en este fichero y las de dos ganchos seguidos."""
-    marcas = {}
+def marcas():
+    """Las dudas marcadas con REVISAR CON ENTRENADOR en este fichero, por notación cruda (la de FAMILIAS o SUELTAS)."""
+    encontradas = {}
     for linea in Path(__file__).read_text(encoding="utf-8").splitlines():
         if (m := re.search(r'"([0-9A-Z{}c-]+)", "[^"]*"\),\s*# REVISAR CON ENTRENADOR: (.+)', linea)):
-            marcas[m.group(1)] = m.group(2)
-    crudas = {notacion: clave for _, _, _, miembros in FAMILIAS for clave, _, _, notacion, _ in miembros}
+            encontradas[m.group(1)] = m.group(2)
+    return encontradas
+
+
+def dudas_de(c):
+    """Las dudas de técnica de una combinación: la marcada y, si lleva 5-6 o 6-5, los dos ganchos seguidos."""
+    dudas_ = [c["duda"]] if c["duda"] else []
+    if dos_ganchos_seguidos(c["acciones"]) and not any("dos ganchos seguidos" in d for d in dudas_):
+        dudas_.append("dos ganchos seguidos")
+    return dudas_
+
+
+def dudas(w, combos):
+    """Las combinaciones marcadas con REVISAR CON ENTRENADOR en este fichero y las de dos ganchos seguidos."""
     w("## Dudas de técnica")
     w("")
     w("Golpes cambiados para cuadrar el balance que pueden no ser naturales. **REVISAR CON ENTRENADOR.**")
@@ -707,9 +735,8 @@ def dudas(w, combos):
     w("| # | Acciones | Duda |")
     w("|---|---|---|")
     for c in combos:
-        cruda = next((n for n, k in crudas.items() if k == c["clave"]), c["notacion"])
-        if cruda in marcas:
-            w(f"| {c['n']} | {texto(c['acciones'])} | {marcas[cruda]} |")
+        if c["duda"]:
+            w(f"| {c['n']} | {texto(c['acciones'])} | {c['duda']} |")
     seguidos = [c for c in combos if dos_ganchos_seguidos(c["acciones"])]
     w("")
     w(f"Con 5-6 o 6-5 seguidos (a la cara o al cuerpo; como mucho {MAX_DOS_GANCHOS} por nivel) hay {len(seguidos)}: "
@@ -720,17 +747,35 @@ def dudas(w, combos):
 def salen(w, combos):
     nuevas = {tuple(c["ids"]) for c in combos}
     ampliadas = {c["respecto"].split("«")[1].rstrip("»") for c in combos if c["respecto"].startswith("cambia")}
-    fuera = [c for k, c in ACTUAL.items() if k not in nuevas]
-    w("## Las de la biblioteca actual que salen")
+    fuera = [c for k, c in ANTES.items() if k not in nuevas]
+    w("## Las de la biblioteca anterior que salen")
     w("")
-    w(f"De las {len(ACTUAL)} de hoy se quedan {len(ACTUAL) - len(fuera)} y salen {len(fuera)}. "
-      "Las que salen, con su nivel de hoy, el que les daría `nivel_de` y si alguna nueva las amplía:")
+    w(f"De las {len(ANTES)} de antes se quedan {len(ANTES) - len(fuera)} y salen {len(fuera)}. "
+      "Las que salen, con su nivel de antes, el que les daría `nivel_de` y si alguna nueva las amplía:")
     w("")
-    w("| Hoy | Nivel de hoy | Con nivel_de | Ampliada en la propuesta |")
+    w("| Antes | Nivel de antes | Con nivel_de | Ampliada en la propuesta |")
     w("|---|---|---|---|")
     for c in fuera:
         w(f"| {texto(c.acciones)} | {NIVEL[c.nivel]} | {NIVEL.get(nivel_de(c.acciones), 'ninguno')} "
           f"| {'sí' if c.notacion in ampliadas else '—'} |")
+
+
+def datos(combos):
+    """data/combinaciones.json: una combinación por línea, en ortodoxo y con el número de la propuesta («n»)."""
+    nota = ("Biblioteca de combinaciones de la sesión, en guardia ORTODOXA. Generada por herramientas/biblioteca.py: "
+            "no editar a mano. n = número en docs/revision/biblioteca-propuesta.md; notacion = números de los golpes "
+            "(1-6, solo a la cara) y orden corta de las defensas; nivel = motor.reglas.nivel_de (cada nivel sortea solo "
+            "de las suyas); revisar = dudas de técnica. "
+            f"{MARCA} toda la biblioteca (combinaciones, nombres y niveles)")
+    lineas = []
+    for c in combos:
+        combo = {"n": c["n"], "notacion": notacion(c["acciones"]), "nivel": c["nivel"], "ids": c["ids"],
+                 "nombre": c["nombre"]}
+        if (dudas_ := dudas_de(c)):
+            combo["revisar"] = f"{MARCA} #{c['n']} «{texto(c['acciones'])}»: {'; '.join(dudas_)}"
+        lineas.append("    " + json.dumps(combo, ensure_ascii=False))
+    return ('{\n  "_nota": ' + json.dumps(nota, ensure_ascii=False) + ',\n  "combinaciones": [\n'
+            + ",\n".join(lineas) + "\n  ]\n}\n")
 
 
 def main():
@@ -740,7 +785,9 @@ def main():
         raise SystemExit(1)
     SALIDA.parent.mkdir(parents=True, exist_ok=True)
     SALIDA.write_text(documento(combos), encoding="utf-8")
-    print(f"{len(combos)} combinaciones en {SALIDA.relative_to(RAIZ)}")
+    DATOS.write_text(datos(combos), encoding="utf-8")
+    print(f"{len(combos)} combinaciones en {SALIDA.relative_to(RAIZ)} y {DATOS.relative_to(RAIZ)}, "
+          f"{sum(bool(dudas_de(c)) for c in combos)} con dudas de técnica")
 
 
 if __name__ == "__main__":

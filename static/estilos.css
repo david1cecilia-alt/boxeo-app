@@ -718,8 +718,9 @@ button.volver {
 .col-detalle > p { margin: 0; }
 
 /* ---------- Perfil ---------- */
-#perfil-contenido, .columna-perfil { display: grid; gap: 16px; align-content: start; min-width: 0; }
-/* Tarjeta roja con el estilo recomendado (o el elegido y, debajo y más pequeña, la recomendación). */
+#perfil-contenido { display: grid; gap: 16px; align-content: start; min-width: 0; }
+/* Tarjeta roja con el estilo recomendado (o el elegido y, si las respuestas apuntan a otro, una línea
+   pequeña y neutra «Según tus respuestas: …»). */
 .tarjeta.estilo-recomendado {
   display: grid; gap: 6px; padding: 16px;
   background: var(--acento-relleno); border-color: transparent; color: var(--sobre-acento);
@@ -737,10 +738,22 @@ button.volver {
   font-family: var(--letra-titular); font-size: 22px; line-height: 1.1; text-transform: uppercase; letter-spacing: 0.01em;
 }
 #estilo-resumen .afinar { font-weight: 600; }
-.estilo-recomendado .recomendacion {
-  display: grid; gap: 4px; margin-top: 4px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.35);
+
+/* «Sobre ti» y «Mi estilo»: secciones plegables. El título va en la letra de los titulares, con lo
+   respondido (o el estilo elegido) a la derecha; con el teclado, el subrayado rojo de los títulos. */
+.plegable { padding: 0 18px; }
+.plegable > summary { min-height: 60px; gap: 12px; }
+.plegable > summary::before { color: var(--acento); }
+.titulo-plegable {
+  font-family: var(--letra-titular); font-size: 1.375rem; font-weight: 400; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1;
 }
-.estilo-recomendado .recomendado { font-size: 0.875rem; }
+.resumen-plegable { margin-left: auto; color: var(--suave); font-size: 0.8125rem; font-weight: 400; text-align: right; }
+.plegable > summary:focus-visible { outline: none; }
+.plegable > summary:focus-visible .titulo-plegable {
+  text-decoration: underline 3px var(--acento); text-underline-offset: 6px;
+}
+.cuerpo-plegable { display: grid; gap: 20px; padding: 4px 0 20px; }
+#f-mi-estilo legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 .grupos-estilo { display: grid; gap: 16px; }
 .grupo-chips legend { margin-bottom: 8px; color: var(--suave); font-size: 0.8125rem; font-weight: 600; }
@@ -1051,10 +1064,9 @@ dialog::backdrop { background: var(--velo); }
   .columna-ajustes { display: contents; }
   #ajustes-contenido > :is(#f-practicar, .nota) { grid-column: 1 / -1; }
 
-  /* Perfil: estilo a la izquierda y Sobre ti a la derecha; el pie, debajo a todo el ancho. */
-  #perfil-contenido { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
-  .columna-perfil { gap: 24px; }
-  #perfil-contenido > :not(.columna-perfil) { grid-column: 1 / -1; }
+  /* Perfil: una sola columna (rectángulo, Sobre ti, Mi estilo), del ancho de una lectura cómoda. */
+  #perfil-contenido { max-width: 760px; gap: 20px; }
+  .plegable { padding: 0 24px; }
 }
 
 /* ---------- Animaciones sobrias ---------- */

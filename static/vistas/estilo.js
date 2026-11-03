@@ -1,6 +1,6 @@
 // Estilo recomendado del Perfil (lógica pura, sin DOM). La tabla de puntos, las frases y los
 // umbrales viven en data/estilos.json (se inyecta como `tabla`): cada respuesta suma 1 punto a
-// cada estilo de su lista. Es orientativo: el estilo lo definen meses de práctica y el entrenador.
+// cada estilo de su lista.
 
 const fmt = (n) => n.toLocaleString("es-ES", { maximumFractionDigits: 1 });
 const MAX_RAZONES = 3;

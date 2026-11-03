@@ -98,8 +98,6 @@ export function iniciarPerfil({ almacen }) {
       <section class="tarjeta estilo-recomendado" aria-labelledby="t-estilo">
         <h2 id="t-estilo" class="antetitulo">Estilo recomendado</h2>
         <div id="estilo-resumen" aria-live="polite"><p>Cargando…</p></div>
-        <p class="nota-estilo">Orientativo: el estilo se define con meses de práctica y sparring.
-          Consúltalo con tu entrenador.</p>
       </section>
 
       <form class="grupos-estilo" id="f-estilo" aria-label="Tu estilo">

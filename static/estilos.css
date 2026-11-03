@@ -726,7 +726,7 @@ button.volver {
 }
 .estilo-recomendado .titular { margin: 0; font-size: 28px; line-height: 1.05; }
 #estilo-resumen { display: grid; gap: 6px; }
-#estilo-resumen p, .nota-estilo { margin: 0; font-size: 0.8125rem; line-height: 1.4; }
+#estilo-resumen p { margin: 0; font-size: 0.8125rem; line-height: 1.4; }
 #estilo-resumen .titular { font-size: 28px; line-height: 1.05; }
 /* Empate exacto: la frase entera hace de titular, algo más pequeña para que quepa. */
 #estilo-resumen .empate {
@@ -738,7 +738,6 @@ button.volver {
 }
 .estilo-recomendado .recomendado { font-size: 0.875rem; }
 .estilo-recomendado .aviso-estilo { font-weight: 700; }
-.nota-estilo { margin-top: 4px; font-style: italic; }
 
 .grupos-estilo { display: grid; gap: 16px; }
 .grupo-chips legend { margin-bottom: 8px; color: var(--suave); font-size: 0.8125rem; font-weight: 600; }

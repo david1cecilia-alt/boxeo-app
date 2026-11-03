@@ -1,17 +1,31 @@
 // Pantalla Ajustes (#ajustes): lo que cambia el entreno. Se guarda al cambiar cada campo, solo en
 // este navegador. En el móvil se entra por el engranaje y «Volver» lleva a la pestaña de antes.
-// Los pesos sustituyen a los de data/perfil.json en el sorteo. La voz y su velocidad se aplican
-// al momento (también a la línea «Voz: …» de Entrenar).
-import { NOMBRE_VELOCIDAD, PESOS, opcionesVoz } from "../ajustes.js";
-import { accionesPorIds, textoHablado } from "../motor/acciones.js";
-import { datos } from "../motor/datos.js";
+// «Practicar más» pasa al sorteo lo elegido (ajustes.js). La voz y su velocidad se aplican al
+// momento (también a la línea «Voz: …» de Entrenar).
+import { MAX_PRACTICAR, NOMBRE_VELOCIDAD, cambiarPracticar, opcionesVoz, preferencias } from "../ajustes.js";
+import { accionesPorIds, catalogo, espejo, nombreHablado, textoHablado } from "../motor/acciones.js";
 import { VELOCIDADES } from "../motor/ritmo.js";
+import { FACTOR_PRACTICAR, movimiento, movimientos } from "../motor/sorteo.js";
 import { nombreCortoVoz } from "../voz.js";
 import { chips, conectarCampos } from "./campos.js";
 import { $, $$, anunciar, esc } from "./dom.js";
-import { BASICOS, PESOS_TEXTO, RANGO_PESO } from "./opciones.js";
+import { BASICOS } from "./opciones.js";
 
-const pesoTexto = (n) => `×${n.toLocaleString("es-ES", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
+const GRUPOS_PRACTICAR = { golpe: "Golpes", defensa: "Defensas", movimiento: "Salidas" };
+const CUANTO = { poco: "Un poco", bastante: "Bastante" };
+
+// Los movimientos de «Practicar más» con su nombre y su grupo. Los golpes llevan su número y la
+// mano de la guardia de Entrenar («3 crochet de izquierda»; al zurdo, «de derecha»).
+function movimientosPracticar(zurdo) {
+  const primera = new Map();
+  for (const a of catalogo().values()) if (!primera.has(movimiento(a))) primera.set(movimiento(a), a);
+  return movimientos().map((m) => {
+    const a = primera.get(m);
+    const nombre = a.numero ? `${a.numero} ${nombreHablado(zurdo ? espejo(a) : a)}`
+      : m === "cuerpo" ? "Golpes al cuerpo" : a.orden || a.plantilla.replace(" {lado}", "");
+    return { movimiento: m, nombre, grupo: a.tipo };
+  });
+}
 
 const EJEMPLO = ["jab", "directo", "gancho_izq"]; // lo que dice «Probar voz»
 const numeroEs = (n) => n.toLocaleString("es-ES", { minimumFractionDigits: 1 });
@@ -44,7 +58,6 @@ export function iniciarAjustes({ almacen, voz }) {
   function pintar() {
     $("#volver-ajustes").href = vuelta;
     const p = almacen.datos.perfil;
-    const pesos = p.pesos ?? datos().perfil.pesos;
     raiz.innerHTML = `
       <div class="columna-ajustes">
       <form class="tarjeta formulario" id="f-voz" aria-labelledby="t-voz">
@@ -71,27 +84,69 @@ export function iniciarAjustes({ almacen, voz }) {
       </form>
       </div>
 
-      <form class="tarjeta formulario" id="f-pesos" aria-labelledby="t-pesos">
-        <div>
-          <h2 id="t-pesos" tabindex="-1">Qué te dicta la app</h2>
-          <p class="nota">Más a la derecha, más a menudo. 1 = neutro.
-            ${p.pesos ? "Estás usando tus valores." : "Ahora mismo, los valores por defecto."}</p>
-        </div>
-        ${PESOS.map((c) => `
-          <div class="deslizador">
-            <label for="peso-${c}">${PESOS_TEXTO[c].etiqueta}</label>
-            <output for="peso-${c}" id="valor-${c}">${pesoTexto(pesos[c])}</output>
-            <input type="range" id="peso-${c}" data-peso="${c}" min="${RANGO_PESO.min}" max="${RANGO_PESO.max}"
-              step="${RANGO_PESO.paso}" value="${pesos[c]}" aria-describedby="ayuda-${c}">
-            <p class="solo-lectores" id="ayuda-${c}">${PESOS_TEXTO[c].ayuda}</p>
-          </div>`).join("")}
-        <button type="button" id="pesos-defecto" class="boton pequeno" ${p.pesos ? "" : "disabled"}>
-          Volver a los valores por defecto</button>
-      </form>
+      <form class="tarjeta formulario" id="f-practicar" aria-labelledby="t-practicar"></form>
 
       <p class="nota pie-perfil">Tus ajustes se guardan solo en este dispositivo. <span id="guardado-ajustes"></span></p>`;
     pintarVoces();
+    pintarPracticar();
     conectar();
+  }
+
+  // «Practicar más»: los movimientos como chips (hasta MAX_PRACTICAR; con todos elegidos, los demás
+  // desactivados) y, por cada elegido, cuánto más.
+  function pintarPracticar() {
+    const elegidos = almacen.datos.perfil.practicar;
+    const lleno = elegidos.length >= MAX_PRACTICAR;
+    const lista = movimientosPracticar(preferencias(almacen.datos.perfil).zurdo);
+    const nombre = new Map(lista.map((m) => [m.movimiento, m.nombre]));
+    const elegido = (m) => elegidos.some((e) => e.movimiento === m);
+    $("#f-practicar").innerHTML = `
+      <div>
+        <h2 id="t-practicar" tabindex="-1">Practicar más</h2>
+        <p class="nota">Elige hasta ${MAX_PRACTICAR} movimientos: las combinaciones que los llevan saldrán más a menudo.
+          Nunca se quita ninguna.</p>
+      </div>
+      ${Object.entries(GRUPOS_PRACTICAR).map(([grupo, titulo]) => `
+        <fieldset class="grupo-chips"><legend>${titulo}</legend><div class="chips-fila">
+          ${lista.filter((m) => m.grupo === grupo).map((m) => `<label class="chip-opcion">
+            <input type="checkbox" data-practicar="${m.movimiento}" ${elegido(m.movimiento) ? "checked" : ""}
+              ${lleno && !elegido(m.movimiento) ? "disabled" : ""}><span>${esc(m.nombre)}</span></label>`).join("")}
+        </div></fieldset>`).join("")}
+      <p class="nota" id="practicar-estado">${elegidos.length
+        ? `${elegidos.length} de ${MAX_PRACTICAR} elegidos.${lleno ? " Quita uno para elegir otro." : ""}`
+        : "Ahora todas salen igual de a menudo."}</p>
+      ${elegidos.length ? `<ul class="lista-practicar">
+        ${elegidos.map((e, i) => `<li><fieldset class="cuanto-practicar"><legend>${esc(nombre.get(e.movimiento) ?? e.movimiento)}</legend>
+          <div class="chips-fila velocidades">
+          ${Object.entries(CUANTO).map(([clave, texto]) => `<label class="chip-opcion">
+            <input type="radio" name="cuanto-${i}" data-cuanto="${clave}" data-movimiento="${esc(e.movimiento)}"
+              ${e.cuanto === clave ? "checked" : ""}><span>${texto} más <small>×${FACTOR_PRACTICAR[clave]}</small></span></label>`).join("")}
+          </div></fieldset></li>`).join("")}
+      </ul>
+      <button type="button" id="practicar-quitar" class="boton pequeno">Quitar todo</button>` : ""}`;
+    conectarPracticar();
+  }
+
+  function guardarPracticar(movimiento_, cuanto, foco) {
+    guardar((p) => (p.practicar = cambiarPracticar(p.practicar, movimiento_, cuanto)));
+    pintarPracticar();
+    $(foco)?.focus();
+  }
+
+  function conectarPracticar() {
+    for (const c of $$("[data-practicar]", raiz)) {
+      c.addEventListener("change", () => guardarPracticar(c.dataset.practicar, c.checked ? "poco" : null,
+        `[data-practicar="${c.dataset.practicar}"]`));
+    }
+    for (const r of $$("[data-cuanto]", raiz)) {
+      r.addEventListener("change", () => guardarPracticar(r.dataset.movimiento, r.dataset.cuanto,
+        `[data-movimiento="${r.dataset.movimiento}"][data-cuanto="${r.dataset.cuanto}"]`));
+    }
+    $("#practicar-quitar")?.addEventListener("click", () => {
+      guardar((p) => (p.practicar = []));
+      pintarPracticar();
+      $("#t-practicar").focus();
+    });
   }
 
   // Selector de voces: «Automática» y las voces en español de este dispositivo. Si la guardada no
@@ -122,19 +177,6 @@ export function iniciarAjustes({ almacen, voz }) {
     $("#probar-voz").addEventListener("click", () => {
       const { voz: modo, zurdo } = almacen.datos.perfil.sesion;
       voz.decir(textoHablado(accionesPorIds(EJEMPLO), modo, zurdo === true));
-    });
-
-    for (const r of $$("[data-peso]", raiz)) {
-      r.addEventListener("input", () => ($(`#valor-${r.dataset.peso}`).textContent = pesoTexto(Number(r.value))));
-      r.addEventListener("change", () => {
-        guardar((p) => (p.pesos = Object.fromEntries(PESOS.map((c) => [c, Number($(`#peso-${c}`).value)]))));
-        $("#pesos-defecto").disabled = false;
-      });
-    }
-    $("#pesos-defecto").addEventListener("click", () => {
-      guardar((p) => (p.pesos = null));
-      pintar();
-      $("#t-pesos").focus();
     });
   }
 

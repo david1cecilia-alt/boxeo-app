@@ -138,7 +138,7 @@ def test_el_titulo_de_cada_vista_se_subraya_sin_recuadro(pagina, vista, desde):
     assert pagina.evaluate(FOCO_DEL_TITULO, f"#t-{vista}") == [True, "none", "underline"]
 
 
-@pytest.mark.parametrize("vista, titulo", [("perfil", "#t-notas"), ("ajustes", "#t-pesos")])
+@pytest.mark.parametrize("vista, titulo", [("perfil", "#t-notas"), ("ajustes", "#t-practicar")])
 def test_los_titulos_de_perfil_y_ajustes_se_subrayan_sin_recuadro(pagina, vista, titulo):
     pagina.set_viewport_size({"width": 1440, "height": 900})
     pagina.goto(f"{ORIGEN}/index.html#{vista}")

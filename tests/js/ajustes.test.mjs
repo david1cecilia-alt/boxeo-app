@@ -3,26 +3,42 @@ import { test } from "node:test";
 
 import { crearAlmacen, perfilPorDefecto } from "../../static/almacen.js";
 import {
-  nuevoGuion, opcionesVoz, perfilSorteo, personalizadaValida, preferencias, recordarSesion, resumenElecciones, seguirBasicos,
+  MAX_PRACTICAR, cambiarPracticar, nuevoGuion, opcionesVoz, perfilSorteo, personalizadaValida, preferencias, recordarSesion, resumenElecciones, seguirBasicos,
 } from "../../static/ajustes.js";
 import { crearAzar } from "../../static/motor/azar.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
 
 const datos = cargarDatosDeDisco();
 
-function perfilCon(pesos) {
-  return { ...perfilPorDefecto(), pesos };
-}
-
-test("sin pesos propios se usan los de data/perfil.json", () => {
+test("sin nada en «Practicar más» el sorteo usa data/perfil.json, que ya no lleva pesos", () => {
   assert.equal(perfilSorteo(perfilPorDefecto()), datos.perfil);
+  assert.equal("pesos" in datos.perfil, false);
 });
 
-test("los pesos del perfil sustituyen a los de data/perfil.json (no se mezclan)", () => {
-  const pesos = { termina_en_gancho: 1.2, bloquear_y_devolver: 0.5, entrada_con_jab: 3 };
-  const perfil = perfilSorteo(perfilCon(pesos));
-  assert.deepEqual(perfil.pesos, pesos);
+test("lo elegido en «Practicar más» pasa al sorteo sin tocar el resto de data/perfil.json", () => {
+  const practicar = [{ movimiento: "6", cuanto: "bastante" }];
+  const perfil = perfilSorteo({ ...perfilPorDefecto(), practicar });
+  assert.deepEqual(perfil.practicar, practicar);
+  assert.notEqual(perfil.practicar, practicar); // una copia: el sorteo no cambia el perfil
   assert.equal(perfil.guardia, datos.perfil.guardia);
+  assert.equal("practicar" in datos.perfil, false);
+});
+
+test("cambiarPracticar elige con «un poco», cambia el cuánto en su sitio y quita", () => {
+  let p = cambiarPracticar([], "3", "poco");
+  p = cambiarPracticar(p, "rodar", "poco");
+  assert.deepEqual(cambiarPracticar(p, "3", "bastante"),
+    [{ movimiento: "3", cuanto: "bastante" }, { movimiento: "rodar", cuanto: "poco" }]);
+  assert.deepEqual(cambiarPracticar(p, "3", null), [{ movimiento: "rodar", cuanto: "poco" }]);
+  assert.deepEqual(cambiarPracticar(p, "pivote", null), p);
+});
+
+test(`cambiarPracticar no deja elegir más de ${MAX_PRACTICAR}, pero sí cambiar o quitar los elegidos`, () => {
+  const llenos = ["1", "cuerpo", "bloqueo"].map((movimiento) => ({ movimiento, cuanto: "poco" }));
+  assert.equal(llenos.length, MAX_PRACTICAR);
+  assert.deepEqual(cambiarPracticar(llenos, "6", "poco"), llenos);
+  assert.equal(cambiarPracticar(llenos, "bloqueo", "bastante")[2].cuanto, "bastante");
+  assert.equal(cambiarPracticar(llenos, "1", null).length, MAX_PRACTICAR - 1);
 });
 
 // localStorage falso, para guardar y releer como al recargar la página.
@@ -102,7 +118,7 @@ test("un asalto desconocido vuelve al primero (Amateur)", () => {
 
 test("recordarSesion guarda solo lo que llega y conserva el resto del perfil", () => {
   const guardados = [];
-  const perfil = { ...perfilPorDefecto(), pesos: { termina_en_gancho: 2, bloquear_y_devolver: 1, entrada_con_jab: 1 } };
+  const perfil = { ...perfilPorDefecto(), practicar: [{ movimiento: "2", cuanto: "poco" }] };
   const almacen = { datos: { perfil }, guardarPerfil: (p) => guardados.push(p) };
   recordarSesion(almacen, { voz: "numeros", ritmo: 1 });
   assert.deepEqual(guardados, [{ ...perfil, sesion: { ...perfil.sesion, voz: "numeros", ritmo: 1 } }]);
@@ -131,7 +147,7 @@ test("cambiar nivel o zurdo en Entrenar no cambia el Perfil", () => {
   assert.equal(preferencias(almacen.datos.perfil).zurdo, true);
 });
 
-test("tocar otras cosas del Perfil (pesos, estilo, medidas) no pisa el nivel ni el zurdo de Entrenar", () => {
+test("tocar otras cosas del Perfil («Practicar más», estilo, medidas) no pisa el nivel ni el zurdo de Entrenar", () => {
   const almacen = crearAlmacen({ storage: almacenamiento() });
   cambiarEnPerfil(almacen, "basicos", "guardia", "ortodoxa");
   cambiarEnPerfil(almacen, "basicos", "nivel", "1");
@@ -139,7 +155,7 @@ test("tocar otras cosas del Perfil (pesos, estilo, medidas) no pisa el nivel ni 
   cambiarEnPerfil(almacen, "basicos", "altura_cm", 180);
   cambiarEnPerfil(almacen, "estilo", "cardio", "bueno");
   const p = structuredClone(almacen.datos.perfil);
-  p.pesos = { termina_en_gancho: 3, bloquear_y_devolver: 1, entrada_con_jab: 1 };
+  p.practicar = [{ movimiento: "flexion", cuanto: "bastante" }];
   almacen.guardarPerfil(p);
   assert.equal(preferencias(almacen.datos.perfil).nivel, 3);
   assert.equal(preferencias(almacen.datos.perfil).zurdo, true);

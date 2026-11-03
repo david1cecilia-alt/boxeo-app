@@ -1,7 +1,7 @@
 // Pestaña Perfil: lo informativo que rellena el usuario (solo en este navegador): estilo (con el
 // recomendado según sus respuestas, de data/estilos.json), sobre ti, notas del entrenador y puntos
-// a revisar. Se guarda al cambiar cada campo. Lo que cambia el entreno (guardia, nivel, pesos y
-// voz) está en Ajustes.
+// a revisar. Se guarda al cambiar cada campo. Lo que cambia el entreno (guardia, nivel, «Practicar
+// más» y voz) está en Ajustes.
 import { NO_SE } from "../almacen.js";
 import { chips, conectarCampos } from "./campos.js";
 import { $, $$, anunciar, esc, hoyIso } from "./dom.js";

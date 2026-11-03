@@ -28,12 +28,25 @@ export function opcionesVoz(perfilUsuario) {
   return { id, velocidad: VELOCIDADES[velocidad] ?? VELOCIDADES[VELOCIDAD_POR_DEFECTO] };
 }
 
-export const PESOS = ["termina_en_gancho", "bloquear_y_devolver", "entrada_con_jab"];
+// «Practicar más»: cuántos movimientos se pueden elegir a la vez. Con más, todo pesaría casi igual.
+export const MAX_PRACTICAR = 3;
 
-// Perfil para el sorteo: los pesos editados SUSTITUYEN a los de data/perfil.json.
+// Perfil para el sorteo: el de data/perfil.json con lo elegido en «Practicar más».
 export function perfilSorteo(perfilUsuario) {
   const base = datos().perfil;
-  return perfilUsuario?.pesos ? { ...base, pesos: { ...perfilUsuario.pesos } } : base;
+  const practicar = perfilUsuario?.practicar ?? [];
+  return practicar.length ? { ...base, practicar: practicar.map((p) => ({ ...p })) } : base;
+}
+
+// Elige (cuanto "poco" o "bastante"), cambia o quita (cuanto null) un movimiento de «Practicar
+// más». Devuelve la lista nueva; uno nuevo no entra si ya hay MAX_PRACTICAR.
+export function cambiarPracticar(practicar, movimiento, cuanto) {
+  const resto = practicar.filter((p) => p.movimiento !== movimiento);
+  if (cuanto === null) return resto;
+  if (resto.length === practicar.length && practicar.length >= MAX_PRACTICAR) return practicar;
+  return practicar.some((p) => p.movimiento === movimiento)
+    ? practicar.map((p) => (p.movimiento === movimiento ? { movimiento, cuanto } : p))
+    : [...practicar, { movimiento, cuanto }];
 }
 
 export function nuevoGuion(config, perfilUsuario, azar) {

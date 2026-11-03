@@ -753,13 +753,21 @@ button.volver {
 .velocidades small { color: var(--suave); font-size: 0.75rem; font-weight: 400; font-variant-numeric: tabular-nums; }
 .velocidades input:checked + span small { color: inherit; }
 
-#f-pesos { gap: 14px; }
-:is(#f-pesos, #f-tus-datos, #f-voz) h2 { margin: 0; }
-:is(#f-pesos, #f-tus-datos, #f-voz) .nota { margin-top: 4px; font-size: 0.8125rem; }
+#f-practicar { gap: 14px; }
+:is(#f-practicar, #f-tus-datos, #f-voz) h2 { margin: 0; }
+:is(#f-practicar, #f-tus-datos, #f-voz) .nota { margin-top: 4px; font-size: 0.8125rem; }
 #voz-aviso { margin: -6px 0 0; }
 .sin-cortar { white-space: nowrap; }
 #f-voz > .boton { justify-self: start; }
-#f-pesos > .boton { justify-self: start; }
+#f-practicar > .boton { justify-self: start; }
+/* «Practicar más»: con los elegidos al tope, los demás chips apagados; cuánto más, en dos botones. */
+.chip-opcion input:disabled { cursor: not-allowed; }
+.chip-opcion input:disabled + span { opacity: 0.4; }
+#practicar-estado { margin: -4px 0 0; }
+.lista-practicar { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.lista-practicar li { border-top: 1px solid var(--linea); padding-top: 12px; }
+.cuanto-practicar legend { margin-bottom: 8px; font-size: 0.875rem; font-weight: 600; }
+.cuanto-practicar .chips-fila { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 .lista-editable { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
 .lista-editable li {
@@ -768,11 +776,6 @@ button.volver {
 }
 .lista-editable li p { margin: 4px 0 0; white-space: pre-wrap; }
 .notas time { color: var(--suave); font-size: 0.9rem; }
-/* Deslizadores de pesos: nombre a la izquierda y valor en rojo a la derecha. */
-.deslizador { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; }
-.deslizador label { font-size: 0.875rem; font-weight: 400; }
-.deslizador output { color: var(--acento); font-weight: 800; font-variant-numeric: tabular-nums; }
-.deslizador input { grid-column: 1 / -1; padding: 0; min-height: 32px; border: 0; background: transparent; accent-color: var(--acento-relleno); }
 .lista-revisar { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
 .lista-revisar li { border-top: 1px solid var(--linea); padding-top: 12px; display: grid; gap: 8px; }
 .lista-revisar .punto { margin: 0; font-weight: 600; }

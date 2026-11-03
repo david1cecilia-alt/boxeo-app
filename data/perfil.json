@@ -1,11 +1,6 @@
 {
-  "_nota": "Multiplicadores > 1 hacen más frecuente ese tipo de combinación. 1 = neutro.",
+  "_nota": "Lo que usa el sorteo si el usuario no ha elegido nada. «Practicar más» va en el perfil del navegador (practicar).",
   "guardia": "ortodoxa",
   "nivel": 1,
-  "distancia": "media",
-  "pesos": {
-    "termina_en_gancho": 2.0,
-    "bloquear_y_devolver": 2.5,
-    "entrada_con_jab": 1.8
-  }
+  "distancia": "media"
 }

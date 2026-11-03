@@ -1,4 +1,4 @@
-// Textos de la interfaz para las opciones cerradas del perfil y los pesos del sorteo.
+// Textos de la interfaz para las opciones cerradas del perfil.
 // Todas las preguntas admiten "No lo sé" (NO_SE), que es el valor por defecto.
 import { NO_SE } from "../almacen.js";
 
@@ -50,22 +50,5 @@ export const ESTILO = {
       ["segun_rival", "Según el rival"]],
   },
 };
-
-export const PESOS_TEXTO = {
-  termina_en_gancho: {
-    etiqueta: "Acabar en crochet",
-    ayuda: "Más combinaciones cuyo último golpe es un crochet (aunque después venga una salida).",
-  },
-  bloquear_y_devolver: {
-    etiqueta: "Bloquear",
-    ayuda: "Más combinaciones con bloqueo.",
-  },
-  entrada_con_jab: {
-    etiqueta: "Entrar con el jab",
-    ayuda: "Más combinaciones que empiezan con jab.",
-  },
-};
-
-export const RANGO_PESO = { min: 0.5, max: 4, paso: 0.1 };
 
 export const SENSACION = ["Muy mal", "Mal", "Normal", "Bien", "Muy bien"];

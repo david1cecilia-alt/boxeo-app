@@ -349,6 +349,8 @@ details[open] > summary::before { transform: rotate(90deg); }
 .boton.pequeno { min-height: 40px; padding: 6px 14px; font-size: 0.875rem; }
 .acciones { display: flex; flex-wrap: wrap; gap: 10px; }
 .acciones .boton { flex: 1 1 140px; }
+/* Botones al pie de una tarjeta (Copia de seguridad, «Editar valoración»): separados del texto. */
+.tarjeta > .acciones { margin-top: 18px; }
 label.boton { color: var(--sobre-acento); }
 /* Copia de seguridad: cada botón en una línea; si no caben juntos, uno debajo del otro a todo el ancho. */
 .copia .acciones .boton { flex: 1 1 auto; white-space: nowrap; }
@@ -674,8 +676,9 @@ a.fila-semana:hover { border-color: var(--suave); background: var(--superficie-h
 .rpe.sin-valorar { background: none; border: 1px dashed var(--linea-chip); color: var(--suave); }
 
 .datos { display: grid; gap: 8px; margin: 0; }
-.datos div { display: grid; grid-template-columns: minmax(120px, 40%) 1fr; gap: 8px; }
-.datos dt { color: var(--suave); }
+/* Misma columna de etiquetas en todas las listas del detalle (datos y valoración): alineadas y sin partirse. */
+.datos div { display: grid; grid-template-columns: 10.5rem minmax(0, 1fr); gap: 12px; }
+.datos dt { color: var(--suave); white-space: nowrap; }
 .datos dd { margin: 0; overflow-wrap: anywhere; }
 
 .combos { margin: 0; padding-left: 24px; display: grid; gap: 4px; }

@@ -16,7 +16,8 @@ import pytest
 
 from motor.acciones import Accion, acciones_por_ids, biblioteca, catalogo, espejo, espejo_combo, texto_hablado
 from motor.reglas import nivel_de
-from motor.sorteo import ACCIONES_COLETILLA, NIVEL_COLETILLA, NUMEROS, SIN_REPETIR, SorteoBiblioteca
+from motor.sorteo import (ACCIONES_COLETILLA, NIVEL_COLETILLA, NUMEROS, SIN_REPETIR, SorteoBiblioteca,
+                          cargar_perfil, movimiento, movimientos, peso_practicar)
 from motor.ritmo import VELOCIDAD_SENAL, VELOCIDADES, duracion_estimada, rango_pausa, segundos_habla
 from motor.temporizador import (AVISO_ANTES_FIN, DURACION_AVISO, DURACION_REACCION, FACTOR_VOZ_RAPIDA,
                                 MARGEN, PREPARACION, ConfigSesion, cargar_presets, construir_guion,
@@ -88,6 +89,31 @@ def test_sorteo_js_saca_lo_mismo_que_el_de_python(js, nivel):
 
 def _proporcion(muestra: list[list[Accion]], condicion) -> float:
     return sum(1 for acciones in muestra if condicion(acciones)) / len(muestra)
+
+
+# ---------- "Practicar más" ----------
+
+def test_movimientos_de_practicar_iguales_en_js_y_python(js):
+    assert js["movimientos"] == movimientos()
+
+
+@pytest.mark.parametrize("i", range(4))
+def test_peso_de_practicar_identico_en_js_y_python(js, i):
+    caso = js["practicar"][i]
+    assert caso["pesos"] == [peso_practicar(c.acciones, caso["elegidos"]) for c in biblioteca()]
+
+
+@pytest.mark.parametrize("i", range(4))
+def test_sorteo_con_practicar_igual_en_js_y_python(js, i):
+    caso = js["practicar"][i]
+    sorteo = SorteoBiblioteca(2, perfil={**cargar_perfil(), "practicar": caso["elegidos"]}, rng=random.Random(200))
+    python = [list(sorteo.siguiente().acciones) for _ in range(MUESTRAS)]
+    javascript = [acciones_por_ids(ids) for ids in caso["sorteo"]]
+    assert {tuple(a.id for a in c) for c in javascript} == _del_nivel(2)  # no excluye ninguna
+    for elegido in caso["elegidos"]:
+        def lleva(acciones, m=elegido["movimiento"]): return any(movimiento(a) == m for a in acciones)
+        p_py, p_js = _proporcion(python, lleva), _proporcion(javascript, lleva)
+        assert abs(p_js - p_py) <= TOLERANCIA_PROPORCION, f"{elegido}: JS {p_js:.1%} vs Python {p_py:.1%}"
 
 
 # ---------- Espejo ----------

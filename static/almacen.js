@@ -5,7 +5,7 @@
 // Esquema versionado: si cambia, se sube VERSION y se añade una migración en MIGRACIONES.
 // Si el almacenamiento falla, todo sigue funcionando en memoria y `persistente` pasa a false.
 
-export const VERSION = 5;
+export const VERSION = 6;
 const CLAVE = "boxeo";
 const CLAVE_V0 = "boxeo.historial"; // versión 0: un array de sesiones, antes del almacén
 
@@ -50,7 +50,7 @@ export function perfilPorDefecto() {
       distancia: NO_SE, presion: NO_SE, golpe_favorito: NO_SE, volumen: NO_SE,
       cardio: NO_SE, defensa: NO_SE, iniciativa: NO_SE,
     },
-    pesos: null, // null = los de data/perfil.json
+    practicar: [], // «Practicar más» de Ajustes: [{ movimiento, cuanto }] (motor/sorteo.js)
     sesion: sesionPorDefecto(),
     voz: vozPorDefecto(),
     historial: historialPorDefecto(),
@@ -108,6 +108,12 @@ const MIGRACIONES = {
     const { focos, ...perfil } = v4.perfil ?? {};
     return { ...v4, version: 5, perfil: { ...perfil, voz: vozPorDefecto(), historial: historialPorDefecto() } };
   },
+  // v5 → v6: los pesos de «Qué te dicta la app» desaparecen (el sorteo ya no los usa) y el perfil
+  // gana «Practicar más», sin nada elegido.
+  5: (v5) => {
+    const { pesos, ...perfil } = v5.perfil ?? {};
+    return { ...v5, version: 6, perfil: { ...perfil, practicar: [] } };
+  },
 };
 
 // Rellena lo que falte con los valores por defecto (datos escritos a mano o a medias).
@@ -129,6 +135,7 @@ function completar(datos) {
       },
       voz: { ...base.perfil.voz, ...perfil.voz },
       historial: { ...base.perfil.historial, ...perfil.historial },
+      practicar: Array.isArray(perfil.practicar) ? perfil.practicar : base.perfil.practicar,
     },
   };
 }

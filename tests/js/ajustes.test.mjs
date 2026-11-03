@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { crearAlmacen, perfilPorDefecto } from "../../static/almacen.js";
 import {
-  MAX_PRACTICAR, cambiarPracticar, nuevoGuion, opcionesVoz, perfilSorteo, personalizadaValida, preferencias, recordarSesion, resumenElecciones, seguirBasicos,
+  MAX_PRACTICAR, cambiarPracticar, nuevoGuion, opcionesVoz, perfilSorteo, personalizadaValida, preferencias, recordarSesion, resumenElecciones,
 } from "../../static/ajustes.js";
 import { crearAzar } from "../../static/motor/azar.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
@@ -51,7 +51,6 @@ function almacenamiento() {
 function cambiarEnPerfil(almacen, grupo, campo, valor) {
   const p = structuredClone(almacen.datos.perfil);
   p[grupo][campo] = valor;
-  if (grupo === "basicos") seguirBasicos(p, campo);
   almacen.guardarPerfil(p);
 }
 
@@ -124,33 +123,8 @@ test("recordarSesion guarda solo lo que llega y conserva el resto del perfil", (
   assert.deepEqual(guardados, [{ ...perfil, sesion: { ...perfil.sesion, voz: "numeros", ritmo: 1 } }]);
 });
 
-test("cambiar Guardia o Nivel en Perfil pone igual lo de Entrenar", () => {
-  const almacen = crearAlmacen({ storage: almacenamiento() });
-  recordarSesion(almacen, { nivel: 1, zurdo: false });
-  cambiarEnPerfil(almacen, "basicos", "guardia", "zurda");
-  assert.equal(preferencias(almacen.datos.perfil).zurdo, true);
-  cambiarEnPerfil(almacen, "basicos", "nivel", "3");
-  assert.equal(preferencias(almacen.datos.perfil).nivel, 3);
-  // «No lo sé» vuelve a los de data/perfil.json.
-  cambiarEnPerfil(almacen, "basicos", "nivel", "no_se");
-  assert.equal(preferencias(almacen.datos.perfil).nivel, datos.perfil.nivel);
-});
-
-test("cambiar nivel o zurdo en Entrenar no cambia el Perfil", () => {
-  const almacen = crearAlmacen({ storage: almacenamiento() });
-  cambiarEnPerfil(almacen, "basicos", "guardia", "ortodoxa");
-  cambiarEnPerfil(almacen, "basicos", "nivel", "2");
-  recordarSesion(almacen, { nivel: 3, zurdo: true });
-  assert.equal(almacen.datos.perfil.basicos.guardia, "ortodoxa");
-  assert.equal(almacen.datos.perfil.basicos.nivel, "2");
-  assert.equal(preferencias(almacen.datos.perfil).nivel, 3);
-  assert.equal(preferencias(almacen.datos.perfil).zurdo, true);
-});
-
 test("tocar otras cosas del Perfil («Practicar más», estilo, medidas) no pisa el nivel ni el zurdo de Entrenar", () => {
   const almacen = crearAlmacen({ storage: almacenamiento() });
-  cambiarEnPerfil(almacen, "basicos", "guardia", "ortodoxa");
-  cambiarEnPerfil(almacen, "basicos", "nivel", "1");
   recordarSesion(almacen, { nivel: 3, zurdo: true });
   cambiarEnPerfil(almacen, "basicos", "altura_cm", 180);
   cambiarEnPerfil(almacen, "estilo", "cardio", "bueno");

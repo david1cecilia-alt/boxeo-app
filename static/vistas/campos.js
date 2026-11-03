@@ -1,7 +1,6 @@
-// Campos del perfil compartidos por Perfil y Ajustes: chips de opciones cerradas y el guardado
-// al cambiar de cada campo [data-grupo][data-campo].
+// Campos del Perfil: chips de opciones cerradas y el guardado al cambiar de cada campo
+// [data-grupo][data-campo].
 import { NO_SE } from "../almacen.js";
-import { seguirBasicos } from "../ajustes.js";
 import { $$, esc } from "./dom.js";
 
 // Opciones cerradas como chips (radios); "No lo sé" va la última.
@@ -14,7 +13,7 @@ export function chips(grupo, campo, { etiqueta, opciones }, actual) {
 }
 
 // Chips, fechas y medidas: se guardan al cambiar. `guardar(cambio)` aplica `cambio` a una copia
-// del perfil y la guarda. Guardia y Nivel cambian también lo propuesto en Entrenar.
+// del perfil y la guarda.
 export function conectarCampos(raiz, guardar) {
   for (const el of $$("[data-grupo]", raiz)) {
     el.addEventListener("change", () => {
@@ -26,7 +25,6 @@ export function conectarCampos(raiz, guardar) {
         const valor = el.dataset.numero !== undefined ? (el.value === "" ? null : Number(el.value))
           : el.type === "date" ? (el.value || null) : el.value;
         p[el.dataset.grupo][el.dataset.campo] = valor;
-        if (el.dataset.grupo === "basicos") seguirBasicos(p, el.dataset.campo);
       });
     });
   }

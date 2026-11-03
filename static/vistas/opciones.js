@@ -4,11 +4,6 @@ import { NO_SE } from "../almacen.js";
 
 const NO_LO_SE = [NO_SE, "No lo sé"];
 
-export const BASICOS = {
-  guardia: { etiqueta: "Guardia", opciones: [NO_LO_SE, ["ortodoxa", "Ortodoxa (izquierda delante)"], ["zurda", "Zurda (derecha delante)"]] },
-  nivel: { etiqueta: "Nivel actual", opciones: [NO_LO_SE, ["1", "1 · básico"], ["2", "2 · medio"], ["3", "3 · avanzado"]] },
-};
-
 // "Mi estilo": lo elige el usuario (o su entrenador). La app solo lo recomienda (vistas/estilo.js).
 export const MI_ESTILO = {
   etiqueta: "Mi estilo",

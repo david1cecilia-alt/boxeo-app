@@ -1,6 +1,6 @@
 // Une los datos del usuario (almacén) con el motor: qué perfil usa el sorteo y
 // qué se propone al entrenar (lo último elegido). Sin reglas de boxeo.
-import { NO_SE, PERSONALIZADA_POR_DEFECTO, sesionDesdeBasicos } from "./almacen.js";
+import { NO_SE, PERSONALIZADA_POR_DEFECTO } from "./almacen.js";
 import { datos } from "./motor/datos.js";
 import { VELOCIDADES, VELOCIDAD_POR_DEFECTO } from "./motor/ritmo.js";
 import { SorteoBiblioteca } from "./motor/sorteo.js";
@@ -85,12 +85,4 @@ export function personalizadaValida(p) {
 export function recordarSesion(almacen, cambios) {
   const perfil = almacen.datos.perfil;
   almacen.guardarPerfil({ ...perfil, sesion: { ...perfil.sesion, ...cambios } });
-}
-
-// Gana lo último que se toque: cambiar Guardia o Nivel en «Tus datos» pone igual lo de Entrenar.
-// Cambia el perfil que recibe (la copia que la pestaña Perfil va a guardar).
-export function seguirBasicos(perfilUsuario, campo) {
-  const clave = { guardia: "zurdo", nivel: "nivel" }[campo];
-  if (!clave) return;
-  perfilUsuario.sesion = { ...perfilUsuario.sesion, [clave]: sesionDesdeBasicos(perfilUsuario.basicos)[clave] };
 }

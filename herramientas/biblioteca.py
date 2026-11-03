@@ -38,9 +38,9 @@ POR_NIVEL = 50
 REPARTO = {1: {0: 20, 1: 15, 2: 15}, 2: {1: 20, 2: 20, 3: 10}, 3: {1: 5, 2: 15, 3: 20, "4-5": 10}}
 CLASICOS = ["1-2-3-2", "1-3-2", "1-2-5-2", "1-2-1-2", "3-2-3", "1-2-3", "1-1-2"]  # básico, sin defensa
 # % de cada golpe 1-6 sobre los golpes a la cara (mín, máx), en total y en cada nivel.
-CARA = {1: (20, 30), 2: (18, 26), 3: (14, 20), 4: (8, 14), 5: (8, 14), 6: (8, 14)}
+# Los golpes 1-6 valen lo mismo; solo el jab puede salir más.
+CARA = {1: (20, 30), 2: (13, 17), 3: (13, 17), 4: (13, 17), 5: (13, 17), 6: (13, 17)}
 MIN_EMPIEZAN_JAB = 50    # % de las que empiezan por golpe que empiezan con el jab (a la cara)
-MAX_EMPIEZAN_5_6 = 10    # % de todas que empiezan con 5 o 6 (a la cara o al cuerpo)
 MIN_CUERPO = 6           # veces de cada golpe al cuerpo, en total
 MIN_DEFENSA = 12         # veces de cada tipo de defensa, en total
 MAX_DIFERENCIA_LADO = 20  # % entre derecha e izquierda de cada defensa con lado
@@ -63,7 +63,7 @@ FAMILIAS = [
     ("F2", "Jab-recto", "La base de todo, a la que se le añaden esquivas y contras.", [
         ("F2-B", "base", None, "1-2", "jab-recto"),
         ("F2-Bb", "variante", "F2-B", "1-1-2", "doble jab y recto"),
-        ("F2-M", "crece", "F2-B", "{F2-B}-EI-5-2", "jab-recto, esquiva y gancho-recto"),
+        ("F2-M", "crece", "F2-B", "{F2-B}-EI-5-4", "jab-recto, esquiva y gancho-crochet"),
         ("F2-Mb", "variante", "F2-M", "{F2-Bb}-ED-6", "doble jab-recto, esquiva y gancho"),
         ("F2-A", "crece", "F2-M", "{F2-M}-AD-1-LI", "jab-recto con esquiva, esquiva abajo, jab y paso lateral"),
         ("F2-Ab", "variante", "F2-A", "{F2-Mb}-3-B-6", "doble jab-recto, esquiva, gancho-crochet, bloqueo y gancho"),
@@ -81,16 +81,16 @@ FAMILIAS = [
         ("F4-Bb", "variante", "F4-B", "P-6-3-B", "parada, gancho-crochet y bloqueo"),
         ("F4-M", "crece", "F4-B", "{F4-B}-ED-4-3", "parada, jab-recto, esquiva y doble crochet"),
         ("F4-Mb", "variante", "F4-M", "{F4-Bb}-1-6", "parada, bloqueo, jab y gancho"),
-        ("F4-A", "crece", "F4-M", "{F4-M}-B-5-2", "parada, esquiva, bloqueo y gancho-recto"),
+        ("F4-A", "crece", "F4-M", "{F4-M}-B-5-6", "parada, esquiva, bloqueo y dos ganchos"),
         ("F4-Ab", "variante", "F4-A", "{F4-M}-PA-1-2-LI", "parada, esquiva, paso atrás, jab-recto y paso lateral"),
     ]),
     ("F5", "Abajo y arriba", "Golpes al cuerpo para bajar la guardia del rival y subir a la cara.", [
         ("F5-B", "base", None, "1c-2", "jab al cuerpo y recto"),
         ("F5-Bb", "variante", "F5-B", "6-3c-3", "gancho y crochet abajo y arriba"),
         ("F5-M", "crece", "F5-B", "{F5-B}-F-3c-3", "jab al cuerpo, recto, flexión y crochet abajo y arriba"),
-        ("F5-Mb", "variante", "F5-M", "{F5-Bb}-F-1-2", "crochet abajo y arriba, flexión y jab-recto"),
+        ("F5-Mb", "variante", "F5-M", "{F5-Bb}-F-1-6", "gancho-crochet abajo y arriba, flexión y jab-gancho"),
         ("F5-A", "crece", "F5-M", "{F5-M}-AD-4c-6", "flexión, crochet abajo y arriba, esquiva abajo, crochet al cuerpo y gancho"),
-        ("F5-Ab", "variante", "F5-A", "{F5-Mb}-B-6", "crochet abajo y arriba, flexión, bloqueo y gancho"),
+        ("F5-Ab", "variante", "F5-A", "{F5-Mb}-B-6", "gancho-crochet abajo y arriba, flexión, bloqueo y gancho"),
     ]),
     ("F6", "Esquiva a los dos lados", "Esquiva lateral, se suelta y se vuelve a esquivar.", [
         ("F6-B", "base", None, "ED-6-5-EI", "esquiva derecha, dos ganchos y esquiva izquierda"),
@@ -102,8 +102,8 @@ FAMILIAS = [
     ]),
     ("F7", "Bloqueo", "Bloquear, devolver y, si toca, volver a bloquear.", [
         ("F7-B", "base", None, "B-3-2", "bloqueo y crochet-recto"),
-        ("F7-Bb", "variante", "F7-B", "B-5-2-B", "bloqueo, gancho-recto y bloqueo"),
-        ("F7-Bc", "variante", "F7-B", "1-2-B", "jab-recto y bloqueo"),
+        ("F7-Bb", "variante", "F7-B", "B-5-6-B", "bloqueo, dos ganchos y bloqueo"),  # REVISAR CON ENTRENADOR: dos ganchos seguidos
+        ("F7-Bc", "variante", "F7-B", "1-6-B", "jab-gancho y bloqueo"),  # REVISAR CON ENTRENADOR: jab y gancho trasero
         ("F7-M", "crece", "F7-B", "1-{F7-B}-PA-2", "jab, bloqueo, crochet-recto, paso atrás y recto"),
         ("F7-Mb", "variante", "F7-M", "{F7-Bb}-1-4", "dos bloqueos, jab y crochet"),
         ("F7-A", "crece", "F7-M", "{F7-M}-ED-4-LD", "bloqueo, paso atrás, esquiva, crochet y paso lateral"),
@@ -119,25 +119,25 @@ FAMILIAS = [
     ]),
     ("F9", "Gancho y crochet", "Ganchos (5 y 6) en la corta, rematados con crochet o recto.", [
         ("F9-B", "base", None, "6-3", "gancho de derecha y crochet"),
-        ("F9-Bb", "variante", "F9-B", "4-5-2", "crochet, gancho y recto"),
+        ("F9-Bb", "variante", "F9-B", "4-5-6", "crochet y dos ganchos"),  # REVISAR CON ENTRENADOR: dos ganchos seguidos
         ("F9-M", "crece", "F9-B", "1-2-{F9-B}-AI", "jab-recto, gancho-crochet y esquiva abajo"),
-        ("F9-Mb", "variante", "F9-M", "1-{F9-Bb}-AD", "jab-crochet-gancho-recto y esquiva abajo"),
+        ("F9-Mb", "variante", "F9-M", "1-{F9-Bb}-AD", "jab-crochet, dos ganchos y esquiva abajo"),
         ("F9-A", "crece", "F9-M", "{F9-M}-1-2-EI", "jab-recto, gancho-crochet, esquiva abajo, jab-recto y esquiva"),
-        ("F9-Ab", "variante", "F9-A", "{F9-Mb}-5c-3-BA", "jab-crochet-gancho-recto, esquiva abajo, gancho al cuerpo y ballesteo"),
+        ("F9-Ab", "variante", "F9-A", "{F9-Mb}-5c-3-BA", "jab-crochet, dos ganchos, esquiva abajo, gancho al cuerpo y ballesteo"),
     ]),
     ("F10", "Doble jab", "Doble jab para entrar, y lo que venga.", [
         ("F10-B", "base", None, "1-1-5", "doble jab y gancho"),
-        ("F10-Bb", "variante", "F10-B", "1-1-6-3", "doble jab, gancho y crochet"),
+        ("F10-Bb", "variante", "F10-B", "1-1-6-5", "doble jab y dos ganchos"),  # REVISAR CON ENTRENADOR: dos ganchos seguidos
         ("F10-M", "crece", "F10-B", "{F10-B}-EI-4", "doble jab, gancho, esquiva y crochet"),
-        ("F10-Mb", "variante", "F10-M", "{F10-Bb}-BA-2", "doble jab, gancho-crochet, ballesteo y recto"),
+        ("F10-Mb", "variante", "F10-M", "{F10-Bb}-BA-2", "doble jab, dos ganchos, ballesteo y recto"),
         ("F10-A", "crece", "F10-M", "{F10-M}-1-AD-4-5", "doble jab, esquiva, jab, esquiva abajo y crochet-gancho"),
         ("F10-Ab", "variante", "F10-A", "{F10-Mb}-B-1-6", "doble jab, ballesteo, bloqueo y jab-gancho"),
     ]),
     ("F11", "Flexión y cuerpo", "Se baja con flexión y se ataca al cuerpo.", [
         ("F11-B", "base", None, "F-3c-5", "flexión, crochet al cuerpo y gancho"),
-        ("F11-Bb", "variante", "F11-B", "F-6c-3", "flexión, gancho al cuerpo y crochet"),
-        ("F11-M", "crece", "F11-B", "{F11-B}-2-B", "flexión, crochet al cuerpo, gancho-recto y bloqueo"),
-        ("F11-Mb", "variante", "F11-M", "{F11-Bb}-AD-1-2", "flexión, gancho al cuerpo, esquiva abajo y jab-recto"),
+        ("F11-Bb", "variante", "F11-B", "F-6c-5", "flexión y gancho abajo y arriba"),
+        ("F11-M", "crece", "F11-B", "{F11-B}-4-B", "flexión, crochet al cuerpo, gancho-crochet y bloqueo"),
+        ("F11-Mb", "variante", "F11-M", "{F11-Bb}-AD-1-2", "flexión, gancho abajo y arriba, esquiva abajo y jab-recto"),
         ("F11-A", "crece", "F11-M", "{F11-M}-6c-3-EI", "flexión, bloqueo, gancho al cuerpo, crochet y esquiva"),
         ("F11-Ab", "variante", "F11-A", "{F11-Mb}-F-1c-2", "dos flexiones, esquiva abajo, jab al cuerpo y recto"),
     ]),
@@ -145,13 +145,14 @@ FAMILIAS = [
         ("F12-B", "base", None, "AI-3-AD-4", "esquiva abajo y crochet a los dos lados"),
         ("F12-Bb", "variante", "F12-B", "AD-4-AI-5", "esquiva abajo derecha, crochet, esquiva abajo izquierda y gancho"),
         ("F12-M", "crece", "F12-B", "{F12-B}-1-2", "esquivas abajo con crochet y jab-recto"),
-        ("F12-Mb", "variante", "F12-M", "{F12-Bb}-2-F", "esquivas abajo con crochet y gancho, recto y flexión"),
+        ("F12-Mb", "variante", "F12-M", "{F12-Bb}-4-F",
+         "esquiva abajo derecha, crochet, esquiva abajo izquierda y gancho-crochet"),
         ("F12-A", "crece", "F12-M", "{F12-M}-ED-1-4c", "esquivas abajo, esquiva, jab y crochet al cuerpo"),
         ("F12-Ab", "variante", "F12-A", "{F12-Mb}-5c-5-PA-2", "esquivas abajo, flexión, gancho abajo y arriba, paso atrás y recto"),
     ]),
     ("F13", "Jab arriba y abajo", "El jab cambia de altura para abrir hueco.", [
         ("F13-B", "base", None, "1-1c-6", "jab arriba, jab abajo y gancho"),
-        ("F13-Bb", "variante", "F13-B", "1c-1-3", "jab abajo, jab arriba y crochet"),
+        ("F13-Bb", "variante", "F13-B", "1c-1-4", "jab abajo, jab arriba y crochet"),  # REVISAR CON ENTRENADOR: crochet trasero tras dos jabs
         ("F13-M", "crece", "F13-B", "{F13-B}-ED-2", "jab arriba y abajo, gancho, esquiva y recto"),
         ("F13-Mb", "variante", "F13-M", "{F13-Bb}-PA-6", "jab abajo y arriba, crochet, paso atrás y gancho"),
         ("F13-A", "crece", "F13-M", "{F13-M}-1-B-4c-4", "jab arriba y abajo, esquiva, jab, bloqueo y crochet abajo y arriba"),
@@ -160,7 +161,7 @@ FAMILIAS = [
     ("F14", "Parada y al cuerpo", "Se para el jab y se contesta abajo.", [
         ("F14-B", "base", None, "P-2c-5", "parada, recto al cuerpo y gancho"),
         ("F14-Bb", "variante", "F14-B", "P-1-2c", "parada, jab y recto al cuerpo"),
-        ("F14-M", "crece", "F14-B", "{F14-B}-AI-6-2", "parada, recto al cuerpo, gancho, esquiva abajo y gancho-recto"),
+        ("F14-M", "crece", "F14-B", "{F14-B}-AI-6-3", "parada, recto al cuerpo, gancho, esquiva abajo y gancho-crochet"),
         ("F14-Mb", "variante", "F14-M", "{F14-Bb}-BA-4", "parada, jab, recto al cuerpo, ballesteo y crochet"),
         ("F14-A", "crece", "F14-M", "{F14-M}-ED-1-CA", "parada, esquiva abajo, esquiva, jab y cambio de ángulo"),
         ("F14-Ab", "variante", "F14-A", "{F14-Mb}-B-1-2-PI", "parada, ballesteo, bloqueo, jab-recto y pivote"),
@@ -168,15 +169,15 @@ FAMILIAS = [
     ("F15", "Cambio de ángulo", "Se suelta, se cambia de ángulo y se ataca desde el nuevo sitio.", [
         ("F15-B", "base", None, "1-2-CA", "jab-recto y cambio de ángulo"),
         ("F15-Bb", "variante", "F15-B", "4-3-CA", "doble crochet y cambio de ángulo"),
-        ("F15-M", "crece", "F15-B", "{F15-B}-5-2-EI", "jab-recto, cambio de ángulo, gancho-recto y esquiva"),
+        ("F15-M", "crece", "F15-B", "{F15-B}-5-6-EI", "jab-recto, cambio de ángulo, dos ganchos y esquiva"),
         ("F15-Mb", "variante", "F15-M", "{F15-Bb}-5-PA", "doble crochet, cambio de ángulo, gancho y paso atrás"),
         ("F15-A", "crece", "F15-M", "{F15-M}-5-B-6", "cambio de ángulo, esquiva, gancho, bloqueo y gancho"),
         ("F15-Ab", "variante", "F15-A", "{F15-Mb}-1-AD-4-LI", "cambio de ángulo, paso atrás, esquiva abajo y paso lateral"),
     ]),
     ("F16", "Pivote", "Se suelta y se pivota para no quedarse delante.", [
-        ("F16-B", "base", None, "3-6-PI", "crochet-gancho y pivote"),
+        ("F16-B", "base", None, "5-6-PI", "dos ganchos y pivote"),  # REVISAR CON ENTRENADOR: dos ganchos seguidos
         ("F16-Bb", "variante", "F16-B", "4-3-PI", "doble crochet y pivote"),
-        ("F16-M", "crece", "F16-B", "B-{F16-B}-1", "bloqueo, crochet-gancho, pivote y jab"),
+        ("F16-M", "crece", "F16-B", "B-{F16-B}-1", "bloqueo, dos ganchos, pivote y jab"),
         ("F16-Mb", "variante", "F16-M", "{F16-Bb}-AD-6", "doble crochet, pivote, esquiva abajo y gancho"),
         ("F16-A", "crece", "F16-M", "{F16-M}-EI-1-BA-6", "bloqueo, pivote, esquiva, jab, ballesteo y gancho"),
         ("F16-Ab", "variante", "F16-A", "{F16-Mb}-3-F-6c-ED", "doble crochet, pivote, esquiva abajo, flexión y esquiva"),
@@ -193,20 +194,20 @@ SUELTAS = [
     ("3-2-3", "crochet-recto-crochet"),
     ("1-2-3", "jab-recto-crochet"),
     # Básico con defensa
-    ("EI-5-2", "esquiva izquierda y gancho-recto"),
+    ("EI-5-4", "esquiva izquierda y gancho-crochet"),
     ("1-5c-4-B", "jab, gancho al cuerpo, crochet y bloqueo"),
     ("ED-6-3", "esquiva derecha y gancho-crochet"),
     ("1-ED-6-BA", "jab, esquiva, gancho y ballesteo"),
     ("PA-1-6-B", "paso atrás, jab-gancho y bloqueo"),
     ("ED-4-EI-5", "esquiva y crochet, esquiva y gancho"),
-    ("F-5c-2-B", "flexión, gancho al cuerpo, recto y bloqueo"),
+    ("F-5c-4-B", "flexión, gancho al cuerpo, crochet y bloqueo"),
     ("P-1-AD", "parada, jab y esquiva abajo"),
     ("AI-4c-5-PA", "esquiva abajo, crochet al cuerpo, gancho y paso atrás"),
-    ("1-BA-2-F", "jab, ballesteo, recto y flexión"),
+    ("1-BA-6-F", "jab, ballesteo, gancho y flexión"),  # REVISAR CON ENTRENADOR: tras el ballesteo, gancho y no recto
     ("EI-6c-4-ED", "esquiva, gancho al cuerpo, crochet y esquiva"),
     # Medio
     ("1-2-4-3-EI", "jab-recto, doble crochet y esquiva"),
-    ("ED-2-5-AI-1-PI", "esquiva, recto-gancho, esquiva abajo, jab y pivote"),
+    ("ED-4-5-AI-1-PI", "esquiva, crochet-gancho, esquiva abajo, jab y pivote"),
     ("1-2-B-6-3-EI", "jab-recto, bloqueo, gancho-crochet y esquiva"),
     ("F-2c-3-4-PA", "flexión, recto al cuerpo, doble crochet y paso atrás"),
     ("P-1-AI-5-2", "parada, jab, esquiva abajo y gancho-recto"),
@@ -216,7 +217,7 @@ SUELTAS = [
     ("EI-5c-3-BA-1", "esquiva, gancho al cuerpo, crochet, ballesteo y jab"),
     ("1-AI-3-5-B-LD", "jab, esquiva abajo, crochet-gancho, bloqueo y paso lateral"),
     ("B-4-B-3-ED-6", "dos bloqueos con crochet, esquiva y gancho"),
-    ("EI-5-AD-4-BA-2", "esquiva, gancho, esquiva abajo, crochet, ballesteo y recto"),
+    ("EI-5-AD-4-BA-6", "esquiva, gancho, esquiva abajo, crochet, ballesteo y gancho"),
     ("1-ED-6-EI-5-AI", "jab, esquivas a los dos lados con ganchos y esquiva abajo"),
     ("F-1-2-AI-5-B", "flexión, jab-recto, esquiva abajo, gancho y bloqueo"),
     ("P-1-PA-2-F-4c", "parada, jab, paso atrás, recto, flexión y crochet al cuerpo"),
@@ -224,24 +225,24 @@ SUELTAS = [
     ("BA-2-F-2c-AI-3", "ballesteo, recto, flexión, recto al cuerpo, esquiva abajo y crochet"),
     ("PA-1-ED-4-B-6", "paso atrás, jab, esquiva, crochet, bloqueo y gancho"),
     # Avanzado
-    ("1-2-3-6-ED-2-3-LI", "jab-recto-crochet-gancho, esquiva, recto-crochet y paso lateral"),
-    ("1-4c-2-3-5-2-B", "jab, crochet al cuerpo, recto-crochet, gancho-recto y bloqueo"),
+    ("1-2-3-6-ED-6-3-LI", "jab-recto-crochet-gancho, esquiva, gancho-crochet y paso lateral"),
+    ("1-4c-2-3-5-4-B", "jab, crochet al cuerpo, recto-crochet, gancho-crochet y bloqueo"),
     ("1-2-4-AI-5c-3-2-CA", "jab-recto-crochet, esquiva abajo, gancho al cuerpo y cambio de ángulo"),
     ("1-2-ED-4-3-AI-5-PA-2", "jab-recto, esquiva, esquiva abajo y paso atrás con contra"),
     ("B-1-2-F-3c-1-EI-6", "bloqueo, jab-recto, flexión, crochet al cuerpo, jab, esquiva y gancho"),
     ("P-1-2-3-BA-2-AD-4-LD", "parada, jab-recto-crochet, ballesteo, esquiva abajo y paso lateral"),
-    ("1-6c-3-AI-3-B-2-EI-LI", "jab, gancho al cuerpo, esquiva abajo, bloqueo, esquiva y paso lateral"),
+    ("1-6c-3-AI-3-B-5-EI-LI", "jab, gancho al cuerpo, esquiva abajo, bloqueo, esquiva y paso lateral"),
     ("ED-2-3-F-1c-6-PA-1-LD", "esquiva, flexión con jab al cuerpo, paso atrás, jab y paso lateral"),
     ("1c-2-B-6-AI-3-1-BA", "jab al cuerpo, bloqueo, gancho, esquiva abajo, crochet-jab y ballesteo"),
     ("1-1-EI-2-5-B-5c-4-AD", "doble jab, esquiva, bloqueo, gancho al cuerpo y esquiva abajo"),
     ("ED-2-EI-3-AD-4-AI-5-CA", "esquivas y esquivas abajo a los dos lados y cambio de ángulo"),
-    ("1-B-2-F-2c-BA-6-PA", "bloqueo, flexión con recto al cuerpo, ballesteo y paso atrás"),
+    ("1-B-5-F-2c-BA-6-PA", "jab, bloqueo, gancho, flexión, ballesteo y paso atrás"),  # REVISAR CON ENTRENADOR: tras el bloqueo, gancho y no recto
     ("P-1-ED-2-AI-3-AD-4-BA-4", "cinco defensas, cada una con su contra"),
-    ("B-1-B-2-EI-5-F-3c", "dos bloqueos, esquiva, gancho, flexión y crochet al cuerpo"),
-    ("AI-3-ED-2-PA-1c-6-BA", "esquiva abajo, esquiva, paso atrás, jab al cuerpo, gancho y ballesteo"),
+    ("B-1-B-5-EI-5-F-3c", "dos bloqueos, esquiva, gancho, flexión y crochet al cuerpo"),  # REVISAR CON ENTRENADOR: tras el bloqueo, gancho y no recto
+    ("AI-3-ED-4-PA-1c-6-BA", "esquiva abajo, esquiva, paso atrás, jab al cuerpo, gancho y ballesteo"),
     ("1-EI-4c-2-AD-3-F-5-B", "esquiva, esquiva abajo, flexión con gancho y bloqueo"),
     ("BA-2-ED-6c-3-AI-4-PA-1", "ballesteo, esquiva, esquiva abajo y paso atrás con jab"),
-    ("F-5c-B-2-EI-3-AD-6-CA", "flexión, bloqueo, esquiva, esquiva abajo y cambio de ángulo"),
+    ("F-5c-B-4-EI-3-AD-6-CA", "flexión, gancho al cuerpo, bloqueo, crochet, esquiva y cambio de ángulo"),
 ]
 
 
@@ -412,11 +413,9 @@ def problemas(combos):
             if not minimo <= pct <= maximo:
                 malos.append(f"golpe {numero_} a la cara en {NIVEL.get(nivel, 'total')}: {pct:.1f} % "
                              f"(entre {minimo} y {maximo} %)")
-    jab, cinco_seis = empiezan(combos)
-    if jab < MIN_EMPIEZAN_JAB:
-        malos.append(f"empiezan con el jab {jab:.0f} % de las que empiezan por golpe (mínimo {MIN_EMPIEZAN_JAB} %)")
-    if cinco_seis > MAX_EMPIEZAN_5_6:
-        malos.append(f"empiezan con 5 o 6 el {cinco_seis:.0f} % (máximo {MAX_EMPIEZAN_5_6} %)")
+    if empiezan_con_jab(combos) < MIN_EMPIEZAN_JAB:
+        malos.append(f"empiezan con el jab {empiezan_con_jab(combos):.0f} % de las que empiezan por golpe "
+                     f"(mínimo {MIN_EMPIEZAN_JAB} %)")
     malos += [f"nombre repetido: «{n}»" for n, v in Counter(c["nombre"] for c in combos).items() if v > 1]
     for c in combos:
         if re.search(r"\d", c["nombre"]):
@@ -441,13 +440,15 @@ def problemas(combos):
     return malos
 
 
-def empiezan(combos):
-    """% de las que empiezan por golpe que empiezan con el jab y % de todas que empiezan con 5 o 6."""
-    primeras = [c["acciones"][0] for c in combos]
-    con_golpe = [a for a in primeras if a.tipo == "golpe"]
-    jab = 100 * sum(a.id == "jab" for a in con_golpe) / len(con_golpe)
-    cinco_seis = 100 * sum(a.familia == "uppercut" for a in primeras) / len(primeras)
-    return jab, cinco_seis
+def empiezan_con_jab(combos):
+    """% de las que empiezan por golpe que empiezan con el jab (a la cara)."""
+    con_golpe = [c["acciones"][0] for c in combos if c["acciones"][0].tipo == "golpe"]
+    return 100 * sum(a.id == "jab" for a in con_golpe) / len(con_golpe)
+
+
+def dos_ganchos_seguidos(acciones):
+    """Si lleva dos ganchos (5 o 6, a la cara o al cuerpo) uno detrás de otro."""
+    return any(a.familia == b.familia == "uppercut" for a, b in zip(acciones, acciones[1:]))
 
 
 def usos_por_id(combos):
@@ -552,6 +553,7 @@ def documento(combos):
         w("")
         tabla(w, [c for c in combos if c["familia"] is None and c["nivel"] == nivel])
         w("")
+    dudas(w, combos)
     salen(w, combos)
     return "\n".join(L) + "\n"
 
@@ -609,15 +611,14 @@ def resumen_vocabulario(w, combos):
     w("Comprobado por el script (en total y en cada nivel para los golpes a la cara): cada golpe a la cara dentro de su")
     w(f"rango; cada golpe al cuerpo, al menos {MIN_CUERPO} veces; cada defensa, al menos {MIN_DEFENSA}; derecha e izquierda de")
     w(f"cada defensa con lado, a menos de un {MAX_DIFERENCIA_LADO} % de diferencia; cada salida, al menos {MIN_SALIDA}; de las")
-    w(f"que empiezan por golpe, al menos el {MIN_EMPIEZAN_JAB} % empiezan con el jab; como mucho el {MAX_EMPIEZAN_5_6} % de")
-    w("todas empiezan con 5 o 6 (a la cara o al cuerpo).")
+    w(f"que empiezan por golpe, al menos el {MIN_EMPIEZAN_JAB} % empiezan con el jab. Los golpes 2 a 6 valen lo mismo;")
+    w("solo el jab puede salir más.")
     w("")
-    jab, cinco_seis = empiezan(combos)
     primeras = [c["acciones"][0] for c in combos]
     con_golpe = sum(a.tipo == "golpe" for a in primeras)
     w(f"**Cómo empiezan:** {con_golpe} de {len(combos)} empiezan por golpe y, de ellas, "
-      f"{sum(a.id == 'jab' for a in primeras)} con el jab ({coma(jab, 0)} %). "
-      f"Empiezan con 5 o 6: {sum(a.familia == 'uppercut' for a in primeras)} ({coma(cinco_seis, 0)} % de todas).")
+      f"{sum(a.id == 'jab' for a in primeras)} con el jab ({coma(empiezan_con_jab(combos), 0)} %). "
+      f"Empiezan con 5 o 6: {sum(a.familia == 'uppercut' for a in primeras)}.")
     w("")
     w("**Golpes a la cara** (% sobre los golpes a la cara)")
     w("")
@@ -653,6 +654,30 @@ def resumen_vocabulario(w, combos):
       f"| {usos['paso_lateral_izq']} |")
     w(f"| pivote | {usos['pivote']} | — | — |")
     w(f"| cambio de ángulo | {usos['salir']} | — | — |")
+
+
+def dudas(w, combos):
+    """Las combinaciones marcadas con REVISAR CON ENTRENADOR en este fichero y las de dos ganchos seguidos."""
+    marcas = {}
+    for linea in Path(__file__).read_text(encoding="utf-8").splitlines():
+        if (m := re.search(r'"([0-9A-Z{}c-]+)", "[^"]*"\),\s*# REVISAR CON ENTRENADOR: (.+)', linea)):
+            marcas[m.group(1)] = m.group(2)
+    crudas = {notacion: clave for _, _, _, miembros in FAMILIAS for clave, _, _, notacion, _ in miembros}
+    w("## Dudas de técnica")
+    w("")
+    w("Golpes cambiados para cuadrar el balance que pueden no ser naturales. **REVISAR CON ENTRENADOR.**")
+    w("")
+    w("| # | Acciones | Duda |")
+    w("|---|---|---|")
+    for c in combos:
+        cruda = next((n for n, k in crudas.items() if k == c["clave"]), c["notacion"])
+        if cruda in marcas:
+            w(f"| {c['n']} | {texto(c['acciones'])} | {marcas[cruda]} |")
+    seguidos = [c for c in combos if dos_ganchos_seguidos(c["acciones"])]
+    w("")
+    w(f"Con dos ganchos (5 o 6) seguidos hay {len(seguidos)}: "
+      + ", ".join(f"#{c['n']}" for c in seguidos) + ". ¿Son demasiadas?")
+    w("")
 
 
 def salen(w, combos):

@@ -128,9 +128,9 @@ FAMILIAS = [
     ("F9", "Gancho y crochet", "Ganchos (5 y 6) en la corta, rematados con crochet o recto.", [
         ("F9-B", "base", None, "6-3", "gancho-crochet"),
         ("F9-Bb", "variante", "F9-B", "4-5-6", "crochet y dos ganchos"),  # REVISAR CON ENTRENADOR: dos ganchos seguidos
-        ("F9-M", "crece", "F9-B", "1-2-{F9-B}-AI", "jab-recto, gancho-crochet y esquiva abajo"),
+        ("F9-M", "crece", "F9-B", "1-2-{F9-B}-AI", "jab-recto, gancho-crochet y esquiva abajo"),  # REVISAR CON ENTRENADOR: recto y gancho trasero seguidos (misma mano)
         ("F9-Mb", "variante", "F9-M", "1-{F9-Bb}-AD", "jab-crochet, dos ganchos y esquiva abajo"),
-        ("F9-A", "crece", "F9-M", "{F9-M}-1-2-EI", "jab-recto, gancho-crochet, esquiva abajo, jab-recto y esquiva"),
+        ("F9-A", "crece", "F9-M", "{F9-M}-1-2-EI", "jab-recto, gancho-crochet, esquiva abajo, jab-recto y esquiva"),  # REVISAR CON ENTRENADOR: recto y gancho trasero seguidos (misma mano)
         ("F9-Ab", "variante", "F9-A", "{F9-Mb}-5c-3-BA", "jab-crochet, dos ganchos, esquiva abajo, gancho al cuerpo y ballesteo"),
     ]),
     ("F10", "Doble jab", "Doble jab para entrar, y lo que venga.", [

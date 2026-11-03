@@ -392,6 +392,8 @@ Golpes cambiados para cuadrar el balance que pueden no ser naturales. **REVISAR 
 | 38 | bloqueo · 5 · 6 · bloqueo | dos ganchos seguidos |
 | 39 | 1 · 6 · bloqueo | jab y gancho trasero |
 | 51 | 4 · 5 · 6 | dos ganchos seguidos |
+| 52 | 1 · 2 · 6 · 3 · esquiva abajo izquierda | recto y gancho trasero seguidos (misma mano) |
+| 54 | 1 · 2 · 6 · 3 · esquiva abajo izquierda · 1 · 2 · esquiva izquierda | recto y gancho trasero seguidos (misma mano) |
 | 57 | 1 · 1 · 6 · 5 | dos ganchos seguidos |
 | 75 | 1 al cuerpo · 1 · 4 | crochet trasero tras dos jabs |
 | 113 | 1 · ballesteo · 6 · flexión | tras el ballesteo, gancho y no recto |

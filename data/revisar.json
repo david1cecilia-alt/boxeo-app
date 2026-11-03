@@ -62,9 +62,19 @@
       "texto": "#51 «4 · 5 · 6»: dos ganchos seguidos"
     },
     {
+      "id": "combinaciones-111d3dcc",
+      "origen": "data/combinaciones.json",
+      "texto": "#52 «1 · 2 · 6 · 3 · esquiva abajo izquierda»: recto y gancho trasero seguidos (misma mano)"
+    },
+    {
       "id": "combinaciones-5ed3de27",
       "origen": "data/combinaciones.json",
       "texto": "#53 «1 · 4 · 5 · 6 · esquiva abajo derecha»: dos ganchos seguidos"
+    },
+    {
+      "id": "combinaciones-86f4293f",
+      "origen": "data/combinaciones.json",
+      "texto": "#54 «1 · 2 · 6 · 3 · esquiva abajo izquierda · 1 · 2 · esquiva izquierda»: recto y gancho trasero seguidos (misma mano)"
     },
     {
       "id": "combinaciones-c53b299b",

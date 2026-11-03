@@ -64,9 +64,9 @@ def test_toda_la_biblioteca_esta_marcada_para_revisar(crudo):
 
 
 def test_las_dudas_de_tecnica_estan_en_los_datos_y_en_revisar_json(crudo):
-    # Las 8 marcadas en herramientas/biblioteca.py y las 15 con 5-6 o 6-5 seguidos (3 coinciden).
+    # Las 10 marcadas en herramientas/biblioteca.py y las 15 con 5-6 o 6-5 seguidos (3 coinciden).
     con_duda = [c for c in crudo["combinaciones"] if "revisar" in c]
-    assert sorted(c["n"] for c in con_duda) == [31, 33, 35, 38, 39, 41, 43, 51, 53, 55, 57, 59, 61, 63, 65, 67, 75,
+    assert sorted(c["n"] for c in con_duda) == [31, 33, 35, 38, 39, 41, 43, 51, 52, 53, 54, 55, 57, 59, 61, 63, 65, 67, 75,
                                                 113, 144, 146]
     puntos = json.loads((RUTA_DATOS / "revisar.json").read_text(encoding="utf-8"))["puntos"]
     textos = {p["texto"] for p in puntos if p["origen"] == "data/combinaciones.json"}

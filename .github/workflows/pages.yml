@@ -1,18 +1,14 @@
-# Tests (Python + equivalencia con el motor JS) y, solo si pasan, despliegue de la PWA en GitHub Pages.
+# Tests (Python + equivalencia con el motor JS) en cada push de cualquier rama y en cada PR; el
+# despliegue de la PWA en GitHub Pages, solo desde main y solo si pasan.
 name: Tests y despliegue
 
 on:
   push:
-    branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
-
-# Un solo despliegue a la vez; si llega otro push, el que está en marcha termina.
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 jobs:
   tests:
@@ -35,7 +31,12 @@ jobs:
 
   desplegar:
     needs: tests
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    # Un solo despliegue a la vez; si llega otro push, el que está en marcha termina.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     permissions:
       pages: write
       id-token: write

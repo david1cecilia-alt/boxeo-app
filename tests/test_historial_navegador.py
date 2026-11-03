@@ -17,6 +17,7 @@ pytestmark = pytest.mark.skipif(not HAY_PLAYWRIGHT and not os.environ.get("CI"),
                                 reason="Playwright no está instalado")
 
 ANCHOS = (390, 1024, 1440)
+BARRA = 15  # px de la barra de desplazamiento, como en un PC
 
 # Guarda las sesiones con el almacén y el historial de la app. En http://boxeo.local (no seguro)
 # no hay crypto.randomUUID: los ids los pone la prueba. Septiembre, con dos cifras de sesiones.
@@ -70,6 +71,12 @@ def _abrir_historial(pagina, ancho, ruta, esperar):
     pagina.wait_for_selector(esperar)
     pagina.evaluate("document.fonts.ready")
     pagina.add_style_tag(content="::-webkit-scrollbar { width: 15px; }")
+    # Si hay barra (la página no cabe en alto), tiene que quitar sus 15 px: a 390 quedan 375 útiles.
+    # Si no los quitara, las pruebas medirían sin barra y no comprobarían lo que dicen.
+    alto, ventana, util = pagina.evaluate(
+        "[document.documentElement.scrollHeight, innerHeight, document.documentElement.clientWidth]")
+    if alto > ventana:
+        assert util == ancho - BARRA, f"a {ancho} px con barra quedan {util} px útiles, no {ancho - BARRA}"
 
 
 @pytest.mark.parametrize("ancho", ANCHOS)

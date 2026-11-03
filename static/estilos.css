@@ -795,7 +795,8 @@ button.volver {
 :is(.quitar-practicar, .cerrar-hoja) svg {
   width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round;
 }
-/* Cuánto más: selector segmentado de dos (radios); el elegido, en claro como los chips. */
+/* Cuánto más: selector segmentado de dos (radios); el elegido, en claro como los chips. Letra y
+   relleno, los de Velocidad. */
 .segmentado {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px;
   margin: 0 6px 0 0; padding: 3px; border: 0; border-radius: 16px; background: var(--secundario);
@@ -804,21 +805,20 @@ button.volver {
 .segmentado input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
 .segmentado span {
   display: grid; place-items: center; min-height: 42px; padding: 4px 6px; border-radius: 13px;
-  font-size: 0.8125rem; line-height: 1.2; text-align: center; color: var(--suave);
+  font-size: 0.875rem; line-height: 1.2; text-align: center; white-space: nowrap; color: var(--suave);
 }
 .segmentado input:checked + span { background: var(--chip-activo); color: var(--sobre-chip-activo); font-weight: 600; }
 .segmentado input:focus-visible + span { outline: 3px solid var(--foco); outline-offset: 1px; }
-/* En la tarjeta estrecha (tres en fila a 1024) la letra baja un punto: «Bastante más» en una línea. */
-@container (max-width: 200px) {
-  .segmentado { margin-right: 0; }
-  .segmentado span { padding-inline: 0; font-size: 0.75rem; }
+/* Si en la tarjeta no caben los dos en una fila, uno encima del otro (según el ancho de la tarjeta). */
+@container (max-width: 239.98px) {
+  .segmentado { grid-template-columns: minmax(0, 1fr); margin-right: 0; }
 }
 @media (min-width: 720px) {
   .huecos-practicar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-/* Panel para elegir: hoja inferior en el móvil y diálogo centrado desde 720 px. Las pestañas
-   comparten celda (la del panel más alto): la hoja no cambia de alto al cambiar de pestaña. */
+/* Panel para elegir: hoja inferior en el móvil y diálogo centrado desde 720 px. En el diálogo las
+   pestañas comparten celda (la del panel más alto): no cambia de alto al cambiar de pestaña. */
 dialog.hoja { padding: 0; }
 .hoja-contenido { display: grid; gap: 14px; padding: 8px 8px 20px 20px; }
 .hoja-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -854,6 +854,8 @@ dialog.hoja { padding: 0; }
     border-bottom: 0; border-radius: var(--radio) var(--radio) 0 0;
   }
   .hoja-contenido { padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+  /* La hoja mide lo que su pestaña (85dvh como máximo; si no cabe, scroll dentro). */
+  .paneles-hoja > [hidden] { display: none; }
 }
 @media (min-width: 720px) {
   .fichas.numeros { grid-template-columns: repeat(3, minmax(0, 1fr)); }

@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from motor.acciones import RUTA_DATOS, biblioteca, defensa_por_nivel, notacion
+from motor.acciones import RUTA_DATOS, biblioteca, notacion
 from motor.reglas import validar
 
 NUMEROS = set(range(1, 7))
@@ -41,17 +41,11 @@ def test_hay_combinaciones_en_los_tres_niveles():
 
 @pytest.mark.parametrize("nivel", [1, 2, 3])
 def test_cada_nivel_cubre_del_1_al_6_y_da_para_no_repetir(nivel):
-    # Cada nivel incluye los inferiores.
-    disponibles = [c for c in biblioteca() if c.nivel <= nivel]
+    # El sorteo de cada nivel solo usa las suyas.
+    disponibles = [c for c in biblioteca() if c.nivel == nivel]
     numeros = {a.numero for c in disponibles for a in c.acciones if a.numero}
     assert numeros == NUMEROS
-    for con_defensa in (True, False):
-        grupo = [c for c in disponibles if c.con_defensa == con_defensa]
-        assert len(grupo) > VENTANA, f"nivel {nivel}, defensa={con_defensa}: solo {len(grupo)}"
-
-
-def test_proporcion_de_defensa_por_nivel():
-    assert defensa_por_nivel() == {1: 0.15, 2: 0.30, 3: 0.40}
+    assert len(disponibles) > VENTANA, f"nivel {nivel}: solo {len(disponibles)}"
 
 
 def test_los_16_clasicos_de_antes_siguen_con_su_nombre():

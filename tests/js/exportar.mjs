@@ -1,6 +1,6 @@
 // Genera con el motor JS lo que valida tests/test_equivalencia_js.py: sorteos de la biblioteca
-// por nivel y con refuerzo (Practicar), guiones de varias configuraciones, el espejo del catálogo
-// y el nivel por número de acciones.
+// por nivel, guiones de varias configuraciones, el espejo del catálogo y el nivel por número de
+// acciones.
 // Uso: node tests/js/exportar.mjs salida.json [combinaciones_por_nivel]
 import { writeFileSync } from "node:fs";
 
@@ -9,7 +9,7 @@ import { crearAzar } from "../../static/motor/azar.js";
 import { datos } from "../../static/motor/datos.js";
 import { nivelDe } from "../../static/motor/reglas.js";
 import { VELOCIDAD_SENAL, segundosHabla } from "../../static/motor/ritmo.js";
-import { SorteoBiblioteca, cargarPerfil } from "../../static/motor/sorteo.js";
+import { SorteoBiblioteca } from "../../static/motor/sorteo.js";
 import { construirGuion } from "../../static/motor/temporizador.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
 
@@ -30,12 +30,6 @@ const sorteos = {};
 for (const nivel of NIVELES) {
   sorteos[nivel] = { ortodoxo: sortear(nivel, false, 300 + nivel), zurdo: sortear(nivel, true, 300 + nivel) };
 }
-
-// "Practicar": el perfil de data/perfil.json con un refuerzo temporal.
-const REFUERZOS = [["jab"], ["bloqueo"], ["gancho_izq"], ["esquiva_izq", "esquiva_der"], ["uppercut_der"]];
-const refuerzos = REFUERZOS.map((ids) => ({
-  ids, sorteo: sortear(2, false, 200, { ...cargarPerfil(), refuerzo: { acciones: ids, factor: 3.0 } }),
-}));
 
 const CONFIGS = [
   { asaltos: 3, duracion_asalto: 180, descanso: 60, nivel: 1 },
@@ -71,4 +65,4 @@ const senales = {
   segundos: Object.fromEntries(datos().presets.reacciones.map((r) => [r.texto, segundosHabla(r.texto, VELOCIDAD_SENAL)])),
 };
 
-writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, refuerzos, sorteos, senales }));
+writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, sorteos, senales }));

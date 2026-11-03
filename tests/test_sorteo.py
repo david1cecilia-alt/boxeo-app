@@ -1,10 +1,11 @@
-"""Sorteo de la sesión: biblioteca por nivel, sin repetir en 5, cobertura del 1 al 6 y % de defensa."""
+"""Sorteo de la sesión: solo las del nivel y uniforme, sin repetir en 5 y con cobertura del 1 al 6."""
 import random
+from collections import Counter
 
 import pytest
 
-from motor.acciones import acciones_por_ids, biblioteca, defensa_por_nivel, espejo_combo, numero
-from motor.sorteo import NUMEROS, PERFIL_NEUTRO, SIN_REPETIR, SorteoBiblioteca, cargar_perfil
+from motor.acciones import acciones_por_ids, biblioteca, espejo_combo, numero
+from motor.sorteo import NUMEROS, SIN_REPETIR, SorteoBiblioteca
 from motor.temporizador import ConfigSesion, cargar_presets, construir_guion
 
 N = 3000
@@ -21,10 +22,10 @@ def _niveles():
 
 
 @pytest.mark.parametrize("nivel", NIVELES)
-def test_filtra_por_nivel_incluyendo_los_inferiores(nivel):
+def test_cada_nivel_sortea_solo_de_las_suyas_y_salen_todas(nivel):
     niveles = _niveles()
-    salidas = {niveles[tuple(a.id for a in c.acciones)] for c in _sortear(nivel)}
-    assert salidas == set(range(1, nivel + 1))
+    salidas = {tuple(a.id for a in c.acciones) for c in _sortear(nivel)}
+    assert salidas == {k for k, n in niveles.items() if n == nivel}
 
 
 @pytest.mark.parametrize("nivel", NIVELES)
@@ -73,19 +74,15 @@ def test_en_la_prueba_corta_de_basico_casi_siempre_salen_todos(nivel=1):
 
 
 @pytest.mark.parametrize("nivel", NIVELES)
-def test_proporcion_de_defensa_del_nivel(nivel):
-    combos = _sortear(nivel, n=5000, perfil=PERFIL_NEUTRO)
-    con_defensa = sum(any(a.tipo == "defensa" for a in c.acciones) for c in combos) / len(combos)
-    assert abs(con_defensa - defensa_por_nivel()[nivel]) <= 0.04, f"{con_defensa:.1%}"
+def test_sin_preferencias_es_uniforme(nivel):
+    # Tras las 6 primeras (cobertura) todas pesan igual: cada una sale ~N/len veces.
+    combos = _sortear(nivel, n=20000)[6:]
+    veces = Counter(tuple(a.id for a in c.acciones) for c in combos)
+    media = len(combos) / len(veces)
+    assert max(veces.values()) < 1.25 * media and min(veces.values()) > 0.75 * media, veces.most_common(3)
 
 
 @pytest.mark.parametrize("nivel", NIVELES)
 def test_zurdo_es_el_espejo_del_ortodoxo(nivel):
     for o, z in zip(_sortear(nivel, n=500, semilla=4), _sortear(nivel, n=500, zurdo=True, semilla=4)):
         assert list(z.acciones) == espejo_combo(list(o.acciones))
-
-
-def test_el_refuerzo_de_practicar_sube_esas_combinaciones():
-    def lleva(combos): return sum(any(a.id == "uppercut_der" for a in c.acciones) for c in combos) / len(combos)
-    reforzado = {**cargar_perfil(), "refuerzo": {"acciones": ["uppercut_der"], "factor": 3.0}}
-    assert lleva(_sortear(2, perfil=reforzado)) > lleva(_sortear(2)) + 0.05

@@ -15,8 +15,8 @@ from pathlib import Path
 import pytest
 
 from motor.acciones import Accion, acciones_por_ids, biblioteca, catalogo, espejo, espejo_combo, texto_hablado
-from motor.reglas import nivel_de, ultimo_golpe
-from motor.sorteo import ACCIONES_COLETILLA, NIVEL_COLETILLA, NUMEROS, SIN_REPETIR, SorteoBiblioteca, cargar_perfil
+from motor.reglas import nivel_de
+from motor.sorteo import ACCIONES_COLETILLA, NIVEL_COLETILLA, NUMEROS, SIN_REPETIR, SorteoBiblioteca
 from motor.ritmo import VELOCIDAD_SENAL, VELOCIDADES, duracion_estimada, rango_pausa, segundos_habla
 from motor.temporizador import (AVISO_ANTES_FIN, DURACION_AVISO, DURACION_REACCION, FACTOR_VOZ_RAPIDA,
                                 MARGEN, PREPARACION, ConfigSesion, cargar_presets, construir_guion,
@@ -55,8 +55,8 @@ def js(ruta_js):
 
 # ---------- Sorteo de la biblioteca ----------
 
-def _biblioteca_hasta(nivel):
-    return {tuple(a.id for a in c.acciones) for c in biblioteca() if c.nivel <= nivel}
+def _del_nivel(nivel):
+    return {tuple(a.id for a in c.acciones) for c in biblioteca() if c.nivel == nivel}
 
 
 @pytest.mark.parametrize("nivel", NIVELES)
@@ -64,7 +64,7 @@ def test_sorteo_js_cumple_las_mismas_reglas_que_el_de_python(js, nivel):
     sorteo = js["sorteos"][str(nivel)]
     ortodoxas = [tuple(ids) for ids in sorteo["ortodoxo"]]
     assert len(ortodoxas) == MUESTRAS
-    assert set(ortodoxas) <= _biblioteca_hasta(nivel)
+    assert set(ortodoxas) == _del_nivel(nivel)
     for i, c in enumerate(ortodoxas):
         assert c not in ortodoxas[max(0, i - SIN_REPETIR):i], f"repetida en {i}"
     primeras = {a.numero for ids in ortodoxas[:6] for a in acciones_por_ids(list(ids)) if a.numero}
@@ -78,7 +78,7 @@ def test_sorteo_js_saca_lo_mismo_que_el_de_python(js, nivel):
     sorteo = SorteoBiblioteca(nivel, rng=random.Random(nivel))
     python = [list(sorteo.siguiente().acciones) for _ in range(MUESTRAS)]
     javascript = [acciones_por_ids(ids) for ids in js["sorteos"][str(nivel)]["ortodoxo"]]
-    condiciones = {"defensa": lambda c: any(a.tipo == "defensa" for a in c), **CONDICIONES}
+    condiciones = {"defensa": lambda c: any(a.tipo == "defensa" for a in c)}
     for numero_ in sorted(NUMEROS):
         condiciones[f"golpe {numero_}"] = lambda c, n=numero_: any(a.numero == n for a in c)
     for nombre, condicion in condiciones.items():
@@ -86,30 +86,8 @@ def test_sorteo_js_saca_lo_mismo_que_el_de_python(js, nivel):
         assert abs(p_js - p_py) <= TOLERANCIA_PROPORCION, f"nivel {nivel}, {nombre}: JS {p_js:.1%} vs Python {p_py:.1%}"
 
 
-# ---------- Proporciones del perfil ----------
-
-CONDICIONES = {
-    "termina_en_gancho": lambda acciones: (g := ultimo_golpe(acciones)) is not None and g.familia == "gancho",
-    "bloquear_y_devolver": lambda acciones: any(a.familia == "bloqueo" for a in acciones),
-    "entrada_con_jab": lambda acciones: acciones[0].id == "jab",
-}
-
-
 def _proporcion(muestra: list[list[Accion]], condicion) -> float:
     return sum(1 for acciones in muestra if condicion(acciones)) / len(muestra)
-
-
-@pytest.mark.parametrize("i", range(5))
-def test_refuerzo_de_practicar_igual_en_js_y_python(js, i):
-    caso = js["refuerzos"][i]
-    perfil = {**cargar_perfil(), "refuerzo": {"acciones": caso["ids"], "factor": 3.0}}
-    sorteo = SorteoBiblioteca(2, perfil=perfil, rng=random.Random(200))
-    python = [list(sorteo.siguiente().acciones) for _ in range(MUESTRAS)]
-    javascript = [acciones_por_ids(ids) for ids in caso["sorteo"]]
-    assert {tuple(a.id for a in c) for c in javascript} <= _biblioteca_hasta(2)
-    def lleva(acciones): return any(a.id in caso["ids"] for a in acciones)
-    p_py, p_js = _proporcion(python, lleva), _proporcion(javascript, lleva)
-    assert abs(p_js - p_py) <= TOLERANCIA_PROPORCION, f"{caso['ids']}: JS {p_js:.1%} vs Python {p_py:.1%}"
 
 
 # ---------- Espejo ----------
@@ -166,7 +144,8 @@ def comprobar_guion(eventos: list[dict], c: ConfigSesion) -> None:
         for k in combos + reservas + coletillas:
             acciones = acciones_por_ids(k["ids"])
             ortodoxas = espejo_combo(acciones) if c.zurdo else acciones
-            assert tuple(a.id for a in ortodoxas) in _biblioteca_hasta(c.nivel), "no es de la biblioteca"
+            if k["tipo"] != "coletilla":
+                assert tuple(a.id for a in ortodoxas) in _del_nivel(c.nivel), "no es de su nivel"
             assert k["duracion"] == duracion_estimada(acciones, k["texto"], c.velocidad)
             assert k["texto"] == texto_hablado(acciones, c.voz, c.zurdo)
             assert minima <= k["hueco"] <= maxima

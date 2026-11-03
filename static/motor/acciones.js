@@ -49,12 +49,8 @@ export const biblioteca = segunDatos((d) => d.combinaciones.combinaciones.map((c
   const acciones = accionesPorIds(c.ids);
   return Object.freeze({
     notacion: c.notacion, nivel: c.nivel, acciones, nombre: c.nombre ?? null,
-    conDefensa: acciones.some((a) => a.tipo === "defensa"),
   });
 }));
-
-// Proporción de combinaciones con defensa en la sesión, por nivel.
-export const defensaPorNivel = segunDatos((d) => d.combinaciones.defensa_por_nivel);
 
 // Como "1-2-esquiva-2": número de cada golpe (en ortodoxo), orden de cada defensa o su id.
 export function notacion(acciones) {

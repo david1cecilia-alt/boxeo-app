@@ -83,10 +83,6 @@ class ComboBiblioteca:
     acciones: tuple[Accion, ...]
     nombre: str | None = None  # los clásicos de antes conservan su nombre
 
-    @property
-    def con_defensa(self) -> bool:
-        return any(a.tipo == "defensa" for a in self.acciones)
-
 
 @lru_cache
 def _leer_biblioteca() -> dict:
@@ -99,11 +95,6 @@ def biblioteca() -> tuple[ComboBiblioteca, ...]:
     """Combinaciones escritas a mano (data/combinaciones.json), en ortodoxo."""
     return tuple(ComboBiblioteca(c["notacion"], c["nivel"], tuple(acciones_por_ids(c["ids"])), c.get("nombre"))
                  for c in _leer_biblioteca()["combinaciones"])
-
-
-def defensa_por_nivel() -> dict[int, float]:
-    """Proporción de combinaciones con defensa en la sesión, por nivel."""
-    return {int(n): p for n, p in _leer_biblioteca()["defensa_por_nivel"].items()}
 
 
 def notacion(acciones) -> str:

@@ -817,8 +817,9 @@ button.volver {
   .huecos-practicar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-/* Panel para elegir: hoja inferior en el móvil y diálogo centrado desde 720 px. En el diálogo las
-   pestañas comparten celda (la del panel más alto): no cambia de alto al cambiar de pestaña. */
+/* Panel para elegir: hoja inferior en el móvil y diálogo centrado desde 720 px. Las pestañas
+   comparten celda (la del panel más alto): no cambia de alto al cambiar de pestaña ni las fichas
+   se mueven bajo el dedo o el ratón. 85dvh como máximo en el móvil; si no cabe, scroll dentro. */
 dialog.hoja { padding: 0; }
 .hoja-contenido { display: grid; gap: 14px; padding: 8px 8px 20px 20px; }
 .hoja-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -854,8 +855,6 @@ dialog.hoja { padding: 0; }
     border-bottom: 0; border-radius: var(--radio) var(--radio) 0 0;
   }
   .hoja-contenido { padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
-  /* La hoja mide lo que su pestaña (85dvh como máximo; si no cabe, scroll dentro). */
-  .paneles-hoja > [hidden] { display: none; }
 }
 @media (min-width: 720px) {
   .fichas.numeros { grid-template-columns: repeat(3, minmax(0, 1fr)); }

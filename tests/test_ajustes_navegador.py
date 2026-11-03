@@ -273,17 +273,29 @@ def test_nada_se_sale_de_la_pantalla_a_390(ajustes):
     assert all(b["holgura"] >= 6 and b["dentro"] for b in _selector_holgado(pagina))
 
 
-def test_a_390_la_hoja_mide_lo_que_su_pestana_y_si_no_cabe_hace_scroll(ajustes):
+def _pestanas_quietas(pagina):
+    """Al cambiar de pestaña la hoja no cambia de alto ni de sitio, y ninguna ficha se queda con hover
+    porque se haya movido bajo el ratón (pasaba con «esquiva abajo» al pulsar Defensas). Devuelve la
+    hoja en cada pestaña."""
+    hojas, sitios = {}, set()
+    for pestana in ("golpe", "defensa", "movimiento", "golpe"):
+        pagina.click(f"#pestana-{pestana}")
+        pagina.wait_for_timeout(100)  # Chromium recalcula el hover en el fotograma siguiente
+        assert pagina.locator("#elegir-practicar [data-elegir]:hover").count() == 0
+        sitios.add(round(pagina.locator(f"#pestana-{pestana}").bounding_box()["y"]))
+        hojas[pestana] = _hoja(pagina)
+    assert len(sitios) == 1
+    assert len({(h["top"], h["alto"]) for h in hojas.values()}) == 1, hojas
+    return hojas
+
+
+def test_a_390_la_hoja_mide_lo_que_su_pestana_mas_alta_y_si_no_cabe_hace_scroll(ajustes):
     pagina = ajustes
     _abrir_panel(pagina)
-    altos = {}
-    for pestana in ("golpe", "defensa", "movimiento"):
-        pagina.click(f"#pestana-{pestana}")
-        hoja = _hoja(pagina)
-        altos[pestana] = hoja["alto"]
-        assert hoja["contenido"] == hoja["alto"] and hoja["alto"] <= 0.85 * 844, hoja
-        assert hoja["bajo"] <= 24, hoja  # bajo la última ficha, solo el relleno de la hoja
-    assert altos["movimiento"] < altos["golpe"] < altos["defensa"]
+    hojas = _pestanas_quietas(pagina)
+    defensa = hojas["defensa"]
+    assert defensa["contenido"] == defensa["alto"] and defensa["alto"] <= 0.85 * 844, defensa
+    assert defensa["bajo"] <= 24, defensa  # bajo la última defensa, solo el relleno de la hoja
     # En una pantalla baja, Defensas (7) no pasa de 85dvh y se llega a la última con scroll dentro.
     pagina.set_viewport_size({"width": 390, "height": 560})
     try:
@@ -320,6 +332,7 @@ def test_a_1024_tres_huecos_en_fila_y_el_panel_centrado(ajustes):
             assert boton["holgura"] >= 6, boton
         _abrir_panel(pagina)
         assert _filas(pagina) == [[3, 3], [1], [1] * 7, [1] * 3]
+        assert _pestanas_quietas(pagina)["defensa"]["bajo"] <= 24
         hoja = pagina.evaluate("() => document.querySelector('#elegir-practicar').getBoundingClientRect().toJSON()")
         assert hoja["width"] <= 560 and hoja["bottom"] < 768
         assert abs((hoja["left"] + hoja["right"]) / 2 - pagina.evaluate("document.documentElement.clientWidth") / 2) <= 1

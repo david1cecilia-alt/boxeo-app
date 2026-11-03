@@ -107,6 +107,13 @@ def test_las_etiquetas_de_las_cifras_caben_en_su_casilla(pagina, ancho):
     assert not [e for e in etiquetas if e[1] > 0], f"a {ancho} px se salen: {etiquetas}"
 
 
+FOCO_DEL_TITULO = """(titulo) => {
+  const t = document.querySelector(titulo);
+  const e = getComputedStyle(t);
+  return [t.matches(':focus-visible'), e.outlineStyle, e.textDecorationLine];
+}"""
+
+
 # Al abrir el detalle (o un día) el foco va a su título: se ve (subrayado rojo), sin recuadro blanco.
 @pytest.mark.parametrize("ruta, titulo", [("local%3Aprueba-1", "#t-detalle"), ("dia/2026-09-01", "#t-periodo")])
 def test_el_titulo_enfocado_se_subraya_sin_recuadro(pagina, ruta, titulo):
@@ -114,12 +121,31 @@ def test_el_titulo_enfocado_se_subraya_sin_recuadro(pagina, ruta, titulo):
     pagina.keyboard.press("Shift")  # el foco por teclado: el que se ve
     pagina.goto(f"{ORIGEN}/index.html#historial/{ruta}")
     pagina.wait_for_function(f"document.activeElement?.matches('{titulo}')")
-    foco = pagina.evaluate(f"""() => {{
-      const t = document.querySelector('{titulo}');
-      const e = getComputedStyle(t);
-      return [t.matches(':focus-visible'), e.outlineStyle, e.textDecorationLine];
-    }}""")
-    assert foco == [True, "none", "underline"]
+    assert pagina.evaluate(FOCO_DEL_TITULO, titulo) == [True, "none", "underline"]
+
+
+# Lo mismo en el título de cada vista (al llegar desde otra, el foco va a su h1) y en los que
+# reciben el foco dentro de Perfil y Ajustes. El foco no se quita: solo cambia cómo se ve.
+@pytest.mark.parametrize("vista, desde", [("entrenar", "perfil"), ("historial", "entrenar"),
+                                          ("perfil", "entrenar"), ("ajustes", "entrenar")])
+def test_el_titulo_de_cada_vista_se_subraya_sin_recuadro(pagina, vista, desde):
+    pagina.set_viewport_size({"width": 1440, "height": 900})
+    pagina.goto(f"{ORIGEN}/index.html#{desde}")
+    pagina.wait_for_selector(f"#vista-{desde} h1", state="visible")
+    pagina.keyboard.press("Shift")
+    pagina.evaluate(f"location.hash = '#{vista}'")
+    pagina.wait_for_function(f"document.activeElement?.matches('#t-{vista}')")
+    assert pagina.evaluate(FOCO_DEL_TITULO, f"#t-{vista}") == [True, "none", "underline"]
+
+
+@pytest.mark.parametrize("vista, titulo", [("perfil", "#t-notas"), ("ajustes", "#t-pesos")])
+def test_los_titulos_de_perfil_y_ajustes_se_subrayan_sin_recuadro(pagina, vista, titulo):
+    pagina.set_viewport_size({"width": 1440, "height": 900})
+    pagina.goto(f"{ORIGEN}/index.html#{vista}")
+    pagina.wait_for_selector(titulo, state="attached")
+    pagina.keyboard.press("Shift")
+    pagina.evaluate(f"document.querySelector('{titulo}').focus()")  # como tras añadir una nota o restablecer
+    assert pagina.evaluate(FOCO_DEL_TITULO, titulo) == [True, "none", "underline"]
 
 
 # Sesión vieja (prueba-13, la de mayo): en el detalle y en su valoración, los números en cifra y

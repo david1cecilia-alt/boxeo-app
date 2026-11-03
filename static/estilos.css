@@ -138,6 +138,12 @@ h3 { margin: 16px 0 6px; font-size: 0.85rem; font-weight: 600; color: var(--suav
 }
 h1:focus, h2:focus { outline: none; }
 h1:focus-visible, h2:focus-visible { outline: 3px solid var(--foco); outline-offset: 4px; }
+/* Títulos que reciben el foco al navegar (el de cada vista, el periodo, el día y el detalle del
+   Historial, los de Perfil y Ajustes): en vez del recuadro blanco, el subrayado rojo de los
+   enlaces de la app, más grueso. Sigue viéndose. */
+:is(h1, h2, h3)[tabindex="-1"]:focus-visible {
+  outline: none; text-decoration: underline 3px var(--acento); text-underline-offset: 6px;
+}
 
 /* Cabecera con foto fundida al negro (detrás del titular). La foto nunca se amplía por encima
    de su tamaño: en pantallas anchas se queda a la derecha y se funde también por la izquierda. */
@@ -698,12 +704,6 @@ a.fila-semana:hover { border-color: var(--suave); background: var(--superficie-h
 button.volver {
   padding: 0; border: 0; background: none; cursor: pointer; font: inherit; color: var(--texto);
   text-decoration: underline; text-decoration-color: var(--acento); text-underline-offset: 3px;
-}
-
-/* Títulos que reciben el foco al navegar por el Historial (el periodo, el día, el detalle): en vez
-   del recuadro blanco, el subrayado rojo de los enlaces de la app, más grueso. Sigue viéndose. */
-#historial-contenido :is(h2, h3)[tabindex="-1"]:focus-visible {
-  outline: none; text-decoration: underline 3px var(--acento); text-underline-offset: 6px;
 }
 
 /* Maestro-detalle. Móvil: o la lista o el detalle (con su enlace de volver). */

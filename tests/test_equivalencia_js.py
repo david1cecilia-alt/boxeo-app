@@ -17,7 +17,7 @@ import pytest
 from motor.acciones import Accion, acciones_por_ids, biblioteca, catalogo, espejo, espejo_combo, texto_hablado
 from motor.reglas import nivel_de, ultimo_golpe
 from motor.sorteo import ACCIONES_COLETILLA, NIVEL_COLETILLA, NUMEROS, SIN_REPETIR, SorteoBiblioteca, cargar_perfil
-from motor.ritmo import VELOCIDADES, duracion_estimada, rango_pausa
+from motor.ritmo import VELOCIDAD_SENAL, VELOCIDADES, duracion_estimada, rango_pausa, segundos_habla
 from motor.temporizador import (AVISO_ANTES_FIN, DURACION_AVISO, DURACION_REACCION, FACTOR_VOZ_RAPIDA,
                                 MARGEN, PREPARACION, ConfigSesion, cargar_presets, construir_guion,
                                 guion_a_dict)
@@ -226,3 +226,12 @@ def test_guiones_python_cumplen_los_mismos_invariantes(js):
 def test_motor_js_es_reproducible_con_la_misma_semilla(ruta_js, tmp_path):
     otra = _exportar(tmp_path / "otra.json")
     assert otra.read_bytes() == ruta_js.read_bytes()
+
+
+def test_senales_de_reaccion_a_la_misma_velocidad_y_duracion_que_python(js):
+    assert js["senales"]["velocidad"] == VELOCIDAD_SENAL
+    textos = [r["texto"] for r in cargar_presets()["reacciones"]]
+    assert sorted(js["senales"]["segundos"]) == sorted(textos)
+    for texto, segundos in js["senales"]["segundos"].items():
+        assert segundos == pytest.approx(segundos_habla(texto, VELOCIDAD_SENAL)), texto
+        assert segundos <= DURACION_REACCION, texto

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { notaAlcance, recomendarEstilo, textoFaltan } from "../../static/vistas/estilo.js";
+import { TEXTO_AFINAR, notaAlcance, recomendarEstilo, textoEmpate, textoFaltan } from "../../static/vistas/estilo.js";
 import { ESTILO, MI_ESTILO } from "../../static/vistas/opciones.js";
 
 const tabla = JSON.parse(readFileSync(new URL("../../data/estilos.json", import.meta.url), "utf-8"));
@@ -22,6 +22,10 @@ test("la tabla usa los estilos de «Mi estilo» y las respuestas del Perfil, con
   assert.ok(tabla.obligatorias.every((p) => p in tabla.puntos));
   assert.match(tabla._nota, /REVISAR CON ENTRENADOR/);
   assert.equal(tabla._fuentes.length, 3);
+  for (const f of tabla._fuentes) {
+    assert.ok(f.titulo, "cada fuente con su título");
+    assert.match(f.url, /^https:\/\/[^\s]+$/, `url de ${f.titulo}`);
+  }
 });
 
 test("con menos de 4 obligatorias respondidas pide las que faltan", () => {
@@ -42,18 +46,51 @@ test("un boxer claro, con su porqué hecho de sus respuestas", () => {
   assert.equal(r.tambien, null); // a 3 puntos
 });
 
-test("si el segundo queda a 1 punto o menos, también encajas como él", () => {
+test("si el segundo queda a 1 punto justo, también encajas como él", () => {
   const r = recomendar({ distancia: "media", presion: "contraatacar", volumen: "pocos_fuertes", iniciativa: "espero", defensa: "pies" });
   assert.deepEqual([r.puntos.contragolpeador, r.puntos.boxer_puncher], [3, 2]);
   assert.equal(r.nombre, "Contragolpeador");
+  assert.equal(r.empate, null);
   assert.equal(r.tambien, "Boxer-puncher");
 });
 
-test("a igual puntuación decide el orden de «Mi estilo», siempre igual", () => {
-  const r = recomendar({ distancia: "corta", presion: "salir", volumen: "combos_largos", iniciativa: "segun_rival" });
-  assert.deepEqual([r.puntos.boxer, r.puntos.fajador], [2, 2]);
-  assert.equal(r.estilo, "boxer");
-  assert.equal(r.tambien, "Fajador");
+test("a 2 puntos o más, el segundo no se nombra", () => {
+  const r = recomendar({ distancia: "larga", presion: "salir", volumen: "pocos_fuertes", iniciativa: "segun_rival", defensa: "pies" });
+  assert.deepEqual([r.puntos.boxer, r.puntos.boxer_puncher], [4, 2]);
+  assert.equal(r.nombre, "Boxer");
+  assert.equal(r.tambien, null);
+});
+
+test("con empate exacto no se elige a ninguno por el orden: encajas igual como los dos", () => {
+  const respuestas = { distancia: "corta", presion: "salir", volumen: "combos_largos", iniciativa: "segun_rival" };
+  const r = recomendar(respuestas);
+  assert.deepEqual([r.puntos.boxer, r.puntos.fajador, r.puntos.boxer_puncher], [2, 2, 1]);
+  assert.equal(r.estilo, null);
+  assert.equal(r.nombre, null);
+  assert.deepEqual(r.empate, ["Boxer", "Fajador"]);
+  assert.equal(r.tambien, null); // el «también» es solo para el que va a 1 punto de un ganador claro
+  assert.equal(textoEmpate(r.empate), "Encajas igual como Boxer y como Fajador.");
+  // El porqué junta las respuestas de los dos.
+  assert.equal(r.porque, "Porque prefieres la corta distancia, bajo presión te mueves y sales y lanzas combos largos.");
+  // Mismo resultado aunque cambie el orden en que se escribieron las respuestas.
+  const alReves = Object.fromEntries(Object.entries(respuestas).reverse());
+  assert.deepEqual(recomendar(alReves).empate, ["Boxer", "Fajador"]);
+});
+
+test("empate de más de dos: encajas igual como todos ellos", () => {
+  const r = recomendar({ distancia: "larga", presion: "intercambiar", volumen: "pocos_fuertes", iniciativa: "espero", cardio: "mejorar" });
+  assert.deepEqual(r.empate, ["Boxer", "Fajador", "Contragolpeador", "Boxer-puncher"]);
+  assert.equal(textoEmpate(r.empate), "Encajas igual como Boxer, como Fajador, como Contragolpeador y como Boxer-puncher.");
+  assert.deepEqual(r.avisos, ["Este estilo exige mucho fondo."]); // el fajador está entre los empatados
+});
+
+test("«Responde más preguntas para afinar» solo si quedan preguntas de estilo sin contestar", () => {
+  const todas = { distancia: "larga", presion: "salir", volumen: "pocos_fuertes", iniciativa: "segun_rival", defensa: "pies", golpe_favorito: "jab" };
+  assert.equal(recomendar(todas).afinar, false);
+  assert.equal(recomendar({ ...todas, golpe_favorito: "no_se" }).afinar, true); // «No lo sé» no cuenta
+  const { golpe_favorito, ...sinGolpe } = todas;
+  assert.equal(recomendar(sinGolpe).afinar, true);
+  assert.equal(TEXTO_AFINAR, "Responde más preguntas para afinar.");
 });
 
 test("fajador con cardio por mejorar avisa del fondo; con buen cardio, no", () => {

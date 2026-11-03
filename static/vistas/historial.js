@@ -1,31 +1,32 @@
-// Pestaña Historial: resumen y gráfico, las sesiones como una galería de fotos (Semana → Día →
-// sesión, Mes → Semana, Año → Mes; lógica en galeria.js), detalle con valoración (editable),
-// borrado y copia de seguridad (exportar / importar).
+// Pestaña Historial: resumen y gráfico, las sesiones como una galería de fotos (Año → Mes →
+// Semana → Día → sesión; lógica en galeria.js), detalle con valoración (editable), borrado y copia
+// de seguridad (exportar / importar). «Volver» siempre sube un nivel y solo hay uno (con una sesión
+// abierta, el del detalle).
 // La vista va en la ruta (#historial/semana/…, /dia/…, /mes/…, /ano/…, /<clave>): bajar de nivel
 // añade una entrada al historial del navegador y las flechas o el selector la sustituyen, así el
 // gesto atrás sube un nivel. En PC la galería y el detalle van en dos columnas; en móvil el CSS
 // muestra solo la galería o, si hay una sesión elegida, solo su detalle.
 import { ErrorAlmacen } from "../almacen.js";
 import { datos } from "../motor/datos.js";
-import { $, aFecha, anunciar, diaCorto, esc, fechaLarga, hoyIso, minutos } from "./dom.js";
+import { $, aFecha, anunciar, esc, fechaLarga, hoyIso, minutos, palabra, plural } from "./dom.js";
 import {
-  alCambiarDeNivel, diaDeLaVista, diasDeSemana, escribirRuta, leerRuta, mesesDelAno, rutaDeArriba, rutaDelDia,
-  semanaDeLaVista, semanasDelMes, vecinos,
+  alCambiarDeNivel, diaDeLaVista, diasDeSemana, escribirRuta, etiquetaFila, leerRuta, mesesDelAno, rutaDeArriba,
+  rutaDelDia, semanasDelMes, vecinos, vistaDeLaGaleria,
 } from "./galeria.js";
 import { activarGrafico, graficoSemanas } from "./grafico.js";
 import { SENSACION } from "./opciones.js";
 import { textoGuardado } from "./pasos.js";
-import { AGRUPACIONES, inicioPeriodo, lunes, minutosDeAsalto, porPeriodo, textoMinutos, tituloGrupo, totales } from "./resumen.js";
+import { AGRUPACIONES, inicioPeriodo, minutosDeAsalto, porPeriodo, textoMinutos, tituloGrupo, totales } from "./resumen.js";
 
 const MES = new Intl.DateTimeFormat("es-ES", { month: "short" });
 const MES_LARGO = new Intl.DateTimeFormat("es-ES", { month: "long" });
-const DIA_SEMANA = new Intl.DateTimeFormat("es-ES", { weekday: "short" });
+const LETRAS = ["L", "M", "X", "J", "V", "S", "D"]; // de lunes a domingo
 const DIA_LARGO = new Intl.DateTimeFormat("es-ES", { weekday: "long", day: "numeric", month: "long" });
 const mesYAno = (d) => `${MES_LARGO.format(d)} ${d.getFullYear()}`; // "octubre 2026", sin el "de"
 const mayuscula = (t) => `${t.charAt(0).toUpperCase()}${t.slice(1)}`;
 const fmt = (n) => n.toLocaleString("es-ES", { maximumFractionDigits: 1 });
-const plural = (n, una, varias) => `${n} ${n === 1 ? una : varias}`;
 const NOMBRE_NIVEL = { semana: "Semana", mes: "Mes", ano: "Año" };
+const mesCorto = (d) => mayuscula(MES.format(d).replace(".", ""));
 const FLECHAS = {
   semana: ["Semana anterior", "Semana siguiente"], mes: ["Mes anterior", "Mes siguiente"], ano: ["Año anterior", "Año siguiente"],
 };
@@ -72,12 +73,21 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
     }
   }
 
-  // «Volver»: si lo de arriba es lo anterior en el navegador, se vuelve atrás (no se apila).
-  function subir() {
-    const arriba = rutaDeArriba(vista, sesiones);
-    if (arriba === null) return;
+  // «Volver» (lleva su destino en data-subir): si es lo anterior en el navegador, se vuelve atrás
+  // (no se apila).
+  function subir(e) {
+    const arriba = e.currentTarget.dataset.subir;
     if (arriba === rutaPrevia) history.back();
     else navegar(arriba);
+  }
+
+  // «← Volver a la semana», «← Volver a octubre», «← Volver a 2026».
+  function botonVolver(arriba) {
+    const destino = leerRuta(arriba);
+    const texto = arriba ? {
+      dia: "al día", semana: "a la semana", mes: `a ${MES_LARGO.format(destino.inicio)}`, ano: `a ${destino.inicio.getFullYear()}`,
+    }[destino.nivel] : "al historial";
+    return `<button type="button" class="volver" data-subir="${esc(arriba)}">← Volver ${esc(texto)}</button>`;
   }
 
   async function pintar({ enfocar = false } = {}) {
@@ -97,8 +107,8 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
       <div class="resumen-historial">
         <h2 class="solo-lectores">Resumen de ${esc(mesActual)}</h2>
         <dl class="cifras">
-          <div class="destacada"><dt>sesiones / mes</dt><dd>${mes.sesiones}</dd></div>
-          <div><dt>asaltos / mes</dt><dd>${mes.asaltos}</dd></div>
+          <div class="destacada"><dt>${palabra(mes.sesiones, "sesión", "sesiones")} / mes</dt><dd>${mes.sesiones}</dd></div>
+          <div><dt>${palabra(mes.asaltos, "asalto", "asaltos")} / mes</dt><dd>${mes.asaltos}</dd></div>
           <div><dt>RPE medio</dt><dd>${mes.rpe == null ? "–" : `${fmt(mes.rpe)}<small>/10</small>`}</dd></div>
         </dl>
         ${graficoSemanas(series)}
@@ -130,7 +140,7 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
     if (clave) {
       await detalle(sesiones.find((x) => x.clave === clave), clave);
     } else if (enfocar) {
-      const foco = (focoPendiente && raiz.querySelector(focoPendiente)) || (raiz.querySelector("#t-dia") ?? raiz.querySelector("#t-periodo"));
+      const foco = (focoPendiente && raiz.querySelector(focoPendiente)) || raiz.querySelector("#t-periodo");
       (foco?.disabled ? raiz.querySelector("#t-periodo") : foco)?.focus();
     }
     focoPendiente = null;
@@ -141,104 +151,138 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
     return AGRUPACIONES.includes(elegido) ? elegido : "semana";
   }
 
-  // El periodo que se pinta: el de la ruta; en un día o un detalle, su semana.
-  function periodoVisible() {
-    const semana = semanaDeLaVista(vista, sesiones);
-    if (semana) return { nivel: "semana", inicio: semana };
-    if (vista.nivel === "sesion") return { nivel: "semana", inicio: lunes(new Date()) }; // la sesión no existe
-    return vista;
-  }
+  // Lo que pinta la galería: el nivel de la ruta o, con un detalle abierto, el de arriba.
+  const periodoVisible = () => vistaDeLaGaleria(vista, sesiones);
 
   function galeria(v) {
-    const { nivel, inicio } = periodoVisible();
-    const { anterior, siguiente } = vecinos(sesiones, nivel, inicio);
-    const delPeriodo = sesiones.filter((s) => inicioPeriodo(aFecha(s.fecha), nivel).getTime() === inicio.getTime());
-    const dia = diaDeLaVista(vista, sesiones);
-    const flecha = (id, destino, etiqueta) => `<button type="button" class="flecha" data-ir="${id}"
-      ${destino ? `data-ruta="${escribirRuta(nivel, destino)}"` : "disabled"} aria-label="${etiqueta}">${ICONO[id]}</button>`;
-    const celdas = { semana: celdasSemana, mes: celdasMes, ano: celdasAno }[nivel];
+    const g = periodoVisible();
+    const escala = g.nivel === "dia" ? "semana" : g.nivel;
+    // Con una sesión abierta, el único «Volver» es el del detalle (sube un nivel desde la sesión).
+    const arriba = vista.nivel === "sesion" ? null : rutaDeArriba(g, sesiones, rutaPrevia);
     return `
       <section class="sesiones galeria" aria-labelledby="t-sesiones">
         <div class="cabeza-sesiones">
           <h2 id="t-sesiones">Sesiones</h2>
           <div class="selector" role="group" aria-label="Ver las sesiones por">
-            ${AGRUPACIONES.map((a) => `<button type="button" data-nivel="${a}" aria-pressed="${a === nivel}">${NOMBRE_NIVEL[a]}</button>`).join("")}
+            ${AGRUPACIONES.map((a) => `<button type="button" data-nivel="${a}" aria-pressed="${a === escala}">${NOMBRE_NIVEL[a]}</button>`).join("")}
           </div>
         </div>
-        <div class="periodo">
-          ${flecha("anterior", anterior, FLECHAS[nivel][0])}
-          <div class="titulo-periodo">
-            <h3 id="t-periodo" tabindex="-1">${esc(tituloGrupo(inicio, nivel))}</h3>
-            <p>${resumenSesiones(delPeriodo)}</p>
-          </div>
-          ${flecha("siguiente", siguiente, FLECHAS[nivel][1])}
-        </div>
-        ${celdas(inicio, dia)}
-        ${dia ? diaAbierto(dia, v) : ""}
+        ${arriba ? `<p class="volver-galeria">${botonVolver(arriba)}</p>` : ""}
+        ${g.nivel === "dia" ? vistaDia(g.inicio, v) : periodo(g)}
         ${sesiones.length ? "" : `<p class="nota">Aún no hay sesiones. Las que termines aparecerán aquí.</p>`}
         <p class="nota">Guardado ${esc(historial.descripcion)}. Las valoraciones y notas, en este navegador.</p>
       </section>`;
   }
 
-  // Los 7 días: con sesiones, un enlace (a la lista del día o, si solo hay una, a su detalle).
-  function celdasSemana(inicio, abierto) {
-    return `<ol class="celdas dias">${diasDeSemana(sesiones, inicio).map((d) => {
+  // Semana, mes o año: título con flechas ‹ › y sus celdas (en el mes, con sus cifras debajo).
+  function periodo({ nivel, inicio }) {
+    const { anterior, siguiente } = vecinos(sesiones, nivel, inicio);
+    const delPeriodo = sesiones.filter((s) => inicioPeriodo(aFecha(s.fecha), nivel).getTime() === inicio.getTime());
+    const flecha = (id, destino, etiqueta) => `<button type="button" class="flecha" data-ir="${id}"
+      ${destino ? `data-ruta="${escribirRuta(nivel, destino)}"` : "disabled"} aria-label="${etiqueta}">${ICONO[id]}</button>`;
+    const celdas = { semana: celdasSemana, mes: calendarioMes, ano: celdasAno }[nivel];
+    return `
+        <div class="periodo">
+          ${flecha("anterior", anterior, FLECHAS[nivel][0])}
+          <div class="titulo-periodo">
+            <h3 id="t-periodo" tabindex="-1">${esc(tituloGrupo(inicio, nivel))}</h3>
+            ${nivel === "mes" ? "" : `<p>${resumenSesiones(delPeriodo)}</p>`}
+          </div>
+          ${flecha("siguiente", siguiente, FLECHAS[nivel][1])}
+        </div>
+        ${celdas(inicio)}
+        ${nivel === "mes" ? cifrasMes(delPeriodo) : ""}`;
+  }
+
+  // Clases de un día: con sesiones (rojo, en negrita y con punto), hoy y futuro.
+  const clasesDia = (d, extra = []) => [
+    d.sesiones.length ? "con-sesion" : "", d.hoy ? "hoy" : "", d.futuro ? "futuro" : "", ...extra,
+  ].filter(Boolean).join(" ");
+  const numeroDia = (d) => `<b>${d.fecha.getDate()}</b><span class="punto"></span>`;
+
+  // L M X J V S D con su número debajo. Los días con sesiones son un enlace (a su lista o, si solo
+  // hay una, a su detalle); los demás, no.
+  function celdasSemana(inicio) {
+    const abierto = diaDeLaVista(vista, sesiones);
+    return `<ol class="celdas dias">${diasDeSemana(sesiones, inicio).map((d, i) => {
       const elegido = abierto?.getTime() === d.fecha.getTime();
-      const clases = ["celda", d.hoy ? "hoy" : "", elegido ? "elegida" : ""].filter(Boolean).join(" ");
-      const visible = `<span class="dia-semana" aria-hidden="true">${esc(DIA_SEMANA.format(d.fecha).replace(".", ""))}</span>
-        <b aria-hidden="true">${d.fecha.getDate()}</b>`;
+      const clases = `dia ${clasesDia(d, elegido ? ["elegida"] : [])}`;
+      const visible = `<span class="letra" aria-hidden="true">${LETRAS[i]}</span>`
+        + `<span class="numero" aria-hidden="true">${numeroDia(d)}</span>`;
       const nombre = `${diaLargo(d.fecha)}${d.hoy ? " (hoy)" : ""}`;
       const destino = rutaDelDia(d);
       if (!destino) {
-        return `<li><span class="${clases} vacia">${visible}<span class="solo-lectores">${esc(nombre)}: sin sesiones</span></span></li>`;
+        return `<li><span class="${clases}">${visible}<span class="solo-lectores">${esc(nombre)}: sin sesiones</span></span></li>`;
       }
       const actual = elegido ? ' aria-current="true"' : d.hoy ? ' aria-current="date"' : "";
       const enlace = destino.includes(":") ? encodeURIComponent(destino) : destino;
-      return `<li><a class="${clases}" href="#historial/${enlace}"${actual}>${visible}
-        <span class="cuenta" aria-hidden="true">${d.sesiones.length}</span>
-        <span class="solo-lectores">${esc(nombre)}: ${plural(d.sesiones.length, "sesión", "sesiones")}</span></a></li>`;
+      return `<li><a class="${clases}" href="#historial/${enlace}"${actual}
+        aria-label="${esc(`${nombre}: ${plural(d.sesiones.length, "sesión", "sesiones")}`)}">${visible}</a></li>`;
     }).join("")}</ol>`;
   }
 
-  // Las semanas del mes con su resumen; con sesiones, un enlace a su vista de semana.
-  function celdasMes(inicio) {
-    return `<ol class="celdas filas">${semanasDelMes(sesiones, inicio).map((s) => {
-      const clases = ["celda", s.actual ? "hoy" : "", s.sesiones.length ? "" : "vacia"].filter(Boolean).join(" ");
-      const texto = `<b>${esc(`${diaCorto(s.inicio)} – ${diaCorto(s.fin)}`)}</b>
-        <span>${s.actual ? "Esta semana · " : ""}${resumenSesiones(s.sesiones)}</span>`;
-      return s.sesiones.length
-        ? `<li><a class="${clases}" href="#historial/${escribirRuta("semana", s.inicio)}"${s.actual ? ' aria-current="date"' : ""}>${texto}</a></li>`
-        : `<li><span class="${clases}">${texto}</span></li>`;
-    }).join("")}</ol>`;
+  // Calendario del mes: cada fila es un único enlace a su semana (los días sueltos no se pulsan).
+  // Las semanas que aún no han llegado, sin enlace.
+  function calendarioMes(inicio) {
+    const filas = semanasDelMes(sesiones, inicio).map((s) => {
+      // Los días de otro mes, casilla vacía: la cuadrícula no se mueve y no se confunden con los del mes.
+      const dias = s.dias.map((d) => (d.delMes ? `<span class="dia ${clasesDia(d)}">${numeroDia(d)}</span>`
+        : '<span class="dia otro-mes"></span>')).join("");
+      const etiqueta = esc(etiquetaFila(s));
+      const clases = `fila-semana${s.actual ? " actual" : ""}${s.futuro ? " futuro" : ""}`;
+      const visible = `<span class="dias-fila" aria-hidden="true">${dias}</span>`;
+      return s.futuro
+        ? `<li><span class="${clases}">${visible}<span class="solo-lectores">${etiqueta}</span></span></li>`
+        : `<li><a class="${clases}" href="#historial/${escribirRuta("semana", s.inicio)}" aria-label="${etiqueta}"${
+          s.actual ? ' aria-current="date"' : ""}>${visible}</a></li>`;
+    });
+    return `<div class="calendario">
+          <div class="letras-calendario" aria-hidden="true">${LETRAS.map((l) => `<span>${l}</span>`).join("")}</div>
+          <ol class="semanas-mes">${filas.join("")}</ol>
+        </div>`;
   }
 
-  // Los 12 meses con su resumen; con sesiones, un enlace a su vista de mes.
+  // Las cifras del mes que se ve, debajo del calendario.
+  function cifrasMes(delMes) {
+    const asaltos = delMes.reduce((n, s) => n + (s.asaltos ?? 0), 0);
+    const minutosMes = minutosDeAsalto(delMes);
+    return `<dl class="cifras cifras-mes">
+          <div><dt>${palabra(delMes.length, "sesión", "sesiones")}</dt><dd>${delMes.length}</dd></div>
+          <div><dt>${palabra(asaltos, "asalto", "asaltos")}</dt><dd>${asaltos}</dd></div>
+          <div><dt>${palabra(minutosMes, "minuto", "minutos")}</dt><dd>${fmt(minutosMes)}</dd></div>
+        </dl>`;
+  }
+
+  // Los 12 meses: su nombre (abreviado en móvil) y cuántas sesiones. Los que ya han llegado son un
+  // enlace a su mes; sin sesiones, apagados.
   function celdasAno(inicio) {
     return `<ol class="celdas meses">${mesesDelAno(sesiones, inicio).map((m) => {
-      const clases = ["celda", m.actual ? "hoy" : "", m.sesiones.length ? "" : "vacia"].filter(Boolean).join(" ");
-      const resumen = m.sesiones.length
-        ? `<span>${plural(m.sesiones.length, "sesión", "sesiones")}</span><span>${textoMinutos(m.minutos)}</span>`
-        : "<span>sin sesiones</span>";
-      const texto = `<b>${esc(mayuscula(MES_LARGO.format(m.inicio)))}</b>${resumen}`;
-      return m.sesiones.length
-        ? `<li><a class="${clases}" href="#historial/${escribirRuta("mes", m.inicio)}"${m.actual ? ' aria-current="date"' : ""}>${texto}</a></li>`
-        : `<li><span class="${clases}">${texto}</span></li>`;
+      const n = m.sesiones.length;
+      const clases = ["celda", "mes", n ? "con-sesion" : "vacia", m.actual ? "hoy" : "", m.futuro ? "futuro" : ""]
+        .filter(Boolean).join(" ");
+      const nombre = mayuscula(MES_LARGO.format(m.inicio));
+      const visible = `<b aria-hidden="true"><span class="nombre-largo">${esc(nombre)}</span>`
+        + `<span class="nombre-corto">${esc(mesCorto(m.inicio))}</span></b>`
+        + `<span class="cuenta-mes" aria-hidden="true">${n ? `<strong>${n}</strong> ${palabra(n, "sesión", "sesiones")}` : "sin sesiones"}</span>`;
+      const etiqueta = esc(`${nombre}${m.actual ? " (este mes)" : ""}: ${n ? plural(n, "sesión", "sesiones") : "sin sesiones"}`);
+      return m.futuro
+        ? `<li><span class="${clases}">${visible}<span class="solo-lectores">${etiqueta}</span></span></li>`
+        : `<li><a class="${clases}" href="#historial/${escribirRuta("mes", m.inicio)}" aria-label="${etiqueta}"${
+          m.actual ? ' aria-current="date"' : ""}>${visible}</a></li>`;
     }).join("")}</ol>`;
   }
 
-  // Las sesiones del día abierto; en la vista de día, con «Volver a la semana».
-  function diaAbierto(dia, v) {
+  // Un día: su título y sus sesiones, sin flechas (se sale con «Volver», que sube a su semana).
+  function vistaDia(dia, v) {
     const delDia = diasDeSemana(sesiones, dia).find((d) => d.fecha.getTime() === dia.getTime())?.sesiones ?? [];
     const elegida = vista.nivel === "sesion" ? vista.clave : "";
     return `
-      <section class="dia-abierto" aria-labelledby="t-dia">
-        <div class="cabeza-dia">
-          <h3 id="t-dia" tabindex="-1">${esc(diaLargo(dia))}</h3>
-          ${vista.nivel === "dia" ? '<button type="button" class="volver" data-subir>← Volver a la semana</button>' : ""}
+        <div class="titulo-periodo titulo-dia">
+          <h3 id="t-periodo" tabindex="-1">${esc(diaLargo(dia))}</h3>
+          <p>${resumenSesiones(delDia)}</p>
         </div>
         ${delDia.length ? `<ul class="lista-sesiones">${delDia.map((s) => fila(s, v[s.clave], elegida)).join("")}</ul>`
-          : `<p class="nota">Este día no hay sesiones.</p>`}
-      </section>`;
+          : `<p class="nota">Este día no hay sesiones.</p>`}`;
   }
 
   function activarGaleria() {
@@ -294,9 +338,8 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
     const costosas = new Set(v?.costosas ?? []);
     const asaltos = [...new Set(combinaciones.map((c) => c.asalto))];
     const dato = (dt, dd) => `<div><dt>${dt}</dt><dd>${dd}</dd></div>`;
-    const alDia = rutaDeArriba(vista, sesiones)?.startsWith("dia/");
     panel.innerHTML = `
-      <p class="volver-detalle"><button type="button" class="volver" data-subir>${alDia ? "← Volver al día" : "← Volver a la semana"}</button></p>
+      <p class="volver-detalle">${botonVolver(rutaDeArriba(vista, sesiones))}</p>
       <section class="tarjeta" aria-labelledby="t-detalle">
         <h2 id="t-detalle" tabindex="-1">${esc(fechaLarga(s.fecha))}</h2>
         <dl class="datos">

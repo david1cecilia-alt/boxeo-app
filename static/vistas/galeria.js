@@ -1,13 +1,17 @@
 // Historial como una galería de fotos (lógica pura, sin DOM): cada vista es un nivel de zoom.
-// Año (12 meses) → Mes (sus semanas) → Semana (sus 7 días) → Día (sus sesiones) → detalle.
+// Año (12 meses) → Mes (calendario: cada fila, una semana) → Semana (sus 7 días) → Día (sus
+// sesiones) → detalle. «Volver» siempre sube un nivel; el día no tiene flechas.
 // La vista va en la ruta (#historial/<ruta>), así el gesto atrás del navegador también funciona:
 //   semana/2026-10-26 · dia/2026-10-28 · mes/2026-10 · ano/2026 · <clave de la sesión>
 // Sin ruta, el periodo actual del nivel elegido (perfil.historial.agrupar).
+import { plural } from "./dom.js";
 import { AGRUPACIONES, inicioPeriodo, lunes, minutosDeAsalto, moverPeriodo } from "./resumen.js";
 
 const dosCifras = (n) => String(n).padStart(2, "0");
 const sumarDias = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 const mismoDia = (a, b) => a.getTime() === b.getTime();
+const mismoMes = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+const MES_LARGO = new Intl.DateTimeFormat("es-ES", { month: "long" });
 const diaDe = (s) => {
   const d = new Date(s.fecha);
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -68,8 +72,10 @@ export function diasDeSemana(sesiones, inicio, hoy = new Date()) {
   });
 }
 
-// Las semanas que tocan el mes (de 4 a 6, de lunes a domingo, como un calendario):
-// { inicio, fin (domingo), sesiones (de toda la semana), minutos, actual, futuro }.
+// Las filas del calendario del mes (de 4 a 6 semanas, de lunes a domingo):
+// { inicio, fin (domingo), dias, sesiones y minutos (de toda la semana), actual, futuro }.
+// `dias`: los 7, como en diasDeSemana, más `delMes` (false en los días de otros meses).
+// `futuro`: la semana entera aún no ha llegado.
 export function semanasDelMes(sesiones, inicio, hoy = new Date()) {
   const primero = new Date(inicio.getFullYear(), inicio.getMonth(), 1);
   const siguiente = new Date(inicio.getFullYear(), inicio.getMonth() + 1, 1);
@@ -77,10 +83,28 @@ export function semanasDelMes(sesiones, inicio, hoy = new Date()) {
   const semanas = [];
   for (let l = lunes(primero); l < siguiente; l = sumarDias(l, 7)) {
     const de = sesionesEntre(sesiones, l, sumarDias(l, 7));
-    semanas.push({ inicio: l, fin: sumarDias(l, 6), sesiones: de, minutos: minutosDeAsalto(de),
+    const dias = diasDeSemana(de, l, hoy).map((d) => ({ ...d, delMes: mismoMes(d.fecha, primero) }));
+    semanas.push({ inicio: l, fin: sumarDias(l, 6), dias, sesiones: de, minutos: minutosDeAsalto(de),
       actual: mismoDia(l, actual), futuro: l > actual });
   }
   return semanas;
+}
+
+// «21 al 27 de octubre», «28 de septiembre al 4 de octubre» o, si cambia el año,
+// «29 de diciembre de 2025 al 4 de enero de 2026».
+export function textoSemana(inicio, fin) {
+  const diaMes = (d) => `${d.getDate()} de ${MES_LARGO.format(d)}`;
+  if (inicio.getFullYear() !== fin.getFullYear()) {
+    return `${diaMes(inicio)} de ${inicio.getFullYear()} al ${diaMes(fin)} de ${fin.getFullYear()}`;
+  }
+  return `${mismoMes(inicio, fin) ? inicio.getDate() : diaMes(inicio)} al ${diaMes(fin)}`;
+}
+
+// Lo que se lee de una fila del calendario: «Semana del 21 al 27 de octubre, 3 sesiones».
+export function etiquetaFila(semana) {
+  const n = semana.sesiones.length;
+  const cuantas = n ? plural(n, "sesión", "sesiones") : "sin sesiones";
+  return `Semana del ${textoSemana(semana.inicio, semana.fin)}, ${cuantas}${semana.actual ? " (esta semana)" : ""}`;
 }
 
 // Los 12 meses del año: { inicio, sesiones, minutos, actual, futuro }.
@@ -94,16 +118,17 @@ export function mesesDelAno(sesiones, inicio, hoy = new Date()) {
 }
 
 // Hasta dónde llevan las flechas ‹ ›: del periodo de la sesión más antigua al actual (no se
-// navega al futuro). Devuelve { anterior, siguiente }: el inicio de cada uno o null.
+// navega al futuro). Devuelve { anterior, siguiente }: el inicio de cada uno o null. El día no
+// tiene flechas (se sale con «Volver»).
 export function vecinos(sesiones, nivel, inicio, hoy = new Date()) {
-  const escala = nivel === "dia" ? "semana" : nivel;
-  const desde = inicioPeriodo(inicio, escala);
-  const actual = inicioPeriodo(hoy, escala);
+  if (nivel === "dia") return { anterior: null, siguiente: null };
+  const desde = inicioPeriodo(inicio, nivel);
+  const actual = inicioPeriodo(hoy, nivel);
   const fechas = sesiones.map((s) => diaDe(s).getTime());
-  const primero = fechas.length ? inicioPeriodo(new Date(Math.min(...fechas)), escala) : actual;
+  const primero = fechas.length ? inicioPeriodo(new Date(Math.min(...fechas)), nivel) : actual;
   return {
-    anterior: desde > primero ? moverPeriodo(desde, escala, -1) : null,
-    siguiente: desde < actual ? moverPeriodo(desde, escala, 1) : null,
+    anterior: desde > primero ? moverPeriodo(desde, nivel, -1) : null,
+    siguiente: desde < actual ? moverPeriodo(desde, nivel, 1) : null,
   };
 }
 
@@ -117,10 +142,20 @@ export function alCambiarDeNivel(vista, nivel, hoy = new Date()) {
 }
 
 // El nivel de arriba (botón «Volver» y tras borrar una sesión): detalle → su día (o su semana si
-// ese día solo tiene esa sesión, que se abrió directamente) → semana. Null si no hay nivel de arriba.
-export function rutaDeArriba(vista, sesiones) {
+// ese día solo tiene esa sesión, que se abrió directamente) → semana → mes → año. Null en el año.
+// Una semana entre dos meses sube al mes del que se vino (`previa`, la ruta anterior) o, si no se
+// vino de ninguno de los dos, al de su jueves (el que tiene más días de esa semana).
+export function rutaDeArriba(vista, sesiones, previa = null) {
+  if (vista.nivel === "ano") return null;
+  if (vista.nivel === "mes") return escribirRuta("ano", vista.inicio);
+  if (vista.nivel === "semana") {
+    const antes = previa?.startsWith("mes/") ? leerRuta(previa) : null;
+    if (antes?.nivel === "mes" && [vista.inicio, sumarDias(vista.inicio, 6)].some((d) => mismoMes(d, antes.inicio))) {
+      return previa;
+    }
+    return escribirRuta("mes", sumarDias(vista.inicio, 3));
+  }
   if (vista.nivel === "dia") return escribirRuta("semana", vista.inicio);
-  if (vista.nivel !== "sesion") return null;
   const sesion = sesiones.find((s) => s.clave === vista.clave);
   if (!sesion) return "";
   const dia = diaDe(sesion);
@@ -134,11 +169,12 @@ export function rutaDelDia(dia) {
   return dia.sesiones.length === 1 ? dia.sesiones[0].clave : escribirRuta("dia", dia.fecha);
 }
 
-// La semana que se pinta en una vista de día o de detalle (la del día o la de la sesión).
-export function semanaDeLaVista(vista, sesiones) {
-  if (vista.nivel === "semana" || vista.nivel === "dia") return lunes(vista.inicio);
-  const sesion = vista.nivel === "sesion" && sesiones.find((s) => s.clave === vista.clave);
-  return sesion ? lunes(diaDe(sesion)) : null;
+// Lo que pinta la galería: el nivel de la ruta; con un detalle abierto, el nivel de arriba (su día
+// si tiene varias sesiones, o su semana). Si la sesión no existe, la semana actual.
+export function vistaDeLaGaleria(vista, sesiones, hoy = new Date()) {
+  if (vista.nivel !== "sesion") return vista;
+  const arriba = rutaDeArriba(vista, sesiones);
+  return arriba ? leerRuta(arriba, "semana", hoy) : { nivel: "semana", inicio: lunes(hoy) };
 }
 
 // El día abierto en la vista: el de la ruta o el de la sesión elegida.

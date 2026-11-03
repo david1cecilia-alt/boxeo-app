@@ -28,8 +28,10 @@ export function notaAlcance(basicos, tabla) {
 }
 
 // `estilo`: perfil.estilo; `basicos`: perfil.basicos; `nombres`: { id: «Boxer», … } (los de «Mi estilo»).
-// Devuelve { faltan, puntos, estilo, nombre, porque, tambien, avisos, alcance }:
-// con `faltan` > 0 aún no hay recomendación (estilo null).
+// Devuelve { faltan, puntos, estilo, nombre, empate, porque, tambien, afinar, avisos, alcance }:
+// con `faltan` > 0 aún no hay recomendación (estilo null). Con empate exacto en cabeza no se elige
+// a ninguno por el orden: estilo y nombre null y `empate` con los nombres empatados.
+// `afinar`: quedan preguntas que puntúan sin contestar (o con «No lo sé»).
 export function recomendarEstilo(estilo, basicos, tabla, nombres) {
   const alcance = notaAlcance(basicos, tabla);
   const hechas = tabla.obligatorias.filter((p) => respondida(estilo, tabla, p)).length;
@@ -40,20 +42,33 @@ export function recomendarEstilo(estilo, basicos, tabla, nombres) {
     for (const id of tabla.puntos[pregunta][estilo[pregunta]]) puntos[id] += 1;
   }
   if (faltan) return { faltan, puntos, estilo: null, alcance };
-  // A igual puntuación, el orden de «Mi estilo» (estable: siempre el mismo resultado).
-  const [primero, segundo] = Object.keys(nombres).sort((a, b) => puntos[b] - puntos[a]);
+  const maximo = Math.max(...Object.values(puntos));
+  // Los de cabeza en el orden de «Mi estilo» (solo para escribirlos siempre igual).
+  const cabeza = Object.keys(nombres).filter((id) => puntos[id] === maximo);
+  const segundo = Object.keys(nombres).filter((id) => puntos[id] === maximo - 1);
   const razones = Object.keys(tabla.puntos)
-    .filter((p) => respondida(estilo, tabla, p) && tabla.puntos[p][estilo[p]].includes(primero))
+    .filter((p) => respondida(estilo, tabla, p) && tabla.puntos[p][estilo[p]].some((id) => cabeza.includes(id)))
     .map((p) => tabla.frases[p][estilo[p]])
     .slice(0, MAX_RAZONES);
-  const avisos = primero === "fajador" && estilo.cardio === "mejorar" ? ["Este estilo exige mucho fondo."] : [];
+  const avisos = cabeza.includes("fajador") && estilo.cardio === "mejorar" ? ["Este estilo exige mucho fondo."] : [];
+  const unico = cabeza.length === 1 ? cabeza[0] : null;
   return {
-    faltan: 0, puntos, estilo: primero, nombre: nombres[primero],
+    faltan: 0, puntos, estilo: unico, nombre: unico && nombres[unico],
+    empate: unico ? null : cabeza.map((id) => nombres[id]),
     porque: razones.length ? `Porque ${enumerar(razones)}.` : "",
-    tambien: segundo && puntos[segundo] > 0 && puntos[primero] - puntos[segundo] <= 1 ? nombres[segundo] : null,
+    // Solo con un ganador claro y el segundo a 1 punto justo.
+    tambien: unico && segundo.length && maximo > 1 ? enumerar(segundo.map((id) => nombres[id])) : null,
+    afinar: Object.keys(tabla.puntos).some((p) => !respondida(estilo, tabla, p)),
     avisos, alcance,
   };
 }
+
+// «Encajas igual como Boxer y como Fajador» (o «como A, como B y como C»).
+export function textoEmpate(empatados) {
+  return `Encajas igual ${enumerar(empatados.map((n) => `como ${n}`))}.`;
+}
+
+export const TEXTO_AFINAR = "Responde más preguntas para afinar.";
 
 // «Responde 2 preguntas más para ver tu estilo recomendado».
 export function textoFaltan(faltan) {

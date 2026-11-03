@@ -16,6 +16,9 @@ export const VELOCIDAD_MEDIDA = 1.1; // la de las medidas de arriba
 // Velocidades de la voz que se pueden elegir en Ajustes (rate de la Web Speech API).
 export const VELOCIDADES = { lenta: 0.9, normal: 1.1, rapida: 1.3 };
 export const VELOCIDAD_POR_DEFECTO = "normal";
+// Las señales de Reacción («¡esquiva!») se dicen siempre a esta velocidad, sea cual sea la de
+// Ajustes: son una orden corta que tiene que llegar rápido. Las combinaciones van a la de Ajustes.
+export const VELOCIDAD_SENAL = 1.4;
 const SILABA = /[aeiouáéíóúü]+/gi;
 // Hueco desde que la voz termina de decir una combinación hasta que empieza la siguiente, según el
 // ritmo elegido: se sortea en el rango [mín, máx], igual para combinaciones cortas y largas.

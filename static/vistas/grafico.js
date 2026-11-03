@@ -2,7 +2,7 @@
 // Años) y otro selector Asaltos / RPE. Barras en HTML (no SVG): se ven nítidas a cualquier ancho.
 // El periodo actual va en rojo; cada barra lleva su valor encima y una etiqueta completa para
 // lectores de pantalla. Debajo, los mismos datos como tabla.
-import { diaCorto, esc } from "./dom.js";
+import { diaCorto, esc, plural } from "./dom.js";
 import { tituloGrupo } from "./resumen.js";
 
 const fmt = (n) => n.toLocaleString("es-ES", { maximumFractionDigits: 1 });
@@ -45,7 +45,7 @@ const titulo = () => `${MODOS[modoElegido].titulo} ${ESCALAS[escalaElegida].por}
 
 function etiqueta(p, e) {
   const rpe = p.rpe == null ? "sin RPE" : `RPE medio ${fmt(p.rpe)}`;
-  return `${e.nombre(p)}: ${p.asaltos} asaltos en ${p.sesiones} sesiones, ${rpe}`;
+  return `${e.nombre(p)}: ${plural(p.asaltos, "asalto", "asaltos")} en ${plural(p.sesiones, "sesión", "sesiones")}, ${rpe}`;
 }
 
 function barras(periodos) {

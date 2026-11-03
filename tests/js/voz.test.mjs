@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { elegirVoz, nombreCortoVoz, vocesEspanol } from "../../static/voz.js";
+import { crearVoz, elegirVoz, nombreCortoVoz, vocesEspanol } from "../../static/voz.js";
 
 test("el nombre corto de la voz quita la coletilla del idioma", () => {
   assert.equal(nombreCortoVoz("Microsoft Helena - Spanish (Spain)"), "Microsoft Helena");
@@ -73,5 +73,23 @@ test("decir corta lo que esté sonando o en cola antes de hablar", async () => {
     speechSynthesis[estado] = true;
     crearVoz().decir("diez segundos");
     assert.deepEqual(llamadas, ["cancel", "speak diez segundos"], estado);
+  }
+});
+
+test("decir usa la velocidad configurada o, si se pide, otra solo para ese texto", () => {
+  const frases = [];
+  globalThis.SpeechSynthesisUtterance = class { constructor(texto) { this.text = texto; } };
+  globalThis.speechSynthesis = {
+    getVoices: () => VOCES, addEventListener() {}, cancel() {}, speak: (f) => frases.push(f),
+  };
+  try {
+    const v = crearVoz({ velocidad: 0.9 });
+    v.decir("jab, recto");
+    v.decir("¡esquiva!", { velocidad: 1.4 });
+    v.decir("gancho");
+    assert.deepEqual(frases.map((f) => [f.text, f.rate]), [["jab, recto", 0.9], ["¡esquiva!", 1.4], ["gancho", 0.9]]);
+  } finally {
+    delete globalThis.SpeechSynthesisUtterance;
+    delete globalThis.speechSynthesis;
   }
 });

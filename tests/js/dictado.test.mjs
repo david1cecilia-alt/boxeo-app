@@ -2,9 +2,10 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { crearAlmacen } from "../../static/almacen.js";
-import { MARGEN_VOZ, crearDictado } from "../../static/dictado.js";
+import { MARGEN_VOZ, PARA_REACCIONAR, crearDictado } from "../../static/dictado.js";
 import { crearHistorial } from "../../static/historial.js";
-import { segundosHabla } from "../../static/motor/ritmo.js";
+import { datos } from "../../static/motor/datos.js";
+import { VELOCIDADES, VELOCIDAD_SENAL, segundosHabla } from "../../static/motor/ritmo.js";
 import { crearReproductor } from "../../static/reproductor.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
 
@@ -20,8 +21,10 @@ function montar({ pausa = 1.0, ritmo = 3, velocidad, combos = [], coletillas = [
   const reproductor = crearReproductor([], { alLanzar: () => {}, reloj: () => ms });
   const dichos = [];
   const voz = {
-    decir(texto) {
-      return new Promise((ok) => dichos.push({ texto, en: reproductor.tiempo(), onend: () => ok("fin"), onerror: () => ok("error") }));
+    decir(texto, { velocidad } = {}) {
+      return new Promise((ok) => dichos.push({
+        texto, velocidad, en: reproductor.tiempo(), onend: () => ok("fin"), onerror: () => ok("error"),
+      }));
     },
     callar() {},
   };
@@ -224,5 +227,62 @@ test("se guarda solo lo que se dijo de verdad, nunca las reservas sin usar", asy
     assert.equal((await historial.listar())[0].num_combinaciones, dichos.length);
   } finally {
     globalThis.fetch = fetchAntes;
+  }
+});
+
+test("las señales de Reacción van a 1.4 sea cual sea la velocidad de Ajustes; las combinaciones, a la de Ajustes", async () => {
+  assert.equal(VELOCIDAD_SENAL, 1.4);
+  for (const velocidad of Object.values(VELOCIDADES)) {
+    const { dichos, dictado, hasta } = montar({ velocidad });
+    await hasta(2.5);
+    dictado.reaccion("¡esquiva!");
+    dictado.asalto({ cola: COMBOS, reservados: [], desde: 3, fin: 180 });
+    await hasta(2.6);
+    assert.equal(dichos[0].velocidad, 1.4, `señal con Ajustes a ${velocidad}`);
+    dichos[0].onend();
+    await hasta(2.6 + PARA_REACCIONAR + 0.3);
+    assert.equal(dichos[1].texto, "jab, recto");
+    assert.equal(dichos[1].velocidad, velocidad, `combinación con Ajustes a ${velocidad}`);
+  }
+});
+
+test("el tope de una señal de Reacción sin onend se estima a 1.4, no a la velocidad de Ajustes", async () => {
+  const { dichos, dictado, hasta } = montar({ velocidad: 0.9 });
+  await hasta(2);
+  dictado.reaccion("¡cúbrete y devuelve!");
+  dictado.asalto({ cola: COMBOS, reservados: [], desde: 3, fin: 180 });
+  const tope = segundosHabla("¡cúbrete y devuelve!", 1.4) + MARGEN_VOZ;
+  assert.ok(tope < segundosHabla("¡cúbrete y devuelve!", 0.9) + MARGEN_VOZ);
+  await hasta(2 + tope + PARA_REACCIONAR - 0.2);
+  assert.equal(dichos.length, 1);
+  await hasta(2 + tope + PARA_REACCIONAR + 0.2);
+  assert.equal(dichos.length, 2);
+  assert.equal(dichos[1].velocidad, 0.9);
+});
+
+test("los avisos siguen a la velocidad de Ajustes", async () => {
+  const { dichos, dictado, hasta } = montar({ velocidad: 1.3 });
+  await hasta(1);
+  dictado.senal("diez segundos");
+  await hasta(1.2);
+  assert.equal(dichos[0].velocidad, 1.3);
+});
+
+test("todas las señales de Reacción del preset van a 1.4 y su tope sin onend se estima a 1.4", async () => {
+  const textos = datos().presets.reacciones.map((r) => r.texto);
+  assert.deepEqual(textos, ["¡esquiva!", "¡contra!", "¡cúbrete y devuelve!", "¡sal!"]);
+  for (const velocidad of Object.values(VELOCIDADES)) {
+    for (const texto of textos) {
+      const { dichos, dictado, hasta } = montar({ velocidad });
+      let acabo = null;
+      dictado.reaccion(texto).then((motivo) => { acabo = motivo; });
+      await hasta(0.1);
+      assert.equal(dichos[0].velocidad, VELOCIDAD_SENAL, `«${texto}» con Ajustes a ${velocidad}`);
+      const tope = segundosHabla(texto, VELOCIDAD_SENAL) + MARGEN_VOZ; // onend no llega
+      await hasta(tope - 0.2);
+      assert.equal(acabo, null, `«${texto}» a ${velocidad}: deja de esperar antes del tope a 1,4`);
+      await hasta(tope + 0.2);
+      assert.equal(acabo, "maximo", `«${texto}» a ${velocidad}: el tope no es el de 1,4`);
+    }
   }
 });

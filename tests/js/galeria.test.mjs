@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
-  alCambiarDeNivel, diaDeLaVista, diasDeSemana, escribirRuta, isoDia, leerRuta, mesesDelAno, rutaDeArriba, rutaDelDia,
-  semanaDeLaVista, semanasDelMes, vecinos,
+  alCambiarDeNivel, diaDeLaVista, diasDeSemana, escribirRuta, etiquetaFila, isoDia, leerRuta, mesesDelAno, rutaDeArriba,
+  rutaDelDia, semanasDelMes, textoSemana, vecinos, vistaDeLaGaleria,
 } from "../../static/vistas/galeria.js";
 
 const HOY = new Date(2026, 9, 28, 18, 0); // miércoles 28 de octubre de 2026
@@ -89,7 +89,8 @@ test("las flechas van de la sesión más antigua al periodo actual", () => {
   assert.deepEqual(vecinos(sesiones, "mes", new Date(2026, 0, 1), HOY),
     { anterior: new Date(2025, 11, 1), siguiente: new Date(2026, 1, 1) });
   assert.deepEqual(vecinos(sesiones, "ano", new Date(2026, 0, 1), HOY), { anterior: new Date(2025, 0, 1), siguiente: null });
-  assert.deepEqual(vecinos(sesiones, "dia", new Date(2026, 9, 28), HOY).siguiente, null); // el día se mueve por semanas
+  // El día no tiene flechas: se sale con «Volver».
+  assert.deepEqual(vecinos(sesiones, "dia", new Date(2026, 9, 26), HOY), { anterior: null, siguiente: null });
   assert.deepEqual(vecinos([], "mes", new Date(2026, 9, 1), HOY), { anterior: null, siguiente: null });
 });
 
@@ -104,19 +105,80 @@ test("el selector Semana / Mes / Año va al periodo actual o al que contiene el 
   assert.equal(alCambiarDeNivel({ nivel: "dia", inicio: new Date(2026, 9, 28) }, "mes", HOY), "mes/2026-10");
 });
 
-test("volver sube un nivel: detalle → día → semana", () => {
+test("volver siempre sube un nivel: detalle → día → semana → mes → año", () => {
   assert.equal(rutaDeArriba({ nivel: "sesion", clave: "local:a" }, sesiones), "dia/2026-10-28");
   assert.equal(rutaDeArriba({ nivel: "sesion", clave: "local:c" }, sesiones), "semana/2026-10-26"); // sola ese día
   assert.equal(rutaDeArriba({ nivel: "dia", inicio: new Date(2026, 9, 28) }, sesiones), "semana/2026-10-26");
+  assert.equal(rutaDeArriba({ nivel: "semana", inicio: new Date(2026, 9, 19) }, sesiones), "mes/2026-10");
+  assert.equal(rutaDeArriba({ nivel: "mes", inicio: new Date(2026, 9, 1) }, sesiones), "ano/2026");
+  assert.equal(rutaDeArriba({ nivel: "ano", inicio: new Date(2026, 0, 1) }, sesiones), null);
   assert.equal(rutaDeArriba({ nivel: "sesion", clave: "local:no-existe" }, sesiones), "");
-  assert.equal(rutaDeArriba({ nivel: "semana", inicio: new Date(2026, 9, 26) }, sesiones), null);
 });
 
-test("en un día o un detalle se pinta su semana con su día abierto", () => {
-  const vista = { nivel: "sesion", clave: "local:d" };
-  assert.deepEqual(semanaDeLaVista(vista, sesiones), new Date(2026, 8, 28));
-  assert.deepEqual(diaDeLaVista(vista, sesiones), new Date(2026, 9, 1));
-  assert.deepEqual(semanaDeLaVista({ nivel: "dia", inicio: new Date(2026, 9, 28) }, sesiones), new Date(2026, 9, 26));
+test("una semana entre dos meses sube al mes del que se vino o, si no, al de su jueves", () => {
+  const entreDos = { nivel: "semana", inicio: new Date(2026, 8, 28) }; // 28 sept – 4 oct
+  assert.equal(rutaDeArriba(entreDos, sesiones), "mes/2026-10"); // el jueves es 1 de octubre
+  assert.equal(rutaDeArriba(entreDos, sesiones, "mes/2026-09"), "mes/2026-09");
+  assert.equal(rutaDeArriba(entreDos, sesiones, "mes/2026-10"), "mes/2026-10");
+  assert.equal(rutaDeArriba(entreDos, sesiones, "mes/2026-07"), "mes/2026-10", "un mes que la semana no toca");
+  assert.equal(rutaDeArriba(entreDos, sesiones, "semana/2026-10-05"), "mes/2026-10", "si no se vino de un mes");
+  // Fin de año: del 28 de diciembre de 2026 al 3 de enero de 2027, el jueves es 31 de diciembre.
+  assert.equal(rutaDeArriba({ nivel: "semana", inicio: new Date(2026, 11, 28) }, sesiones), "mes/2026-12");
+  assert.equal(rutaDeArriba({ nivel: "semana", inicio: new Date(2026, 11, 28) }, sesiones, "mes/2027-01"), "mes/2027-01");
+});
+
+test("con un detalle abierto, la galería pinta el nivel de arriba: su día o su semana", () => {
+  assert.deepEqual(vistaDeLaGaleria({ nivel: "sesion", clave: "local:a" }, sesiones, HOY),
+    { nivel: "dia", inicio: new Date(2026, 9, 28) }); // dos sesiones ese día
+  assert.deepEqual(vistaDeLaGaleria({ nivel: "sesion", clave: "local:d" }, sesiones, HOY),
+    { nivel: "semana", inicio: new Date(2026, 8, 28) }); // sola ese día
+  assert.deepEqual(vistaDeLaGaleria({ nivel: "sesion", clave: "local:x" }, sesiones, HOY),
+    { nivel: "semana", inicio: new Date(2026, 9, 26) }); // no existe: la semana actual
+  const mes = { nivel: "mes", inicio: new Date(2026, 9, 1) };
+  assert.equal(vistaDeLaGaleria(mes, sesiones, HOY), mes);
+  assert.deepEqual(diaDeLaVista({ nivel: "sesion", clave: "local:d" }, sesiones), new Date(2026, 9, 1));
   assert.equal(diaDeLaVista({ nivel: "semana", inicio: new Date(2026, 9, 26) }, sesiones), null);
-  assert.equal(semanaDeLaVista({ nivel: "sesion", clave: "local:x" }, sesiones), null);
+});
+
+test("las filas del mes tienen sus 7 días, con los de otros meses marcados", () => {
+  const [primera, , , , ultima] = semanasDelMes(sesiones, new Date(2026, 9, 1), HOY);
+  assert.deepEqual(primera.dias.map((d) => d.fecha.getDate()), [28, 29, 30, 1, 2, 3, 4]);
+  assert.deepEqual(primera.dias.map((d) => d.delMes), [false, false, false, true, true, true, true]);
+  assert.deepEqual(primera.dias.map((d) => d.sesiones.length), [0, 0, 1, 1, 0, 0, 0]); // el 30 sept también
+  assert.deepEqual(ultima.dias.map((d) => d.fecha.getDate()), [26, 27, 28, 29, 30, 31, 1]);
+  assert.deepEqual(ultima.dias.map((d) => d.delMes), [true, true, true, true, true, true, false]);
+  assert.deepEqual(ultima.dias.map((d) => d.hoy), [false, false, true, false, false, false, false]);
+  assert.deepEqual(ultima.dias.map((d) => d.futuro), [false, false, false, true, true, true, true]);
+  assert.deepEqual(ultima.dias[2].sesiones.map((s) => s.clave), ["local:a", "local:b"]);
+});
+
+test("el mes tiene de 4 a 6 filas, con todos sus días una sola vez", () => {
+  const filas = (ano, mes) => semanasDelMes([], new Date(ano, mes, 1), HOY).length;
+  assert.equal(filas(2027, 1), 4); // febrero de 2027: empieza en lunes y tiene 28 días
+  assert.equal(filas(2026, 9), 5); // octubre de 2026
+  assert.equal(filas(2026, 7), 6); // agosto de 2026: empieza en sábado y acaba en lunes
+  assert.equal(filas(2026, 2), 6); // marzo de 2026: empieza en domingo
+  for (let mes = 0; mes < 12; mes++) {
+    const semanas = semanasDelMes([], new Date(2026, mes, 1), HOY);
+    assert.ok(semanas.length >= 4 && semanas.length <= 6, `mes ${mes + 1}: ${semanas.length} filas`);
+    const delMes = semanas.flatMap((s) => s.dias).filter((d) => d.delMes).length;
+    assert.equal(delMes, new Date(2026, mes + 1, 0).getDate(), `mes ${mes + 1}`);
+  }
+});
+
+test("las semanas que aún no han llegado se marcan como futuras; la actual, no", () => {
+  const nov = semanasDelMes([], new Date(2026, 10, 1), HOY);
+  assert.deepEqual(nov.map((s) => s.futuro), [false, true, true, true, true, true]); // la 1.ª es la actual (26 oct)
+  assert.equal(nov[0].actual, true);
+  assert.ok(nov[0].dias.every((d) => d.delMes === (d.fecha.getMonth() === 10)));
+});
+
+test("cada fila del mes se lee como «Semana del 21 al 27 de octubre, 3 sesiones»", () => {
+  const filas = semanasDelMes(sesiones, new Date(2026, 9, 1), HOY);
+  assert.equal(etiquetaFila(filas[3]), "Semana del 19 al 25 de octubre, sin sesiones");
+  assert.equal(etiquetaFila(filas[0]), "Semana del 28 de septiembre al 4 de octubre, 2 sesiones");
+  assert.equal(etiquetaFila(filas[4]), "Semana del 26 de octubre al 1 de noviembre, 3 sesiones (esta semana)");
+  assert.equal(etiquetaFila({ inicio: new Date(2026, 9, 5), fin: new Date(2026, 9, 11), sesiones: [{}] }),
+    "Semana del 5 al 11 de octubre, 1 sesión");
+  assert.equal(textoSemana(new Date(2025, 11, 29), new Date(2026, 0, 4)), "29 de diciembre de 2025 al 4 de enero de 2026");
 });

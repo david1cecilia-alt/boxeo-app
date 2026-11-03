@@ -3,8 +3,8 @@ import random
 import pytest
 
 from motor.acciones import acciones_por_ids
-from motor.ritmo import duracion_estimada
-from motor.temporizador import (AVISO_ANTES_FIN, ConfigSesion, cargar_presets,
+from motor.ritmo import VELOCIDAD_SENAL, VELOCIDADES, duracion_estimada, segundos_habla
+from motor.temporizador import (AVISO_ANTES_FIN, DURACION_REACCION, ConfigSesion, cargar_presets,
                                 construir_guion)
 
 
@@ -73,3 +73,16 @@ def test_zurdo_dicta_nombres_reflejados():
     config = ConfigSesion(asaltos=1, duracion_asalto=180, descanso=0, zurdo=True)
     combos = de_tipo(construir_guion(config, random.Random(0)), "combo")
     assert any("crochet de derecha" in c.texto for c in combos)
+
+
+def test_cada_senal_de_reaccion_cabe_en_su_reserva_dicha_a_1_4():
+    """La reserva cubre solo la voz; el segundo para reaccionar lo pone el dictado después."""
+    assert VELOCIDAD_SENAL == 1.4
+    assert VELOCIDAD_SENAL not in VELOCIDADES.values()  # no depende de lo elegido en Ajustes
+    for r in cargar_presets()["reacciones"]:
+        assert segundos_habla(r["texto"], VELOCIDAD_SENAL) <= DURACION_REACCION, r["texto"]
+
+
+def test_las_senales_de_reaccion_no_dicen_lado():
+    for r in cargar_presets()["reacciones"]:
+        assert not any(lado in r["texto"].lower() for lado in ("izquierd", "derech")), r["texto"]

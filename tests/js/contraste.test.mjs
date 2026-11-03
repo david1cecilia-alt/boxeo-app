@@ -60,6 +60,8 @@ const TEXTO = [
   // Historial y perfil
   ["sobre-acento", "acento-relleno"], // cifra destacada y tarjeta de estilo
   ["acento", "acento-tenue"], ["terciario", "superficie"], ["terciario", "secundario"], // RPE, gráfico
+  // Galería: días con sesión (rojo) y futuros (tenue), sobre la página, la celda y la celda elegida
+  ["acento", "superficie-hover"], ["tenue", "fondo"], ["tenue", "superficie"], ["tenue", "superficie-hover"],
 ];
 
 const COMPONENTES = [
@@ -92,6 +94,14 @@ test("bordes, foco y marcas de gráficos con 3:1", () => {
     const r = contraste(a, b);
     assert.ok(r >= 3, `${a} sobre ${b}: ${r.toFixed(2)}:1`);
   }
+});
+
+// Los días de otro mes ya no llevan color: su casilla del calendario va vacía.
+test("en la galería, lo futuro se ve más apagado que lo pasado sin sesiones", () => {
+  const fondo = rgb("fondo");
+  const [suave, tenue] = ["suave", "tenue"].map((t) => luminancia(rgb(t, fondo)));
+  assert.ok(suave > tenue);
+  assert.equal(tokens.apagado, undefined);
 });
 
 test("el fondo rojo completo es solo de los últimos 10 s", () => {

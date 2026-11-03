@@ -46,6 +46,7 @@
   --texto: #f5f3f0;
   --suave: #a8a29e;           /* texto secundario */
   --terciario: #d6d3d1;
+  --tenue: #8c8783;           /* días y meses futuros: más apagado que --suave, aún 4,5:1 */
   --acento: #ff3b30;          /* rojo de texto: palabra roja, contexto, cifras */
   --acento-relleno: #d7192a;  /* rojo de relleno: botones, pestaña activa, chip destacado (texto blanco) */
   --acento-relleno-hover: #b81424;
@@ -217,7 +218,8 @@ input[type="checkbox"], input[type="radio"] { width: auto; min-height: 0; accent
 fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 legend { color: var(--suave); font-size: 0.95rem; padding: 0; margin-bottom: 8px; }
 legend small { display: block; font-size: 0.85rem; }
-.rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+/* Campos en rejilla, alineados por abajo: si una etiqueta ocupa dos líneas, las cajas siguen a la misma altura. */
+.rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; align-items: end; }
 hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
 
 /* Chips de opción (radios): presets, categorías, estilo. El seleccionado, en claro. */
@@ -264,12 +266,17 @@ hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
 }
 .ritmo input[type="range"]::-moz-range-track { height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.14); }
 .ritmo input[type="range"]::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--acento-relleno); }
+/* La bolita se toca en un cuadrado de 48 × 48 px (más de los 44 que pide un dedo) pero se dibuja
+   como un círculo de 28 px: el resto es transparente. Sin border-radius, para que las esquinas
+   también cuenten. */
 .ritmo input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 28px; height: 28px; margin-top: -11px; border-radius: 50%;
-  background: var(--texto); border: 4px solid var(--acento-relleno); pointer-events: auto; cursor: grab;
+  -webkit-appearance: none; width: 48px; height: 48px; margin-top: -21px; border: 0; border-radius: 0;
+  background: radial-gradient(circle, var(--texto) 0 10px, var(--acento-relleno) 10.5px 14px, transparent 14.5px);
+  pointer-events: auto; cursor: grab;
 }
 .ritmo input[type="range"]::-moz-range-thumb {
-  width: 20px; height: 20px; border-radius: 50%; background: var(--texto); border: 4px solid var(--acento-relleno);
+  width: 48px; height: 48px; border: 0; border-radius: 0;
+  background: radial-gradient(circle, var(--texto) 0 10px, var(--acento-relleno) 10.5px 14px, transparent 14.5px);
   pointer-events: auto; cursor: grab;
 }
 .ritmo input[type="range"]:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; border-radius: 8px; }
@@ -347,6 +354,8 @@ details[open] > summary::before { transform: rotate(90deg); }
 .boton.pequeno { min-height: 40px; padding: 6px 14px; font-size: 0.875rem; }
 .acciones { display: flex; flex-wrap: wrap; gap: 10px; }
 .acciones .boton { flex: 1 1 140px; }
+/* Botones al pie de una tarjeta (Copia de seguridad, «Editar valoración»): separados del texto. */
+.tarjeta > .acciones { margin-top: 18px; }
 label.boton { color: var(--sobre-acento); }
 /* Copia de seguridad: cada botón en una línea; si no caben juntos, uno debajo del otro a todo el ancho. */
 .copia .acciones .boton { flex: 1 1 auto; white-space: nowrap; }
@@ -523,6 +532,10 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
   padding: 14px 12px; border-radius: 18px; background: var(--superficie); border: 1px solid var(--linea);
 }
 .cifras dt { color: var(--suave); font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+/* Las del resumen, en una línea: si la casilla no da para «sesiones / mes» (7,2 veces su letra),
+   la letra baja lo justo (la casilla es su contenedor). */
+.resumen-historial > .cifras div { padding-inline: 10px; container-type: inline-size; }
+.resumen-historial > .cifras dt { font-size: min(0.75rem, 13.5cqi); }
 .cifras dd { margin: 0; font-family: var(--letra-titular); font-size: 38px; line-height: 1; }
 .cifras dd small { font-size: 18px; color: var(--suave); }
 .cifras .destacada { background: var(--acento-relleno); border-color: transparent; color: var(--sobre-acento); }
@@ -572,8 +585,8 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
   color: var(--texto); text-decoration: none; transition: border-color 0.15s;
 }
 .lista-sesiones a:hover { border-color: var(--linea-chip); }
-/* Galería: el periodo con flechas ‹ › y sus celdas (7 días, las semanas del mes o los 12 meses).
-   Con sesiones, la celda resalta y es un enlace; sin ellas, apagada. */
+/* Galería: el periodo con flechas ‹ › y sus celdas (7 días, el calendario del mes o los 12 meses).
+   Con sesiones, resalta; sin ellas, apagada. */
 .galeria { gap: 14px; }
 .periodo { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; gap: 8px; }
 .titulo-periodo { text-align: center; min-width: 0; }
@@ -596,32 +609,62 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
   background: var(--superficie); color: var(--texto); text-decoration: none; transition: border-color 0.15s, background 0.15s;
 }
 a.celda:hover { border-color: var(--suave); background: var(--superficie-hover); }
-.celda.vacia { border-color: transparent; background: none; color: var(--suave); }
-.celda.hoy { box-shadow: inset 0 -3px 0 var(--acento); }
-.celda.elegida { border-color: var(--acento); background: var(--superficie-hover); }
-.celda b { font-family: var(--letra-titular); font-weight: 400; font-size: 24px; line-height: 1; }
-.celda.vacia b { color: var(--suave); }
-.celda span { font-size: 0.75rem; }
-.dias { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
-.dias .celda { grid-template-rows: auto auto 20px; align-content: start; min-height: 82px; padding: 8px 2px; }
-.dias .celda.vacia b { opacity: 0.6; }
-.dia-semana { color: var(--suave); font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
-.dias .cuenta {
-  display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px;
-  background: var(--acento-relleno); color: var(--sobre-acento); font-size: 0.6875rem; font-weight: 800;
+
+/* Un día (semana y calendario del mes). Con sesiones: número en rojo, en negrita y con un punto
+   debajo (no depende solo del color). Hoy: el número en un círculo. Pasados sin sesión, en gris
+   suave; futuros, más apagados (--tenue, aún 4,5:1). Los de otro mes, en el calendario, casilla
+   vacía (la fila lleva su etiqueta). */
+.dia { display: grid; justify-items: center; align-content: start; gap: 3px; min-width: 0; color: var(--suave); }
+.dia b {
+  display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+  font-variant-numeric: tabular-nums; font-size: 0.9375rem; font-weight: 500; line-height: 1;
 }
-.filas .celda { grid-template-columns: minmax(0, 1fr) auto; justify-items: start; gap: 4px 12px; padding: 12px 14px; }
-.filas .celda b { font-family: var(--letra-texto); font-size: 0.9375rem; font-weight: 600; }
-.filas .celda span { justify-self: end; color: var(--suave); font-size: 0.8125rem; text-align: right; }
-.filas .celda.vacia { border-color: var(--linea); }
+.dia .punto { width: 6px; height: 6px; border-radius: 50%; }
+.dia.con-sesion { color: var(--acento); }
+.dia.con-sesion b { font-weight: 800; }
+.dia.con-sesion .punto { background: var(--acento); }
+.dia.hoy b { box-shadow: inset 0 0 0 2px var(--texto); }
+.dia.futuro { color: var(--tenue); }
+
+/* Semana: L M X J V S D con el número debajo; con sesiones, un enlace del alto de un dedo. */
+.dias { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.dias .dia { height: 100%; padding: 8px 0 10px; border-radius: 14px; border: 1px solid transparent; text-decoration: none; }
+.dias a.dia { background: var(--superficie); border-color: var(--linea-chip); }
+.dias a.dia:hover { border-color: var(--suave); background: var(--superficie-hover); }
+.dias .dia.elegida { border-color: var(--acento); background: var(--superficie-hover); }
+.letra { color: var(--suave); font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.06em; }
+.dias .futuro .letra { color: var(--tenue); }
+.dias .numero { display: grid; justify-items: center; gap: 3px; }
+
+/* Mes: calendario de 4 a 6 filas; cada fila es un único enlace que abre su semana. */
+.calendario { display: grid; gap: 4px; }
+.letras-calendario, .dias-fila { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.letras-calendario { padding: 0 6px; color: var(--suave); font-size: 0.6875rem; font-weight: 600; text-align: center; }
+.semanas-mes { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.fila-semana {
+  display: block; padding: 6px; border-radius: 16px; border: 1px solid var(--linea);
+  background: var(--superficie); color: inherit; text-decoration: none; transition: border-color 0.15s, background 0.15s;
+}
+a.fila-semana:hover { border-color: var(--suave); background: var(--superficie-hover); }
+.fila-semana.actual { border-color: var(--linea-chip); }
+.fila-semana.futuro { background: none; }
+.cifras-mes dd { font-size: 32px; }
+
+/* Año: 12 casillas (3 columnas; 4 en escritorio) con el nombre del mes y sus sesiones. En móvil,
+   el nombre abreviado; desde 1024 px, completo. Ninguno se parte. */
 .meses { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.meses .celda { gap: 1px; padding: 12px 6px; }
-.meses .celda b { font-family: var(--letra-texto); font-size: 0.875rem; font-weight: 600; }
-.meses .celda span { color: var(--suave); }
-.meses .celda.vacia { border-color: var(--linea); }
-.dia-abierto { display: grid; gap: 10px; }
-.cabeza-dia { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0 12px; }
-.cabeza-dia h3 { margin: 0; color: var(--texto); font-size: 0.9375rem; letter-spacing: 0; text-transform: none; }
+.meses .celda { gap: 2px; padding: 12px 6px; min-width: 0; }
+.meses .celda b { font-family: var(--letra-texto); font-size: 0.875rem; font-weight: 600; white-space: nowrap; }
+.nombre-largo { display: none; }
+.cuenta-mes { color: var(--suave); font-size: 0.75rem; white-space: nowrap; }
+.meses .con-sesion .cuenta-mes { color: var(--texto); }
+.meses .con-sesion strong { color: var(--acento); font-weight: 800; }
+.meses .celda.vacia { border-color: var(--linea); background: none; color: var(--suave); }
+.meses .celda.futuro, .meses .celda.futuro .cuenta-mes { color: var(--tenue); }
+.meses .celda.hoy { box-shadow: inset 0 -3px 0 var(--acento); }
+
+.volver-galeria { margin: -6px 0 0; }
+.titulo-dia { text-align: left; }
 .lista-sesiones a[aria-current="true"] { border-color: var(--acento); box-shadow: inset 3px 0 0 var(--acento); }
 .bloque-fecha {
   flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -639,8 +682,9 @@ a.celda:hover { border-color: var(--suave); background: var(--superficie-hover);
 .rpe.sin-valorar { background: none; border: 1px dashed var(--linea-chip); color: var(--suave); }
 
 .datos { display: grid; gap: 8px; margin: 0; }
-.datos div { display: grid; grid-template-columns: minmax(120px, 40%) 1fr; gap: 8px; }
-.datos dt { color: var(--suave); }
+/* Misma columna de etiquetas en todas las listas del detalle (datos y valoración): alineadas y sin partirse. */
+.datos div { display: grid; grid-template-columns: 10.5rem minmax(0, 1fr); gap: 12px; }
+.datos dt { color: var(--suave); white-space: nowrap; }
 .datos dd { margin: 0; overflow-wrap: anywhere; }
 
 .combos { margin: 0; padding-left: 24px; display: grid; gap: 4px; }
@@ -654,6 +698,12 @@ a.celda:hover { border-color: var(--suave); background: var(--superficie-hover);
 button.volver {
   padding: 0; border: 0; background: none; cursor: pointer; font: inherit; color: var(--texto);
   text-decoration: underline; text-decoration-color: var(--acento); text-underline-offset: 3px;
+}
+
+/* Títulos que reciben el foco al navegar por el Historial (el periodo, el día, el detalle): en vez
+   del recuadro blanco, el subrayado rojo de los enlaces de la app, más grueso. Sigue viéndose. */
+#historial-contenido :is(h2, h3)[tabindex="-1"]:focus-visible {
+  outline: none; text-decoration: underline 3px var(--acento); text-underline-offset: 6px;
 }
 
 /* Maestro-detalle. Móvil: o la lista o el detalle (con su enlace de volver). */
@@ -678,6 +728,11 @@ button.volver {
 #estilo-resumen { display: grid; gap: 6px; }
 #estilo-resumen p, .nota-estilo { margin: 0; font-size: 0.8125rem; line-height: 1.4; }
 #estilo-resumen .titular { font-size: 28px; line-height: 1.05; }
+/* Empate exacto: la frase entera hace de titular, algo más pequeña para que quepa. */
+#estilo-resumen .empate {
+  font-family: var(--letra-titular); font-size: 22px; line-height: 1.1; text-transform: uppercase; letter-spacing: 0.01em;
+}
+#estilo-resumen .afinar { font-weight: 600; }
 .estilo-recomendado .recomendacion {
   display: grid; gap: 4px; margin-top: 4px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.35);
 }
@@ -878,12 +933,20 @@ dialog::backdrop { background: var(--velo); }
   .maestro-detalle { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
   /* Cifras encima del gráfico; desde 1280 px, a su izquierda (a 1024 el gráfico las tapaba). */
   .resumen-historial, .con-detalle > .resumen-historial { display: grid; gap: 24px; align-items: start; }
-  .cifras dd { font-size: 52px; }
-  .cifras div { padding: 20px 18px; }
+  .resumen-historial > .cifras dd { font-size: 52px; }
+  .resumen-historial > .cifras div { padding: 20px 18px; }
   .con-detalle .col-lista, #historial-contenido:not(.con-detalle) .col-detalle { display: grid; }
   .col-lista { position: sticky; top: 24px; }
   .volver-movil { display: none; }
   .meses { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  /* A 1024 px la galería es media columna: casillas de ~78 px, donde «Septiembre» (5,6 veces su
+     letra) cabe justo a 13 px. Si la casilla no da para tanto (otra fuente, zoom), la letra baja lo
+     justo para que quepa: la casilla es el contenedor de su nombre. */
+  .meses { gap: 4px; }
+  .meses .celda { padding: 12px 2px; container-type: inline-size; }
+  .meses .celda b { font-size: min(0.8125rem, 17.5cqi); }
+  .nombre-largo { display: inline; }
+  .nombre-corto { display: none; }
   .col-detalle > .vacio {
     display: grid; place-items: center; min-height: 240px; text-align: center;
     border: 1px dashed var(--linea); border-radius: var(--radio);
@@ -898,7 +961,8 @@ dialog::backdrop { background: var(--velo); }
       gap: 24px; align-items: start;
     }
     .resumen-historial, .con-detalle > .resumen-historial, .maestro-detalle { display: contents; }
-    .cifras { grid-column: 1; grid-row: 1; }
+    .resumen-historial > .cifras { grid-column: 1; grid-row: 1; } /* las del resumen, no las del mes */
+    .resumen-historial > .cifras div { padding-inline: 14px; } /* columna estrecha: sitio para «sesiones / mes» */
     .grafico-semanas { grid-column: 2; grid-row: 1 / span 2; }
     .col-lista { grid-column: 1; grid-row: 2 / span 2; }
     .col-detalle { grid-column: 2; grid-row: 3; }

@@ -7,6 +7,11 @@
       "texto": "¿alguna acción no es para principiantes?"
     },
     {
+      "id": "temporizador-bfe0e33f",
+      "origen": "motor/temporizador.py",
+      "texto": "tiempo para reaccionar tras la señal (hoy 1 s sin combinaciones)"
+    },
+    {
       "id": "acciones-dbfd9eb2",
       "origen": "data/acciones.json",
       "texto": "«esquiva abajo» para el roll (antes «rueda»); puede acabar siendo otro término"

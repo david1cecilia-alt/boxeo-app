@@ -6,7 +6,9 @@ import { writeFileSync } from "node:fs";
 
 import { accionesPorIds, catalogo, espejo } from "../../static/motor/acciones.js";
 import { crearAzar } from "../../static/motor/azar.js";
+import { datos } from "../../static/motor/datos.js";
 import { nivelDe } from "../../static/motor/reglas.js";
+import { VELOCIDAD_SENAL, segundosHabla } from "../../static/motor/ritmo.js";
 import { SorteoBiblioteca, cargarPerfil } from "../../static/motor/sorteo.js";
 import { construirGuion } from "../../static/motor/temporizador.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
@@ -63,4 +65,10 @@ const niveles = Array.from({ length: 13 }, (_, n) => {
   return { ids, nivel: nivelDe(accionesPorIds(ids)) };
 });
 
-writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, refuerzos, sorteos }));
+// Señales de Reacción: la velocidad fija a la que se dicen y lo que se estima que tardan.
+const senales = {
+  velocidad: VELOCIDAD_SENAL,
+  segundos: Object.fromEntries(datos().presets.reacciones.map((r) => [r.texto, segundosHabla(r.texto, VELOCIDAD_SENAL)])),
+};
+
+writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, refuerzos, sorteos, senales }));

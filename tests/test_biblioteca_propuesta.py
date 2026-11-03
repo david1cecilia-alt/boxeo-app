@@ -30,6 +30,24 @@ def test_el_nombre_tiene_que_decir_sus_golpes_en_orden():
     assert cuadra("crochet abajo y arriba", "3c-3")
     assert not cuadra("crochet abajo y arriba", "3-3c")
     assert not cuadra("crochet y recto", "3c-2")                    # sin «al cuerpo», a la cabeza
-    assert cuadra("ballesteo, jab y crochet de derecha", "BA-1-4")
-    assert not cuadra("ballesteo, jab y crochet de derecha", "BA-1-3")
-    assert cuadra("esquivas a los dos lados con ganchos", "ED-6-EI-5c")
+    assert cuadra("ballesteo y jab-crochet", "BA-1-4")              # «crochet» vale con las dos manos
+    assert cuadra("ballesteo y jab-crochet", "BA-1-3")
+    assert cuadra("esquiva derecha, dos ganchos y esquiva izquierda", "ED-6-5c-EI")
+    assert not cuadra("esquivas a los dos lados con ganchos", "ED-6-EI-5c")  # las dos esquivas, antes que los ganchos
+    assert cuadra("parada, esquivas abajo a los dos lados y crochet", "P-AI-3-AD-4")
+    assert not cuadra("jab y esquiva derecha", "1-EI")             # el lado de la defensa, si lo dice, cuenta
+
+
+def test_reglas_de_los_nombres():
+    from herramientas.biblioteca import fallos_del_nombre, ids
+    from motor.acciones import acciones_por_ids
+
+    def fallos(nombre, notacion):
+        return fallos_del_nombre(nombre, acciones_por_ids(ids(notacion)))
+
+    assert fallos("jab-recto, esquiva abajo y crochet", "1-2-AD-4") == []
+    assert fallos("esquiva abajo y gancho", "1-AD-6") == ["no empieza por la primera acción"]          # R1
+    assert fallos("ballesteo, esquiva abajo y paso lateral", "BA-1-AD-LD") == ["no nombra ningún golpe"]  # R2
+    assert fallos("jab, gancho y esquiva", "1-EI-6") == ["nombra algo que no está o en otro orden"]       # R3
+    assert "dice la mano del golpe" in fallos("gancho de derecha y crochet", "6-3")                      # R4
+    assert fallos("jab-recto con contra", "1-2") == ["palabras fuera del vocabulario: contra"]           # R5

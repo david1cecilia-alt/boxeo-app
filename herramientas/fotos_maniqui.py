@@ -59,9 +59,10 @@ def nombre_foto(postura: str, guardia: str, vista: str = VISTA) -> str:
 
 
 @contextmanager
-def abrir(sitio: Path, html: str, ancho: int = ANCHO, alto: int = ALTO):
+def abrir(sitio: Path, html: str, ancho: int = ANCHO, alto: int = ALTO, barras: bool = False):
     """Abre `html` en Chromium headless como una página más de `sitio` (sin servidor: Playwright
-    sirve los ficheros). Devuelve la página y la lista de errores de JS que vaya habiendo."""
+    sirve los ficheros). Devuelve la página y la lista de errores de JS que vaya habiendo.
+    Con `barras`, la página tiene barra de desplazamiento y ocupa sitio, como en un PC."""
     from playwright.sync_api import sync_playwright
 
     def servir(ruta):
@@ -75,7 +76,8 @@ def abrir(sitio: Path, html: str, ancho: int = ANCHO, alto: int = ALTO):
         ruta.fulfill(body=fichero.read_bytes(), content_type=tipo or "application/octet-stream")
 
     with sync_playwright() as p:
-        navegador = p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
+        navegador = p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader"],
+                                      ignore_default_args=["--hide-scrollbars"] if barras else None)
         try:
             pagina = navegador.new_page(viewport={"width": ancho, "height": alto}, device_scale_factor=1)
             errores = []

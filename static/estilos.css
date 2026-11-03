@@ -929,10 +929,12 @@ dialog::backdrop { background: var(--velo); }
   .col-lista { position: sticky; top: 24px; }
   .volver-movil { display: none; }
   .meses { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  /* A 1024 px la galería es media columna: casillas de ~80 px, donde «Septiembre» cabe a 13 px. */
+  /* A 1024 px la galería es media columna: casillas de ~78 px, donde «Septiembre» (5,6 veces su
+     letra) cabe justo a 13 px. Si la casilla no da para tanto (otra fuente, zoom), la letra baja lo
+     justo para que quepa: la casilla es el contenedor de su nombre. */
   .meses { gap: 4px; }
-  .meses .celda { padding: 12px 2px; }
-  .meses .celda b { font-size: 0.8125rem; }
+  .meses .celda { padding: 12px 2px; container-type: inline-size; }
+  .meses .celda b { font-size: min(0.8125rem, 17.5cqi); }
   .nombre-largo { display: inline; }
   .nombre-corto { display: none; }
   .col-detalle > .vacio {

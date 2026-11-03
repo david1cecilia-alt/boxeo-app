@@ -700,6 +700,12 @@ button.volver {
   text-decoration: underline; text-decoration-color: var(--acento); text-underline-offset: 3px;
 }
 
+/* Títulos que reciben el foco al navegar por el Historial (el periodo, el día, el detalle): en vez
+   del recuadro blanco, el subrayado rojo de los enlaces de la app, más grueso. Sigue viéndose. */
+#historial-contenido :is(h2, h3)[tabindex="-1"]:focus-visible {
+  outline: none; text-decoration: underline 3px var(--acento); text-underline-offset: 6px;
+}
+
 /* Maestro-detalle. Móvil: o la lista o el detalle (con su enlace de volver). */
 .maestro-detalle, .col-lista, .col-detalle { display: grid; gap: 16px; align-content: start; min-width: 0; }
 .con-detalle > .resumen-historial, .con-detalle .col-lista,

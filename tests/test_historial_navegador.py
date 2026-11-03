@@ -91,3 +91,18 @@ def test_las_etiquetas_de_las_cifras_caben_en_su_casilla(pagina, ancho):
     assert "sesiones / mes" in [e[0] for e in etiquetas] or "sesión / mes" in [e[0] for e in etiquetas]
     assert len(etiquetas) == 6
     assert not [e for e in etiquetas if e[1] > 0], f"a {ancho} px se salen: {etiquetas}"
+
+
+# Al abrir el detalle (o un día) el foco va a su título: se ve (subrayado rojo), sin recuadro blanco.
+@pytest.mark.parametrize("ruta, titulo", [("local%3Aprueba-1", "#t-detalle"), ("dia/2026-09-01", "#t-periodo")])
+def test_el_titulo_enfocado_se_subraya_sin_recuadro(pagina, ruta, titulo):
+    _abrir_historial(pagina, 1440, ruta, titulo)
+    pagina.keyboard.press("Shift")  # el foco por teclado: el que se ve
+    pagina.goto(f"{ORIGEN}/index.html#historial/{ruta}")
+    pagina.wait_for_function(f"document.activeElement?.matches('{titulo}')")
+    foco = pagina.evaluate(f"""() => {{
+      const t = document.querySelector('{titulo}');
+      const e = getComputedStyle(t);
+      return [t.matches(':focus-visible'), e.outlineStyle, e.textDecorationLine];
+    }}""")
+    assert foco == [True, "none", "underline"]

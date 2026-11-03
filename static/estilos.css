@@ -532,6 +532,10 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
   padding: 14px 12px; border-radius: 18px; background: var(--superficie); border: 1px solid var(--linea);
 }
 .cifras dt { color: var(--suave); font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+/* Las del resumen, en una línea: si la casilla no da para «sesiones / mes» (7,2 veces su letra),
+   la letra baja lo justo (la casilla es su contenedor). */
+.resumen-historial > .cifras div { padding-inline: 10px; container-type: inline-size; }
+.resumen-historial > .cifras dt { font-size: min(0.75rem, 13.5cqi); }
 .cifras dd { margin: 0; font-family: var(--letra-titular); font-size: 38px; line-height: 1; }
 .cifras dd small { font-size: 18px; color: var(--suave); }
 .cifras .destacada { background: var(--acento-relleno); border-color: transparent; color: var(--sobre-acento); }
@@ -952,6 +956,7 @@ dialog::backdrop { background: var(--velo); }
     }
     .resumen-historial, .con-detalle > .resumen-historial, .maestro-detalle { display: contents; }
     .resumen-historial > .cifras { grid-column: 1; grid-row: 1; } /* las del resumen, no las del mes */
+    .resumen-historial > .cifras div { padding-inline: 14px; } /* columna estrecha: sitio para «sesiones / mes» */
     .grafico-semanas { grid-column: 2; grid-row: 1 / span 2; }
     .col-lista { grid-column: 1; grid-row: 2 / span 2; }
     .col-detalle { grid-column: 2; grid-row: 3; }

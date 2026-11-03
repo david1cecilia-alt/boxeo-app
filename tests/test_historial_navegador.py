@@ -81,3 +81,13 @@ def test_en_el_ano_el_nombre_del_mes_cabe_en_su_casilla(pagina, ancho):
     cuentas = pagina.evaluate(SOBRESALE, [".meses .celda", ".cuenta-mes"])
     assert "12 sesiones" in [c[0] for c in cuentas]
     assert not [c for c in cuentas if c[1] > 0], f"a {ancho} px se salen: {cuentas}"
+
+
+# 1280: desde ahí las cifras van en la columna izquierda, de 2/5 del ancho.
+@pytest.mark.parametrize("ancho", ANCHOS + (1280,))
+def test_las_etiquetas_de_las_cifras_caben_en_su_casilla(pagina, ancho):
+    _abrir_historial(pagina, ancho, "mes/2026-09", ".cifras-mes")
+    etiquetas = pagina.evaluate(SOBRESALE, [".cifras div", "dt"])
+    assert "sesiones / mes" in [e[0] for e in etiquetas] or "sesión / mes" in [e[0] for e in etiquetas]
+    assert len(etiquetas) == 6
+    assert not [e for e in etiquetas if e[1] > 0], f"a {ancho} px se salen: {etiquetas}"

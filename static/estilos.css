@@ -219,7 +219,8 @@ input[type="checkbox"], input[type="radio"] { width: auto; min-height: 0; accent
 fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 legend { color: var(--suave); font-size: 0.95rem; padding: 0; margin-bottom: 8px; }
 legend small { display: block; font-size: 0.85rem; }
-.rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+/* Campos en rejilla, alineados por abajo: si una etiqueta ocupa dos líneas, las cajas siguen a la misma altura. */
+.rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; align-items: end; }
 hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
 
 /* Chips de opción (radios): presets, categorías, estilo. El seleccionado, en claro. */

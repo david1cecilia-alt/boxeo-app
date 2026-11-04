@@ -339,6 +339,32 @@ def test_guiones_python_con_propias_cumplen_los_mismos_invariantes(js):
         comprobar_guion(guion_a_dict(construir_guion(config, rng, sorteo)), config, g["propias"], g["mezcla"])
 
 
+def test_guiones_de_entrenar_js_con_la_mezcla_cumplen_los_invariantes(js):
+    """nuevoGuion (lo que lanza Entrenar) con «Practicar más» y las propias: «Solo las mías» solo dice
+    propias en las combinaciones, y el final del asalto se rellena (con la biblioteca si no hay cortas)."""
+    from tests.test_silencio_final import SILENCIO_MAXIMO
+    assert {g["mezcla"] for g in js["guiones_entrenar"]} == {"mucho", "solo"}
+    for g in js["guiones_entrenar"]:
+        config = ConfigSesion(**g["config"])
+        comprobar_guion(g["eventos"], config, g["propias"], g["mezcla"])
+        propias = {tuple(acciones_espejo(p["ids"], config.zurdo)) for p in g["propias"]}
+        combos = [tuple(e["ids"]) for e in g["eventos"] if e["tipo"] == "combo"]
+        if g["mezcla"] == "solo":
+            assert combos and all(c in propias for c in combos)
+        else:
+            assert any(c in propias for c in combos) and any(c not in propias for c in combos)
+        for fin in (e for e in g["eventos"] if e["tipo"] == "fin_asalto"):
+            dichos = [e for e in g["eventos"] if e["asalto"] == fin["asalto"]
+                      and e["tipo"] in ("combo", "coletilla") and e["t"] < fin["t"]]
+            silencio = fin["t"] - max(e["t"] + e["duracion"] for e in dichos)
+            assert silencio <= SILENCIO_MAXIMO + 1e-9, (g["mezcla"], g["semilla"], silencio)
+
+
+def acciones_espejo(ids: list[str], zurdo: bool) -> list[str]:
+    acciones = acciones_por_ids(ids)
+    return [(espejo(a) if zurdo else a).id for a in acciones]
+
+
 # ---------- Reproducibilidad ----------
 
 def test_motor_js_es_reproducible_con_la_misma_semilla(ruta_js, tmp_path):

@@ -4,6 +4,8 @@
 // Uso: node tests/js/exportar.mjs salida.json [combinaciones_por_nivel]
 import { writeFileSync } from "node:fs";
 
+import { nuevoGuion } from "../../static/ajustes.js";
+import { perfilPorDefecto } from "../../static/almacen.js";
 import { accionesPorIds, biblioteca, catalogo, espejo } from "../../static/motor/acciones.js";
 import { crearAzar } from "../../static/motor/azar.js";
 import { datos } from "../../static/motor/datos.js";
@@ -119,6 +121,28 @@ const guionesMezcla = [];
   }
 });
 
+// Guiones de Entrenar tal cual (nuevoGuion, con «Practicar más»): «Mucho» y «Solo las mías» (también
+// sin ninguna corta), con y sin Reacción, en ortodoxo y zurdo. Asaltos de 3 min en medio, velocidad
+// normal: los del test de silencio final.
+const PRACTICAR_ENTRENAR = [{ movimiento: "esquiva", cuanto: "bastante" }];
+const guionesEntrenar = [];
+[
+  ["mucho", PROPIAS, {}],
+  ["mucho", PROPIAS, { modo_reaccion: true, zurdo: true }],
+  ["solo", PROPIAS, {}],
+  ["solo", PROPIAS, { modo_reaccion: true, zurdo: true, voz: "numeros" }],
+  ["solo", SIN_CORTAS, {}],
+  ["solo", SIN_CORTAS, { modo_reaccion: true, voz: "ambos" }],
+].forEach(([mezcla, propias, extra], i) => {
+  const config = { asaltos: 3, duracion_asalto: 180, descanso: 60, nivel: 2, ritmo: 3, pausa: null, voz: "nombres",
+    zurdo: false, modo_reaccion: false, velocidad: 1.1, ...extra };
+  const perfil = { ...perfilPorDefecto(), practicar: PRACTICAR_ENTRENAR };
+  for (let semilla = 0; semilla < 10; semilla++) {
+    const eventos = nuevoGuion({ ...config, mezcla }, perfil, crearAzar(8000 + 20 * i + semilla), propias);
+    guionesEntrenar.push({ config, semilla, mezcla, propias, eventos });
+  }
+});
+
 // Avisos del creador: cada combinación de la biblioteca y unas cuantas propias, con 0, 3 y 20 guardadas.
 const GUARDADAS = [[], PROPIAS.slice(0, 3), Array.from({ length: 20 }, (_, i) => ({ id: `p-${i}`, ids: PROPIAS[i % 6].ids }))];
 const CREADAS = [
@@ -143,4 +167,4 @@ const senales = {
   segundos: Object.fromEntries(datos().presets.reacciones.map((r) => [r.texto, segundosHabla(r.texto, VELOCIDAD_SENAL)])),
 };
 
-writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, sorteos, senales, practicar, duplicadas, mezclas, guiones_mezcla: guionesMezcla, avisos, movimientos: movimientos(), cobertura }));
+writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, sorteos, senales, practicar, duplicadas, mezclas, guiones_mezcla: guionesMezcla, guiones_entrenar: guionesEntrenar, avisos, movimientos: movimientos(), cobertura }));

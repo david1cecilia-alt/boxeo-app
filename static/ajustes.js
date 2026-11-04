@@ -3,7 +3,7 @@
 import { PERSONALIZADA_POR_DEFECTO } from "./almacen.js";
 import { datos } from "./motor/datos.js";
 import { VELOCIDADES, VELOCIDAD_POR_DEFECTO } from "./motor/ritmo.js";
-import { SorteoBiblioteca } from "./motor/sorteo.js";
+import { MEZCLAS, SorteoMezcla } from "./motor/sorteo.js";
 import { construirGuion, validarConfig } from "./motor/temporizador.js";
 
 export const PERSONALIZADO = "personalizado"; // el asalto que no es un preset de data/presets.json
@@ -49,9 +49,13 @@ export function cambiarPracticar(practicar, movimiento, cuanto) {
     : [...practicar, { movimiento, cuanto }];
 }
 
-export function nuevoGuion(config, perfilUsuario, azar) {
-  const sorteo = new SorteoBiblioteca(config.nivel,
-    { perfil: perfilSorteo(perfilUsuario), zurdo: config.zurdo, azar });
+// El guion de la sesión: la biblioteca del nivel con «Practicar más» y, según `config.mezcla` («Tus
+// combinaciones»), las propias del almacén (`propias`, en ortodoxo; el zurdo, como la biblioteca).
+// Con «Ninguna», o una mezcla que no se puede cumplir, sale lo mismo que sin propias.
+export function nuevoGuion(config, perfilUsuario, azar, propias = []) {
+  const sorteo = new SorteoMezcla(config.nivel, {
+    perfil: perfilSorteo(perfilUsuario), zurdo: config.zurdo, azar, propias, mezcla: config.mezcla ?? "ninguna",
+  });
   return construirGuion(config, azar, sorteo);
 }
 
@@ -68,6 +72,7 @@ export function preferencias(perfilUsuario) {
     voz: s.voz,
     ritmo: s.ritmo,
     reaccion: s.reaccion === true,
+    mezcla: MEZCLAS.includes(s.mezcla) ? s.mezcla : "ninguna",
     personalizada: { ...(personalizadaValida(s.personalizada) ? s.personalizada : PERSONALIZADA_POR_DEFECTO) },
   };
 }

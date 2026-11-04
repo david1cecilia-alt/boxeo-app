@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boceto · Mis combinaciones</title>
+<!-- Boceto suelto, FUERA de la app (no va al precache ni al sitio). Usa los tokens y las fuentes de
+     la app para que se vea como quedaría. Los datos de las acciones están copiados a mano solo aquí:
+     en la app saldrán de data/acciones.json. Abrir con la app servida (python -m http.server) o
+     directamente desde el disco. -->
+<link rel="stylesheet" href="../../static/estilos.css">
+<style>
+  body { padding: 24px var(--hueco) 48px; }
+  .bocetos { display: grid; gap: 40px; max-width: 1180px; margin: 0 auto; }
+  .boceto-titulo { font-family: var(--letra-titular); text-transform: uppercase; color: var(--suave); letter-spacing: 2px; font-size: 14px; margin: 0 0 10px; }
+  .marco { border: 1px dashed var(--linea-chip); border-radius: 28px; padding: 20px; }
+  .marco.movil { max-width: 390px; }
+
+  /* ---------- Comunes ---------- */
+  .cr-volver { display: inline-flex; min-height: 48px; align-items: center; color: var(--texto); }
+  .cr-cabecera h1 { margin: 0; font-family: var(--letra-titular); text-transform: uppercase; font-weight: 400; font-size: 44px; line-height: .95; }
+  .cr-cabecera h1 .acento { color: var(--acento); }
+  .cr-cabecera p { margin: 6px 0 0; color: var(--suave); font-size: .9rem; }
+  .cr-boton { min-height: 48px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--linea-chip); background: var(--secundario);
+    color: var(--texto); font: 600 1rem var(--letra-texto); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    cursor: pointer; transition: transform 140ms cubic-bezier(.23,1,.32,1), background-color 140ms ease; }
+  .cr-boton:active { transform: scale(.97); }
+  .cr-boton.principal { background: var(--acento-relleno); border-color: transparent; color: var(--sobre-acento); }
+  .cr-boton[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+  :is(button, a):focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
+
+  /* Pasos: el MISMO código visual que la pantalla de la sesión (paso-golpe/defensa/movimiento):
+     lo que creas se ve como lo verás al entrenar. */
+  .cr-paso { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px 0 4px; border-radius: 999px;
+    background: var(--secundario); font-size: .85rem; white-space: nowrap; }
+  .cr-paso i { display: inline-grid; place-items: center; min-width: 24px; height: 24px; border-radius: 999px; font: 400 14px var(--letra-titular); font-style: normal; }
+  .cr-paso.golpe i { background: var(--acento-relleno); color: var(--sobre-acento); }
+  .cr-paso.defensa i { border: 1.5px solid currentColor; }
+  .cr-paso.movimiento { color: var(--terciario); }
+  .cr-paso.movimiento i { border: 1.5px dashed var(--suave); color: var(--suave); }
+
+  /* Nivel en directo: 10 segmentos, uno por acción, con las tres zonas de nivel_de marcadas. */
+  .cr-nivel { display: grid; gap: 6px; }
+  .cr-nivel-linea { display: flex; justify-content: space-between; align-items: baseline; font-size: .85rem; color: var(--suave); }
+  .cr-nivel-linea b { font: 400 22px var(--letra-titular); text-transform: uppercase; color: var(--texto); letter-spacing: 1px; }
+  .cr-nivel-linea b.fuera { color: var(--suave); }
+  .cr-segmentos { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; }
+  .cr-segmentos span { height: 8px; border-radius: 2px; background: var(--linea-chip); transition: background-color 160ms ease; }
+  .cr-segmentos span.lleno { background: var(--acento-relleno); }
+  .cr-segmentos span:nth-child(1) { opacity: .5; }        /* 1 acción: aún no vale */
+  .cr-segmentos span:nth-child(4), .cr-segmentos span:nth-child(6) { margin-right: 5px; } /* cortes 4|5 y 6|7 */
+  .cr-zonas { display: grid; grid-template-columns: 4fr 2fr 4fr; font-size: .7rem; color: var(--tenue); text-transform: uppercase; letter-spacing: 1px; }
+  .cr-zonas span:nth-child(2) { text-align: center; } .cr-zonas span:nth-child(3) { text-align: right; }
+
+  /* ---------- Listado ---------- */
+  .cr-lista { list-style: none; margin: 18px 0; padding: 0; display: grid; gap: 10px; }
+  .cr-combo { background: var(--superficie); border: 1px solid var(--linea); border-radius: var(--radio); padding: 14px 8px 10px 16px; display: grid; gap: 10px; }
+  .cr-combo-cabeza { display: flex; align-items: center; gap: 10px; }
+  .cr-combo h2 { margin: 0; flex: 1; white-space: nowrap; font: 400 20px var(--letra-titular); text-transform: uppercase; letter-spacing: 1px; }
+  .cr-pastilla { font-size: .75rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: var(--acento-tenue); color: var(--acento); }
+  .cr-icono { width: 48px; height: 48px; border-radius: 999px; border: 0; background: transparent; color: var(--suave); display: grid; place-items: center; cursor: pointer; }
+  .cr-icono:hover { background: var(--secundario); color: var(--texto); }
+  .cr-icono svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+  .cr-secuencia { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+  .cr-anadir { width: 100%; min-height: 64px; border: 1.5px dashed var(--linea-chip); border-radius: var(--radio); background: transparent; color: var(--texto);
+    font: 600 1rem var(--letra-texto); display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
+  .cr-anadir span { color: var(--acento); font-size: 1.6rem; line-height: 1; }
+
+  /* ---------- Editor ---------- */
+  .cr-editor { display: grid; gap: 16px; }
+  .cr-tira-caja { position: sticky; top: 0; z-index: 1; background: var(--superficie); border: 1px solid var(--linea); border-radius: var(--radio); padding: 14px 16px; display: grid; gap: 12px; }
+  .cr-tira { display: flex; flex-wrap: wrap; gap: 6px; min-height: 40px; margin: 0; padding: 0; list-style: none; }
+  .cr-tira:empty::before { content: "Toca un movimiento para empezar"; color: var(--tenue); font-size: .9rem; align-self: center; }
+  .cr-tira button.cr-paso { border: 0; color: inherit; cursor: pointer; min-height: 40px; font-family: var(--letra-texto);
+    transition: transform 180ms cubic-bezier(.23,1,.32,1), opacity 180ms ease; }
+  .cr-tira button.cr-paso.movimiento { color: var(--terciario); }
+  .cr-tira button.cr-paso::after { content: "×"; margin-left: 2px; color: var(--suave); }
+  @starting-style { .cr-tira button.cr-paso { opacity: 0; transform: scale(.9); } }
+  .cr-guardia { margin: 0; font-size: .8rem; color: var(--suave); }
+
+  .cr-tarjetas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .cr-tarjeta { min-height: 88px; border-radius: 18px; border: 1px solid var(--linea-chip); background: var(--superficie); color: var(--texto);
+    display: grid; place-content: center; justify-items: center; gap: 4px; cursor: pointer; font: 600 .95rem var(--letra-texto);
+    transition: transform 140ms cubic-bezier(.23,1,.32,1), background-color 140ms ease; }
+  .cr-tarjeta:active { transform: scale(.97); }
+  .cr-tarjeta svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .cr-tarjeta[aria-expanded="true"] { background: var(--chip-activo); color: var(--sobre-chip-activo); border-color: transparent; }
+
+  .cr-paleta { display: grid; gap: 10px; }
+  .cr-paleta[hidden] { display: none; }
+  .cr-objetivo { display: flex; align-items: center; justify-content: space-between; min-height: 48px; }
+  .cr-objetivo { gap: 12px; }
+  .cr-objetivo small { text-align: right; font-size: .75rem; }
+  .cr-combo-cabeza { gap: 4px; }
+  .cr-combo-cabeza .cr-pastilla { margin-right: 4px; }
+  .cr-objetivo label { white-space: nowrap; display: flex; align-items: center; gap: 10px; font-weight: 600; cursor: pointer; }
+  .cr-golpes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; list-style: none; margin: 0; padding: 0; }
+  .cr-golpe { width: 100%; min-height: 72px; border-radius: 16px; border: 1px solid var(--linea-chip); background: var(--superficie); color: var(--texto);
+    display: flex; align-items: center; gap: 12px; padding: 0 12px; cursor: pointer; text-align: left; font: 600 .95rem var(--letra-texto);
+    transition: transform 140ms cubic-bezier(.23,1,.32,1), border-color 140ms ease; }
+  .cr-golpe:active { transform: scale(.97); }
+  @media (hover: hover) and (pointer: fine) { .cr-golpe:hover, .cr-mov:hover { border-color: var(--acento); } }
+  .cr-golpe b { font: 400 40px var(--letra-titular); color: var(--acento); line-height: 1; min-width: 26px; }
+  .cr-golpe b.sin-numero { font-size: 22px; color: var(--suave); }
+  .cr-movs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; list-style: none; margin: 0; padding: 0; }
+  .cr-mov { width: 100%; min-height: 56px; border-radius: 16px; border: 1px solid var(--linea-chip); background: var(--superficie); color: var(--texto);
+    font: 600 .95rem var(--letra-texto); cursor: pointer; padding: 0 12px; text-align: left; display: flex; align-items: center; gap: 10px;
+    transition: transform 140ms cubic-bezier(.23,1,.32,1), border-color 140ms ease; }
+  .cr-mov:active { transform: scale(.97); }
+  .cr-mov.salida { border-style: dashed; }
+  .cr-barra { position: sticky; bottom: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 0 0; background: linear-gradient(transparent, var(--fondo) 30%); }
+  .cr-estado { min-height: 1.4em; margin: 0; font-size: .85rem; color: var(--suave); }
+
+  /* Escritorio: paleta a la izquierda, tira y guardar fijos a la derecha. */
+  @media (min-width: 1024px) {
+    .cr-editor.escritorio { grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr); align-items: start; }
+    .cr-editor.escritorio .cr-lado { position: sticky; top: 24px; display: grid; gap: 12px; order: 2; }
+    .cr-editor.escritorio .cr-golpes { grid-template-columns: repeat(3, 1fr); }
+    .cr-editor.escritorio .cr-movs { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  /* ---------- Avisos ---------- */
+  dialog.cr-avisos { max-width: 420px; border: 1px solid var(--linea-chip); border-radius: var(--radio); background: var(--superficie); color: var(--texto); padding: 22px; }
+  dialog.cr-avisos::backdrop { background: var(--velo); }
+  .cr-avisos h2 { margin: 0 0 12px; font: 400 26px var(--letra-titular); text-transform: uppercase; }
+  .cr-avisos ul { margin: 0 0 18px; padding: 0; list-style: none; display: grid; gap: 10px; }
+  .cr-avisos li { display: grid; grid-template-columns: 24px 1fr; gap: 10px; padding: 12px; border-radius: 14px; background: var(--aviso-fondo); color: var(--aviso); font-size: .92rem; }
+  .cr-avisos .acciones { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="bocetos">
+
+  <section>
+    <p class="boceto-titulo">1 · Ajustes → sección (390 px)</p>
+    <div class="marco movil">
+      <a class="tarjeta cr-entrada" href="#" style="display:flex;align-items:center;gap:12px;padding:16px;color:inherit;text-decoration:none;min-height:72px">
+        <span style="flex:1"><b style="font:400 22px var(--letra-titular);text-transform:uppercase;letter-spacing:1px">Mis combinaciones <span style="color:var(--acento)">3/20</span></b><br>
+          <small style="color:var(--suave)">Crea las tuyas y mézclalas con la biblioteca en Entrenar.</small></span>
+        <span aria-hidden="true" style="font-size:1.4rem;color:var(--suave)">›</span>
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <p class="boceto-titulo">2 · #ajustes/mis-combinaciones: listado (390 px)</p>
+    <div class="marco movil">
+      <a href="#" class="cr-volver">← Volver</a>
+      <header class="cr-cabecera">
+        <h1>Mis <span class="acento">combinaciones</span></h1>
+        <p>3 de 20. Se crean para guardia ortodoxa; en zurdo la app las cambia de lado, como al resto.</p>
+      </header>
+      <ul class="cr-lista" id="lista"></ul>
+      <button type="button" class="cr-anadir" id="ir-editor"><span aria-hidden="true">+</span> Añadir combinación</button>
+    </div>
+  </section>
+
+  <section>
+    <p class="boceto-titulo">3 · Editor (interactivo; a ≥1024 px pasa a dos columnas)</p>
+    <div class="marco">
+      <a href="#" class="cr-volver">← Mis combinaciones</a>
+      <header class="cr-cabecera" style="margin-bottom:14px"><h1>Nueva <span class="acento">combinación</span></h1></header>
+      <div class="cr-editor escritorio">
+        <div class="cr-lado">
+          <div class="cr-tira-caja">
+            <div class="cr-nivel" aria-hidden="true">
+              <div class="cr-nivel-linea"><span id="contador">0 de 10 acciones</span><b id="nivel" class="fuera">—</b></div>
+              <div class="cr-segmentos" id="segmentos"></div>
+              <div class="cr-zonas"><span>Básico 2-4</span><span>Medio 5-6</span><span>Avanzado 7-10</span></div>
+            </div>
+            <ol class="cr-tira" id="tira" aria-label="Tu combinación (toca un paso para quitarlo)"></ol>
+            <p class="cr-guardia">Se crean para guardia ortodoxa; en zurdo la app las cambia de lado, como al resto.</p>
+          </div>
+          <p class="cr-estado" id="estado" role="status" aria-live="polite"></p>
+          <div class="cr-barra">
+            <button type="button" class="cr-boton" id="quitar-ultima">Quitar la última</button>
+            <button type="button" class="cr-boton principal" id="guardar" aria-describedby="por-que">Guardar</button>
+          </div>
+          <p class="cr-estado" id="por-que"></p>
+        </div>
+
+        <div>
+          <div class="cr-tarjetas" role="group" aria-label="Tipo de movimiento">
+            <button type="button" class="cr-tarjeta" aria-expanded="true" aria-controls="p-golpe" data-grupo="golpe">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V7a2 2 0 0 1 4 0v3m0-1V6a2 2 0 0 1 4 0v4m0-2a2 2 0 0 1 4 0v5a7 7 0 0 1-7 7h-1a6 6 0 0 1-6-6v-2a2 2 0 0 1 4 0"/></svg>Golpes</button>
+            <button type="button" class="cr-tarjeta" aria-expanded="false" aria-controls="p-defensa" data-grupo="defensa">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg>Defensas</button>
+            <button type="button" class="cr-tarjeta" aria-expanded="false" aria-controls="p-movimiento" data-grupo="movimiento">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h12m-4-5 5 5-5 5"/><path d="M5 6v12" stroke-dasharray="2 3"/></svg>Salidas</button>
+          </div>
+          <div style="height:12px"></div>
+          <div class="cr-paleta" id="p-golpe">
+            <div class="cr-objetivo">
+              <label><input type="checkbox" role="switch" id="al-cuerpo"> Al cuerpo</label>
+              <small style="color:var(--suave)">Los golpes al cuerpo no llevan número</small>
+            </div>
+            <ul class="cr-golpes" id="golpes"></ul>
+          </div>
+          <div class="cr-paleta" id="p-defensa" hidden><ul class="cr-movs" id="defensas"></ul></div>
+          <div class="cr-paleta" id="p-movimiento" hidden><ul class="cr-movs" id="salidas"></ul></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <dialog class="cr-avisos" id="avisos" aria-labelledby="t-avisos">
+    <h2 id="t-avisos">Antes de guardar</h2>
+    <ul id="lista-avisos"></ul>
+    <form method="dialog" class="acciones">
+      <button class="cr-boton" value="denegar" autofocus>Volver a editar</button>
+      <button class="cr-boton principal" value="aceptar">Guardar igual</button>
+    </form>
+  </dialog>
+</div>
+
+<script type="module">
+  // Copia mínima de data/acciones.json para el boceto (en la app sale del catálogo del motor).
+  const A = {
+    jab: { tipo: "golpe", n: 1, corto: "jab" }, directo: { tipo: "golpe", n: 2, corto: "recto" },
+    gancho_izq: { tipo: "golpe", n: 3, corto: "crochet izq." }, gancho_der: { tipo: "golpe", n: 4, corto: "crochet dcha." },
+    uppercut_izq: { tipo: "golpe", n: 5, corto: "gancho izq." }, uppercut_der: { tipo: "golpe", n: 6, corto: "gancho dcha." },
+    jab_cuerpo: { tipo: "golpe", corto: "jab abajo" }, directo_cuerpo: { tipo: "golpe", corto: "recto abajo" },
+    gancho_izq_cuerpo: { tipo: "golpe", corto: "croch. izq. abajo" }, gancho_der_cuerpo: { tipo: "golpe", corto: "croch. dcha. abajo" },
+    uppercut_izq_cuerpo: { tipo: "golpe", corto: "gancho izq. abajo" }, uppercut_der_cuerpo: { tipo: "golpe", corto: "gancho dcha. abajo" },
+    esquiva_izq: { tipo: "defensa", corto: "esquiva izq." }, esquiva_der: { tipo: "defensa", corto: "esquiva dcha." },
+    rodar_izq: { tipo: "defensa", corto: "rueda izq." }, rodar_der: { tipo: "defensa", corto: "rueda dcha." },
+    paso_atras: { tipo: "defensa", corto: "paso atrás" }, bloqueo: { tipo: "defensa", corto: "bloqueo" },
+    parada: { tipo: "defensa", corto: "parada" }, ballesteo: { tipo: "defensa", corto: "ballesteo" }, flexion: { tipo: "defensa", corto: "flexión" },
+    paso_lateral_izq: { tipo: "movimiento", corto: "paso lateral izq." }, paso_lateral_der: { tipo: "movimiento", corto: "paso lateral dcha." },
+    pivote: { tipo: "movimiento", corto: "pivote" }, salir: { tipo: "movimiento", corto: "cambio de ángulo" },
+  };
+  const CARA = ["jab", "directo", "gancho_izq", "gancho_der", "uppercut_izq", "uppercut_der"];
+  const NIVEL = (n) => (n >= 2 && n <= 4 ? "Básico" : n <= 6 && n >= 5 ? "Medio" : n >= 7 && n <= 10 ? "Avanzado" : null);
+  const $ = (s) => document.querySelector(s);
+  const paso = (id, etiqueta = "li") => {
+    const a = A[id];
+    return `<${etiqueta} class="cr-paso ${a.tipo}" ${etiqueta === "button" ? `type="button" data-id="${id}" aria-label="Quitar ${a.corto}"` : ""}><i aria-hidden="true">${a.n ?? ""}</i>${a.corto}</${etiqueta}>`;
+  };
+
+  // ---- Listado de ejemplo ----
+  const propias = [["jab", "rodar_der", "uppercut_der"], ["jab", "directo", "esquiva_izq", "gancho_izq", "directo"], ["bloqueo", "parada", "paso_atras"]];
+  const ICONOS = {
+    editar: '<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+    borrar: '<svg viewBox="0 0 24 24"><path d="M5 7h14M10 7V4h4v3m-7 0 1 13h8l1-13"/></svg>',
+  };
+  $("#lista").innerHTML = propias.map((ids, i) => `<li class="cr-combo">
+      <div class="cr-combo-cabeza"><h2>Combinación ${i + 1}</h2><span class="cr-pastilla">${NIVEL(ids.length)}</span>
+        <button type="button" class="cr-icono" aria-label="Editar combinación ${i + 1}">${ICONOS.editar}</button>
+        <button type="button" class="cr-icono" aria-label="Borrar combinación ${i + 1}">${ICONOS.borrar}</button></div>
+      <ol class="cr-secuencia" aria-label="${ids.map((id) => A[id].corto).join(", ")}">${ids.map((id) => paso(id)).join("")}</ol></li>`).join("");
+
+  // ---- Editor ----
+  let tira = [];
+  const pintarPaletas = () => {
+    const cuerpo = $("#al-cuerpo").checked;
+    $("#golpes").innerHTML = CARA.map((id) => cuerpo ? id.replace(/^(jab|directo|gancho_izq|gancho_der|uppercut_izq|uppercut_der)$/, "$1_cuerpo") : id)
+      .map((id) => `<li><button type="button" class="cr-golpe" data-anadir="${id}"><b class="${A[id].n ? "" : "sin-numero"}" aria-hidden="true">${A[id].n ?? "↓"}</b>${A[id].corto}</button></li>`).join("");
+    const lista = (tipo, clase) => Object.entries(A).filter(([, a]) => a.tipo === tipo)
+      .map(([id, a]) => `<li><button type="button" class="cr-mov ${clase}" data-anadir="${id}">${a.corto}</button></li>`).join("");
+    $("#defensas").innerHTML = lista("defensa", "");
+    $("#salidas").innerHTML = lista("movimiento", "salida");
+  };
+  const pintarTira = (anuncio = "") => {
+    $("#tira").innerHTML = tira.map((id, i) => `<li>${paso(id, "button").replace("data-id", `data-i="${i}" data-id`)}</li>`).join("");
+    $("#segmentos").innerHTML = Array.from({ length: 10 }, (_, i) => `<span class="${i < tira.length ? "lleno" : ""}"></span>`).join("");
+    const nivel = NIVEL(tira.length);
+    $("#nivel").textContent = nivel ?? "—";
+    $("#nivel").className = nivel ? "" : "fuera";
+    $("#contador").textContent = `${tira.length} de 10 acciones`;
+    const motivo = tira.length < 2 ? "Hacen falta al menos 2 acciones." : "";
+    $("#guardar").setAttribute("aria-disabled", String(Boolean(motivo)));
+    $("#por-que").textContent = motivo;
+    $("#quitar-ultima").setAttribute("aria-disabled", String(!tira.length));
+    $("#estado").textContent = anuncio ? `${anuncio}. ${tira.length} acciones${nivel ? `, ${nivel.toLowerCase()}` : ""}.` : "";
+  };
+  document.addEventListener("click", (e) => {
+    const anadir = e.target.closest("[data-anadir]");
+    if (anadir) {
+      if (tira.length >= 10) return pintarTira("Ya tiene 10 acciones, el máximo");
+      tira.push(anadir.dataset.anadir);
+      return pintarTira(`Añadido ${A[anadir.dataset.anadir].corto}`);
+    }
+    const chip = e.target.closest("#tira [data-i]");
+    if (chip) {
+      const [quitado] = tira.splice(Number(chip.dataset.i), 1);
+      pintarTira(`Quitado ${A[quitado].corto}`);
+      ($("#tira button") ?? $("#quitar-ultima")).focus();
+      return;
+    }
+    const tarjeta = e.target.closest(".cr-tarjeta");
+    if (tarjeta) {
+      for (const t of document.querySelectorAll(".cr-tarjeta")) {
+        const activa = t === tarjeta;
+        t.setAttribute("aria-expanded", String(activa));
+        document.getElementById(t.getAttribute("aria-controls")).hidden = !activa;
+      }
+    }
+  });
+  $("#al-cuerpo").addEventListener("change", pintarPaletas);
+  $("#quitar-ultima").addEventListener("click", () => {
+    if (!tira.length) return;
+    pintarTira(`Quitado ${A[tira.pop()].corto}`);
+  });
+  $("#guardar").addEventListener("click", () => {
+    if (tira.length < 2) return;
+    const avisos = [];
+    if (!tira.some((id) => A[id].tipo === "golpe")) avisos.push("No lleva ningún golpe: solo defensas o salidas.");
+    if (tira.slice(0, -1).some((id) => A[id].tipo === "movimiento")) avisos.push("Hay una salida en medio y no al final.");
+    if (tira.join() === "jab,directo") avisos.push("Es igual que una de la biblioteca (nivel básico).");
+    if (propias.some((p) => p.join() === tira.join())) avisos.push("Es igual que otra de tus combinaciones.");
+    if (!avisos.length) return pintarTira("Guardada (boceto)");
+    $("#lista-avisos").innerHTML = avisos.map((t) => `<li><span aria-hidden="true">⚠</span>${t}</li>`).join("");
+    $("#avisos").showModal();
+  });
+  pintarPaletas();
+  pintarTira();
+</script>
+</body>
+</html>

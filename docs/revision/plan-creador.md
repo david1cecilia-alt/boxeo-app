@@ -1,0 +1,320 @@
+# Plan: creador de combinaciones (bloque 4)
+
+Rama `creador-combinaciones`, sacada de main en 8e97330. Hoy solo diagnóstico y plan: no se ha tocado código.
+Boceto del diseño: [boceto-creador.html](boceto-creador.html) (suelto, fuera de la app; capturas en
+`.playwright-mcp/capturas/boceto-creador-{390,1440,avisos-390}.png`).
+
+> **No encontrados:** `CONTEXTO-boxeo-app.md`, `claude/estado-2026-11-04.md` y `claude/hoja-de-ruta.md` no existen
+> en el repo, ni en el historial de git, ni en la carpeta de usuario. El diagnóstico sale del código, de `CLAUDE.md`,
+> `README.md` y `docs/revision/siguiente-paso.md`. Si están en otro sitio, los leo antes de C1.
+
+---
+
+## 1. Diagnóstico
+
+### 1.1 Almacén (`static/almacen.js`)
+
+- **Valores por defecto:** `vacio()` → `{ version, sesiones, valoraciones, perfil: perfilPorDefecto() }`. Lo que se
+  elige en Entrenar está en `perfil.sesion` (`sesionPorDefecto()`: voz, ritmo, asalto, nivel, zurdo, reaccion,
+  personalizada). Al cargar, `migrar()` lleva los datos a la versión actual y `completar()` rellena lo que falte
+  campo a campo (fusiona `basicos`, `estilo`, `sesion`, `voz`, `historial`; `practicar` solo si es array).
+- **Migraciones:** `VERSION = 7`; `MIGRACIONES[n]` pasa de n a n+1 (0→1 ids aleatorios … 5→6 `practicar: []`,
+  6→7 quita notas/revisiones y la guardia/nivel de «Tus datos»). `migrar()` las encadena y lanza `ErrorAlmacen` si
+  la versión es mayor que la de la app.
+- **Exportar/Importar:** `exportar()` → `{ app: "boxeo", version, exportado, datos }`. `importar()` solo comprueba
+  `app === "boxeo"` y que `datos` sea objeto; la versión la valida `migrar()` sobre `copia.datos.version`. Por eso
+  **importar una copia v5/v6/v7 ya funciona** en cuanto exista la migración 7→8: pasará por ella y saldrá con la
+  lista vacía. Una copia v9 se rechaza con mensaje claro.
+- **Dónde guardar lo nuevo:** `datos.combinacionesPropias` (al nivel de `sesiones`, no dentro de `perfil`: no es una
+  preferencia y así `guardarPerfil` no la toca) y `perfil.sesion.mezcla` (Entrenar lo recuerda como el nivel, con
+  `recordarSesion`).
+
+### 1.2 Sorteo (`motor/sorteo.py` ⇄ `static/motor/sorteo.js`)
+
+- **Filtro por nivel:** en el constructor, `self.combos = [c for c in biblioteca() if c.nivel == nivel]`.
+- **Sorteo:** uniforme salvo pesos: `peso_practicar(acciones, practicar) * max(1, nuevos)` con `rng.choices` /
+  `azar.elegirConPesos`. `peso_practicar` multiplica ×2/×4 por movimiento elegido, tope ×8; nunca da 0.
+- **Cobertura 1-6:** `faltan = {1..6}`; `_candidatas()` se queda con las libres que añaden algún número que falte
+  (si no hay ninguna, todas las libres) y además pesan ×(números nuevos).
+- **Ventana:** `recientes`, las últimas `SIN_REPETIR = 5`. **Identifica cada combinación por igualdad:** en Python
+  `c not in self.recientes` compara la dataclass `ComboBiblioteca` por valor (notación, nivel, acciones, nombre); en
+  JS `includes` compara por referencia. Hoy da igual (la biblioteca no tiene dos iguales: comprobado), pero con
+  propias duplicadas (se permiten con aviso) **Python y JS divergirían**. Hay que identificar por clave: `n` para la
+  biblioteca (hoy `ComboBiblioteca` no lo carga: se añade) e `id` para las propias.
+- **Coletillas:** biblioteca nivel 1 de 2-3 acciones, ordenadas al azar por peso (`u^(1/peso)`), sin tocar el estado.
+- **guardar()/restaurar():** guardan `recientes` y `faltan` para sacar reservas sin dejar rastro.
+- **Equivalencia:** `tests/test_equivalencia_js.py` + `tests/js/exportar.mjs`. No compara secuencias (cada motor
+  tiene su PRNG) sino reglas, invariantes y proporciones con 5.000 muestras (tolerancia 5 puntos). Hay que ampliar:
+  sorteo mezclado (proporción de propias ≈ p, ventana por grupo, cobertura), «solo las mías», coletillas mezcladas,
+  guiones con propias, y que el espejo/`texto` de una propia sea igual en los dos motores.
+
+### 1.3 «Al menos un golpe»: todo lo que lo da por hecho
+
+Comprobado: ninguna combinación de la biblioteca carece de golpe, así que nada de esto se ha ejercitado nunca.
+
+| Sitio | Qué hace | Con una propia sin golpes | Arreglo |
+|---|---|---|---|
+| `reglas.validar` / `_regla_tiene_golpe` (py+js) | Única regla: «no hay ningún golpe» | Es justo el aviso del creador | El creador usa `validar()` como fuente de ese aviso (no bloquea). Sin cambios en la regla. |
+| `reglas.ultimo_golpe` (py+js) | Último golpe «para los pesos del perfil» | Devuelve `None` sin romper | **Nadie la llama** (código muerto desde la v6). No se toca; si quieres, commit aparte para quitarla. |
+| `sorteo.numeros` / cobertura 1-6 | Números de los golpes | Conjunto vacío | En el grupo de propias no se filtra por cobertura (decisión tuya), así que no hay problema. Si se aplicara, una propia sin números nunca saldría mientras falten. |
+| `sorteo.movimiento` / `peso_practicar` | Golpe → «1»-«6»/«cuerpo»; resto → familia | Funciona: pesa por defensas/salidas | Nada. |
+| `texto_hablado` / `palabra_hablada` (voz Números/Nombres/Ambos) | Golpe con número → número; resto → `orden` o nombre | Dice las órdenes («bloqueo, parada, paso atrás»); las salidas (sin `orden`) por su nombre hablado | Nada. Test: una propia solo de defensas se dice igual en los tres modos. |
+| `ritmo.duracion_estimada` | Estima por el texto | Funciona | Nada. |
+| `pasos.pasosCombo` (pantalla de la sesión) | Tipo, número y nombre corto por paso | Pinta círculos de defensa/salida | Nada. |
+| `pasos.vozDeSesion` (deducir la voz de sesiones viejas) | Solo vota con las que llevan golpe con número | Se ignora en la votación (ya previsto en el código) | Nada. Las sesiones nuevas guardan `voz`. |
+| `pasos.combinacionesParaVer` (Historial, valoración) | Rehace el texto desde los ids | Funciona | Nada. |
+| Guion (`temporizador`) | Usa `siguiente()`, `coletillas()`, `guardar/restaurar` | No mira golpes | Nada (ver 1.8 para coletillas en «solo las mías»). |
+| Reacción | Solo añade señales; las combinaciones salen del mismo sorteo | — | Nada: con el sorteo mezclado la usa sola. |
+| Historial / servidor (`ComboDictado`) | Guarda `{asalto, texto, ids}` sin validar golpes | Se guarda bien | Nada. |
+| Valoración (`costosas`) | Índices de las dictadas | — | Nada. |
+
+### 1.4 Espejo zurdo
+
+Se aplica en un único sitio: `SorteoBiblioteca._combinacion()` (`espejo_combo` si `zurdo`), al final y sobre
+acciones del catálogo. Sirve **tal cual** para las propias: son ids del catálogo en ortodoxo. `numero(accion, zurdo)`
+lee el número del espejo, así que los números no cambian. El editor no mira el zurdo de Entrenar (la única vista
+que lo mira hoy es «Practicar más», para el nombre de la mano).
+
+### 1.5 «Nombrar combinaciones»
+
+**Es el selector Números / Nombres / Ambos** (`index.html`, `MODOS_VOZ`): decide cómo se dice cada golpe. No dice el
+nombre de la combinación: el `nombre` de la biblioteca («jab-recto») **no se dice ni se ve en ningún sitio** de la
+sesión (`Evento.texto` = `texto_hablado(acciones, voz, zurdo)`). La regla «las propias nunca se nombran en el audio»
+ya se cumple sola. Para blindarla: las propias salen con `origen: "propia"` y `nombre: None`, y un test comprueba
+que el texto de cada evento de una propia es exactamente `texto_hablado(...)`.
+
+### 1.6 Historial, postsesión y valoración
+
+Nada depende del número de biblioteca (#n): las sesiones guardan `ids` y `texto`; la valoración, índices. Borrar o
+editar una propia no rompe ninguna sesión pasada. Detalle: la sesión guarda `nivel` (el servidor lo exige 1-3); con
+«solo las mías» el nivel no se usa, pero se guarda el elegido en Entrenar. El Historial hoy no lo muestra, así que no
+engaña a nadie (ver choque 11).
+
+### 1.7 Ajustes, Entrenar y router
+
+- **Router** (`rutas.js`): `#vista/parametro`; la vista recibe `mostrar(parametro, { mismaVista })`. Ajustes hoy
+  **ignora el parámetro** (`mostrar: pintar`). Aprende es el modelo de subpágina: `pintar(id, { mismaVista })` y, al
+  navegar dentro de la vista, foco al título y scroll arriba. El «← Volver» de Ajustes recuerda la pestaña de origen
+  (`vuelta`, ignora los hash que empiezan por `#ajustes`): ya sirve para volver de la subpágina.
+- **Entrenar** (`vistas/entrenar.js`): lee `preferencias()` y guarda cada cambio con `recordar()`; el guion sale de
+  `nuevoGuion(config, perfil, azar)` en `static/ajustes.js`, que crea el `SorteoBiblioteca`. Ahí entra el sorteo
+  mezclado. `resumenElecciones` (línea «Medio · Vivo · Números») tendrá que mencionar la mezcla.
+- **Panel de «Practicar más»** (`vistas/ajustes.js` + CSS `.huecos-practicar`, `dialog.hoja`, `.fichas`,
+  `.segmentado`): tres huecos; uno vacío abre una hoja `<dialog>` con pestañas Golpes/Defensas/Salidas y fichas de
+  texto. Accesible (foco atrapado, flechas en pestañas, Esc, foco de vuelta).
+  - **Le sobra:** el modal para una elección de un toque (tapa la tarjeta que estás editando); las pestañas `tablist`
+    cuando solo hay tres grupos; fichas de solo texto, todas iguales («1 jab» pesa lo mismo que «flexión»).
+  - **Le falta:** jerarquía visual (el número del golpe es lo que se reconoce de un vistazo); el código de colores
+    de la sesión (golpe rojo, defensa círculo, salida discontinua: `.paso-golpe/.paso-defensa/.paso-movimiento`);
+    respuesta al tocar (`:active`); en PC, aprovechar el ancho (es la misma hoja centrada).
+  - **Se puede compartir con el creador:** el código visual de los pasos (`.pasos i` / `.leyenda i`), las tarjetas
+    de grupo, las baldosas de golpe con número grande, `atraparFoco`, el estilo de los botones. Es lo que C4
+    llevaría a «Practicar más».
+
+### 1.8 Choques con las decisiones (para que decidas)
+
+1. **Documentos de contexto no encontrados** (arriba).
+2. **«Nombrar combinaciones» no nombra combinaciones** (1.5): la regla de no nombrar las propias ya se cumple; solo
+   añado el test. Ninguna acción tuya hace falta, salvo confirmarlo.
+3. **Formato de la lista.** El ejemplo «Combinación N | 1-Jab | rueda derecha | 6-gancho de derecha» usa el nombre
+   *hablado* y mayúscula; la regla dice *nombre corto / texto de pantalla* («jab», «rueda dcha.», «gancho dcha.»).
+   **Propuesta:** nombre corto en minúscula, como en la sesión, con el número en el círculo rojo (boceto). Para
+   lectores de pantalla, la lista lleva el texto plano «1 jab, rueda derecha, 6 gancho de derecha» (hablado).
+4. **Los golpes al cuerpo no tienen número** (`acciones.json`): salen como «jab abajo», sin cifra.
+5. **¿Qué es una «salida»?** En los datos, `tipo: "movimiento"`: paso lateral izq./dcha., pivote y cambio de
+   ángulo. **«Paso atrás» es una defensa**, así que va en la tarjeta Defensas (como en «Practicar más») y no activa
+   el aviso «salida en medio». Además, **11 de las 150 de la biblioteca ya llevan una salida en medio** (p. ej. #5,
+   #6): el aviso es un criterio técnico → lo marco `# REVISAR CON ENTRENADOR`.
+6. **«Aceptar / Denegar»:** propongo los textos «Guardar igual» / «Volver a editar» (mismo significado, se entiende
+   sin leer la pregunta). Si prefieres los literales, se cambian.
+7. **«Guardia diestra»:** la app dice «ortodoxa» en todas partes. Propongo «Se crean para guardia ortodoxa; en zurdo
+   la app las cambia de lado, como al resto».
+8. **Id `p-<marca>`:** `CLAUDE.md` pide `crypto.randomUUID()` para lo local. Propongo `p-<randomUUID>` (una marca de
+   tiempo puede repetirse al importar o en dos pestañas). La fecha ya va en `creada`.
+9. **Coletillas con «Solo las mías».** Las coletillas son de 2-3 acciones para rellenar el final del asalto. Si
+   ninguna propia tiene 2-3 acciones, no hay coletillas y el silencio final puede pasar del límite que comprueba
+   `tests/test_silencio_final.py`. **Propuesta:** coletillas = propias de 2-3 acciones; si no hay, ninguna, y ese
+   test se aplica solo cuando hay coletillas (Entrenar avisa: «Sin combinaciones de 2-3 acciones, el final de cada
+   asalto puede quedar en silencio»). Alternativa: usar las de la biblioteca solo para rellenar.
+10. **Coletillas en la mezcla:** propongo una lista con la misma moneda posición a posición (p: siguiente propia corta
+    en su orden ponderado; si no, siguiente de la biblioteca), así la proporción también se cumple al final.
+11. **Cobertura 1-6 en la mezcla:** solo filtra el grupo biblioteca. ¿Los golpes de una propia que sale cuentan como
+    cubiertos? **Propuesta: sí** (se han dicho). Con «solo las mías», desactivada.
+12. **`mezcla = "solo"` con menos de 3 propias** (porque se borraron) o con 0 propias: el valor guardado no se
+    cambia, pero el sorteo usa «ninguna» y Entrenar lo explica en la nota. Al volver a tener 3, vuelve sola.
+13. **Copia importada con más de 20 propias o ids desconocidos:** `completar()` descarta las entradas que no sean
+    válidas (ids fuera del catálogo, longitud fuera de 2-10) y se queda con las 20 primeras.
+14. **Nivel guardado con «solo las mías»:** se guarda el de Entrenar (el servidor exige 1-3). Si algún día el
+    Historial muestra el nivel, habrá que guardar también la mezcla (columna nueva en SQLite): fuera de este bloque.
+15. **API `/api/guion`:** el guion lo genera siempre el JS, así que la API no cambia. El sorteo mezclado se escribe
+    primero en Python (referencia + tests), pero sin endpoint nuevo.
+
+---
+
+## 2. Diseño propuesto
+
+Ver el boceto. Resumen:
+
+- **Entrada en Ajustes:** tarjeta-enlace «Mis combinaciones 3/20» con una línea de explicación y «›». Abre
+  `#ajustes/mis-combinaciones`.
+- **Listado:** cada combinación es una tarjeta con «Combinación N» (titular Anton), pastilla de nivel y dos botones
+  de icono de 48 px (editar, borrar con confirmación en `<dialog>`). Debajo, la secuencia con **el mismo código que
+  la pantalla de la sesión**: golpe = círculo rojo con su número, defensa = círculo con borde, salida = círculo
+  discontinuo. «+ Añadir combinación» es un hueco discontinuo grande al final (desactivado a 20/20 con el motivo).
+  Lista vacía: texto que explica para qué sirve y el botón.
+- **Editor (`#ajustes/mis-combinaciones/nueva` y `/editar/<id>`):**
+  - **Caja de la combinación, fija arriba al bajar:** medidor de nivel de 10 segmentos (uno por acción) con las
+    zonas Básico 2-4 · Medio 5-6 · Avanzado 7-10 marcadas, contador «5 de 10 acciones» y el nivel en grande; debajo,
+    la tira de chips (tocar uno lo quita, con «×» visible) y la línea de la guardia ortodoxa.
+  - **Tres tarjetas grandes** Golpes / Defensas / Salidas con icono (`aria-expanded`); la elegida se ve en blanco.
+    Su paleta aparece debajo, en la página (sin modal).
+  - **Golpes:** seis baldosas de 72 px con el número enorme en rojo (Anton) y el nombre corto; un interruptor «Al
+    cuerpo» cambia las seis a sus versiones al cuerpo (sin número). Así son 6 baldosas y no 12.
+  - **Defensas / Salidas:** baldosas de 56 px en dos columnas (las salidas con borde discontinuo, como en la sesión).
+  - **Barra de acciones fija abajo:** «Quitar la última» y «Guardar». Guardar no se desactiva en silencio: con menos
+    de 2 acciones o 20/20 lleva `aria-disabled` y debajo dice por qué. A 10 acciones, las baldosas avisan «máximo».
+  - **Avisos:** `<dialog>` «Antes de guardar» con todos los avisos a la vez, cada uno en su franja ámbar (`--aviso`),
+    y los botones «Volver a editar» (foco inicial) / «Guardar igual».
+  - **Escritorio (≥1024):** dos columnas: paletas a la izquierda (golpes en 3 columnas), caja de la combinación +
+    Guardar fijas a la derecha. Ancho máximo como el resto de Ajustes.
+- **Movimiento:** solo transform/opacity: `:active` a `scale(.97)` (140 ms), chip nuevo que entra de `scale(.9)` y
+  opacidad 0 (180 ms, ease-out fuerte); nada al usar el teclado y nada con `prefers-reduced-motion`.
+- **Accesibilidad:** todo son `<button>` nativos con nombre («Quitar rueda dcha.», «Editar combinación 2»); toques
+  ≥48 px; `role="status"` anuncia «Añadido jab. 3 acciones, básico.»; al quitar un chip el foco pasa al siguiente
+  (o a «Quitar la última»); al abrir el editor, foco al título; el diálogo devuelve el foco a «Guardar»; colores con
+  contraste AA comprobado en `tests/js/contraste.test.mjs` (las parejas nuevas se añaden ahí).
+
+**Qué tiene de mejor frente a «Practicar más»:**
+
+1. **Sin modal:** la paleta está en la página y la combinación siempre a la vista; en «Practicar más» la hoja tapa lo
+   que estás editando.
+2. **Jerarquía:** el número del golpe es lo primero que se ve (como se reconoce en el gimnasio), no una ficha de
+   texto más.
+3. **Mismo lenguaje visual que la sesión:** lo que creas se ve igual que lo que verás al entrenar.
+4. **Respuesta en directo:** nivel, contador y anuncio para lectores de pantalla en cada toque; el motivo de que
+   Guardar no se pueda pulsar está escrito.
+5. **Menos ruido:** interruptor «Al cuerpo» en vez de 12 baldosas; tarjetas en vez de `tablist` (más simple con
+   teclado: Tab y Enter).
+6. **Escritorio de verdad:** dos columnas con la combinación fija, no una hoja centrada.
+
+---
+
+## 3. Fases
+
+Cada fase acaba con `.venv\Scripts\python -m pytest -q` en verde, capturas y **parada** para tu visto bueno.
+Commits pequeños en español, autor con el correo noreply, sin atribución y sin push.
+
+### C1 · Motor y almacén (Python + JS + migración v8 + tests)
+
+**Ficheros:** `motor/acciones.py`, `motor/sorteo.py`, `motor/temporizador.py` (solo si hace falta para coletillas),
+`static/motor/acciones.js`, `static/motor/sorteo.js`, `static/motor/temporizador.js`, `static/almacen.js`,
+`static/ajustes.js` (`nuevoGuion`, `preferencias`), `tests/test_sorteo.py`, `tests/test_equivalencia_js.py`,
+`tests/js/exportar.mjs`, `tests/js/almacen.test.mjs`, `tests/js/ajustes.test.mjs`, `tests/test_silencio_final.py`
+(si se acepta el choque 9), `CLAUDE.md` (una línea de arquitectura).
+
+**Diseño del motor:**
+- `ComboBiblioteca` gana `n`; la ventana pasa a identificar por clave (`n` / `id`). Sin cambio de comportamiento:
+  commit propio con su test (dos propias iguales no se confunden en la ventana, en Python y JS).
+- `motor/sorteo.py`: constantes `PROBABILIDAD_PROPIAS = {"poco": 0.20, "bastante": 0.35, "mucho": 0.50}` y
+  `MIN_SOLO_PROPIAS = 3`; `propias_validas(propias)` (ids del catálogo, 2-10 acciones); `SorteoMezcla(nivel, perfil,
+  zurdo, rng, propias, mezcla)` con dos grupos internos (biblioteca del nivel, propias del nivel; en «solo» todas
+  las propias), cada uno con su ventana `min(5, n − 1)`; moneda `rng.random() < p` por sorteo; pesos de «Practicar
+  más» dentro de cada grupo; cobertura solo en biblioteca. `siguiente()`, `coletillas()`, `guardar()`, `restaurar()`
+  con la misma interfaz que `SorteoBiblioteca`, para que el guion, las reservas y Reacción no cambien. Las propias
+  salen con `origen="propia"`, `nombre=None`. Funciones auxiliares para Entrenar: `mezcla_efectiva(mezcla, propias,
+  nivel)` y el motivo del aviso (sin propias de ese nivel / menos de 3).
+- Aviso del creador en el motor (`motor/reglas.py`): `avisos_creador(ids, propias, indice_editando)` → lista de
+  `{tipo, texto}`: sin golpe (de `validar`), igual a una de la biblioteca (con su nivel), igual a otra propia, salida
+  en medio (`# REVISAR CON ENTRENADOR`). Y `puede_guardar(n_acciones, n_propias)` (2-10 y ≤20).
+- Port fiel a JS de todo lo anterior.
+
+**Almacén:** `VERSION = 8`; migración 7→8: `combinacionesPropias: []` y `perfil.sesion.mezcla = "ninguna"`;
+`vacio()` y `sesionPorDefecto()` las incluyen; `completar()` sanea la lista (choque 13). Métodos `anadirPropia(ids)`
+→ `{ id: "p-<uuid>", ids, creada }`, `cambiarPropia(id, ids)`, `borrarPropia(id)`; `exportar/importar` sin cambios
+(ya copian todo `datos`).
+
+**Commits previstos:**
+1. Identifica las combinaciones de la ventana por clave (`n` en la biblioteca) en Python y JS.
+2. Añade el sorteo mezclado con combinaciones propias en Python (con tests).
+3. Porta el sorteo mezclado a JS y amplía los tests de equivalencia.
+4. Añade los avisos del creador y `puede_guardar` en Python y JS.
+5. Sube el almacén a v8 con las combinaciones propias y la mezcla (migración y tests).
+6. Usa el sorteo mezclado en `nuevoGuion` y en las preferencias de Entrenar.
+
+**Tests nuevos:** proporción de propias ≈ 20/35/50 % (±5 puntos, 5.000 muestras) en los dos motores; sin propias del
+nivel → 0 %; «solo» → 100 % y de todos los niveles; ventana por grupo `min(5, n−1)` (con 1, 2, 6 propias); pesos de
+«Practicar más» dentro de cada grupo; cobertura 1-6 de la biblioteca intacta en la mezcla; zurdo: una propia sale en
+espejo y con los mismos números; texto de una propia = `texto_hablado` (nunca su nombre); propia sin golpes en los
+tres modos de voz; guiones con propias cumplen los invariantes (reservas y coletillas incluidas, con Reacción);
+reproducible con semilla; migración 7→8; importar copias v5, v6, v7 → lista vacía y `mezcla: "ninguna"`; copia v8
+saneada; avisos (cada uno y varios juntos).
+
+**Riesgos:** romper la equivalencia por el cambio de identificación de la ventana (por eso va solo en el commit 1);
+la moneda cambia el consumo del azar y por tanto los guiones con semilla de tests que comparan valores exactos
+(con «ninguna» no se tira moneda, para que lo de hoy salga idéntico); coletillas en «solo» (choque 9).
+
+### C2 · Pantalla del creador en Ajustes
+
+**Ficheros:** `static/vistas/ajustes.js` (entrada + `mostrar(parametro)`), nuevo `static/vistas/creador.js`
+(listado, editor, avisos, borrar), `static/index.html` (diálogos si hace falta), `static/estilos.css` (bloque
+«Mis combinaciones», reutilizando `.pasos i`), `static/sw.js` (precache de `vistas/creador.js`, lo pide
+`tests/test_pwa.py`), `tests/js/contraste.test.mjs`, nuevo `tests/test_creador_navegador.py`, nuevo
+`herramientas/capturas_creador.py`, `README.md`.
+
+**Commits previstos:**
+1. Añade la subpágina `#ajustes/mis-combinaciones` con el listado y la entrada en Ajustes.
+2. Añade el editor con las tres tarjetas, la tira de chips y el nivel en directo.
+3. Añade los avisos al guardar y la confirmación al borrar.
+4. Ajusta el diseño de escritorio y añade las capturas del creador.
+
+**Tests nuevos (navegador, Playwright):** crear, editar, borrar (con confirmación) y renumerar; Guardar bloqueado con
+<2 y a 20/20 con su motivo; >10 no entra; cada aviso y varios juntos; «Volver a editar» no guarda, «Guardar igual»
+sí; todo con teclado (Tab, Enter, Espacio, Esc) y foco donde toca; toques ≥48 px; contraste AA; «← Volver» desde la
+subpágina y desde el editor; recarga de `#ajustes/mis-combinaciones/editar/<id>` inexistente → listado.
+
+**Riesgos:** la caja fija arriba y la barra fija abajo comiéndose la pantalla a 390 con el teclado virtual (no hay
+campos de texto, así que no debería salir); la navegación atrás del móvil dentro de Ajustes.
+
+### C3 · Selector en Entrenar y prueba completa
+
+**Ficheros:** `static/index.html` (fieldset «Tus combinaciones»), `static/vistas/entrenar.js`, `static/ajustes.js`
+(`resumenElecciones`), `static/estilos.css`, `tests/test_sesion_navegador.py`, `tests/js/ajustes.test.mjs`,
+`README.md`.
+
+**Comportamiento:** el selector solo aparece con ≥1 propia; «Solo las mías» desactivada con <3 y con el motivo
+escrito; con «solo», el selector de nivel se desactiva con una nota; si no hay propias del nivel elegido, nota «No
+tienes combinaciones de nivel medio: solo saldrán las de la biblioteca»; se recuerda como el nivel.
+
+**Commits previstos:**
+1. Añade el selector «Tus combinaciones» en Entrenar y lo recuerda.
+2. Desactiva el nivel con «Solo las mías» y avisa si no hay propias del nivel.
+3. Prueba completa en el navegador: crear tres combinaciones, entrenar con «Solo las mías» y con «Mucho».
+
+**Tests nuevos:** visibilidad y estados del selector; recordar la elección; sesión completa con propias (las
+dictadas incluyen propias, en zurdo salen en espejo, se guardan en el historial y se pueden valorar); exportar e
+importar con propias.
+
+**Riesgos:** espacio en la tarjeta de configuración a 390 (ya lleva nivel, ritmo, voz e interruptores): el selector
+irá como fila de chips desplazable o como `<details>`, según la captura.
+
+### C4 · (Opcional, solo si lo apruebas tras ver C2) «Practicar más» con el diseño del creador
+
+Sin cambiar cómo funciona (tres huecos, poco/bastante, máximo 3): cambiar la hoja modal por la paleta en la página
+con las tarjetas de grupo y las baldosas de golpe con número. **Ficheros:** `static/vistas/ajustes.js`,
+`static/estilos.css`, `herramientas/capturas_practicar.py`, tests de Ajustes en el navegador. **Riesgo:** los tests
+de foco de la hoja actual se reescriben.
+
+---
+
+## 4. Capturas
+
+En `.playwright-mcp/capturas/`, con datos de prueba solo en el `localStorage` del navegador de Playwright:
+
+| Fase | Capturas | Anchos |
+|---|---|---|
+| C2 | Ajustes con la entrada (0/20 y 3/20); listado vacío, con 3 y con 20/20; editor vacío, con 5 acciones (golpes abiertos), con «Al cuerpo», con defensas y con salidas abiertas; diálogo con 1 y con 4 avisos; confirmación de borrar | 390 y 1440; editor y listado también a 1024 |
+| C3 | Entrenar con el selector (sin propias = no sale; con 2 = «Solo las mías» desactivada; con «Solo las mías» = nivel desactivado; aviso sin propias del nivel); pantalla de la sesión dictando una propia | 390, 1024 y 1440 |
+| C4 | «Practicar más» vacío, con 3 y la paleta abierta | 390, 1024 y 1440 |
+
+Las capturas de cada fase se generan con un script de `herramientas/` (como `capturas_practicar.py`) para poder
+repetirlas.

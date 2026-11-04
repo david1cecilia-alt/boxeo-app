@@ -28,21 +28,37 @@ export function fichasHtml(fichas) {
 // Un botón desactivado con aria-disabled (sigue en el orden del foco y dice por qué): no hace nada.
 export const desactivado = (boton) => boton?.getAttribute("aria-disabled") === "true";
 
-// Abre un <dialog> modal con el foco en `inicial`; al cerrarse llama a `alCerrar(returnValue)`.
+// Abre un <dialog> modal con el foco en `inicial`; al cerrarlo se llama a `alCerrar(lo elegido)`.
+// Se responde en el momento, no en el evento `close`: ese llega después y, si el diálogo se vuelve
+// a abrir enseguida (el «atrás» del navegador), se mezclaría con la respuesta siguiente.
+const respuestas = new WeakMap();
 export function abrirDialogo(dialogo, inicial, alCerrar) {
-  dialogo.returnValue = "";
+  respuestas.set(dialogo, alCerrar);
   dialogo.showModal();
   $(inicial, dialogo)?.focus();
-  dialogo.addEventListener("close", () => alCerrar(dialogo.returnValue), { once: true });
 }
 
-// Los diálogos se cierran con Esc, tocando el velo o con sus botones (value = lo elegido).
+function cerrarDialogo(dialogo, valor) {
+  const alCerrar = respuestas.get(dialogo);
+  respuestas.delete(dialogo);
+  dialogo.close(valor);
+  alCerrar?.(valor);
+}
+
+// Los diálogos se cierran con Esc, tocando el velo (sin elegir: «») o con sus botones (value = lo elegido).
 function conectarDialogo(dialogo) {
   dialogo.addEventListener("keydown", atraparFoco);
+  dialogo.addEventListener("cancel", (e) => {
+    e.preventDefault();
+    cerrarDialogo(dialogo, "");
+  });
   dialogo.addEventListener("click", (e) => {
-    if (e.target === dialogo) return dialogo.close("");
+    // En el velo (fuera de la caja; el relleno del diálogo también es `e.target === dialogo`).
+    const r = dialogo.getBoundingClientRect();
+    const fuera = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+    if (e.target === dialogo && fuera) return cerrarDialogo(dialogo, "");
     const boton = e.target.closest("button[value]");
-    if (boton) dialogo.close(boton.value);
+    if (boton) cerrarDialogo(dialogo, boton.value);
   });
 }
 
@@ -134,7 +150,25 @@ export function iniciarCreador({ almacen, raiz }) {
           </div>
           <div id="paleta" class="paleta"></div>
         </div>
-      </div>`;
+      </div>
+      <dialog id="d-avisos" aria-labelledby="t-avisos">
+        <h2 id="t-avisos">Antes de guardar</h2>
+        <ul class="lista-avisos"></ul>
+        <div class="acciones">
+          <button type="button" class="boton secundario" value="">Volver a editar</button>
+          <button type="button" class="boton principal" value="guardar">Guardar igual</button>
+        </div>
+      </dialog>
+      <dialog id="d-descartar" aria-labelledby="t-descartar" aria-describedby="detalle-descartar">
+        <h2 id="t-descartar">¿Descartar los cambios?</h2>
+        <p id="detalle-descartar" class="nota">Si sales ahora, se pierde lo que has cambiado en esta combinación.</p>
+        <div class="acciones">
+          <button type="button" class="boton secundario" value="">Seguir editando</button>
+          <button type="button" class="boton peligro" value="descartar">Descartar</button>
+        </div>
+      </dialog>`;
+    conectarDialogo($("#d-avisos", raiz));
+    conectarDialogo($("#d-descartar", raiz));
     actualizar();
   }
 
@@ -207,6 +241,7 @@ export function iniciarCreador({ almacen, raiz }) {
       editando: propia?.id ?? null,
       numero: propia ? propias().indexOf(propia) + 1 : null,
       hash: location.hash,
+      marca: history.state?.marca ?? 0,
       desdeListado: ultimaRuta === RUTA,
     };
     pintarEditor();
@@ -242,7 +277,20 @@ export function iniciarCreador({ almacen, raiz }) {
       anunciar(anuncio("Quitado", id, editor.estado.ids));
       return actualizar({ foco: "#quitar-ultima" });
     }
-    if (boton.id === "guardar") return guardar();
+    if (boton.id === "guardar") return intentarGuardar();
+  }
+
+  // Los avisos (sin golpes, igual que una de la biblioteca o que otra propia) no impiden guardar:
+  // se enseñan todos a la vez y se elige «Guardar igual» o «Volver a editar».
+  function intentarGuardar() {
+    const { avisos } = resumen(editor.estado.ids, propias(), editor.editando);
+    if (!avisos.length) return guardar();
+    const dialogo = $("#d-avisos", raiz);
+    $(".lista-avisos", dialogo).innerHTML = avisos.map((a) => `<li class="aviso">${esc(a.texto)}</li>`).join("");
+    abrirDialogo(dialogo, 'button[value=""]', (valor) => {
+      if (valor === "guardar") guardar();
+      else $("#guardar", raiz)?.focus();
+    });
   }
 
   function guardar() {
@@ -278,10 +326,70 @@ export function iniciarCreador({ almacen, raiz }) {
     else if (boton.dataset.borrar) borrar(boton.dataset.borrar);
   });
 
-  // La ruta de antes de la actual (para saber si el editor se abrió desde el listado). Este oyente va
-  // antes que el del router: se conecta al iniciar las vistas, el router después.
-  let ultimaRuta = null;
-  window.addEventListener("hashchange", (e) => (ultimaRuta = new URL(e.oldURL).hash));
+  // ---------- Salir con cambios sin guardar ----------
+  // Cada entrada del historial lleva una marca de cuándo se creó: al cambiar de ruta, si la nueva es
+  // más antigua que la del editor se ha ido atrás. `hashchange` no se puede cancelar: se vuelve al
+  // editor recorriendo el historial (adelante o atrás, sin crear entradas) y se pregunta.
+  let ultimaRuta = null; // la ruta de antes (para saber si el editor se abrió desde el listado)
+  let volviendo = null;  // el hash del editor mientras se vuelve a él
+  const marcarEntrada = () => {
+    if (history.state?.marca == null) history.replaceState({ ...history.state, marca: Date.now() }, "");
+  };
+  marcarEntrada();
+
+  // Este oyente va antes que el del router (se conecta al iniciar las vistas; el router, después):
+  // si corta el evento, el router no se entera y el editor sigue como estaba.
+  window.addEventListener("hashchange", (e) => {
+    marcarEntrada();
+    if (volviendo) {
+      const era = volviendo;
+      volviendo = null;
+      if (location.hash === era) return e.stopImmediatePropagation();
+    }
+    ultimaRuta = new URL(e.oldURL).hash;
+    if (!editor || location.hash === editor.hash) return;
+    if (!hayCambios(editor.estado)) {
+      editor = null;
+      return;
+    }
+    e.stopImmediatePropagation();
+    const atras = history.state.marca < editor.marca;
+    const destino = location.hash;
+    volviendo = editor.hash;
+    if (atras) history.forward();
+    else history.back();
+    preguntarDescartar({ destino, atras });
+  });
+
+  window.addEventListener("beforeunload", (e) => {
+    if (editor && hayCambios(editor.estado)) e.preventDefault();
+  });
+
+  // «¿Descartar los cambios?». Con «Descartar», a donde se quería ir: atrás si se fue atrás; si no,
+  // a la ruta pedida (al listado, atrás si el editor se abrió desde él).
+  function preguntarDescartar({ destino, atras }) {
+    const antes = document.activeElement;
+    abrirDialogo($("#d-descartar", raiz), 'button[value=""]', (valor) => {
+      if (valor !== "descartar") return (antes?.isConnected ? antes : $("#t-creador", raiz))?.focus();
+      const desdeListado = editor.desdeListado;
+      editor = null;
+      if (atras || (destino === RUTA && desdeListado)) history.back();
+      else location.hash = destino;
+    });
+  }
+
+  // «← Mis combinaciones»: sin cambios, atrás si se vino del listado (sin apilar entradas); con
+  // cambios, se pregunta antes.
+  raiz.addEventListener("click", (e) => {
+    if (!editor || !e.target.closest("#salir-editor")) return;
+    if (hayCambios(editor.estado)) {
+      e.preventDefault();
+      preguntarDescartar({ destino: RUTA, atras: false });
+    } else if (editor.desdeListado) {
+      e.preventDefault();
+      salirDelEditor();
+    }
+  });
 
   function aListado() {
     history.replaceState(history.state, "", RUTA);

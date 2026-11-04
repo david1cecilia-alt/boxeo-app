@@ -199,18 +199,12 @@ def test_sesion_con_solo_las_mias_en_zurdo_dice_solo_propias_y_las_guarda_como_e
     combinaciones = sesiones[0]["combinaciones"]
     assert combinaciones and all(set(c) == {"asalto", "texto", "ids"} for c in combinaciones)
     por_ids = {tuple(e["ids"]): e["texto"] for e in esperado}
-    cortas = pagina.evaluate("""async () => {
-      const { biblioteca, espejo } = await import("./motor/acciones.js");
-      return biblioteca().filter((c) => c.acciones.length <= 3).map((c) => c.acciones.map((a) => espejo(a).id));
-    }""")
-    de_relleno = {tuple(ids) for ids in cortas}
+    # Todas propias, también el relleno (hay 2 de 2-3 acciones), en espejo y dichas como el resto:
+    # nunca por un nombre. El nivel 3 no cuenta.
     for c in combinaciones:
-        if tuple(c["ids"]) in por_ids:  # en espejo y dichas como el resto: nunca por un nombre
-            assert c["texto"] == por_ids[tuple(c["ids"])], c
-        else:  # de la biblioteca, solo coletillas cortas de relleno (C1); el nivel 3 no cuenta
-            assert tuple(c["ids"]) in de_relleno, c
+        assert tuple(c["ids"]) in por_ids, c
+        assert c["texto"] == por_ids[tuple(c["ids"])], c
     assert {c["asalto"] for c in combinaciones} == {1, 2}
-    assert sum(tuple(c["ids"]) in por_ids for c in combinaciones) > len(combinaciones) / 2
     # La voz dijo exactamente esos textos (además de las señales del asalto).
     dichos = [d["texto"] for d in pagina.evaluate("window.dichos")]
     guardados = {c["texto"] for c in combinaciones}

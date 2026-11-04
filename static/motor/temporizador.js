@@ -87,12 +87,17 @@ const clave = (ids) => ids.join(" ");
 // `reservados`: señales previstas, ordenadas (la última es el aviso).
 // Si la siguiente no cabe (pisaría una señal o se pasa del final) y ya solo queda el aviso por
 // delante, se dice la primera coletilla que quepa; si tampoco, se espera a que pase la señal.
-export function elegirSiguiente(t, siguiente, coletillas, reservados, fin, recientes) {
+// Con `repetibles` («Solo las mías» con propias cortas, ver coletillasRepetibles en sorteo.js), si
+// ninguna coletilla libre cabe, vale una reciente: antes una que no sea la última dicha.
+export function elegirSiguiente(t, siguiente, coletillas, reservados, fin, recientes, repetibles = false) {
   const usadas = new Set(recientes.map(clave));
+  const ultima = recientes.length ? clave(recientes.at(-1)) : null;
   while (true) {
     if (siguiente && cabe(t, siguiente.duracion, reservados, fin)) return [siguiente, t];
     if (reservados.slice(0, -1).every(([ini]) => ini <= t)) {
-      const corta = coletillas.find((c) => !usadas.has(clave(c.ids)) && cabe(t, c.duracion, reservados, fin));
+      const caben = coletillas.filter((c) => cabe(t, c.duracion, reservados, fin));
+      let corta = caben.find((c) => !usadas.has(clave(c.ids)));
+      if (!corta && repetibles) corta = caben.find((c) => clave(c.ids) !== ultima) ?? caben[0];
       if (corta) return [corta, t];
     }
     const despues = reservados.map(([, f]) => f + MARGEN).filter((x) => x > t);
@@ -104,9 +109,10 @@ export function elegirSiguiente(t, siguiente, coletillas, reservados, fin, recie
 // Como elegirSiguiente tras callar la voz en finVoz y esperar el hueco. Si con ese hueco ya no
 // cabe nada en el asalto, se prueba con el mínimo del ritmo: así el silencio final es como mucho
 // ese mínimo más lo que dura la coletilla más corta.
-export function siguienteTrasVoz(finVoz, hueco, huecoMinimo, siguiente, coletillas, reservados, fin, recientes) {
-  return elegirSiguiente(redondear(finVoz + hueco), siguiente, coletillas, reservados, fin, recientes)
-    ?? elegirSiguiente(redondear(finVoz + huecoMinimo), siguiente, coletillas, reservados, fin, recientes);
+export function siguienteTrasVoz(finVoz, hueco, huecoMinimo, siguiente, coletillas, reservados, fin, recientes,
+  repetibles = false) {
+  return elegirSiguiente(redondear(finVoz + hueco), siguiente, coletillas, reservados, fin, recientes, repetibles)
+    ?? elegirSiguiente(redondear(finVoz + huecoMinimo), siguiente, coletillas, reservados, fin, recientes, repetibles);
 }
 
 function reaccionesEntre(inicio, limite, azar, reacciones, asalto) {
@@ -126,6 +132,7 @@ function reaccionesEntre(inicio, limite, azar, reacciones, asalto) {
 export function construirGuion(config, azar, sorteo = null) {
   config = { ...CONFIG_POR_DEFECTO, ...config };
   sorteo = sorteo ?? new SorteoBiblioteca(config.nivel, { zurdo: config.zurdo, azar });
+  const repetibles = sorteo.coletillasRepetibles ?? false;
   const reacciones = datos().presets.reacciones;
   const huecoMinimo = rangoPausa(config.ritmo, config.pausa)[0];
   let eventos = [];
@@ -164,13 +171,13 @@ export function construirGuion(config, azar, sorteo = null) {
     let siguiente = pendiente ? { ...pendiente, asalto: n } : aEvento(sorteo.siguiente(), "combo", n);
     let apartada = null;
     const t = inicio + PREPARACION;
-    let eleccion = elegirSiguiente(t, siguiente, coletillas, reservados, fin, recientes);
+    let eleccion = elegirSiguiente(t, siguiente, coletillas, reservados, fin, recientes, repetibles);
     // Asalto muy corto y aún vacío: la que no cabe espera al siguiente y se prueba otra.
     for (let i = 0; !eleccion && i < REINTENTOS; i++) {
       apartada = apartada ?? siguiente;
       antes = sorteo.guardar();
       siguiente = aEvento(sorteo.siguiente(), "combo", n);
-      eleccion = elegirSiguiente(t, siguiente, coletillas, reservados, fin, recientes);
+      eleccion = elegirSiguiente(t, siguiente, coletillas, reservados, fin, recientes, repetibles);
     }
     const dichas = [];
     while (eleccion) {
@@ -183,7 +190,7 @@ export function construirGuion(config, azar, sorteo = null) {
       dichas.push(dicha);
       recientes = [...recientes, dicha.ids].slice(-SIN_REPETIR);
       eleccion = siguienteTrasVoz(empieza + dicha.duracion, dicha.hueco, huecoMinimo, siguiente,
-        coletillas, reservados, fin, recientes);
+        coletillas, reservados, fin, recientes, repetibles);
     }
     eventos = eventos.concat(dichas);
     pendiente = apartada ?? siguiente;

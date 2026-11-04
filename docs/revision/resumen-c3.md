@@ -68,26 +68,40 @@ En `.playwright-mcp/capturas/` (no se versionan), `mezcla-<qué>-<ancho>.png` a 
 `python herramientas/capturas_mezcla.py`. Las he mirado todas. Al revisarlas salió un fallo que ya está
 arreglado: a 1024 los porcentajes a 32 px tocaban el borde de su botón. En escritorio van ahora a 24 px.
 
-## Para decidir
+## Decisiones de David tras C3 (aplicadas)
 
-1. **«Solo las mías» deja pasar coletillas de la biblioteca aunque haya propias cortas.** Es lo que hace C1
-   (commit `07a25d7`: «con «Solo las mías», delante, con la biblioteca de relleno»): una coletilla no repite
-   ninguna de las 5 últimas dichas, y con pocas propias cortas todas están recientes. Además, las coletillas
-   también rellenan huecos **antes del aviso de los 10 s**, no solo al final. Lo pilló el test de la sesión
-   entera. Medido con `nuevoGuion` (300 sesiones, nivel medio):
+1. **«Solo las mías»: el relleno es siempre propio si hay propias de 2-3 acciones.** Antes (C1, commit
+   `07a25d7`) la biblioteca iba detrás de las propias cortas, y como una coletilla no repite ninguna de las 5
+   últimas dichas, con pocas propias cortas se colaba la biblioteca. También antes del aviso de los 10 s:
 
    | Preset | 3 propias (2 cortas) | 5 propias (2 cortas) | 8 propias (6 cortas) |
    |---|---|---|---|
-   | Amateur 3×3 | 1,9 % de la biblioteca | 4,9 % | 0,3 % |
-   | Prueba 2×30 s | 14,6 % | 21,4 % | 0,9 % |
+   | Amateur 3×3, antes | 1,9 % de la biblioteca | 4,9 % | 0,3 % |
+   | Prueba 2×30 s, antes | 14,6 % | 21,4 % | 0,9 % |
+   | **Ahora, los dos** | **0 %** | **0 %** | **0 %** |
 
-   No lo he cambiado: es una regla del motor (Python, JS y el dictado) y C1 la decidió así para que el test de
-   silencio final pase sin excepciones. Opciones: (a) dejarlo así y que el aviso diga también «con pocas de 2-3
-   acciones»; (b) que en «Solo las mías» una propia corta pueda repetirse antes que tirar de la biblioteca
-   (ventana de su grupo, `mín(5, n − 1)`, en vez de las 5 últimas), en Python y JS, con equivalencia y
-   silencio final. Recomiendo la (b).
-2. **«Escuchar» en ortodoxo.** Es como se ve en el editor. Si prefieres que siga el «Zurdo» de Entrenar, se
-   cambia en una línea (`escuchar()`), pero entonces lo que se oye no cuadra con las fichas de la pantalla.
-3. Los desactivados del selector usan `disabled` nativo (los radios desactivados no reciben el foco), no
-   `aria-disabled` como los botones de C2. Así las flechas del grupo funcionan como siempre y el motivo
-   está escrito y en `aria-describedby` del grupo.
+   Cómo, igual en Python y JS:
+   - Con «Solo las mías» (la efectiva) y alguna propia corta, `coletillas()` devuelve **solo** las propias
+     cortas, y el sorteo marca `coletillas_repetibles` / `coletillasRepetibles` (`motor/sorteo.py`,
+     `static/motor/sorteo.js`).
+   - En `elegir_siguiente`, si ninguna coletilla fuera de la ventana cabe y son repetibles, vale una reciente:
+     la primera que quepa y no sea la inmediatamente anterior. Si solo cabe la anterior, esa (mejor repetida
+     que el silencio). El guion lo lee del sorteo. El dictado lo recibe de Entrenar (`repetirColetillas` en
+     `static/ajustes.js`, `asalto({ repetibles })`).
+   - Si no hay ninguna propia de 2-3 acciones, la biblioteca rellena como antes, y Entrenar lo avisa.
+   - Con Ninguna, Poco, Bastante y Mucho la marca es falsa y no cambia nada. `test_igual_que_antes` sigue
+     en verde con las mismas huellas.
+
+   Tests: `elegir_siguiente` con y sin repetibles (`tests/test_reservas.py`), la marca solo con «Solo las
+   mías» y propias cortas (Python y JS), **0 % de biblioteca en 300 guiones «Prueba 2×30 s»** con 2 propias
+   cortas (3 y 5 propias, con y sin Reacción, en `tests/test_mezcla.py`). En la equivalencia, 32 elecciones de
+   `elegirSiguiente` exportadas de JS dan lo mismo en Python, y los guiones de `nuevoGuion` («Prueba» incluida)
+   tienen el relleno propio. El silencio final (Python y la simulación de voz en JS) pasa con «Solo las mías»
+   sin excepciones. La sesión entera en el navegador ahora exige que todo lo dicho sea propio.
+   Tras el cambio: **1038 en pytest** (dos pasadas completas en verde, 149 s y 146 s) y **244 en node**. El
+   fallo intermitente de `test_perfil_navegador.py` tampoco ha salido en estas dos.
+2. **«Escuchar» sigue en ortodoxo**, como se ve en el editor.
+
+Queda como estaba: los desactivados del selector usan `disabled` nativo (los radios desactivados no reciben el
+foco), no `aria-disabled` como los botones de C2. Así las flechas del grupo funcionan como siempre, y el motivo
+está escrito y en `aria-describedby` del grupo.

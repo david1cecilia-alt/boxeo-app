@@ -3,7 +3,7 @@
 // el reproductor lo lanza en tiempo de sesión (con pausa).
 import {
   NOMBRE_RITMO, OPCIONES_MEZCLA, PERSONALIZADO, estadoMezcla, nuevoGuion, opcionesVoz, personalizadaValida, preferencias,
-  recordarSesion, resumenElecciones,
+  recordarSesion, repetirColetillas, resumenElecciones,
 } from "../ajustes.js";
 import { crearAzar, semillaAleatoria } from "../motor/azar.js";
 import { datos } from "../motor/datos.js";
@@ -183,6 +183,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       almacen.datos.combinacionesPropias);
     estado = {
       config,
+      repetibles: repetirColetillas(config, almacen.datos.combinacionesPropias),
       fase: "asalto",
       finFase: 0,
       reaccionHasta: -1,
@@ -271,6 +272,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
           reservados: reservados(e.asalto),
           desde: e.t + PREPARACION,
           fin: estado.finFase,
+          repetibles: estado.repetibles,
         });
         break;
       case "reaccion": {

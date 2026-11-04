@@ -351,6 +351,11 @@ def test_guiones_de_entrenar_js_con_la_mezcla_cumplen_los_invariantes(js):
         combos = [tuple(e["ids"]) for e in g["eventos"] if e["tipo"] == "combo"]
         if g["mezcla"] == "solo":
             assert combos and all(c in propias for c in combos)
+            if any(2 <= len(p["ids"]) <= 3 for p in g["propias"]):  # el relleno, también propio
+                fines = {e["asalto"]: e["t"] for e in g["eventos"] if e["tipo"] == "fin_asalto"}
+                rellenos = [tuple(e["ids"]) for e in g["eventos"]
+                            if e["tipo"] == "coletilla" and e["t"] < fines[e["asalto"]]]
+                assert all(c in propias for c in rellenos), (g["semilla"], rellenos)
         else:
             assert any(c in propias for c in combos) and any(c not in propias for c in combos)
         for fin in (e for e in g["eventos"] if e["tipo"] == "fin_asalto"):
@@ -358,6 +363,20 @@ def test_guiones_de_entrenar_js_con_la_mezcla_cumplen_los_invariantes(js):
                       and e["tipo"] in ("combo", "coletilla") and e["t"] < fin["t"]]
             silencio = fin["t"] - max(e["t"] + e["duracion"] for e in dichos)
             assert silencio <= SILENCIO_MAXIMO + 1e-9, (g["mezcla"], g["semilla"], silencio)
+
+
+def test_elegir_la_siguiente_con_coletillas_repetibles_igual_en_js_y_python(js):
+    from motor.temporizador import Evento, elegir_siguiente
+    corta = lambda ids, d: Evento(0.0, "coletilla", 1, d, "", list(ids), 2.0)  # noqa: E731
+    coletillas = [corta(("jab", "jab"), 2.0), corta(("jab", "directo"), 2.5), corta(("directo", "directo"), 2.0)]
+    larga = Evento(0.0, "combo", 1, 6.0, "", ["jab", "directo", "gancho_izq"], 2.0)
+    casos = js["elecciones_coletillas"]
+    assert {c["repetibles"] for c in casos} == {False, True}
+    for c in casos:
+        r = elegir_siguiente(c["t"], larga, coletillas, [], 180, [tuple(x) for x in c["recientes"]], c["repetibles"])
+        elegida = r and ("siguiente" if r[0] is larga else coletillas.index(r[0]))
+        assert (elegida, r[1] if r else None) == (c["elegida"], c["empieza"]), c
+    assert any(c["repetibles"] and c["elegida"] is not None and c["recientes"] for c in casos)
 
 
 def acciones_espejo(ids: list[str], zurdo: bool) -> list[str]:

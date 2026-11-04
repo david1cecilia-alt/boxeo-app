@@ -141,7 +141,7 @@ test("en zurdo la propia sale en espejo, con los mismos números", () => {
   });
 });
 
-test("coletillas: con la mezcla, las propias cortas entre las de la biblioteca; con «solo», delante", () => {
+test("coletillas: con la mezcla, las propias cortas entre las de la biblioteca; con «solo», solo ellas y repetibles", () => {
   const clave = (c) => c.acciones.map((a) => a.id).join();
   const deBiblioteca = new SorteoBiblioteca(1, { azar: crearAzar(0) }).coletillas().map(clave);
   const cortas = ["jab,jab,directo", "esquiva_der,gancho_izq"];
@@ -149,11 +149,15 @@ test("coletillas: con la mezcla, las propias cortas entre las de la biblioteca; 
   assert.equal(mezcla.length, deBiblioteca.length + cortas.length);
   assert.deepEqual(new Set(mezcla.map(clave)), new Set([...deBiblioteca, ...cortas]));
   const solo = new SorteoMezcla(2, { azar: crearAzar(0), propias: TODAS, mezcla: "solo" }).coletillas();
-  assert.deepEqual(new Set(solo.slice(0, 2).map(clave)), new Set(cortas));
-  assert.ok(solo.slice(0, 2).every((c) => c.origen === "propia" && c.nombre === null));
-  assert.deepEqual(new Set(solo.slice(2).map(clave)), new Set(deBiblioteca));
-  const sinCortas = new SorteoMezcla(2, { azar: crearAzar(0), propias: TODAS.slice(3), mezcla: "solo" }).coletillas();
-  assert.ok(sinCortas.every((c) => c.origen === "biblioteca"));
+  assert.deepEqual(new Set(solo.map(clave)), new Set(cortas));
+  assert.ok(solo.length === 2 && solo.every((c) => c.origen === "propia" && c.nombre === null));
+  assert.equal(new SorteoMezcla(2, { azar: crearAzar(0), propias: TODAS, mezcla: "solo" }).coletillasRepetibles, true);
+  for (const otra of ["ninguna", "poco", "bastante", "mucho"]) {
+    assert.equal(new SorteoMezcla(1, { azar: crearAzar(0), propias: TODAS, mezcla: otra }).coletillasRepetibles, false, otra);
+  }
+  const sinCortasSorteo = new SorteoMezcla(2, { azar: crearAzar(0), propias: TODAS.slice(3), mezcla: "solo" });
+  assert.ok(sinCortasSorteo.coletillas().every((c) => c.origen === "biblioteca"));
+  assert.equal(sinCortasSorteo.coletillasRepetibles, false);
   const primeras = Array.from({ length: 3000 }, (_, s) =>
     new SorteoMezcla(2, { azar: crearAzar(s), propias: TODAS, mezcla: "poco" }).coletillas()[0].origen);
   assert.ok(Math.abs(primeras.filter((o) => o === "propia").length / 3000 - PROBABILIDAD_PROPIAS.poco) <= 0.03);

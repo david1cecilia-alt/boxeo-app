@@ -4,7 +4,8 @@ import { PERSONALIZADA_POR_DEFECTO } from "./almacen.js";
 import { datos } from "./motor/datos.js";
 import { VELOCIDADES, VELOCIDAD_POR_DEFECTO } from "./motor/ritmo.js";
 import {
-  MEZCLAS, MIN_SOLO_PROPIAS, PROBABILIDAD_PROPIAS, SorteoMezcla, esCorta, mezclaEfectiva, propiasValidas,
+  MEZCLAS, MIN_SOLO_PROPIAS, PROBABILIDAD_PROPIAS, SorteoMezcla, coletillasRepetibles, esCorta, mezclaEfectiva,
+  propiasValidas,
 } from "./motor/sorteo.js";
 import { construirGuion, validarConfig } from "./motor/temporizador.js";
 
@@ -91,6 +92,12 @@ export function nuevoGuion(config, perfilUsuario, azar, propias = []) {
     perfil: perfilSorteo(perfilUsuario), zurdo: config.zurdo, azar, propias, mezcla: config.mezcla ?? "ninguna",
   });
   return construirGuion(config, azar, sorteo);
+}
+
+// Si el dictado puede repetir una coletilla reciente: lo mismo que decide el sorteo de nuevoGuion.
+export function repetirColetillas(config, propias = []) {
+  const validas = propiasValidas(propias);
+  return coletillasRepetibles(mezclaEfectiva(config.mezcla ?? "ninguna", validas, config.nivel), validas);
 }
 
 // Lo que se propone al entrenar: lo último que se eligió en Entrenar. Nivel y guardia, si no se

@@ -197,10 +197,14 @@ export class SorteoBiblioteca extends SorteoGrupo {
 //   también los del cuerpo, cuentan como ya salidos.
 // - "solo": todas las propias, de cualquier nivel, sin cobertura.
 // Coletillas: las propias cortas (2-3 acciones, de cualquier nivel) entre las de la biblioteca, con
-// la misma moneda en cada puesto de la lista. Con «Solo las mías», primero todas las propias cortas
-// y detrás las de la biblioteca, solo para rellenar: el guion dice la primera que quepa y no se haya
-// dicho hace poco, y las propias suelen estar entre las recientes (son las del asalto). Sin propias
-// cortas, las de la biblioteca (y Entrenar lo avisa).
+// la misma moneda en cada puesto de la lista. Con «Solo las mías», solo las propias cortas, y se
+// pueden repetir aunque se hayan dicho hace poco (coletillasRepetibles, ver elegirSiguiente): la
+// biblioteca solo entra si no hay ninguna propia corta (y Entrenar lo avisa).
+// Con «Solo las mías» (la efectiva) y alguna propia de 2-3 acciones, las coletillas son solo propias
+// y se pueden repetir aunque estén entre las últimas dichas: mejor una propia repetida que una de la
+// biblioteca o el silencio. Con las otras mezclas, nunca.
+export const coletillasRepetibles = (mezcla, propias) => mezcla === "solo" && propias.some(esCorta);
+
 export class SorteoMezcla {
   constructor(nivel, { perfil = null, zurdo = false, azar, propias = [], mezcla = "ninguna" }) {
     this.azar = azar;
@@ -208,6 +212,7 @@ export class SorteoMezcla {
     const validas = propiasValidas(propias);
     this.cortas = validas.filter(esCorta);
     this.mezcla = mezclaEfectiva(mezcla, validas, nivel);
+    this.coletillasRepetibles = coletillasRepetibles(this.mezcla, validas);
     const delGrupo = this.mezcla === "solo" ? validas : validas.filter((p) => p.nivel === nivel);
     this.propias = new SorteoGrupo(delGrupo,
       { practicar: this.biblioteca.practicar, zurdo, azar, cobertura: false });
@@ -228,7 +233,7 @@ export class SorteoMezcla {
     if (this.mezcla === "ninguna" || !this.cortas.length) return deBiblioteca;
     const propias = ordenPonderado(this.cortas, this.biblioteca.practicar, this.azar)
       .map((c) => this.propias.combinacion(c));
-    if (this.mezcla === "solo") return [...propias, ...deBiblioteca];
+    if (this.mezcla === "solo") return propias;
     const p = PROBABILIDAD_PROPIAS[this.mezcla];
     const mezcladas = [];
     while (propias.length && deBiblioteca.length) {

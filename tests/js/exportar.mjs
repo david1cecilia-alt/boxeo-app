@@ -12,7 +12,7 @@ import { datos } from "../../static/motor/datos.js";
 import { avisosCreador, nivelDe } from "../../static/motor/reglas.js";
 import { VELOCIDAD_SENAL, segundosHabla } from "../../static/motor/ritmo.js";
 import { SorteoBiblioteca, SorteoMezcla, cargarPerfil, identidad, movimientos, pesoPracticar } from "../../static/motor/sorteo.js";
-import { construirGuion } from "../../static/motor/temporizador.js";
+import { construirGuion, elegirSiguiente } from "../../static/motor/temporizador.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
 
 cargarDatosDeDisco();
@@ -133,6 +133,9 @@ const guionesEntrenar = [];
   ["solo", PROPIAS, { modo_reaccion: true, zurdo: true, voz: "numeros" }],
   ["solo", SIN_CORTAS, {}],
   ["solo", SIN_CORTAS, { modo_reaccion: true, voz: "ambos" }],
+  // «Prueba 2×30 s»: el relleno antes del aviso y al final, con solo 2 propias cortas.
+  ["solo", PROPIAS, { asaltos: 2, duracion_asalto: 30, descanso: 30 }],
+  ["solo", PROPIAS, { asaltos: 2, duracion_asalto: 30, descanso: 30, modo_reaccion: true, zurdo: true }],
 ].forEach(([mezcla, propias, extra], i) => {
   const config = { asaltos: 3, duracion_asalto: 180, descanso: 60, nivel: 2, ritmo: 3, pausa: null, voz: "nombres",
     zurdo: false, modo_reaccion: false, velocidad: 1.1, ...extra };
@@ -142,6 +145,20 @@ const guionesEntrenar = [];
     guionesEntrenar.push({ config, semilla, mezcla, propias, eventos });
   }
 });
+
+// Elegir la siguiente con coletillas recientes, con y sin `repetibles`: el índice de la elegida (o null).
+const corta = (ids, duracion) => ({ tipo: "coletilla", asalto: 1, duracion, texto: "", ids, hueco: 2 });
+const COLETILLAS = [corta(["jab", "jab"], 2.0), corta(["jab", "directo"], 2.5), corta(["directo", "directo"], 2.0)];
+const LARGA = { tipo: "combo", asalto: 1, duracion: 6.0, texto: "", ids: ["jab", "directo", "gancho_izq"], hueco: 2 };
+const eleccionesColetillas = [];
+for (const t of [170.0, 176.0, 177.8, 178.5]) {
+  for (const recientes of [[], [["jab", "jab"]], [["jab", "directo"], ["jab", "jab"]], [["directo", "directo"], ["jab", "directo"], ["jab", "jab"]]]) {
+    for (const repetibles of [false, true]) {
+      const r = elegirSiguiente(t, LARGA, COLETILLAS, [], 180, recientes, repetibles);
+      eleccionesColetillas.push({ t, recientes, repetibles, elegida: r && (r[0] === LARGA ? "siguiente" : COLETILLAS.indexOf(r[0])), empieza: r?.[1] ?? null });
+    }
+  }
+}
 
 // Avisos del creador: cada combinación de la biblioteca y unas cuantas propias, con 0, 3 y 20 guardadas.
 const GUARDADAS = [[], PROPIAS.slice(0, 3), Array.from({ length: 20 }, (_, i) => ({ id: `p-${i}`, ids: PROPIAS[i % 6].ids }))];
@@ -167,4 +184,4 @@ const senales = {
   segundos: Object.fromEntries(datos().presets.reacciones.map((r) => [r.texto, segundosHabla(r.texto, VELOCIDAD_SENAL)])),
 };
 
-writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, sorteos, senales, practicar, duplicadas, mezclas, guiones_mezcla: guionesMezcla, guiones_entrenar: guionesEntrenar, avisos, movimientos: movimientos(), cobertura }));
+writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, sorteos, senales, practicar, duplicadas, mezclas, guiones_mezcla: guionesMezcla, guiones_entrenar: guionesEntrenar, elecciones_coletillas: eleccionesColetillas, avisos, movimientos: movimientos(), cobertura }));

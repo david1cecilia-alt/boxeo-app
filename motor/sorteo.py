@@ -211,6 +211,13 @@ class SorteoBiblioteca(SorteoGrupo):
         return [self._combinacion(c) for c in orden_ponderado(cortas, self.practicar, self.rng)]
 
 
+def coletillas_repetibles(mezcla: str, propias: list[ComboPropia]) -> bool:
+    """Con «Solo las mías» (la efectiva) y alguna propia de 2-3 acciones, las coletillas son solo
+    propias y se pueden repetir aunque estén entre las últimas dichas: mejor una propia repetida
+    que una de la biblioteca o el silencio. Con las otras mezclas, nunca."""
+    return mezcla == "solo" and any(es_corta(p) for p in propias)
+
+
 class SorteoMezcla:
     """El sorteo de la sesión con las propias, con la misma interfaz que SorteoBiblioteca
     (siguiente, coletillas, guardar, restaurar): el guion, las reservas y Reacción no cambian.
@@ -224,10 +231,9 @@ class SorteoMezcla:
     - "solo": todas las propias, de cualquier nivel, sin cobertura.
 
     Coletillas: las propias cortas (2-3 acciones, de cualquier nivel) entre las de la biblioteca,
-    con la misma moneda en cada puesto de la lista. Con «Solo las mías», primero todas las propias
-    cortas y detrás las de la biblioteca, solo para rellenar: el guion dice la primera que quepa y
-    no se haya dicho hace poco, y las propias suelen estar entre las recientes (son las del asalto).
-    Sin propias cortas, las de la biblioteca (y Entrenar lo avisa).
+    con la misma moneda en cada puesto de la lista. Con «Solo las mías», solo las propias cortas, y
+    se pueden repetir aunque se hayan dicho hace poco (`coletillas_repetibles`, ver
+    elegir_siguiente): la biblioteca solo entra si no hay ninguna propia corta (y Entrenar lo avisa).
     """
 
     def __init__(self, nivel: int, perfil: dict | None = None, zurdo: bool = False,
@@ -238,6 +244,7 @@ class SorteoMezcla:
         validas = propias_validas(propias)
         self.cortas = [p for p in validas if es_corta(p)]
         self.mezcla = mezcla_efectiva(mezcla, validas, nivel)
+        self.coletillas_repetibles = coletillas_repetibles(self.mezcla, validas)
         del_grupo = validas if self.mezcla == "solo" else [p for p in validas if p.nivel == nivel]
         self.propias = SorteoGrupo(del_grupo, self.biblioteca.practicar, zurdo, self.rng, cobertura=False)
 
@@ -257,7 +264,7 @@ class SorteoMezcla:
         propias = [self.propias._combinacion(c)
                    for c in orden_ponderado(self.cortas, self.biblioteca.practicar, self.rng)]
         if self.mezcla == "solo":
-            return propias + de_biblioteca
+            return propias
         p = PROBABILIDAD_PROPIAS[self.mezcla]
         mezcladas = []
         while propias and de_biblioteca:

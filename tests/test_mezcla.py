@@ -252,16 +252,47 @@ def test_coletillas_con_la_mezcla_llevan_las_propias_cortas_y_todas_las_de_la_bi
     assert abs(primeras.count("propia") / 3000 - PROBABILIDAD_PROPIAS["poco"]) <= TOLERANCIA
 
 
-def test_coletillas_con_solo_las_mias_primero_las_propias_y_la_biblioteca_de_relleno():
+def test_coletillas_con_solo_las_mias_son_solo_las_propias_cortas_y_repetibles():
     lista = _coletillas(TODAS, "solo")
-    n = 2  # las dos básicas de 2-3 acciones
-    assert {ids(c) for c in lista[:n]} == de_propias(BASICAS[:2]) and {c.origen for c in lista[:n]} == {"propia"}
-    assert {ids(c) for c in lista[n:]} == _cortas_biblioteca()
+    assert [c.origen for c in lista] == ["propia", "propia"]  # las dos básicas de 2-3 acciones
+    assert {ids(c) for c in lista} == de_propias(BASICAS[:2])
+    assert SorteoMezcla(2, rng=random.Random(0), propias=TODAS, mezcla="solo").coletillas_repetibles
+
+
+@pytest.mark.parametrize("mezcla", ["ninguna", "poco", "bastante", "mucho"])
+def test_con_las_otras_mezclas_las_coletillas_no_se_repiten(mezcla):
+    assert not SorteoMezcla(1, rng=random.Random(0), propias=TODAS, mezcla=mezcla).coletillas_repetibles
+    # «Solo las mías» con menos de 3 (sortea como «Ninguna») o sin cortas, tampoco.
+    assert not SorteoMezcla(1, rng=random.Random(0), propias=BASICAS[:2], mezcla="solo").coletillas_repetibles
+    assert not SorteoMezcla(1, rng=random.Random(0), propias=MEDIAS + AVANZADAS, mezcla="solo").coletillas_repetibles
 
 
 def test_coletillas_con_solo_las_mias_sin_propias_cortas_son_las_de_la_biblioteca():
-    lista = _coletillas(MEDIAS + AVANZADAS + [propia(9, ["jab"] * 7)], "solo")
+    s = SorteoMezcla(2, rng=random.Random(0), propias=MEDIAS + AVANZADAS + [propia(9, ["jab"] * 7)], mezcla="solo")
+    lista = s.coletillas()
     assert {c.origen for c in lista} == {"biblioteca"} and {ids(c) for c in lista} == _cortas_biblioteca()
+    assert not s.coletillas_repetibles
+
+
+# Lo del caso de C3: «Prueba 2×30 s» con «Solo las mías» y solo 2 propias de 2-3 acciones. Antes,
+# el relleno (antes del aviso de los 10 s y al final) tiraba de la biblioteca un 15-21 % de las veces.
+DOS_CORTAS = [propia(1, ["jab", "directo"]), propia(2, ["jab", "rodar_der", "directo", "gancho_izq"]),
+              propia(3, ["bloqueo", "directo", "gancho_izq"]), propia(4, ["jab", "jab", "directo", "esquiva_izq"]),
+              propia(5, ["jab", "directo", "esquiva_izq", "gancho_izq", "directo", "rodar_der", "gancho_der", "paso_atras"])]
+
+
+@pytest.mark.parametrize("propias", [DOS_CORTAS[:3], DOS_CORTAS], ids=["3_propias", "5_propias"])
+@pytest.mark.parametrize("modo_reaccion", [False, True])
+def test_solo_las_mias_con_dos_cortas_en_prueba_no_dice_nada_de_la_biblioteca(propias, modo_reaccion):
+    config = ConfigSesion(asaltos=2, duracion_asalto=30, descanso=30, nivel=2, modo_reaccion=modo_reaccion)
+    suyas = de_propias(propias)
+    for semilla in range(300):
+        rng = random.Random(semilla)
+        guion = construir_guion(config, rng, SorteoMezcla(2, rng=rng, propias=propias, mezcla="solo"))
+        fines = {e.asalto: e.t for e in guion if e.tipo == "fin_asalto"}
+        dichas = [e for e in guion if e.tipo == "combo" or (e.tipo == "coletilla" and e.t < fines[e.asalto])]
+        assert dichas
+        assert all(tuple(e.ids) in suyas for e in dichas), (semilla, [e.ids for e in dichas])
 
 
 # ---------- Guion con propias (Reacción incluida) ----------

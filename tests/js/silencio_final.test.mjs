@@ -61,6 +61,9 @@ function silenciosDelGuion(eventos) {
 // del guion, lo que se avisó con alDecir y lo que el dictado guarda (`dichas`).
 async function reproducir(config, semilla, factor, mezcla = "ninguna") {
   const eventos = guion(config, semilla, mezcla);
+  // Como Entrenar (repetirColetillas): con «Solo las mías» y propias cortas, el dictado puede repetirlas.
+  const [lista, cual] = MEZCLAS[mezcla];
+  const { coletillasRepetibles: repetibles } = new SorteoMezcla(config.nivel, { azar: crearAzar(0), propias: lista, mezcla: cual });
   const combos = eventos.filter((e) => COMBINACIONES.includes(e.tipo));
   const fijos = eventos.filter((e) => !COMBINACIONES.includes(e.tipo));
   let ms = 0;
@@ -82,6 +85,7 @@ async function reproducir(config, semilla, factor, mezcla = "ninguna") {
           reservados: fijos.filter((f) => f.asalto === e.asalto && (f.tipo === "aviso" || f.tipo === "reaccion"))
             .map((f) => [f.t, f.t + f.duracion]),
           fin: e.t + config.duracion_asalto,
+          repetibles,
         });
       } else if (e.tipo === "reaccion") dictado.reaccion(e.texto); // como vistas/entrenar.js
       else if (e.tipo === "aviso") dictado.senal(e.texto);

@@ -103,6 +103,21 @@ def test_la_coletilla_no_repite_las_recientes():
     assert elegir_siguiente(176.0, siguiente, [CORTA, OTRA_CORTA], [], 180, [("jab", "jab")]) == (OTRA_CORTA, 176.0)
 
 
+def test_con_repetibles_si_no_cabe_ninguna_libre_va_una_reciente_antes_que_la_ultima():
+    siguiente = combo(6.0, ("jab", "directo", "gancho_izq"))
+    recientes = [("jab", "directo"), ("jab", "jab")]  # la última dicha: jab, jab
+    # Sin repetibles (la biblioteca y las otras mezclas): como siempre, nada.
+    assert elegir_siguiente(176.0, siguiente, [CORTA, OTRA_CORTA], [], 180, recientes) is None
+    # Con repetibles: una reciente, pero no la última si cabe otra.
+    assert elegir_siguiente(176.0, siguiente, [CORTA, OTRA_CORTA], [], 180, recientes, True) == (OTRA_CORTA, 176.0)
+    # Si solo cabe la última, la última (mejor repetida que el silencio).
+    assert elegir_siguiente(177.8, siguiente, [CORTA, OTRA_CORTA], [], 180, recientes, True) == (CORTA, 177.8)
+    # Una libre que cabe va antes que cualquier reciente.
+    otra = combo(2.0, ("directo", "directo"), tipo="coletilla")
+    assert elegir_siguiente(176.0, siguiente, [CORTA, OTRA_CORTA, otra], [], 180, recientes, True) == (otra, 176.0)
+    assert siguiente_tras_voz(174.0, 2.0, 2.0, siguiente, [CORTA], [], 180, [("jab", "jab")], True) == (CORTA, 176.0)
+
+
 def test_antes_de_una_reaccion_se_espera_y_antes_del_aviso_va_una_coletilla():
     siguiente = combo(5.0, ("jab", "directo", "gancho_izq"))
     reaccion, aviso = (100.0, 102.0), (170.0, 171.5)

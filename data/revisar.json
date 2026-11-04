@@ -7,6 +7,11 @@
       "texto": "¿alguna acción no es para principiantes?"
     },
     {
+      "id": "sorteo-629bf593",
+      "origen": "motor/sorteo.py",
+      "texto": "el ×2 para que salgan los golpes al cuerpo que falten"
+    },
+    {
       "id": "temporizador-bfe0e33f",
       "origen": "motor/temporizador.py",
       "texto": "tiempo para reaccionar tras la señal (hoy 1 s sin combinaciones)"

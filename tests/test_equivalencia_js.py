@@ -103,6 +103,29 @@ def test_ventana_js_por_identidad_como_la_de_python(js, nivel):
         assert n not in sacadas[max(0, i - SIN_REPETIR):i], f"repetida en {i}"
 
 
+def _cobertura(sesiones):
+    """% de sesiones con los seis golpes al cuerpo, % con los seis a la cara en las 6 primeras y % de
+    combinaciones dichas con algún golpe al cuerpo."""
+    def nums(ids):
+        return {a.numero for a in acciones_por_ids(ids) if a.numero}
+    cuerpo = sum(set(range(7, 13)) <= set().union(*map(nums, s)) for s in sesiones) / len(sesiones)
+    cara = sum(NUMEROS <= set().union(*map(nums, s[:6])) for s in sesiones) / len(sesiones)
+    dichas = [ids for s in sesiones for ids in s]
+    return cuerpo, cara, sum(bool(nums(ids) - NUMEROS) for ids in dichas) / len(dichas)
+
+
+@pytest.mark.parametrize("nivel", NIVELES)
+def test_cobertura_en_dos_pasos_igual_en_js_y_python(js, nivel):
+    # Paso 1: los seis a la cara en las 6 primeras; paso 2: casi siempre los seis al cuerpo, en los dos motores.
+    config = ConfigSesion(asaltos=3, duracion_asalto=180, descanso=60, nivel=nivel)
+    python = [[e.ids for e in construir_guion(config, random.Random(semilla)) if e.tipo == "combo"]
+              for semilla in range(200)]
+    (cuerpo_js, cara_js, dichas_js), (cuerpo_py, cara_py, dichas_py) = _cobertura(js["cobertura"][str(nivel)]), _cobertura(python)
+    assert cara_js == cara_py == 1
+    assert cuerpo_js >= 0.95 and cuerpo_py >= 0.95, (cuerpo_js, cuerpo_py)
+    assert abs(dichas_js - dichas_py) <= TOLERANCIA_PROPORCION, (dichas_js, dichas_py)
+
+
 # ---------- Sorteo mezclado con las propias ----------
 
 @pytest.mark.parametrize("mezcla", ["poco", "bastante", "mucho", "solo"])

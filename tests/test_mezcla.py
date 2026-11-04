@@ -7,7 +7,7 @@ import pytest
 
 from motor.acciones import acciones_por_ids, espejo_combo, numero, texto_hablado
 from motor.temporizador import ConfigSesion, construir_guion
-from motor.sorteo import (MEZCLAS, MIN_SOLO_PROPIAS, NUMEROS, PROBABILIDAD_PROPIAS, SIN_REPETIR, SorteoBiblioteca,
+from motor.sorteo import (MEZCLAS, MIN_SOLO_PROPIAS, NUMEROS, NUMEROS_CUERPO, PROBABILIDAD_PROPIAS, SIN_REPETIR, SorteoBiblioteca,
                           SorteoMezcla, mezcla_efectiva, numeros, propias_validas)
 
 N = 5000
@@ -153,8 +153,8 @@ def test_la_biblioteca_sigue_cubriendo_los_golpes_que_faltan(semilla, nivel):
         faltaban = set(s.biblioteca.faltan)
         combo = s.siguiente()
         dichos = {numero(a, False) for a in combo.acciones} - {None}
-        if combo.origen == "biblioteca" and faltaban:
-            assert dichos & faltaban, "una de la biblioteca no añadió ningún golpe que faltara"
+        if combo.origen == "biblioteca" and faltaban & NUMEROS:  # paso 1: filtra; paso 2 (7-12) solo pesa
+            assert dichos & faltaban & NUMEROS, "una de la biblioteca no añadió ningún golpe que faltara"
         assert s.biblioteca.faltan == faltaban - dichos  # los de las propias también cuentan
 
 
@@ -162,7 +162,17 @@ def test_una_propia_con_los_seis_golpes_los_cubre_todos():
     s = SorteoMezcla(2, rng=random.Random(1), propias=[MEDIAS[0]], mezcla="mucho")
     while s.siguiente().origen != "propia":
         pass
-    assert s.biblioteca.faltan == set()
+    assert s.biblioteca.faltan & NUMEROS == set()
+
+
+def test_los_golpes_al_cuerpo_de_las_propias_cuentan_como_salidos():
+    cuerpo = propia(30, ["jab_cuerpo", "directo_cuerpo", "gancho_izq_cuerpo", "gancho_der_cuerpo",
+                         "uppercut_izq_cuerpo", "uppercut_der_cuerpo"])
+    for zurdo in (False, True):
+        s = SorteoMezcla(2, rng=random.Random(1), propias=[cuerpo], mezcla="mucho", zurdo=zurdo)
+        while s.siguiente().origen != "propia":
+            pass
+        assert not s.biblioteca.faltan & NUMEROS_CUERPO, zurdo
 
 
 def test_solo_las_mias_no_filtra_por_cobertura():

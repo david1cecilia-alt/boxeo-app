@@ -6,7 +6,7 @@ from dataclasses import replace
 import pytest
 
 from motor.acciones import acciones_por_ids, biblioteca, espejo_combo, numero
-from motor.sorteo import NUMEROS, SIN_REPETIR, SorteoBiblioteca, movimiento, movimientos, peso_practicar
+from motor.sorteo import NUMEROS, NUMEROS_CUERPO, PESO_CUERPO, SIN_REPETIR, SorteoBiblioteca, movimiento, movimientos, peso_practicar
 from motor.temporizador import ConfigSesion, cargar_presets, construir_guion
 
 N = 3000
@@ -191,3 +191,32 @@ def test_con_la_biblioteca_duplicada_salen_las_dos_copias_sin_repetir_numero(niv
     for i, n in enumerate(sacadas):
         assert n not in sacadas[max(0, i - SIN_REPETIR):i]
     assert set(sacadas) == {c.n for c in s.combos}
+
+
+# ---------- Cobertura en dos pasos: 1-6 y luego 7-12 ----------
+
+def test_paso_2_las_que_anaden_un_golpe_al_cuerpo_que_falte_pesan_el_doble_sin_filtrar():
+    s = SorteoBiblioteca(1, rng=random.Random(3))
+    assert all(numeros_de(c) & NUMEROS for c in s._candidatas())  # paso 1: filtra por el 1-6
+    s.faltan -= NUMEROS
+    assert len(s._candidatas()) == len(s.combos)  # paso 2: no filtra
+    con = next(c for c in s.combos if numeros_de(c) & NUMEROS_CUERPO)
+    sin = next(c for c in s.combos if not numeros_de(c) & NUMEROS_CUERPO)
+    assert (s._peso_cobertura(con), s._peso_cobertura(sin)) == (PESO_CUERPO, 1) == (2.0, 1)
+    s.faltan -= numeros_de(con)
+    assert s._peso_cobertura(con) == 1  # lo que ya ha salido no pesa
+
+
+@pytest.mark.parametrize("nivel", NIVELES)
+def test_en_casi_todas_las_sesiones_amateur_salen_los_seis_golpes_al_cuerpo(nivel):
+    con_todos = 0
+    for semilla in range(100):
+        combos = [e for e in construir_guion(_config("amateur", nivel=nivel), random.Random(semilla))
+                  if e.tipo == "combo"]
+        dichos = {a.numero for e in combos for a in acciones_por_ids(e.ids) if a.numero}
+        con_todos += NUMEROS_CUERPO <= dichos
+    assert con_todos >= 95, f"nivel {nivel}: solo {con_todos} de 100"
+
+
+def numeros_de(combo):
+    return {a.numero for a in combo.acciones if a.numero}

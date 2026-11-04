@@ -25,7 +25,11 @@ from motor.acciones import (RUTA_DATOS, Accion, ComboBiblioteca, acciones_por_id
 from motor.reglas import MAX_ACCIONES, nivel_de
 
 SIN_REPETIR = 5
-NUMEROS = frozenset(range(1, 7))
+NUMEROS = frozenset(range(1, 7))  # paso 1 de la cobertura: los golpes a la cara
+NUMEROS_CUERPO = frozenset(range(7, 13))  # paso 2: los golpes al cuerpo
+# Paso 2 de la cobertura: con el 1-6 ya dicho, cuánto pesan las que añaden un 7-12 que falte (sin
+# filtrar: por eso salen a lo largo de la sesión y menos que el 1-6).
+PESO_CUERPO = 2.0  # REVISAR CON ENTRENADOR: el ×2 para que salgan los golpes al cuerpo que falten
 NIVEL_COLETILLA = 1
 ACCIONES_COLETILLA = (2, 3)  # mínimo y máximo
 # "Practicar más": cuánto multiplica cada movimiento elegido ("Un poco más", "Bastante más"). Si
@@ -144,7 +148,8 @@ def orden_ponderado(combos, practicar: list[dict], rng: random.Random) -> list:
 
 class SorteoGrupo:
     """Sortea dentro de un grupo de combinaciones (ortodoxas): pesos de "Practicar más", ventana de
-    no repetir y, si `cobertura`, primero las que añaden golpes del 1 al 6 que falten."""
+    no repetir y, si `cobertura`, en dos pasos: mientras falte algún golpe del 1 al 6, solo las que
+    añaden alguno; luego, las que añaden un 7-12 que falte pesan PESO_CUERPO (×2, sin filtrar)."""
 
     def __init__(self, combos, practicar: list[dict], zurdo: bool, rng: random.Random, cobertura: bool):
         self.combos = list(combos)
@@ -152,17 +157,22 @@ class SorteoGrupo:
         self.zurdo = zurdo
         self.rng = rng
         self.recientes: list[int | str] = []  # identidad de las últimas sacadas
-        self.faltan = set(NUMEROS) if cobertura else set()
+        self.faltan = set(NUMEROS | NUMEROS_CUERPO) if cobertura else set()
 
     def _candidatas(self) -> list:
         libres = [c for c in self.combos if identidad(c) not in self.recientes]
-        return [c for c in libres if numeros(c) & self.faltan] or libres
+        return [c for c in libres if numeros(c) & self.faltan & NUMEROS] or libres
+
+    def _peso_cobertura(self, combo) -> float:
+        # Paso 1: mientras falten golpes del 1 al 6, pesan más las que añaden más (así están todos
+        # antes). Paso 2: las que añaden un 7-12 que falte, ×2.
+        if self.faltan & NUMEROS:
+            return max(1, len(numeros(combo) & self.faltan & NUMEROS))
+        return PESO_CUERPO if numeros(combo) & self.faltan else 1
 
     def siguiente(self) -> Combinacion:
         candidatas = self._candidatas()
-        # Mientras falten golpes, pesan más las que añaden más: así están todos antes.
-        pesos = [peso_practicar(c.acciones, self.practicar) * max(1, len(numeros(c) & self.faltan))
-                 for c in candidatas]
+        pesos = [peso_practicar(c.acciones, self.practicar) * self._peso_cobertura(c) for c in candidatas]
         elegida = self.rng.choices(candidatas, weights=pesos)[0]
         k = ventana(len(self.combos))
         self.recientes = (self.recientes + [identidad(elegida)])[-k:] if k else []
@@ -209,8 +219,8 @@ class SorteoMezcla:
       SorteoBiblioteca, sin tirar moneda.
     - poco/bastante/mucho: en cada sorteo, con probabilidad PROBABILIDAD_PROPIAS una propia del
       nivel y si no, una de la biblioteca. Cada grupo con su ventana y sus pesos de "Practicar
-      más"; la cobertura del 1 al 6 solo filtra la biblioteca, pero los golpes de las propias
-      cuentan como ya salidos.
+      más"; la cobertura (1-6 y luego 7-12) solo cuenta en la biblioteca, pero los golpes de las
+      propias, también los del cuerpo, cuentan como ya salidos.
     - "solo": todas las propias, de cualquier nivel, sin cobertura.
 
     Coletillas: las propias cortas (2-3 acciones, de cualquier nivel) entre las de la biblioteca,

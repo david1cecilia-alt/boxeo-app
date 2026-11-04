@@ -5,7 +5,8 @@
 // - No repite ninguna de las últimas SIN_REPETIR (por su identidad: el número en la biblioteca, el
 //   id en las propias); en un grupo de n, de las últimas mín(SIN_REPETIR, n − 1).
 // - Hasta que hayan salido todos los golpes del 1 al 6, solo saca las que añaden alguno (en las
-//   6 primeras están todos seguro).
+//   6 primeras están todos seguro). Luego, las que añaden un golpe al cuerpo (7-12) que falte
+//   pesan PESO_CUERPO, sin filtrar.
 // - Coletillas: las cortas (2-3 acciones) del nivel básico, para rellenar el final de un asalto
 //   donde ya no cabe una del nivel.
 // - Mezcla con las propias (SorteoMezcla): en cada sorteo, una moneda decide si sale una propia del
@@ -17,7 +18,11 @@ import { datos } from "./datos.js";
 import { MAX_ACCIONES, nivelDe } from "./reglas.js";
 
 export const SIN_REPETIR = 5;
-export const NUMEROS = [1, 2, 3, 4, 5, 6];
+export const NUMEROS = [1, 2, 3, 4, 5, 6]; // paso 1 de la cobertura: los golpes a la cara
+export const NUMEROS_CUERPO = [7, 8, 9, 10, 11, 12]; // paso 2: los golpes al cuerpo
+// Paso 2 de la cobertura: con el 1-6 ya dicho, cuánto pesan las que añaden un 7-12 que falte (sin
+// filtrar: por eso salen a lo largo de la sesión y menos que el 1-6). REVISAR CON ENTRENADOR (motor/sorteo.py).
+export const PESO_CUERPO = 2.0;
 export const NIVEL_COLETILLA = 1;
 export const ACCIONES_COLETILLA = [2, 3]; // mínimo y máximo
 // "Practicar más": cuánto multiplica cada movimiento elegido ("Un poco más", "Bastante más"). Si
@@ -105,7 +110,8 @@ export function mezclaEfectiva(mezcla, propias, nivel) {
 }
 
 // Sortea dentro de un grupo de combinaciones (ortodoxas): pesos de "Practicar más", ventana de no
-// repetir y, si `cobertura`, primero las que añaden golpes del 1 al 6 que falten.
+// repetir y, si `cobertura`, en dos pasos: mientras falte algún golpe del 1 al 6, solo las que
+// añaden alguno; luego, las que añaden un 7-12 que falte pesan PESO_CUERPO (×2, sin filtrar).
 // Devuelve { acciones, origen: "biblioteca" | "propia", nombre, texto }.
 export class SorteoGrupo {
   constructor(combos, { practicar, zurdo, azar, cobertura }) {
@@ -114,21 +120,31 @@ export class SorteoGrupo {
     this.zurdo = zurdo;
     this.azar = azar;
     this.recientes = []; // identidad de las últimas sacadas
-    this.faltan = new Set(cobertura ? NUMEROS : []);
+    this.faltan = new Set(cobertura ? [...NUMEROS, ...NUMEROS_CUERPO] : []);
+  }
+
+  // Los golpes del 1 al 6 que faltan y añade la combinación.
+  nuevosDeCara(c) {
+    return [...numeros(c)].filter((n) => n <= 6 && this.faltan.has(n)).length;
   }
 
   candidatas() {
     const libres = this.combos.filter((c) => !this.recientes.includes(identidad(c)));
-    const nuevas = libres.filter((c) => [...numeros(c)].some((n) => this.faltan.has(n)));
+    const nuevas = libres.filter((c) => this.nuevosDeCara(c) > 0);
     return nuevas.length ? nuevas : libres;
+  }
+
+  // Paso 1: mientras falten golpes del 1 al 6, pesan más las que añaden más (así están todos
+  // antes). Paso 2: las que añaden un 7-12 que falte, ×2.
+  pesoCobertura(c) {
+    if (NUMEROS.some((n) => this.faltan.has(n))) return Math.max(1, this.nuevosDeCara(c));
+    return [...numeros(c)].some((n) => this.faltan.has(n)) ? PESO_CUERPO : 1;
   }
 
   siguiente() {
     const candidatas = this.candidatas();
-    // Mientras falten golpes, pesan más las que añaden más: así están todos antes.
-    const nuevos = (c) => [...numeros(c)].filter((n) => this.faltan.has(n)).length;
     const elegida = this.azar.elegirConPesos(candidatas,
-      candidatas.map((c) => pesoPracticar(c.acciones, this.practicar) * Math.max(1, nuevos(c))));
+      candidatas.map((c) => pesoPracticar(c.acciones, this.practicar) * this.pesoCobertura(c)));
     const k = ventana(this.combos.length);
     this.recientes = k ? [...this.recientes, identidad(elegida)].slice(-k) : [];
     for (const n of numeros(elegida)) this.faltan.delete(n);
@@ -177,8 +193,8 @@ export class SorteoBiblioteca extends SorteoGrupo {
 //   SorteoBiblioteca, sin tirar moneda.
 // - poco/bastante/mucho: en cada sorteo, con probabilidad PROBABILIDAD_PROPIAS una propia del nivel
 //   y si no, una de la biblioteca. Cada grupo con su ventana y sus pesos de "Practicar más"; la
-//   cobertura del 1 al 6 solo filtra la biblioteca, pero los golpes de las propias cuentan como ya
-//   salidos.
+//   cobertura (1-6 y luego 7-12) solo cuenta en la biblioteca, pero los golpes de las propias,
+//   también los del cuerpo, cuentan como ya salidos.
 // - "solo": todas las propias, de cualquier nivel, sin cobertura.
 // Coletillas: las propias cortas (2-3 acciones, de cualquier nivel) entre las de la biblioteca, con
 // la misma moneda en cada puesto de la lista. Con «Solo las mías», primero todas las propias cortas

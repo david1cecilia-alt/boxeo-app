@@ -5,7 +5,7 @@ import random
 import pytest
 
 from motor.acciones import acciones_por_ids, biblioteca
-from motor.sorteo import ACCIONES_COLETILLA, NIVEL_COLETILLA, NUMEROS, SIN_REPETIR, SorteoBiblioteca, numeros
+from motor.sorteo import ACCIONES_COLETILLA, NIVEL_COLETILLA, NUMEROS, NUMEROS_CUERPO, SIN_REPETIR, SorteoBiblioteca, numeros
 from motor.temporizador import (FACTOR_VOZ_RAPIDA, MARGEN, ConfigSesion, Evento, construir_guion,
                                 elegir_siguiente, siguiente_tras_voz)
 
@@ -67,13 +67,13 @@ class Apuntador(SorteoBiblioteca):
 @pytest.mark.parametrize("semilla", range(20))
 @pytest.mark.parametrize("nivel", [1, 2, 3])
 def test_las_reservas_no_dejan_rastro_en_el_sorteo(semilla, nivel):
-    # Sin rastro: la cobertura del 1 al 6 y lo que no se repite siguen como sin reservas.
+    # Sin rastro: la cobertura (1-6 y 7-12) y lo que no se repite siguen como sin reservas.
     rng = random.Random(semilla)
     sorteo = Apuntador(nivel, rng=rng)
     construir_guion(ConfigSesion(asaltos=3, duracion_asalto=180, nivel=nivel), rng, sorteo)
     assert sorteo.recientes == sorteo.identidades[-SIN_REPETIR:]
     dichos = set().union(*(numeros(c) for c in sorteo.cuentan))
-    assert sorteo.faltan == set(NUMEROS) - dichos
+    assert sorteo.faltan == set(NUMEROS | NUMEROS_CUERPO) - dichos
 
 
 # ---------- elegir_siguiente ----------

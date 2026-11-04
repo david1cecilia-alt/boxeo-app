@@ -93,6 +93,11 @@ CONFIGS.forEach((config, i) => {
   }
 });
 
+// Cobertura en dos pasos: 200 sesiones «Amateur 3×3 min» por nivel; de cada una, los ids de lo dicho.
+const cobertura = Object.fromEntries(NIVELES.map((nivel) => [nivel, Array.from({ length: 200 }, (_, semilla) =>
+  construirGuion({ asaltos: 3, duracion_asalto: 180, descanso: 60, nivel }, crearAzar(9000 + 1000 * nivel + semilla))
+    .filter((e) => e.tipo === "combo").map((e) => e.ids))]));
+
 // Guiones con propias: cada mezcla, con y sin Reacción, en ortodoxo y zurdo. «Solo las mías» también
 // con unas propias sin ninguna corta (las coletillas son entonces las de la biblioteca).
 const SIN_CORTAS = PROPIAS.filter((p) => p.ids.length > 3);
@@ -138,4 +143,4 @@ const senales = {
   segundos: Object.fromEntries(datos().presets.reacciones.map((r) => [r.texto, segundosHabla(r.texto, VELOCIDAD_SENAL)])),
 };
 
-writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, sorteos, senales, practicar, duplicadas, mezclas, guiones_mezcla: guionesMezcla, avisos, movimientos: movimientos() }));
+writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, sorteos, senales, practicar, duplicadas, mezclas, guiones_mezcla: guionesMezcla, avisos, movimientos: movimientos(), cobertura }));

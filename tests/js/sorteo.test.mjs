@@ -5,8 +5,8 @@ import { test } from "node:test";
 import { biblioteca, espejoCombo, numero, textoHablado } from "../../static/motor/acciones.js";
 import { crearAzar } from "../../static/motor/azar.js";
 import {
-  MEZCLAS, MIN_SOLO_PROPIAS, PROBABILIDAD_PROPIAS, SIN_REPETIR, SorteoBiblioteca, SorteoMezcla, cargarPerfil, identidad,
-  mezclaEfectiva, propiasValidas,
+  MEZCLAS, MIN_SOLO_PROPIAS, PESO_CUERPO, PROBABILIDAD_PROPIAS, SIN_REPETIR, SorteoBiblioteca, SorteoMezcla, cargarPerfil,
+  identidad, mezclaEfectiva, numeros as numerosDe, propiasValidas,
 } from "../../static/motor/sorteo.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
 import { FIJOS, casos } from "./igual_que_antes.mjs";
@@ -106,10 +106,30 @@ test("la ventana de las propias es de mín(5, n − 1)", () => {
   }
 });
 
-test("los golpes de las propias cuentan para la cobertura del 1 al 6", () => {
+test("los golpes de las propias cuentan para la cobertura del 1 al 6 y del 7 al 12", () => {
   const s = new SorteoMezcla(2, { azar: crearAzar(1), propias: [TODAS[3]], mezcla: "mucho" });
   while (s.siguiente().origen !== "propia");
-  assert.equal(s.biblioteca.faltan.size, 0);
+  assert.deepEqual([...s.biblioteca.faltan].filter((n) => n <= 6), []);
+  const cuerpo = { id: "p-cuerpo", ids: ["jab_cuerpo", "directo_cuerpo", "gancho_izq_cuerpo", "gancho_der_cuerpo",
+    "uppercut_izq_cuerpo", "uppercut_der_cuerpo"] };
+  for (const zurdo of [false, true]) {
+    const c = new SorteoMezcla(2, { azar: crearAzar(1), propias: [cuerpo], mezcla: "mucho", zurdo });
+    while (c.siguiente().origen !== "propia");
+    assert.deepEqual([...c.biblioteca.faltan].filter((n) => n >= 7), [], `zurdo ${zurdo}`);
+  }
+});
+
+test("cobertura en dos pasos: primero filtra por el 1-6; luego las que añaden un 7-12 que falte pesan ×2", () => {
+  const s = new SorteoBiblioteca(1, { azar: crearAzar(3) });
+  const conCara = s.candidatas();
+  assert.ok(conCara.every((c) => [...numerosDe(c)].some((n) => n <= 6)));
+  for (const n of [1, 2, 3, 4, 5, 6]) s.faltan.delete(n);
+  assert.equal(s.candidatas().length, s.combos.length); // sin filtrar
+  const conCuerpo = s.combos.find((c) => [...numerosDe(c)].some((n) => n >= 7));
+  const sinCuerpo = s.combos.find((c) => ![...numerosDe(c)].some((n) => n >= 7));
+  assert.equal(s.pesoCobertura(conCuerpo), PESO_CUERPO);
+  assert.equal(s.pesoCobertura(sinCuerpo), 1);
+  assert.equal(PESO_CUERPO, 2);
 });
 
 test("en zurdo la propia sale en espejo, con los mismos números", () => {

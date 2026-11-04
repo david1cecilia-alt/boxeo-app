@@ -1,38 +1,653 @@
 {
-  "_nota": "Fichas de la pestaña Aprende. Todo en guardia ORTODOXA (izquierda delante); el zurdo se ve en espejo. `acciones` son ids de acciones.json (vacío en estrategia). Cada paso puede llevar una `postura` de posturas.json. Las combinaciones relacionadas NO se escriben: salen de combinaciones.json. `revisar: true` = pendiente de revisar con el entrenador; `pendiente` dice qué (y sale en Perfil vía herramientas/extraer_revisar.py). Textos redactados con palabras propias a partir de las fuentes.",
+  "_nota": "Fichas de la pestaña Aprende. Todo en guardia ORTODOXA (izquierda delante); el zurdo lo lee en espejo (la vista lo avisa). `acciones` son ids de acciones.json (vacío en estrategia). que_es, cuando, pasos, errores (con o sin correccion), ventajas, inconvenientes y notas son lo que se ve; en_ingles sirve para buscar vídeos. Cada paso puede llevar una `postura` de posturas.json. Las combinaciones relacionadas NO se escriben: salen de combinaciones.json. `revisar: true` = pendiente de revisar con el entrenador; `pendiente` dice qué (lo recoge herramientas/extraer_revisar.py en revisar.json; la vista solo avisa, no lo enseña). fuentes: {titulo, url}. Textos redactados con palabras propias a partir de las fuentes.",
   "categorias": [
-    {"id": "golpes",     "titulo": "Golpes",        "frase": "Qué lanzar y cómo lanzarlo sin abrirte.",       "imagen": null},
-    {"id": "defensas",   "titulo": "Defensas",      "frase": "Que no te den es la mitad del trabajo.",          "imagen": null},
-    {"id": "pies",       "titulo": "Juego de pies", "frase": "Los golpes salen de los pies.",                    "imagen": null},
-    {"id": "estrategia", "titulo": "Estrategia",    "frase": "Cuándo y por qué, no solo cómo.",                  "imagen": null}
+    {
+      "id": "golpes",
+      "titulo": "Golpes",
+      "frase": "Qué lanzar y cómo lanzarlo sin abrirte.",
+      "imagen": null
+    },
+    {
+      "id": "defensas",
+      "titulo": "Defensas",
+      "frase": "Que no te den es la mitad del trabajo.",
+      "imagen": null
+    },
+    {
+      "id": "salidas",
+      "titulo": "Salidas",
+      "frase": "No son defensas: sirven para salir de la línea del rival o cambiar de ángulo después de una combinación o de una defensa.",
+      "imagen": null
+    },
+    {
+      "id": "estrategia",
+      "titulo": "Estrategia",
+      "frase": "Cuándo y por qué, no solo cómo.",
+      "imagen": null
+    }
   ],
   "fichas": [
     {
       "id": "jab",
       "categoria": "golpes",
-      "acciones": ["jab"],
+      "acciones": [
+        "jab"
+      ],
       "titulo": "Jab",
       "frase": "El golpe más rápido y el que lo abre todo: mide, molesta y prepara.",
       "nivel": 1,
-      "palabras_clave": ["jab", "mano adelantada", "mano izquierda", "distancia", "medir"],
+      "palabras_clave": [
+        "jab",
+        "mano adelantada",
+        "mano izquierda",
+        "distancia",
+        "medir"
+      ],
       "pasos": [
-        {"texto": "Parte de la guardia: pie izquierdo delante, manos arriba y barbilla al pecho.", "postura": "guardia"},
-        {"texto": "Lanza la mano izquierda recta desde donde está, sin echarla atrás antes.", "postura": "jab_salida"},
-        {"texto": "Al final gira el puño hasta dejarlo horizontal (nudillos arriba), sube el hombro izquierdo para tapar la barbilla y suelta aire corto. El brazo va suelto en el recorrido; la tensión, solo al tocar.", "postura": "jab_impacto"},
-        {"texto": "La mano derecha no se mueve: sigue pegada a la cara durante todo el golpe.", "postura": "jab_impacto"},
-        {"texto": "Recoge por el mismo camino, al menos igual de rápido que al salir, hasta la guardia.", "postura": "guardia"}
+        {
+          "texto": "Parte de la guardia: pie izquierdo delante, manos arriba y barbilla al pecho.",
+          "postura": "guardia"
+        },
+        {
+          "texto": "Lanza la mano izquierda recta desde donde está, sin echarla atrás antes.",
+          "postura": "jab_salida"
+        },
+        {
+          "texto": "Al final gira el puño hasta dejarlo horizontal (nudillos arriba), sube el hombro izquierdo para tapar la barbilla y suelta aire corto. El brazo va suelto en el recorrido; la tensión, solo al tocar.",
+          "postura": "jab_impacto"
+        },
+        {
+          "texto": "La mano derecha no se mueve: sigue pegada a la cara durante todo el golpe.",
+          "postura": "jab_impacto"
+        },
+        {
+          "texto": "Recoge por el mismo camino, al menos igual de rápido que al salir, hasta la guardia.",
+          "postura": "guardia"
+        }
       ],
       "errores": [
-        {"error": "Bajar la mano derecha mientras sale el jab.", "correccion": "Déjala apoyada en la mejilla; al practicar, comprueba que el guante sigue tocándote la cara."},
-        {"error": "Echar la mano atrás antes de golpear (se ve venir).", "correccion": "Sale directo desde donde está en la guardia: el puño viaja en línea recta al objetivo."},
-        {"error": "Abrir el codo hacia fuera al lanzar (el golpe sale en curva).", "correccion": "El codo mira al suelo durante todo el recorrido, por debajo del puño."},
-        {"error": "Estirarse para llegar.", "correccion": "Si no llegas, da un paso: el cuerpo no se estira."},
-        {"error": "Dejar el brazo estirado después del golpe.", "correccion": "La vuelta es parte del golpe: recoge en cuanto toques, sin quedarte a mirar."}
+        {
+          "error": "Bajar la mano derecha mientras sale el jab.",
+          "correccion": "Déjala apoyada en la mejilla; al practicar, comprueba que el guante sigue tocándote la cara."
+        },
+        {
+          "error": "Echar la mano atrás antes de golpear (se ve venir).",
+          "correccion": "Sale directo desde donde está en la guardia: el puño viaja en línea recta al objetivo."
+        },
+        {
+          "error": "Abrir el codo hacia fuera al lanzar (el golpe sale en curva).",
+          "correccion": "El codo mira al suelo durante todo el recorrido, por debajo del puño."
+        },
+        {
+          "error": "Estirarse para llegar.",
+          "correccion": "Si no llegas, da un paso: el cuerpo no se estira."
+        },
+        {
+          "error": "Dejar el brazo estirado después del golpe.",
+          "correccion": "La vuelta es parte del golpe: recoge en cuanto toques, sin quedarte a mirar."
+        }
       ],
       "cuando": "Para medir la distancia, molestar y romper el ritmo del rival, y para abrir combinaciones: casi todas empiezan con él. También sirve de freno: un jab seco corta al rival que entra. Si estás algo lejos, acompáñalo con un paso corto del pie izquierdo; el derecho lo sigue enseguida para no perder la guardia. Contra un rival más alto, el jab puede subir por encima del hombro.",
       "revisar": true,
       "pendiente": "REVISAR CON ENTRENADOR: jab, error «estirarse para llegar» (sustituye a «inclinarse hacia delante, con el peso en la pierna delantera»: el peso depende de la situación)",
-      "fuentes": ["ExpertBoxing (artículos sobre el jab)", "Reglamento técnico de World Boxing (golpe válido: con los nudillos del guante cerrado)"]
+      "fuentes": [
+        {
+          "titulo": "ExpertBoxing (artículos sobre el jab)"
+        },
+        {
+          "titulo": "Reglamento técnico de World Boxing (golpe válido: con los nudillos del guante cerrado)"
+        }
+      ]
+    },
+    {
+      "id": "esquiva",
+      "categoria": "defensas",
+      "acciones": [
+        "esquiva_der",
+        "esquiva_izq"
+      ],
+      "titulo": "Esquiva",
+      "en_ingles": "slip",
+      "que_es": "Apartar la cabeza un palmo hacia un lado para que el golpe pase al lado, sin tocarte. Las manos quedan libres para devolver.",
+      "cuando": "Contra golpes rectos (jab y recto). Cuesta más contra golpes curvos y no sirve para los golpes al cuerpo.",
+      "pasos": [
+        {
+          "texto": "Desde la guardia, gira un poco el tronco y flexiona algo la rodilla del lado al que vas."
+        },
+        {
+          "texto": "La cabeza se mueve lo justo para salir de la línea del golpe; los ojos siguen en el rival."
+        },
+        {
+          "texto": "Las manos se quedan en guardia."
+        },
+        {
+          "texto": "Vuelve al centro o aprovecha la posición para devolver."
+        }
+      ],
+      "errores": [
+        {
+          "error": "Moverte demasiado (pierdes el equilibrio y tardas en volver)."
+        },
+        {
+          "error": "Bajar las manos."
+        },
+        {
+          "error": "Dejar de mirar al rival."
+        },
+        {
+          "error": "Esquivar siempre hacia el mismo lado."
+        }
+      ],
+      "ventajas": "No recibes nada y el rival queda abierto tras fallar.",
+      "inconvenientes": "Pide buena vista y tiempo de reacción; si te amagan o te equivocas de lado, recibes el golpe de lleno.",
+      "notas": [
+        {
+          "titulo": "Derecha o izquierda",
+          "texto": "El lado es hacia dónde va la cabeza: en la esquiva derecha te apartas hacia tu derecha; en la izquierda, hacia tu izquierda."
+        }
+      ],
+      "revisar": true,
+      "pendiente": "REVISAR CON ENTRENADOR: esquiva, cuánto se gira el tronco y si la rodilla se flexiona en la esquiva lateral",
+      "fuentes": [
+        {
+          "titulo": "ExpertBoxing, «Boxing Defense Techniques» (Johnny Nguyen)",
+          "url": "https://expertboxing.com/boxing-defense-techniques"
+        },
+        {
+          "titulo": "EFDeportes, «Percepción visual y boxeo defensivo» (Federación Nacional de Boxeo de Cuba)",
+          "url": "https://efdeportes.com/efd127/percepcion-visual-y-boxeo-defensivo.htm"
+        }
+      ]
+    },
+    {
+      "id": "rodar",
+      "categoria": "defensas",
+      "acciones": [
+        "rodar_der",
+        "rodar_izq"
+      ],
+      "titulo": "Rueda",
+      "en_ingles": "roll, bob and weave",
+      "que_es": "Bajar flexionando las piernas y pasar por debajo del golpe dibujando una «U» hacia un lado, para volver a subir al otro lado del brazo del rival.",
+      "cuando": "Contra golpes curvos a la cabeza (crochet). Te deja cerca del rival y en ángulo para golpear.",
+      "pasos": [
+        {
+          "texto": "Ve el crochet venir."
+        },
+        {
+          "texto": "Baja flexionando las rodillas, no doblando la espalda."
+        },
+        {
+          "texto": "Mueve el cuerpo en «U» por debajo del brazo que golpea."
+        },
+        {
+          "texto": "Sube al otro lado con la guardia puesta, listo para devolver."
+        }
+      ],
+      "errores": [
+        {
+          "error": "Agacharte doblando la cintura (te deja sin equilibrio y expuesto al gancho)."
+        },
+        {
+          "error": "Bajar la vista al suelo."
+        },
+        {
+          "error": "Bajar las manos."
+        },
+        {
+          "error": "Bajar más de lo necesario."
+        }
+      ],
+      "ventajas": "Neutraliza golpes fuertes y te coloca en una posición buena para el contraataque.",
+      "inconvenientes": "Cansa las piernas; si el rival lo espera, puede responder con un gancho.",
+      "notas": [
+        {
+          "titulo": "Derecha o izquierda",
+          "texto": "El lado es hacia dónde va el cuerpo: en la rueda derecha bajas y sales hacia tu derecha; en la izquierda, hacia tu izquierda."
+        }
+      ],
+      "revisar": true,
+      "pendiente": "REVISAR CON ENTRENADOR: rueda, el nombre («rueda», «rotativa»…; Iván no lo ha confirmado), si en su escuela se distingue de la flexión y que el lado sea hacia dónde va el cuerpo (rueda derecha = bajas y sales hacia tu derecha)",
+      "fuentes": [
+        {
+          "titulo": "ExpertBoxing, «Boxing Defense Techniques» (Johnny Nguyen)",
+          "url": "https://expertboxing.com/boxing-defense-techniques"
+        },
+        {
+          "titulo": "EFDeportes, «Percepción visual y boxeo defensivo» (Federación Nacional de Boxeo de Cuba)",
+          "url": "https://efdeportes.com/efd127/percepcion-visual-y-boxeo-defensivo.htm"
+        }
+      ]
+    },
+    {
+      "id": "ballesteo",
+      "categoria": "defensas",
+      "acciones": [
+        "ballesteo"
+      ],
+      "titulo": "Ballesteo",
+      "en_ingles": "pull back, lean back",
+      "que_es": "Echar el tronco y la cabeza hacia atrás para que el golpe se quede corto, sin mover los pies (o con un paso muy corto).",
+      "cuando": "Contra el jab o golpes rectos a la cara, sobre todo cuando quieres quedarte a distancia para devolver con un recto.",
+      "pasos": [
+        {
+          "texto": "Desde la guardia, pasa algo de peso a la pierna de atrás."
+        },
+        {
+          "texto": "Echa el tronco hacia atrás lo justo para que el golpe no llegue."
+        },
+        {
+          "texto": "Barbilla abajo y manos arriba."
+        },
+        {
+          "texto": "Vuelve hacia delante; esa vuelta puede ser ya tu golpe."
+        }
+      ],
+      "errores": [
+        {
+          "error": "Echarte demasiado atrás (pierdes el equilibrio y no puedes devolver)."
+        },
+        {
+          "error": "Levantar la barbilla."
+        },
+        {
+          "error": "Hacerlo contra golpes largos que te siguen alcanzando."
+        }
+      ],
+      "ventajas": "Rápido y sencillo; te deja a la distancia justa para contraatacar.",
+      "inconvenientes": "Si el rival da un paso adelante o encadena golpes, te alcanza. Con mal equilibrio es peligroso.",
+      "revisar": true,
+      "pendiente": "REVISAR CON ENTRENADOR: ballesteo, si Iván lo llama así, si va con paso o solo con el cuerpo, y si es adecuado para un principiante",
+      "fuentes": [
+        {
+          "titulo": "ExpertBoxing, «Boxing Defense Techniques» (Johnny Nguyen)",
+          "url": "https://expertboxing.com/boxing-defense-techniques"
+        },
+        {
+          "titulo": "EFDeportes, «Percepción visual y boxeo defensivo» (Federación Nacional de Boxeo de Cuba)",
+          "url": "https://efdeportes.com/efd127/percepcion-visual-y-boxeo-defensivo.htm"
+        }
+      ]
+    },
+    {
+      "id": "flexion",
+      "categoria": "defensas",
+      "acciones": [
+        "flexion"
+      ],
+      "titulo": "Flexión",
+      "en_ingles": "duck",
+      "que_es": "Bajar recto flexionando las piernas para que el golpe pase por encima de la cabeza, sin irte hacia ningún lado.",
+      "cuando": "Contra golpes que van a la altura de la cabeza (crochets amplios, golpes por encima).",
+      "pasos": [
+        {
+          "texto": "Flexiona las rodillas con la espalda recta."
+        },
+        {
+          "texto": "Baja lo justo para que el golpe pase por encima."
+        },
+        {
+          "texto": "Manos arriba y mirada al rival."
+        },
+        {
+          "texto": "Sube enseguida o golpea al cuerpo desde abajo."
+        }
+      ],
+      "errores": [
+        {
+          "error": "Doblar la cintura en lugar de las piernas."
+        },
+        {
+          "error": "Bajar la cabeza por debajo de la cintura del rival."
+        },
+        {
+          "error": "Quedarte abajo demasiado tiempo."
+        }
+      ],
+      "ventajas": "Sencilla y te deja cerca del cuerpo del rival.",
+      "inconvenientes": "Te expone al gancho; cansa las piernas.",
+      "notas": [
+        {
+          "titulo": "Diferencia con la rueda",
+          "texto": "Es como la rueda, pero sin el movimiento en «U»."
+        }
+      ],
+      "revisar": true,
+      "pendiente": "REVISAR CON ENTRENADOR: flexión, la definición es nuestra, no de Iván: qué entiende él por «flexión» y en qué se diferencia de la rueda",
+      "fuentes": [
+        {
+          "titulo": "ExpertBoxing, «Boxing Defense Techniques» (Johnny Nguyen)",
+          "url": "https://expertboxing.com/boxing-defense-techniques"
+        },
+        {
+          "titulo": "EFDeportes, «Percepción visual y boxeo defensivo» (Federación Nacional de Boxeo de Cuba)",
+          "url": "https://efdeportes.com/efd127/percepcion-visual-y-boxeo-defensivo.htm"
+        }
+      ]
+    },
+    {
+      "id": "bloqueo",
+      "categoria": "defensas",
+      "acciones": [
+        "bloqueo"
+      ],
+      "titulo": "Bloqueo",
+      "en_ingles": "block, cover",
+      "que_es": "Recibir el golpe en los guantes, los antebrazos o los codos en vez de en la cara o el cuerpo.",
+      "cuando": "Casi contra cualquier golpe, también al cuerpo. Es la defensa más fácil y la base para empezar.",
+      "pasos": [
+        {
+          "texto": "Mantén la guardia cerrada: guantes junto a la cara, codos pegados al cuerpo."
+        },
+        {
+          "texto": "Recibe el golpe con el guante o el antebrazo del lado por el que viene."
+        },
+        {
+          "texto": "Golpes al cuerpo: baja un poco el codo para cubrir las costillas."
+        },
+        {
+          "texto": "No te quedes encerrado: devuelve en cuanto acabe el golpe."
+        }
+      ],
+      "errores": [
+        {
+          "error": "Cerrar los ojos."
+        },
+        {
+          "error": "Quedarte encerrado sin devolver."
+        },
+        {
+          "error": "Apartar el guante de la cara al recibir."
+        }
+      ],
+      "ventajas": "Fácil, gasta poco y te deja a distancia para devolver.",
+      "inconvenientes": "Recibes parte de la fuerza; contra un rival que pega fuerte o mucho te puede ir empujando.",
+      "revisar": true,
+      "pendiente": "REVISAR CON ENTRENADOR: bloqueo, cómo quiere Iván que se bloquee el crochet (guante a la sien, codo arriba…)",
+      "fuentes": [
+        {
+          "titulo": "ExpertBoxing, «Boxing Defense Techniques» (Johnny Nguyen)",
+          "url": "https://expertboxing.com/boxing-defense-techniques"
+        },
+        {
+          "titulo": "Evolve MMA, «Boxing Defense 101: How To Block Punches»",
+          "url": "https://evolve-mma.com/blog/boxing-defense-101-how-to-block-punches-in-boxing/"
+        },
+        {
+          "titulo": "Soloboxeo, «Técnica del boxeo»",
+          "url": "https://soloboxeo.com/?p=208"
+        },
+        {
+          "titulo": "EFDeportes, «Percepción visual y boxeo defensivo» (Federación Nacional de Boxeo de Cuba)",
+          "url": "https://efdeportes.com/efd127/percepcion-visual-y-boxeo-defensivo.htm"
+        }
+      ]
+    },
+    {
+      "id": "parada",
+      "categoria": "defensas",
+      "acciones": [
+        "parada"
+      ],
+      "titulo": "Parada",
+      "en_ingles": "parry, catch",
+      "que_es": "Desviar el golpe con un toque corto del guante para sacarlo de la línea, en vez de aguantarlo.",
+      "cuando": "Contra golpes rectos, sobre todo el jab. Funciona peor contra golpes curvos y al cuerpo.",
+      "pasos": [
+        {
+          "texto": "Desde la guardia, usa la mano de atrás para el jab del rival."
+        },
+        {
+          "texto": "Toque corto y lateral (o hacia abajo) del guante contra el golpe; la mano no se va lejos de la cara."
+        },
+        {
+          "texto": "La cabeza puede apartarse un poco a la vez."
+        },
+        {
+          "texto": "El brazo del rival queda desviado: devuelve."
+        }
+      ],
+      "errores": [
+        {
+          "error": "Salir al encuentro del golpe con la mano (te abres)."
+        },
+        {
+          "error": "Hacer un movimiento demasiado grande."
+        },
+        {
+          "error": "Picar en los amagos."
+        }
+      ],
+      "ventajas": "Gasta poco y descoloca al rival, que tarda más en recoger el brazo.",
+      "inconvenientes": "Pide coordinación; si te amagan, te dejas la cara descubierta.",
+      "revisar": true,
+      "pendiente": "REVISAR CON ENTRENADOR: parada, dirección del desvío (lateral o hacia abajo) que prefiere Iván",
+      "fuentes": [
+        {
+          "titulo": "ExpertBoxing, «Boxing Defense Techniques» (Johnny Nguyen)",
+          "url": "https://expertboxing.com/boxing-defense-techniques"
+        },
+        {
+          "titulo": "Evolve MMA, «Boxing Defense 101: How To Block Punches»",
+          "url": "https://evolve-mma.com/blog/boxing-defense-101-how-to-block-punches-in-boxing/"
+        },
+        {
+          "titulo": "EFDeportes, «Percepción visual y boxeo defensivo» (Federación Nacional de Boxeo de Cuba)",
+          "url": "https://efdeportes.com/efd127/percepcion-visual-y-boxeo-defensivo.htm"
+        }
+      ]
+    },
+    {
+      "id": "paso_atras",
+      "categoria": "defensas",
+      "acciones": [
+        "paso_atras"
+      ],
+      "titulo": "Paso atrás",
+      "en_ingles": "step back",
+      "que_es": "Retroceder con un paso para quedar fuera del alcance del golpe.",
+      "cuando": "Contra casi cualquier golpe si lo ves venir con tiempo. Según la distancia a la que te quedes, después puedes responder con un recto, un crochet o un gancho (no hay un golpe fijo).",
+      "pasos": [
+        {
+          "texto": "Empuja con el pie de delante y mueve primero el de atrás."
+        },
+        {
+          "texto": "El de delante lo sigue; termina con los pies a la misma distancia que en la guardia."
+        },
+        {
+          "texto": "No cruces los pies ni saltes."
+        },
+        {
+          "texto": "Guardia puesta durante todo el paso."
+        }
+      ],
+      "errores": [
+        {
+          "error": "Retroceder en línea recta una y otra vez (te acaban arrinconando)."
+        },
+        {
+          "error": "Cruzar los pies."
+        },
+        {
+          "error": "Echar el peso hacia atrás y quedarte sin poder devolver."
+        }
+      ],
+      "ventajas": "Evita el golpe del todo.",
+      "inconvenientes": "Te aleja, así que para devolver tienes que volver a entrar; si lo repites mucho, el rival te lleva contra las cuerdas.",
+      "revisar": true,
+      "pendiente": "REVISAR CON ENTRENADOR: paso atrás, longitud del paso y qué golpe de respuesta recomienda según la distancia",
+      "fuentes": [
+        {
+          "titulo": "ExpertBoxing, «Boxing Defense Techniques» (Johnny Nguyen)",
+          "url": "https://expertboxing.com/boxing-defense-techniques"
+        },
+        {
+          "titulo": "Soloboxeo, «Técnica del boxeo»",
+          "url": "https://soloboxeo.com/?p=208"
+        },
+        {
+          "titulo": "Respuestas del entrenador (02-11-2026)"
+        }
+      ]
+    },
+    {
+      "id": "pivote",
+      "categoria": "salidas",
+      "acciones": [
+        "pivote"
+      ],
+      "titulo": "Pivote",
+      "en_ingles": "pivot",
+      "que_es": "Girar sobre la punta del pie de delante, moviendo el de atrás en arco, para cambiar de ángulo respecto al rival.",
+      "cuando": "Para salir del sitio después de golpear, cuando te están metiendo presión o para buscar un ángulo nuevo desde el que golpear.",
+      "pasos": [
+        {
+          "texto": "Apoya el peso en la parte delantera del pie de delante."
+        },
+        {
+          "texto": "Gira sobre él y lleva el pie de atrás en arco (empieza con giros pequeños, de unos 45°)."
+        },
+        {
+          "texto": "Mantén la guardia y la mirada en el rival durante el giro."
+        },
+        {
+          "texto": "Termina en guardia, con el rival delante de ti y él fuera de ángulo."
+        }
+      ],
+      "errores": [
+        {
+          "error": "Girar sobre el talón."
+        },
+        {
+          "error": "Cruzar los pies."
+        },
+        {
+          "error": "Bajar las manos al girar."
+        },
+        {
+          "error": "Girar tanto que pierdes al rival de vista."
+        }
+      ],
+      "ventajas": "Te saca de la línea sin alejarte y te deja en ángulo para golpear.",
+      "inconvenientes": "Si te pillan a mitad del giro estás desequilibrado.",
+      "revisar": true,
+      "pendiente": "REVISAR CON ENTRENADOR: pivote, hacia qué lado se pivota por defecto en guardia diestra y cuántos grados",
+      "fuentes": [
+        {
+          "titulo": "Myprotein, «Entrenamiento de boxeo»",
+          "url": "https://www.myprotein.com/thezone/entrenamiento/entrenamiento-de-boxeo/"
+        }
+      ]
+    },
+    {
+      "id": "paso_lateral",
+      "categoria": "salidas",
+      "acciones": [
+        "paso_lateral_izq",
+        "paso_lateral_der"
+      ],
+      "titulo": "Paso lateral",
+      "en_ingles": "side step",
+      "que_es": "Desplazarte de lado con pasos cortos para salir de la línea de ataque del rival.",
+      "cuando": "Para no retroceder siempre en línea recta, salir de una esquina o de las cuerdas, o buscar un ángulo.",
+      "pasos": [
+        {
+          "texto": "Mueve primero el pie del lado hacia el que vas."
+        },
+        {
+          "texto": "El otro lo sigue sin juntarse ni cruzarse."
+        },
+        {
+          "texto": "Pasos cortos, sin saltar."
+        },
+        {
+          "texto": "Guardia y mirada en el rival."
+        }
+      ],
+      "errores": [
+        {
+          "error": "Cruzar los pies."
+        },
+        {
+          "error": "Juntarlos."
+        },
+        {
+          "error": "Dar pasos tan largos que te descolocas."
+        }
+      ],
+      "ventajas": "Sencillo y te mantiene a distancia de golpear.",
+      "inconvenientes": "Gasta energía si se hace mucho; si es predecible, el rival te corta el paso.",
+      "notas": [
+        {
+          "titulo": "Derecha o izquierda",
+          "texto": "El lado es hacia dónde vas: en el paso lateral derecha te mueves hacia tu derecha; en el izquierda, hacia tu izquierda."
+        }
+      ],
+      "revisar": true,
+      "pendiente": "REVISAR CON ENTRENADOR: paso lateral, si conviene más moverse hacia el lado de la mano adelantada del rival",
+      "fuentes": [
+        {
+          "titulo": "Myprotein, «Entrenamiento de boxeo»",
+          "url": "https://www.myprotein.com/thezone/entrenamiento/entrenamiento-de-boxeo/"
+        },
+        {
+          "titulo": "Soloboxeo, «Técnica del boxeo»",
+          "url": "https://soloboxeo.com/?p=208"
+        }
+      ]
+    },
+    {
+      "id": "salir",
+      "categoria": "salidas",
+      "acciones": [
+        "salir"
+      ],
+      "titulo": "Cambio de ángulo",
+      "en_ingles": "angle out, exit",
+      "que_es": "Acabar la combinación saliendo de la línea del rival, para que no pueda devolverte enseguida.",
+      "cuando": "Justo después de terminar una combinación, cuando el rival suele intentar contestar.",
+      "pasos": [
+        {
+          "texto": "Termina el último golpe con la guardia ya volviendo."
+        },
+        {
+          "texto": "Sal de la línea del rival con lo que mejor te venga en ese momento: pivote o paso lateral."
+        },
+        {
+          "texto": "No te quedes delante del rival en línea."
+        }
+      ],
+      "errores": [
+        {
+          "error": "Quedarte quieto admirando el golpe."
+        },
+        {
+          "error": "Salir siempre igual."
+        },
+        {
+          "error": "Bajar las manos al salir."
+        }
+      ],
+      "ventajas": "Evita el contraataque y te prepara para la siguiente entrada.",
+      "inconvenientes": "Si sales demasiado lejos tienes que volver a entrar.",
+      "notas": [
+        {
+          "titulo": "También se dice salir",
+          "texto": "Es una salida libre: no hay un movimiento fijo. El paso atrás no sirve aquí: no cambia el ángulo y tiene su propia ficha en Defensas."
+        }
+      ],
+      "revisar": true,
+      "pendiente": "REVISAR CON ENTRENADOR: cambio de ángulo, si «salir» y «cambio de ángulo» son lo mismo para Iván o dos cosas distintas",
+      "fuentes": [
+        {
+          "titulo": "Myprotein, «Entrenamiento de boxeo»",
+          "url": "https://www.myprotein.com/thezone/entrenamiento/entrenamiento-de-boxeo/"
+        },
+        {
+          "titulo": "Soloboxeo, «Técnica del boxeo»",
+          "url": "https://soloboxeo.com/?p=208"
+        }
+      ]
     }
   ]
 }

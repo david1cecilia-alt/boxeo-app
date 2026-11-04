@@ -31,6 +31,7 @@ Criterios de redacción:
 - **id:** `rodar_der`, `rodar_izq` (en el borrador se esperaba `esquiva_abajo_*`)
 - **En inglés:** roll, bob and weave
 - **Qué es:** bajar flexionando las piernas y pasar por debajo del golpe dibujando una «U» hacia un lado, para volver a subir al otro lado del brazo del rival.
+- **Derecha o izquierda:** el lado es hacia dónde va el cuerpo, como en la esquiva y el paso lateral: rueda derecha = bajas y sales hacia tu derecha.
 - **Cuándo suele servir:** contra golpes curvos a la cabeza (crochet). Te deja cerca del rival y en ángulo para golpear.
 - **Cómo se hace:**
   1. Ve el crochet venir.
@@ -40,7 +41,7 @@ Criterios de redacción:
 - **Errores típicos:** agacharte doblando la cintura (te deja sin equilibrio y expuesto al gancho), bajar la vista al suelo, bajar las manos, bajar más de lo necesario.
 - **Ventajas:** neutraliza golpes fuertes y te coloca en una posición buena para el contraataque.
 - **Inconvenientes:** cansa las piernas; si el rival lo espera, puede responder con un gancho.
-- **REVISAR CON ENTRENADOR:** el nombre («rueda», antes «esquiva abajo»; también «rotativa»…; Iván no lo ha confirmado) y si en su escuela se distingue de la flexión.
+- **REVISAR CON ENTRENADOR:** el nombre («rueda», antes «esquiva abajo»; también «rotativa»…; Iván no lo ha confirmado) y si en su escuela se distingue de la flexión. El lado es hacia dónde va el cuerpo (decidido el 04-11-2026, también por revisar).
 
 ## 3. Ballesteo
 - **id esperado:** `ballesteo`
@@ -153,14 +154,15 @@ Las salidas no son defensas: sirven para salir de la línea del rival o cambiar 
 - **Inconvenientes:** gasta energía si se hace mucho; si es predecible, el rival te corta el paso.
 - **REVISAR CON ENTRENADOR:** si conviene más moverse hacia el lado de la mano adelantada del rival.
 
-## 10. Salir (cambio de ángulo)
+## 10. Cambio de ángulo (salir)
+- **Nota:** también se dice «salir». La ficha se titula como lo dice la app; el dictado no cambia.
 - **id esperado:** `salir`
 - **En inglés:** angle out, exit
-- **Qué es:** acabar la combinación saliendo de la distancia del rival o cambiando de ángulo, para que no pueda devolverte enseguida.
+- **Qué es:** acabar la combinación saliendo de la línea del rival, para que no pueda devolverte enseguida. Es una salida libre.
 - **Cuándo suele servir:** justo después de terminar una combinación, cuando el rival suele intentar contestar.
 - **Cómo se hace:**
   1. Termina el último golpe con la guardia ya volviendo.
-  2. Sal con el movimiento que mejor te venga en ese momento: pivote, paso lateral o paso atrás.
+  2. Sal de la línea del rival con lo que mejor te venga en ese momento: pivote o paso lateral (el paso atrás no: no cambia el ángulo y tiene su propia ficha).
   3. No te quedes delante del rival en línea.
 - **Errores típicos:** quedarte quieto admirando el golpe, salir siempre igual, bajar las manos al salir.
 - **Ventajas:** evita el contraataque y te prepara para la siguiente entrada.

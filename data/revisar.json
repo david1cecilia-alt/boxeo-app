@@ -165,6 +165,56 @@
       "id": "tecnica-423ded03",
       "origen": "data/tecnica.json",
       "texto": "jab, error «estirarse para llegar» (sustituye a «inclinarse hacia delante, con el peso en la pierna delantera»: el peso depende de la situación)"
+    },
+    {
+      "id": "tecnica-e051aadd",
+      "origen": "data/tecnica.json",
+      "texto": "esquiva, cuánto se gira el tronco y si la rodilla se flexiona en la esquiva lateral"
+    },
+    {
+      "id": "tecnica-afc7f347",
+      "origen": "data/tecnica.json",
+      "texto": "rueda, el nombre («rueda», «rotativa»…; Iván no lo ha confirmado), si en su escuela se distingue de la flexión y que el lado sea hacia dónde va el cuerpo (rueda derecha = bajas y sales hacia tu derecha)"
+    },
+    {
+      "id": "tecnica-7bef4771",
+      "origen": "data/tecnica.json",
+      "texto": "ballesteo, si Iván lo llama así, si va con paso o solo con el cuerpo, y si es adecuado para un principiante"
+    },
+    {
+      "id": "tecnica-276fcf0e",
+      "origen": "data/tecnica.json",
+      "texto": "flexión, la definición es nuestra, no de Iván: qué entiende él por «flexión» y en qué se diferencia de la rueda"
+    },
+    {
+      "id": "tecnica-e3bd5d1f",
+      "origen": "data/tecnica.json",
+      "texto": "bloqueo, cómo quiere Iván que se bloquee el crochet (guante a la sien, codo arriba…)"
+    },
+    {
+      "id": "tecnica-1381458f",
+      "origen": "data/tecnica.json",
+      "texto": "parada, dirección del desvío (lateral o hacia abajo) que prefiere Iván"
+    },
+    {
+      "id": "tecnica-2e2a96a0",
+      "origen": "data/tecnica.json",
+      "texto": "paso atrás, longitud del paso y qué golpe de respuesta recomienda según la distancia"
+    },
+    {
+      "id": "tecnica-961e5aaf",
+      "origen": "data/tecnica.json",
+      "texto": "pivote, hacia qué lado se pivota por defecto en guardia diestra y cuántos grados"
+    },
+    {
+      "id": "tecnica-882cc93e",
+      "origen": "data/tecnica.json",
+      "texto": "paso lateral, si conviene más moverse hacia el lado de la mano adelantada del rival"
+    },
+    {
+      "id": "tecnica-97d21aba",
+      "origen": "data/tecnica.json",
+      "texto": "cambio de ángulo, si «salir» y «cambio de ángulo» son lo mismo para Iván o dos cosas distintas"
     }
   ]
 }

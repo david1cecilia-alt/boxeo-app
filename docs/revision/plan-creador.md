@@ -4,11 +4,47 @@ Rama `creador-combinaciones`, sacada de main en 8e97330. Hoy solo diagnóstico y
 Boceto del diseño: [boceto-creador.html](boceto-creador.html) (suelto, fuera de la app; capturas en
 `.playwright-mcp/capturas/boceto-creador-{390,1440,avisos-390}.png`).
 
-> **No encontrados:** `CONTEXTO-boxeo-app.md`, `claude/estado-2026-11-04.md` y `claude/hoja-de-ruta.md` no existen
-> en el repo, ni en el historial de git, ni en la carpeta de usuario. El diagnóstico sale del código, de `CLAUDE.md`,
-> `README.md` y `docs/revision/siguiente-paso.md`. Si están en otro sitio, los leo antes de C1.
+> Los documentos de contexto (`CONTEXTO-boxeo-app.md`, estado y hoja de ruta) están en claude.ai, no en el PC: lo
+> necesario viene en las decisiones de abajo.
 
 ---
+
+## 0. Decisiones de David (visto bueno al plan, 2026-11-04)
+
+Sobre los choques de 1.8 (lo que aquí se decide manda sobre lo escrito más abajo):
+
+1. **«Nombrar combinaciones»:** de acuerdo con 1.5. Solo un test que blinde que las propias nunca se nombran.
+2. **Lista del creador:** nombre corto, como en la sesión; el texto hablado, para lectores de pantalla.
+3. **Avisos:** se **quita** el de «salida en medio». Quedan tres: sin golpes, idéntica a una de la biblioteca (con
+   su nivel) e idéntica a otra propia. Paso atrás sigue siendo defensa.
+4. **Coletillas con «Solo las mías» sin propias de 2-3 acciones:** solo para las coletillas del final del asalto se
+   usan las cortas de la biblioteca (las de siempre: 2-3 acciones, que por número de acciones son de básico).
+   Entrenar avisará (C3): «Añade alguna de 2-3 acciones para que el final del asalto sea solo tuyo». El test de
+   silencio final **no tiene excepciones** y pasa también con «Solo las mías».
+5. **Ventana de no repetir** por identidad: `n` (biblioteca) o `id` (propias), en Python y JS. Primer commit de C1.
+6. De acuerdo: ids `p-<randomUUID>`; «Guardar igual» / «Volver a editar»; «guardia ortodoxa»; los golpes de las
+   propias cuentan como ya salidos para la cobertura; con «Solo las mías» y menos de 3 propias el sorteo usa
+   «Ninguna» y Entrenar lo explica.
+7. **Para C2:** el interruptor «Al cuerpo» cambia las baldosas de 1-6 a 7-12 (fase N) y se apaga solo después de
+   añadir cada golpe. Los números se leen de `data/acciones.json`.
+
+**C1 queda así** (commits, en este orden; Python y JS a la vez, con equivalencia en cada uno que toque el sorteo):
+
+1. Ventana de no repetir por identidad (`n` / `id`).
+2. Sorteo mezclado: moneda con p = 20/35/50 % (constante única); grupos propias del nivel / biblioteca del nivel;
+   pesos de «Practicar más» dentro de cada grupo (nunca excluyen); ventana por grupo `mín(5, n − 1)`; cobertura con
+   la biblioteca; sin propias del nivel → solo biblioteca; «Solo las mías»: ignora el nivel, sin cobertura, mínimo 3
+   propias y, si hay menos, «Ninguna». «Ninguna» da **exactamente** lo mismo que hoy con la misma semilla (test).
+3. Guion: reservas y coletillas desde el sorteo mezclado, con el caso 4. Reacción incluida.
+4. Avisos del creador en el motor (Python y JS): dada una lista de ids, los avisos y si se puede guardar (2-10
+   acciones, menos de 20 propias). Nivel con `nivel_de`.
+5. Almacén v8: migración 7→8 (`combinacionesPropias: []`, mezcla «ninguna»); Exportar/Importar con las propias;
+   importar copias v5, v6 y v7 (tests).
+
+`nuevoGuion` y Entrenar no se tocan en C1 (es C3).
+
+---
+
 
 ## 1. Diagnóstico
 
@@ -225,7 +261,7 @@ Commits pequeños en español, autor con el correo noreply, sin atribución y si
   nivel)` y el motivo del aviso (sin propias de ese nivel / menos de 3).
 - Aviso del creador en el motor (`motor/reglas.py`): `avisos_creador(ids, propias, indice_editando)` → lista de
   `{tipo, texto}`: sin golpe (de `validar`), igual a una de la biblioteca (con su nivel), igual a otra propia, salida
-  en medio (`# REVISAR CON ENTRENADOR`). Y `puede_guardar(n_acciones, n_propias)` (2-10 y ≤20).
+  en medio (`# REVISAR CON ENTRENADOR`) — **quitado** (decisión 3). Y `puede_guardar(n_acciones, n_propias)` (2-10 y ≤20).
 - Port fiel a JS de todo lo anterior.
 
 **Almacén:** `VERSION = 8`; migración 7→8: `combinacionesPropias: []` y `perfil.sesion.mezcla = "ninguna"`;
@@ -318,3 +354,24 @@ En `.playwright-mcp/capturas/`, con datos de prueba solo en el `localStorage` de
 
 Las capturas de cada fase se generan con un script de `herramientas/` (como `capturas_practicar.py`) para poder
 repetirlas.
+
+---
+
+## 5. Fase N · Golpes al cuerpo 7-12
+
+Decidido por David:
+
+- **Numeración** (los ids internos no cambian): 7 jab al cuerpo · 8 recto al cuerpo · 9 crochet de izquierda al
+  cuerpo · 10 crochet de derecha al cuerpo · 11 gancho de izquierda al cuerpo · 12 gancho de derecha al cuerpo. En
+  zurdo el número no cambia, como el 1-6. En modo Números, «recto al cuerpo» se dice «ocho».
+- **Sesión:** tienen que verse, aunque menos que el 1-6. Cobertura en dos pasos: primero 1-6, como ahora; cuando ya
+  han salido, se buscan los 7-12 que falten a lo largo de la sesión. En «Solo las mías», sin cobertura.
+- **Biblioteca:** no se editan las 150 que hay ni cambian sus `n`. Se **añaden** 6 por nivel (168 en total) con
+  `herramientas/biblioteca.py`, para que cada golpe al cuerpo esté al menos 3 veces en cada nivel, cumpliendo: el
+  balance de golpes a la cara (1 jab 20-30 %; 2-6 entre 13 y 17 %, en total y por nivel); ≥50 % de las que empiezan
+  por golpe, con jab; máximo 5 dobles ganchos por nivel; las reglas de nombres R1-R5; el reparto de defensas lo más
+  parecido posible al de ahora. Las nuevas, marcadas REVISAR CON ENTRENADOR en `revisar.json`.
+- **Aprende:** los títulos de las 6 fichas de golpes llevan los dos números («1/7 Jab», «2/8 Recto»…). Las tarjetas
+  flotantes van en otro bloque.
+
+Diagnóstico y plan: después de C1 (sección 5.1 y siguientes).

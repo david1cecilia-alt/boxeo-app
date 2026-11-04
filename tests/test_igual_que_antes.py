@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from motor.sorteo import SorteoBiblioteca, cargar_perfil
+from motor.sorteo import SorteoBiblioteca, SorteoMezcla, cargar_perfil
 from motor.temporizador import ConfigSesion, construir_guion, guion_a_dict
 
 FIJOS = Path(__file__).resolve().parent / "fijos" / "igual_que_antes.json"
@@ -65,6 +65,31 @@ def fijos():
 
 def test_la_biblioteca_sortea_igual_que_antes(fijos):
     assert casos() == fijos
+
+
+# Tres propias de básico (y una de medio): con «Ninguna», o con una mezcla sin propias del nivel o
+# «Solo las mías» sin las 3 mínimas, no se tira moneda y sale lo de siempre.
+PROPIAS = [{"id": f"p-{i}", "ids": ids} for i, ids in enumerate(
+    [["jab", "jab"], ["esquiva_der", "gancho_izq", "directo"], ["jab", "bloqueo"],
+     ["jab", "directo", "gancho_izq", "gancho_der", "uppercut_izq"]])]
+
+
+@pytest.mark.parametrize("mezcla, propias", [
+    ("ninguna", PROPIAS),
+    ("mucho", []),
+    ("solo", PROPIAS[:2]),
+])
+def test_con_ninguna_sale_exactamente_lo_de_antes(fijos, mezcla, propias):
+    def crear(nivel, zurdo, rng, practicar):
+        return SorteoMezcla(nivel, _perfil(practicar), zurdo, rng, propias, mezcla)
+    assert casos(crear) == fijos
+
+
+def test_una_mezcla_sin_propias_del_nivel_sale_como_antes(fijos):
+    def crear(nivel, zurdo, rng, practicar):  # solo hay propias del nivel 3, que no está en estos casos
+        return SorteoMezcla(nivel, _perfil(practicar), zurdo, rng, [{"id": "p-a", "ids": ["jab"] * 8}], "bastante")
+    sin_nivel_3 = {k: v for k, v in casos(crear).items() if not k.startswith(("sorteo-3", "guion-2"))}
+    assert sin_nivel_3 == {k: fijos[k] for k in sin_nivel_3}
 
 
 if __name__ == "__main__":

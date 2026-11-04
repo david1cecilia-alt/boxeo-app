@@ -9,7 +9,7 @@ import { crearAzar } from "../../static/motor/azar.js";
 import { datos } from "../../static/motor/datos.js";
 import { nivelDe } from "../../static/motor/reglas.js";
 import { VELOCIDAD_SENAL, segundosHabla } from "../../static/motor/ritmo.js";
-import { SorteoBiblioteca, cargarPerfil, movimientos, pesoPracticar } from "../../static/motor/sorteo.js";
+import { SorteoBiblioteca, SorteoMezcla, cargarPerfil, identidad, movimientos, pesoPracticar } from "../../static/motor/sorteo.js";
 import { construirGuion } from "../../static/motor/temporizador.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
 
@@ -52,6 +52,28 @@ const duplicadas = Object.fromEntries(NIVELES.map((nivel) => {
   return [nivel, Array.from({ length: N }, () => (s.siguiente(), s.recientes.at(-1)))];
 }));
 
+// Sorteo mezclado con unas propias de cada nivel: de cada sacada, su identidad (n o id) y sus ids.
+const PROPIAS = [
+  ["jab", "jab", "directo"], ["esquiva_der", "gancho_izq"], ["directo_cuerpo", "gancho_izq", "salir", "bloqueo"],
+  ["jab", "directo", "gancho_izq", "gancho_der", "uppercut_izq", "uppercut_der"],
+  ["jab", "rodar_izq", "directo", "pivote", "jab"],
+  ["jab", "directo", "esquiva_izq", "gancho_izq", "directo", "rodar_der", "gancho_der", "paso_atras"],
+].map((ids, i) => ({ id: `p-${i}`, ids }));
+function mezclar(nivel, mezcla, zurdo, semilla) {
+  const s = new SorteoMezcla(nivel, { zurdo, azar: crearAzar(semilla), propias: PROPIAS, mezcla });
+  return Array.from({ length: N }, () => {
+    const c = s.siguiente();
+    const grupo = c.origen === "propia" ? s.propias : s.biblioteca;
+    // Con ventana 0 (una sola en el grupo) no se apunta nada: es esa.
+    return [grupo.recientes.at(-1) ?? identidad(grupo.combos[0]), c.acciones.map((a) => a.id)];
+  });
+}
+const mezclas = { propias: PROPIAS, sorteos: {} };
+for (const mezcla of ["poco", "bastante", "mucho", "solo"]) {
+  for (const nivel of NIVELES) mezclas.sorteos[`${mezcla}-${nivel}`] = mezclar(nivel, mezcla, false, 500 + nivel);
+}
+mezclas.zurdo = { ortodoxo: mezclar(2, "mucho", false, 600), zurdo: mezclar(2, "mucho", true, 600) };
+
 const CONFIGS = [
   { asaltos: 3, duracion_asalto: 180, descanso: 60, nivel: 1 },
   { asaltos: 3, duracion_asalto: 180, descanso: 60, nivel: 1, ritmo: 1, voz: "numeros", zurdo: true },
@@ -86,4 +108,4 @@ const senales = {
   segundos: Object.fromEntries(datos().presets.reacciones.map((r) => [r.texto, segundosHabla(r.texto, VELOCIDAD_SENAL)])),
 };
 
-writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, sorteos, senales, practicar, duplicadas, movimientos: movimientos() }));
+writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, sorteos, senales, practicar, duplicadas, mezclas, movimientos: movimientos() }));

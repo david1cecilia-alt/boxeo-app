@@ -16,8 +16,9 @@ import pytest
 
 from motor.acciones import Accion, acciones_por_ids, biblioteca, catalogo, espejo, espejo_combo, texto_hablado
 from motor.reglas import nivel_de
-from motor.sorteo import (ACCIONES_COLETILLA, NIVEL_COLETILLA, NUMEROS, SIN_REPETIR, SorteoBiblioteca,
-                          cargar_perfil, movimiento, movimientos, peso_practicar)
+from motor.sorteo import (ACCIONES_COLETILLA, NIVEL_COLETILLA, NUMEROS, PROBABILIDAD_PROPIAS, SIN_REPETIR,
+                          SorteoBiblioteca, SorteoMezcla, cargar_perfil, movimiento, movimientos, numeros,
+                          peso_practicar, propias_validas, ventana)
 from motor.ritmo import VELOCIDAD_SENAL, VELOCIDADES, duracion_estimada, rango_pausa, segundos_habla
 from motor.temporizador import (AVISO_ANTES_FIN, DURACION_AVISO, DURACION_REACCION, FACTOR_VOZ_RAPIDA,
                                 MARGEN, PREPARACION, ConfigSesion, cargar_presets, construir_guion,
@@ -100,6 +101,47 @@ def test_ventana_js_por_identidad_como_la_de_python(js, nivel):
     assert set(sacadas) == del_nivel | {n + 1000 for n in del_nivel}
     for i, n in enumerate(sacadas):
         assert n not in sacadas[max(0, i - SIN_REPETIR):i], f"repetida en {i}"
+
+
+# ---------- Sorteo mezclado con las propias ----------
+
+@pytest.mark.parametrize("mezcla", ["poco", "bastante", "mucho", "solo"])
+@pytest.mark.parametrize("nivel", NIVELES)
+def test_mezcla_js_cumple_las_reglas_y_proporciones_de_python(js, mezcla, nivel):
+    propias = js["mezclas"]["propias"]
+    validas = {p.id: p for p in propias_validas(propias)}
+    del_grupo = set(validas) if mezcla == "solo" else {i for i, p in validas.items() if p.nivel == nivel}
+    por_n = {c.n: c for c in biblioteca() if c.nivel == nivel}
+    sacadas = js["mezclas"]["sorteos"][f"{mezcla}-{nivel}"]
+    assert len(sacadas) == MUESTRAS
+
+    faltan = set(NUMEROS)
+    for identidad, ids in sacadas:
+        if isinstance(identidad, str):
+            assert identidad in del_grupo and [a.id for a in validas[identidad].acciones] == ids
+        else:
+            assert mezcla != "solo" and [a.id for a in por_n[identidad].acciones] == ids
+            if faltan:
+                assert numeros(por_n[identidad]) & faltan, "la biblioteca no cubrió un golpe que faltaba"
+        faltan -= {a.numero for a in acciones_por_ids(ids)} - {None}  # las propias también cuentan
+    for grupo, tam in ((del_grupo, len(del_grupo)), (set(por_n), len(por_n))):
+        seguidas = [i for i, _ in sacadas if i in grupo]
+        k = ventana(tam)
+        for i, identidad in enumerate(seguidas):
+            assert identidad not in seguidas[max(0, i - k):i], f"repetida en {i}"
+    assert {i for i, _ in sacadas if isinstance(i, str)} == del_grupo
+
+    p_js = sum(isinstance(i, str) for i, _ in sacadas) / MUESTRAS
+    s = SorteoMezcla(nivel, rng=random.Random(nivel), propias=propias, mezcla=mezcla)
+    p_py = sum(s.siguiente().origen == "propia" for _ in range(MUESTRAS)) / MUESTRAS
+    esperada = 1.0 if mezcla == "solo" else PROBABILIDAD_PROPIAS[mezcla]
+    assert abs(p_js - esperada) <= TOLERANCIA_PROPORCION and abs(p_py - esperada) <= TOLERANCIA_PROPORCION
+
+
+def test_mezcla_js_en_zurdo_es_el_espejo(js):
+    orto, zurdo = js["mezclas"]["zurdo"]["ortodoxo"], js["mezclas"]["zurdo"]["zurdo"]
+    for (i_o, o), (i_z, z) in zip(orto, zurdo, strict=True):
+        assert i_o == i_z and z == [a.id for a in espejo_combo(acciones_por_ids(o))]
 
 
 # ---------- "Practicar más" ----------

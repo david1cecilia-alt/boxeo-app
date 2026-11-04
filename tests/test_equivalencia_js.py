@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from motor.acciones import Accion, acciones_por_ids, biblioteca, catalogo, espejo, espejo_combo, texto_hablado
-from motor.reglas import nivel_de
+from motor.reglas import avisos_creador, nivel_de
 from motor.sorteo import (NIVEL_COLETILLA, NUMEROS, PROBABILIDAD_PROPIAS, SIN_REPETIR, SorteoBiblioteca,
                           SorteoMezcla, cargar_perfil, es_corta, mezcla_efectiva, movimiento, movimientos, numeros,
                           peso_practicar, propias_validas, ventana)
@@ -183,6 +183,14 @@ def test_nivel_js_identico_al_de_python(js):
     assert [len(c["ids"]) for c in js["niveles"]] == list(range(13))
     for caso in js["niveles"]:
         assert caso["nivel"] == nivel_de(acciones_por_ids(caso["ids"])), caso["ids"]
+
+
+# ---------- Avisos del creador ----------
+
+def test_avisos_del_creador_identicos_en_js_y_python(js):
+    assert len(js["avisos"]) == 3 * (len(biblioteca()) + 12) * 2
+    for caso in js["avisos"]:
+        assert caso["resultado"] == avisos_creador(caso["ids"], caso["propias"], caso["editando"]), caso["ids"]
 
 
 # ---------- Guiones ----------

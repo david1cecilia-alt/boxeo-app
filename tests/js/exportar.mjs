@@ -7,7 +7,7 @@ import { writeFileSync } from "node:fs";
 import { accionesPorIds, biblioteca, catalogo, espejo } from "../../static/motor/acciones.js";
 import { crearAzar } from "../../static/motor/azar.js";
 import { datos } from "../../static/motor/datos.js";
-import { nivelDe } from "../../static/motor/reglas.js";
+import { avisosCreador, nivelDe } from "../../static/motor/reglas.js";
 import { VELOCIDAD_SENAL, segundosHabla } from "../../static/motor/ritmo.js";
 import { SorteoBiblioteca, SorteoMezcla, cargarPerfil, identidad, movimientos, pesoPracticar } from "../../static/motor/sorteo.js";
 import { construirGuion } from "../../static/motor/temporizador.js";
@@ -114,6 +114,15 @@ const guionesMezcla = [];
   }
 });
 
+// Avisos del creador: cada combinación de la biblioteca y unas cuantas propias, con 0, 3 y 20 guardadas.
+const GUARDADAS = [[], PROPIAS.slice(0, 3), Array.from({ length: 20 }, (_, i) => ({ id: `p-${i}`, ids: PROPIAS[i % 6].ids }))];
+const CREADAS = [
+  ...biblioteca().map((c) => c.acciones.map((a) => a.id)), ...PROPIAS.map((p) => p.ids),
+  [], ["jab"], Array(10).fill("jab"), Array(11).fill("jab"), ["esquiva_der", "bloqueo", "pivote"], ["jab", "patada"],
+];
+const avisos = GUARDADAS.flatMap((propias) => CREADAS.flatMap((ids) => [null, "p-1"].map((editando) =>
+  ({ ids, propias, editando, resultado: avisosCreador(ids, propias, editando) }))));
+
 const espejos = Object.fromEntries([...catalogo().values()].map((a) => [a.id, accionPlana(espejo(a))]));
 
 // Nivel de combinaciones de 0 a 12 acciones, alternando golpes, defensas y salidas.
@@ -129,4 +138,4 @@ const senales = {
   segundos: Object.fromEntries(datos().presets.reacciones.map((r) => [r.texto, segundosHabla(r.texto, VELOCIDAD_SENAL)])),
 };
 
-writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, sorteos, senales, practicar, duplicadas, mezclas, guiones_mezcla: guionesMezcla, movimientos: movimientos() }));
+writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, sorteos, senales, practicar, duplicadas, mezclas, guiones_mezcla: guionesMezcla, avisos, movimientos: movimientos() }));

@@ -374,4 +374,109 @@ Decidido por David:
 - **Aprende:** los títulos de las 6 fichas de golpes llevan los dos números («1/7 Jab», «2/8 Recto»…). Las tarjetas
   flotantes van en otro bloque.
 
-Diagnóstico y plan: después de C1 (sección 5.1 y siguientes).
+Diagnóstico y plan: 5.1 y siguientes (hecho tras C1; sin tocar código de N).
+
+### 5.1 Diagnóstico
+
+**Dónde vive hoy la numeración 1-6.** Solo en `data/acciones.json`: el campo `numero` de las seis acciones a la cara
+(escrito en ortodoxo, por mano adelantada/trasera). Todo lo demás lo lee de ahí: `motor.acciones.numero(accion, zurdo)`
+(el zurdo, del espejo) y su port `static/motor/acciones.js`. **«7-12 sin activar»** quiere decir: `palabras_numero` ya
+llega a «doce», pero las seis `*_cuerpo` no llevan `numero`; la `_nota` dice «Los golpes al cuerpo (7-12) aún no llevan
+número» y `tests/test_numeracion.py` lo fija («del 7 al 12 (cuerpo) aún no»). Los textos (`hablado`, `corto`; sin
+`orden`, son golpes) están en `textos.<familia>.al_cuerpo` y **no cambian**. La regla impar = adelantada se cumple
+también en 7-12 (7, 9 y 11 con la izquierda en ortodoxo).
+
+**Qué cambia en cada sitio al poner `numero` 7-12:**
+
+| Sitio | Qué pasa solo con el dato | Qué hay que hacer |
+|---|---|---|
+| Voz (`palabra_hablada`) | Números: «ocho»; Ambos: «ocho recto al cuerpo»; Nombres: igual que hoy | Nada en código. Tests de los tres modos y zurdo. **REVISAR CON ENTRENADOR:** «diez» (crochet de derecha al cuerpo) se parece al aviso «diez segundos». |
+| Pantalla de la sesión (`pasos.pasosCombo`) | El círculo rojo lleva 7-12 | Comprobar a 390 px que «10», «11» y «12» caben en el círculo de 28 px (13 px de letra): test de navegador como `test_sesion_navegador.py`. |
+| Historial y valoración (`combinacionesParaVer`) | El texto se rehace desde los ids: **las sesiones antiguas salen con el número nuevo** sin migrar | Nada; test con una sesión guardada en Números («uno, recto al cuerpo» → «1, 8»). |
+| Voz deducida (`vozDeSesion`) | **Rompe:** vota con las combinaciones que llevan golpe con número; una antigua de solo cuerpo dicha en Números («jab al cuerpo, bloqueo») votaría «nombres» y la sesión quedaría en «ambos» | Votar solo con golpes 1-6 (los que tenían número cuando no se guardaba la voz). Test. |
+| Espejo zurdo (`espejo`) | Ya sirve: compara sin `numero`, así que `gancho_izq_cuerpo` ↔ `gancho_der_cuerpo` (9 ↔ 10) y el jab al cuerpo del zurdo sigue siendo el 7 | Tests como los de 1-6, parametrizados con 7-12. |
+| «Practicar más» (`movimiento`) | **Rompe:** `if accion.numero: return str(numero)` convertiría los golpes al cuerpo en «7»…«12»; desaparecería «cuerpo», que el almacén ya guarda y la hoja pinta aparte | Mirar antes el objetivo: golpe al cuerpo → «cuerpo», como hoy. Sin migración. El panel puede decir «golpes al cuerpo (7-12)». |
+| Cobertura (`numeros`, `NUMEROS`) | `numeros()` devolverá también 7-12; el filtro del paso 1 sigue con 1-6 | Paso 2 (5.4). |
+| `notacion()` (`combinaciones.json`, propuesta) | En la notación de las 150, los golpes al cuerpo pasan de su id («jab_cuerpo») a su número («7»); `n`, ids y nombres no cambian | Aceptarlo (la notación es derivada) y regenerar; si no, `notacion` escribe solo 1-6. **Decisión de David.** |
+| `herramientas/biblioteca.py` | **Rompe el balance:** `porcentajes_cara` cuenta `a.numero` y metería los 7-12 en el % de golpes a la cara | Contar solo `objetivo == "cabeza"`. Bloque nuevo (5.5) al final, sin tocar `FAMILIAS` ni `SUELTAS`. |
+| Fichas de Aprende | Títulos «Jab», «Recto»… (`data/tecnica.json`; las 6 fichas tienen el id del golpe a la cara) | `aprende.js` pone los dos números leídos de `acciones.json` (ficha `jab` → `jab` y `jab_cuerpo`): «1/7 Jab», «3/9 Crochet de izquierda». Sin cifras en `tecnica.json`. En ortodoxo, como la nota del zurdo. |
+| Límite de 18 caracteres (`test_espejo`) | Los nombres cortos no cambian («croch. izq. abajo» = 17) | Nada: el número va en el círculo, no en el nombre. `test_ningun_nombre_lleva_numeros` sigue valiendo. |
+| `biblioteca-propuesta.md` y `revisar.json` | Se regeneran | Las 18 nuevas, cada una con REVISAR CON ENTRENADOR; `herramientas/extraer_revisar.py`. |
+| Equivalencia | `NUMEROS` y «golpe n» de 1 a 6 | Proporciones de 7-12, cobertura en dos pasos, `movimientos()` igual. |
+| Tests que cuentan 50 | `test_biblioteca.py:53` (`{1: 50, 2: 50, 3: 50}`), `POR_NIVEL = 50` y `REPARTO` | 56 por nivel y `REPARTO` nuevo (5.3). Las huellas de `tests/fijos/igual_que_antes.json` se regeneran a propósito en el commit que cambie el sorteo. |
+
+### 5.2 Cuántas veces sale hoy cada golpe al cuerpo (combinaciones que lo llevan)
+
+| Nivel | 7 jab | 8 recto | 9 croch. izq. | 10 croch. dcha. | 11 gancho izq. | 12 gancho dcha. | Faltan para 3 |
+|---|---|---|---|---|---|---|---|
+| Básico | 3 | 2 | 2 | 1 | 2 | 2 | 6 (8, 9, 10×2, 11, 12) |
+| Medio | 4 | 4 | 4 | 1 | 1 | 2 | 5 (10×2, 11×2, 12) |
+| Avanzado | 7 | 3 | 7 | 6 | 5 | 5 | 0 |
+
+**6 por nivel bastan.** Probado en memoria con las reglas de `biblioteca.py` (sin tocar el repo): las 18 de 5.5 pasan
+**todas** (nombres R1-R5, sin repetidas, balance a la cara en total y por nivel, ≥50 % con jab, máximo 5 dobles ganchos,
+que ya está al tope en los tres niveles: ninguna nueva lleva 5-6 o 6-5 seguidos). Resultado:
+
+| Nivel | 7-12 | Cara 1 · 2 · 3 · 4 · 5 · 6 (%) | Empiezan con jab |
+|---|---|---|---|
+| Básico | 3 · 3 · 3 · 3 · 3 · 3 | 27,3 · 15,5 · 15,5 · 14,5 · 13,6 · 13,6 | 66 % |
+| Medio | 4 · 5 · 4 · 3 · 3 · 3 | 25,4 · 14,7 · 15,8 · 14,7 · 14,7 · 14,7 | 78 % |
+| Avanzado | 8 · 4 · 9 · 8 · 6 · 5 | 24,6 · 15,2 · 15,2 · 16,3 · 14,4 · 14,4 | 81 % |
+| Total | — | 25,4 · 15,1 · 15,4 · 15,4 · 14,3 · 14,3 | 75 % |
+
+Margen justo en básico: el 5 y el 6 quedan en 13,6 % (mínimo 13). Las nuevas de básico no deben llevar el 2 a la cara.
+
+### 5.3 Reparto de defensas con 56
+
+Las mismas proporciones que con 50: básico {0: 22, 1: 17, 2: 17}; medio {1: 22, 2: 23, 3: 11}; avanzado {1: 6, 2: 17,
+3: 22, 4-5: 11}. Las nuevas: básico 2/2/2, medio 2/3/1, avanzado 1/2/2/1.
+
+### 5.4 Cobertura en dos pasos
+
+- **Paso 1** (como hoy): mientras falte algún 1-6, la biblioteca solo saca las que añaden alguno.
+- **Paso 2:** con los 1-6 ya dichos, las que añaden algún 7-12 que falte **pesan ×2**, sin filtrar (por eso salen menos
+  que el 1-6, «a lo largo de la sesión»). Un solo conjunto `faltan` de 1-12; `guardar`/`restaurar` no cambian.
+- **Ventana:** va antes (las candidatas son las libres); el ×2 solo reordena entre ellas.
+- **«Practicar más»:** se multiplica con el ×2; el tope de ×8 sigue siendo solo para «Practicar más».
+- **Propias:** sus golpes 1-12 cuentan como dichos (ya lo hace `SorteoMezcla` con `numero()`). En «Solo las mías», sin
+  cobertura.
+- Simulación (biblioteca candidata de 56, «Amateur 3×3 min», 2.000 sesiones, las combinaciones por sesión del guion de
+  hoy), % de sesiones con los seis al cuerpo:
+
+| Nivel (dichas por sesión) | Sin paso 2 | ×2 | ×3 | Dichas con golpe al cuerpo (×2) |
+|---|---|---|---|---|
+| Básico (71) | 92 % | 100 % | 100 % | 34 % |
+| Medio (52) | 85 % | 99 % | 100 % | 40 % |
+| Avanzado (35) | 90 % | 99 % | 100 % | 61 % |
+
+  ×2 basta y apenas sube los golpes al cuerpo (1-3 puntos). **REVISAR CON ENTRENADOR:** el peso ×2.
+
+### 5.5 Las 18 nuevas (candidatas; n 151-168, al final de la biblioteca)
+
+Básico: `2c-4` recto al cuerpo y crochet · `1-4c-5` jab, crochet al cuerpo y gancho · `ED-4c-6` esquiva, crochet al
+cuerpo y gancho · `1-3c-B` jab, crochet al cuerpo y bloqueo · `EI-5c-4-B` esquiva, gancho al cuerpo, crochet y bloqueo ·
+`PA-6c-3-ED` paso atrás, gancho al cuerpo, crochet y esquiva.
+
+Medio: `1-4c-5-AD-3` · `1-5c-3-B-6` · `ED-4c-5-EI-1` · `1-6c-3-F-5-PA` · `BA-5c-3-AI-5` · `P-1-2c-AD-6-B`.
+
+Avanzado: `1-2c-3-4-AD-5-4` · `1-3c-4-ED-6-3-B` · `ED-5c-4-1-4c-5-AI-6` · `1-1c-6-ED-4-F-5-PA` ·
+`B-4c-6-AD-1-5-EI-4-LD` · `P-1-3c-ED-6-AI-5-BA-4`.
+
+Todas REVISAR CON ENTRENADOR (técnica y nombres). `preparar()` numera familias y luego sueltas ordenadas por nivel: las
+nuevas van en un bloque propio numerado detrás, para que ningún `n` de las 150 se mueva (test).
+
+### 5.6 Commits previstos
+
+1. `biblioteca.py`: el balance cuenta solo golpes a la cara; bloque al final con las 18; `POR_NIVEL = 56` y `REPARTO`
+   nuevo; regenera `combinaciones.json`, la propuesta y `revisar.json`. Tests: los `n` 1-150 iguales (ids, nivel y
+   nombre), 56 por nivel, cada golpe al cuerpo ≥3 por nivel.
+2. `acciones.json`: `numero` 7-12 y `_nota`; `movimiento()` deja «cuerpo» (Python y JS); `vozDeSesion` vota con 1-6.
+   Tests: numeración y zurdo 7-12, tres modos de voz («ocho»), `movimientos()` igual, Historial antiguo con el número
+   nuevo, voz deducida de una sesión vieja de solo cuerpo.
+3. Cobertura en dos pasos (Python y JS) con equivalencia; regenerar a propósito las huellas de
+   `tests/fijos/igual_que_antes.json`. Tests: paso 1 igual que hoy, ≥95 % de sesiones con los seis al cuerpo en los tres
+   niveles, mezcla y «Solo las mías».
+4. Pantalla y Aprende: «1/7 Jab»… en las fichas; test de navegador de los números de dos cifras en el círculo a 390 px.
+5. Capturas (sesión con un 10, ficha «3/9») y `README.md`.
+
+**Decisiones pendientes de David:** notación con 7-12 en las 150 (5.1), «diez» frente a «diez segundos», el ×2.

@@ -41,7 +41,7 @@ def test_no_repite_ninguna_de_las_ultimas_5(nivel):
 def test_los_golpes_del_1_al_6_salen_enseguida(nivel, semilla):
     # Cada sorteo que falta cobertura añade al menos un número: 6 bastan siempre.
     combos = _sortear(nivel, n=6, semilla=semilla)
-    assert {a.numero for c in combos for a in c.acciones if a.numero} == NUMEROS
+    assert {a.numero for c in combos for a in c.acciones if a.numero} & NUMEROS == NUMEROS
 
 
 def _config(preset, **extra):
@@ -58,7 +58,7 @@ def test_en_cada_sesion_salen_todos_los_golpes_del_1_al_6(preset, nivel, zurdo):
     for semilla in range(20):
         config = _config(preset, nivel=nivel, zurdo=zurdo)
         combos = [e for e in construir_guion(config, random.Random(semilla)) if e.tipo == "combo"]
-        dichos = {numero(a, zurdo) for e in combos[:6] for a in acciones_por_ids(e.ids)} - {None}
+        dichos = {numero(a, zurdo) for e in combos[:6] for a in acciones_por_ids(e.ids)} & NUMEROS
         if preset == "amateur" or len(combos) >= 6:
             assert dichos == NUMEROS, f"semilla {semilla}: faltan {NUMEROS - dichos}"
 
@@ -70,7 +70,7 @@ def test_en_la_prueba_corta_de_basico_casi_siempre_salen_todos(nivel=1):
     for semilla in range(100):
         combos = [e for e in construir_guion(_config("prueba", nivel=nivel), random.Random(semilla))
                   if e.tipo == "combo"]
-        completas += {a.numero for e in combos for a in acciones_por_ids(e.ids) if a.numero} == NUMEROS
+        completas += {a.numero for e in combos for a in acciones_por_ids(e.ids) if a.numero} & NUMEROS == NUMEROS
     assert completas >= 90, f"solo {completas} de 100"
 
 
@@ -98,6 +98,16 @@ def _practicar(**cuanto):
 def test_los_movimientos_de_practicar_mas():
     assert movimientos() == ["1", "2", "3", "4", "5", "6", "cuerpo", "esquiva", "rodar", "paso_atras",
                              "bloqueo", "parada", "ballesteo", "flexion", "paso_lateral", "pivote", "salir"]
+
+
+def test_los_golpes_al_cuerpo_son_cuerpo_en_practicar_mas_aunque_lleven_numero():
+    # Del 7 al 12 llevan número, pero «Practicar más» los sigue juntando en «cuerpo» (lo que guarda el almacén).
+    for id_ in ("jab_cuerpo", "directo_cuerpo", "gancho_izq_cuerpo", "gancho_der_cuerpo", "uppercut_izq_cuerpo",
+                "uppercut_der_cuerpo"):
+        a = acciones_por_ids([id_])[0]
+        assert a.numero in range(7, 13) and movimiento(a) == "cuerpo", id_
+    assert _peso(["directo_cuerpo"], cuerpo="bastante") == 4
+    assert _peso(["directo_cuerpo"], **{"8": "bastante"}) == 1  # «8» no es un movimiento
 
 
 def _peso(ids, **cuanto):

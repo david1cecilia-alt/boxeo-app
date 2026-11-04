@@ -4,14 +4,21 @@ import pytest
 from motor.acciones import (MODOS_VOZ, acciones_por_ids, catalogo, espejo, espejo_combo, numero,
                             palabra_hablada, texto_hablado)
 
-ORTODOXO = {"jab": 1, "directo": 2, "gancho_izq": 3, "gancho_der": 4, "uppercut_izq": 5, "uppercut_der": 6}
+CARA = {"jab": 1, "directo": 2, "gancho_izq": 3, "gancho_der": 4, "uppercut_izq": 5, "uppercut_der": 6}
+CUERPO = {"jab_cuerpo": 7, "directo_cuerpo": 8, "gancho_izq_cuerpo": 9, "gancho_der_cuerpo": 10,
+          "uppercut_izq_cuerpo": 11, "uppercut_der_cuerpo": 12}
+ORTODOXO = {**CARA, **CUERPO}
 
 
-def test_numeros_del_1_al_6_en_ortodoxo():
+def test_numeros_del_1_al_12_en_ortodoxo():
     cat = catalogo()
     assert {i: numero(cat[i]) for i in ORTODOXO} == ORTODOXO
     con_numero = {a.id for a in cat.values() if a.numero is not None}
-    assert con_numero == set(ORTODOXO), "del 7 al 12 (cuerpo) aún no"
+    assert con_numero == set(ORTODOXO), "solo los golpes llevan número"
+    # Del 7 al 12, los mismos golpes que del 1 al 6, al cuerpo.
+    for id_, n in CUERPO.items():
+        a, cara = cat[id_], cat[id_.removesuffix("_cuerpo")]
+        assert (a.familia, a.mano, a.objetivo, cara.numero + 6) == (cara.familia, cara.mano, "cuerpo", n), id_
 
 
 def test_en_ortodoxo_la_adelantada_es_la_izquierda():
@@ -26,6 +33,14 @@ def test_el_zurdo_numera_por_mano_adelantada_y_trasera(id_, n):
     assert numero(zurda, zurdo=True) == n
     # Su mano adelantada es la derecha: los impares van con la derecha.
     assert zurda.mano == ("der" if n % 2 else "izq")
+
+
+def test_al_cuerpo_el_crochet_de_derecha_es_el_10_en_ortodoxo_y_el_9_en_zurdo():
+    cat = catalogo()
+    assert numero(cat["gancho_der_cuerpo"]) == 10
+    assert numero(cat["gancho_der_cuerpo"], zurdo=True) == 9
+    assert numero(cat["uppercut_izq_cuerpo"], zurdo=True) == 12
+    assert numero(cat["jab_cuerpo"], zurdo=True) == 7  # el jab y el recto no cambian de número
 
 
 def test_el_crochet_de_derecha_es_el_4_en_ortodoxo_y_el_3_en_zurdo():
@@ -88,3 +103,19 @@ def test_ballesteo_y_flexion_son_defensas_sin_lado():
         assert (a.tipo, a.lado, a.mano) == ("defensa", "ninguno", "ninguna")
         assert espejo(a) == a
         assert texto_hablado(acciones_por_ids([id_, "directo"]), "ambos") == f"{dicho}, dos recto"
+
+
+def test_al_cuerpo_en_numeros_se_dice_el_numero():
+    combo = acciones_por_ids(["jab", "directo_cuerpo", "gancho_der_cuerpo", "esquiva_der", "uppercut_izq_cuerpo"])
+    assert texto_hablado(combo, "numeros") == "uno, ocho, diez, esquiva derecha, once"
+    assert texto_hablado(combo, "ambos") == \
+        "uno jab, ocho recto al cuerpo, diez crochet de derecha al cuerpo, esquiva derecha, once gancho de izquierda al cuerpo"
+    assert texto_hablado(combo, "nombres") == \
+        "jab, recto al cuerpo, crochet de derecha al cuerpo, esquiva derecha, gancho de izquierda al cuerpo"
+
+
+def test_al_cuerpo_en_zurdo_se_dice_por_mano_adelantada_y_trasera():
+    zurda = espejo_combo(acciones_por_ids(["jab_cuerpo", "gancho_izq_cuerpo", "uppercut_der_cuerpo"]))
+    assert texto_hablado(zurda, "numeros", zurdo=True) == "siete, nueve, doce"
+    assert texto_hablado(zurda, "ambos", zurdo=True) == \
+        "siete jab al cuerpo, nueve crochet de derecha al cuerpo, doce gancho de izquierda al cuerpo"

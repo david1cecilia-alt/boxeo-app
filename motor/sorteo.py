@@ -88,10 +88,11 @@ class Combinacion:
 
 def movimiento(accion: Accion) -> str:
     """El movimiento de "Practicar más" de una acción ortodoxa: "1"-"6" los golpes a la cara,
-    "cuerpo" cualquier golpe al cuerpo y la familia las defensas y salidas ("rodar", "pivote")."""
-    if accion.numero:
-        return str(accion.numero)
-    return "cuerpo" if accion.tipo == "golpe" else accion.familia
+    "cuerpo" cualquier golpe al cuerpo (aunque lleven número, del 7 al 12) y la familia las defensas
+    y salidas ("rodar", "pivote")."""
+    if accion.tipo == "golpe":
+        return "cuerpo" if accion.objetivo == "cuerpo" else str(accion.numero)
+    return accion.familia
 
 
 def movimientos() -> list[str]:

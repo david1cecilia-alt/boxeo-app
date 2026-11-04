@@ -6,15 +6,32 @@ import { cargarDatosDeDisco } from "./datos.mjs";
 
 cargarDatosDeDisco();
 
-const ORTODOXO = { jab: 1, directo: 2, gancho_izq: 3, gancho_der: 4, uppercut_izq: 5, uppercut_der: 6 };
+const ORTODOXO = {
+  jab: 1, directo: 2, gancho_izq: 3, gancho_der: 4, uppercut_izq: 5, uppercut_der: 6,
+  jab_cuerpo: 7, directo_cuerpo: 8, gancho_izq_cuerpo: 9, gancho_der_cuerpo: 10, uppercut_izq_cuerpo: 11, uppercut_der_cuerpo: 12,
+};
 
-test("numeración del 1 al 6 en ortodoxo y la misma por mano adelantada/trasera en zurdo", () => {
+test("numeración del 1 al 12 en ortodoxo y la misma por mano adelantada/trasera en zurdo", () => {
   for (const [id, n] of Object.entries(ORTODOXO)) {
     const a = catalogo().get(id);
     assert.equal(numero(a), n, id);
     assert.equal(numero(espejo(a), true), n, `${id} zurdo`);
   }
   assert.equal(numero(catalogo().get("gancho_der"), true), 3);
+  assert.equal(numero(catalogo().get("gancho_der_cuerpo"), true), 9);
+  assert.deepEqual([...catalogo().values()].filter((a) => a.numero != null).map((a) => a.id).sort(),
+    Object.keys(ORTODOXO).sort());
+});
+
+test("al cuerpo: «ocho» en Números, número y nombre en Ambos, y en zurdo por mano adelantada/trasera", () => {
+  const combo = accionesPorIds(["jab", "directo_cuerpo", "gancho_der_cuerpo", "esquiva_der", "uppercut_izq_cuerpo"]);
+  assert.equal(textoHablado(combo, "numeros"), "uno, ocho, diez, esquiva derecha, once");
+  assert.equal(textoHablado(combo, "ambos"),
+    "uno jab, ocho recto al cuerpo, diez crochet de derecha al cuerpo, esquiva derecha, once gancho de izquierda al cuerpo");
+  assert.equal(textoHablado(combo, "nombres"),
+    "jab, recto al cuerpo, crochet de derecha al cuerpo, esquiva derecha, gancho de izquierda al cuerpo");
+  const zurda = espejoCombo(accionesPorIds(["jab_cuerpo", "gancho_izq_cuerpo", "uppercut_der_cuerpo"]));
+  assert.equal(textoHablado(zurda, "numeros", true), "siete, nueve, doce");
 });
 
 test("Números, Nombres y Ambos (ortodoxo)", () => {

@@ -43,7 +43,8 @@ test("en un guion zurdo, pantalla y voz dicen el mismo golpe con su lado", () =>
           assert.ok(dichos[i].includes(lado), `${p.texto} / ${dichos[i]}`);
         }
         if (voz !== "nombres" && p.numero) {
-          const palabra = ["uno", "dos", "tres", "cuatro", "cinco", "seis"][p.numero - 1];
+          const palabra = ["uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez", "once",
+            "doce"][p.numero - 1];
           assert.ok(dichos[i].startsWith(palabra), `${p.numero} / ${dichos[i]}`);
         }
       });
@@ -117,4 +118,32 @@ test("ids que ya no existen o sin ids: el texto guardado tal cual", () => {
     { asalto: 1, texto: "sin ids", ids: [] },
   ] };
   assert.deepEqual(verTextos(s), ["uno jab, golpe raro", "sin ids"]);
+});
+
+test("al cuerpo, en pantalla con su número del 7 al 12 y el nombre corto de siempre", () => {
+  assert.deepEqual(pantalla(["jab_cuerpo", "directo_cuerpo", "gancho_der_cuerpo"], { voz: "numeros", zurdo: false }),
+    ["7 jab abajo", "8 recto abajo", "10 croch. dcha. abajo"]);
+  assert.deepEqual(pantalla(["gancho_der_cuerpo", "uppercut_izq_cuerpo"], { voz: "ambos", zurdo: true }),
+    ["9 croch. dcha. abajo", "12 gancho izq. abajo"]);
+  assert.deepEqual(pantalla(["directo_cuerpo"], { voz: "nombres", zurdo: false }), ["recto abajo"]);
+});
+
+test("sesión vieja con golpes al cuerpo: se ve con el número nuevo, sin migrar", () => {
+  const s = { zurdo: false, combinaciones: [
+    { asalto: 1, texto: "uno, recto al cuerpo", ids: ["jab", "directo_cuerpo"] },
+    { asalto: 1, texto: "jab al cuerpo, bloqueo", ids: ["jab_cuerpo", "bloqueo"] },
+  ] };
+  assert.equal(vozDeSesion(s, s.combinaciones), "numeros");
+  assert.deepEqual(verTextos(s), ["1, 8", "7, bloqueo"]);
+});
+
+test("voz deducida: solo votan los golpes del 1 al 6 (los de solo cuerpo se decían con su nombre)", () => {
+  // Antes de los números 7-12, en Números «jab al cuerpo, bloqueo» se dictaba con el nombre: no es «nombres».
+  const s = { zurdo: false, combinaciones: [
+    { asalto: 1, texto: "uno, dos", ids: ["jab", "directo"] },
+    { asalto: 1, texto: "jab al cuerpo, bloqueo", ids: ["jab_cuerpo", "bloqueo"] },
+  ] };
+  assert.equal(vozDeSesion(s, s.combinaciones), "numeros");
+  const soloCuerpo = { zurdo: false, combinaciones: [{ asalto: 1, texto: "jab al cuerpo, bloqueo", ids: ["jab_cuerpo", "bloqueo"] }] };
+  assert.equal(vozDeSesion(soloCuerpo, soloCuerpo.combinaciones), "ambos");
 });

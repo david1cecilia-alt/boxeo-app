@@ -45,7 +45,7 @@ def test_hay_combinaciones_en_los_tres_niveles():
 def test_cada_nivel_cubre_del_1_al_6_y_da_para_no_repetir(nivel):
     # El sorteo de cada nivel solo usa las suyas.
     disponibles = [c for c in biblioteca() if c.nivel == nivel]
-    numeros = {a.numero for c in disponibles for a in c.acciones if a.numero}
+    numeros = {a.numero for c in disponibles for a in c.acciones if a.objetivo == "cabeza" and a.numero}
     assert numeros == NUMEROS
     assert len(disponibles) > VENTANA, f"nivel {nivel}: solo {len(disponibles)}"
 

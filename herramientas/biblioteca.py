@@ -550,7 +550,9 @@ def usos_por_id(combos):
 
 
 def porcentajes_cara(combos, nivel=None):
-    numeros = Counter(a.numero for c in combos if nivel in (None, c["nivel"]) for a in c["acciones"] if a.numero)
+    """% de cada golpe 1-6 sobre los golpes a la cara (los 7-12, al cuerpo, no cuentan)."""
+    numeros = Counter(a.numero for c in combos if nivel in (None, c["nivel"]) for a in c["acciones"]
+                      if a.objetivo == "cabeza" and a.numero)
     total = sum(numeros.values())
     return {n: 100 * numeros[n] / total for n in range(1, 7)}
 
@@ -613,7 +615,8 @@ def documento(combos):
     w("")
     w("- Todo en guardia **ortodoxa** (el zurdo lo hace en espejo). Los golpes van por número: 1 jab, 2 recto, 3 crochet")
     w("  adelantado, 4 crochet trasero, 5 gancho adelantado, 6 gancho trasero; «3 al cuerpo» es el crochet adelantado al")
-    w("  cuerpo. Las defensas y salidas, como las dice la app («rueda derecha»).")
+    w("  cuerpo, que la app numera 9 (al cuerpo, del 7 al 12: «1 al cuerpo» es el 7). Las defensas y salidas, como las")
+    w("  dice la app («rueda derecha»).")
     w("- **Nivel** = número total de acciones (golpes + defensas + salidas), calculado con `motor.reglas.nivel_de`:")
     w("  básico 2-4, medio 5-6, avanzado 7-10.")
     w("- **Defensa** = esquiva, rueda, ballesteo, flexión, bloqueo, parada y paso atrás. Pivote, paso lateral y")
@@ -729,7 +732,7 @@ def resumen_vocabulario(w, combos):
     w("")
     w("| Golpe | Rango | Veces | Total | Básico | Medio | Avanzado |")
     w("|---|---|---|---|---|---|---|")
-    numeros = Counter(a.numero for c in combos for a in c["acciones"] if a.numero)
+    numeros = Counter(a.numero for c in combos for a in c["acciones"] if a.objetivo == "cabeza" and a.numero)
     por_nivel = {n: porcentajes_cara(combos, n) for n in (None, 1, 2, 3)}
     nombres = {1: "1 jab", 2: "2 recto", 3: "3 crochet adelantado", 4: "4 crochet trasero",
                5: "5 gancho adelantado", 6: "6 gancho trasero"}

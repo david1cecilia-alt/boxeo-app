@@ -22,8 +22,8 @@ function movimientosPracticar(zurdo) {
   for (const a of catalogo().values()) if (!primera.has(movimiento(a))) primera.set(movimiento(a), a);
   return movimientos().map((m) => {
     const a = primera.get(m);
-    const nombre = a.numero ? `${a.numero} ${nombreHablado(zurdo ? espejo(a) : a)}`
-      : m === "cuerpo" ? "golpes al cuerpo" : a.orden || a.plantilla.replace(" {lado}", "");
+    const nombre = m === "cuerpo" ? "golpes al cuerpo"
+      : a.numero ? `${a.numero} ${nombreHablado(zurdo ? espejo(a) : a)}` : a.orden || a.plantilla.replace(" {lado}", "");
     return { movimiento: m, nombre, grupo: a.tipo };
   });
 }

@@ -1,5 +1,5 @@
 {
-  "_nota": "Todo en guardia ORTODOXA (izquierda adelante). El zurdo se calcula con motor.acciones.espejo(). Los textos de cada familia están en «textos», una sola vez: hablado es una plantilla en la que {mano} y {lado} se rellenan con 'izquierda'/'derecha'; corto es la plantilla para la pantalla de la sesión (máx. 18 caracteres), que se rellena con 'izq.'/'dcha.'; al_cuerpo son los textos de los golpes al cuerpo de esa familia; orden = lo que se dice de una defensa en la sesión (si tiene lado, se dice detrás: «esquiva derecha»). Los ids no cambian aunque cambie el nombre (gancho_* es el crochet; uppercut_* es el gancho). numero = numeración de los golpes por mano ADELANTADA/TRASERA (1 jab, 2 recto, 3 crochet adelantado, 4 crochet trasero, 5 gancho adelantado, 6 gancho trasero), escrita en ortodoxo: para el zurdo se lee del espejo (motor.acciones.numero). Los golpes al cuerpo (7-12) aún no llevan número. palabras_numero = cómo se dicen los números en el modo «Números». El peso tras cada golpe depende de la situación: no se guarda ninguna regla fija.",
+  "_nota": "Todo en guardia ORTODOXA (izquierda adelante). El zurdo se calcula con motor.acciones.espejo(). Los textos de cada familia están en «textos», una sola vez: hablado es una plantilla en la que {mano} y {lado} se rellenan con 'izquierda'/'derecha'; corto es la plantilla para la pantalla de la sesión (máx. 18 caracteres), que se rellena con 'izq.'/'dcha.'; al_cuerpo son los textos de los golpes al cuerpo de esa familia; orden = lo que se dice de una defensa en la sesión (si tiene lado, se dice detrás: «esquiva derecha»). Los ids no cambian aunque cambie el nombre (gancho_* es el crochet; uppercut_* es el gancho). numero = numeración de los golpes por mano ADELANTADA/TRASERA (1 jab, 2 recto, 3 crochet adelantado, 4 crochet trasero, 5 gancho adelantado, 6 gancho trasero) y, al cuerpo, del 7 al 12 en el mismo orden (7 jab, 8 recto, 9 y 10 crochet, 11 y 12 gancho), escrita en ortodoxo: para el zurdo se lee del espejo (motor.acciones.numero). Los nombres no llevan cifras: el número va aparte. palabras_numero = cómo se dicen los números en el modo «Números». El peso tras cada golpe depende de la situación: no se guarda ninguna regla fija.",
   "textos": {
     "jab":          {"hablado": "jab", "corto": "jab",
                      "al_cuerpo": {"hablado": "jab al cuerpo", "corto": "jab abajo"}},
@@ -29,12 +29,12 @@
     {"id": "uppercut_izq",      "familia": "uppercut", "tipo": "golpe",  "mano": "izq", "objetivo": "cabeza", "numero": 5},
     {"id": "uppercut_der",      "familia": "uppercut", "tipo": "golpe",  "mano": "der", "objetivo": "cabeza", "numero": 6},
 
-    {"id": "jab_cuerpo",          "familia": "jab",      "tipo": "golpe", "mano": "izq", "objetivo": "cuerpo"},
-    {"id": "directo_cuerpo",      "familia": "directo",  "tipo": "golpe", "mano": "der", "objetivo": "cuerpo"},
-    {"id": "gancho_izq_cuerpo",   "familia": "gancho",   "tipo": "golpe", "mano": "izq", "objetivo": "cuerpo"},
-    {"id": "gancho_der_cuerpo",   "familia": "gancho",   "tipo": "golpe", "mano": "der", "objetivo": "cuerpo"},
-    {"id": "uppercut_izq_cuerpo", "familia": "uppercut", "tipo": "golpe", "mano": "izq", "objetivo": "cuerpo"},
-    {"id": "uppercut_der_cuerpo", "familia": "uppercut", "tipo": "golpe", "mano": "der", "objetivo": "cuerpo"},
+    {"id": "jab_cuerpo",          "familia": "jab",      "tipo": "golpe", "mano": "izq", "objetivo": "cuerpo", "numero": 7},
+    {"id": "directo_cuerpo",      "familia": "directo",  "tipo": "golpe", "mano": "der", "objetivo": "cuerpo", "numero": 8},
+    {"id": "gancho_izq_cuerpo",   "familia": "gancho",   "tipo": "golpe", "mano": "izq", "objetivo": "cuerpo", "numero": 9},
+    {"id": "gancho_der_cuerpo",   "familia": "gancho",   "tipo": "golpe", "mano": "der", "objetivo": "cuerpo", "numero": 10},
+    {"id": "uppercut_izq_cuerpo", "familia": "uppercut", "tipo": "golpe", "mano": "izq", "objetivo": "cuerpo", "numero": 11},
+    {"id": "uppercut_der_cuerpo", "familia": "uppercut", "tipo": "golpe", "mano": "der", "objetivo": "cuerpo", "numero": 12},
 
     {"id": "esquiva_der",       "familia": "esquiva",    "tipo": "defensa", "mano": "ninguna", "lado": "der", "objetivo": "ninguno"},
     {"id": "esquiva_izq",       "familia": "esquiva",    "tipo": "defensa", "mano": "ninguna", "lado": "izq", "objetivo": "ninguno"},

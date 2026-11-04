@@ -69,7 +69,7 @@ def test_sorteo_js_cumple_las_mismas_reglas_que_el_de_python(js, nivel):
     assert set(ortodoxas) == _del_nivel(nivel)
     for i, c in enumerate(ortodoxas):
         assert c not in ortodoxas[max(0, i - SIN_REPETIR):i], f"repetida en {i}"
-    primeras = {a.numero for ids in ortodoxas[:6] for a in acciones_por_ids(list(ids)) if a.numero}
+    primeras = {a.numero for ids in ortodoxas[:6] for a in acciones_por_ids(list(ids)) if a.numero} & NUMEROS
     assert primeras == NUMEROS
     for o, z in zip(sorteo["ortodoxo"], sorteo["zurdo"], strict=True):
         assert z == [a.id for a in espejo_combo(acciones_por_ids(o))]
@@ -81,7 +81,7 @@ def test_sorteo_js_saca_lo_mismo_que_el_de_python(js, nivel):
     python = [list(sorteo.siguiente().acciones) for _ in range(MUESTRAS)]
     javascript = [acciones_por_ids(ids) for ids in js["sorteos"][str(nivel)]["ortodoxo"]]
     condiciones = {"defensa": lambda c: any(a.tipo == "defensa" for a in c)}
-    for numero_ in sorted(NUMEROS):
+    for numero_ in range(1, 13):  # a la cara y al cuerpo
         condiciones[f"golpe {numero_}"] = lambda c, n=numero_: any(a.numero == n for a in c)
     for nombre, condicion in condiciones.items():
         p_py, p_js = _proporcion(python, condicion), _proporcion(javascript, condicion)

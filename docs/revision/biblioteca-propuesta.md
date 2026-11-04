@@ -9,7 +9,8 @@
 
 - Todo en guardia **ortodoxa** (el zurdo lo hace en espejo). Los golpes van por número: 1 jab, 2 recto, 3 crochet
   adelantado, 4 crochet trasero, 5 gancho adelantado, 6 gancho trasero; «3 al cuerpo» es el crochet adelantado al
-  cuerpo. Las defensas y salidas, como las dice la app («rueda derecha»).
+  cuerpo, que la app numera 9 (al cuerpo, del 7 al 12: «1 al cuerpo» es el 7). Las defensas y salidas, como las
+  dice la app («rueda derecha»).
 - **Nivel** = número total de acciones (golpes + defensas + salidas), calculado con `motor.reglas.nivel_de`:
   básico 2-4, medio 5-6, avanzado 7-10.
 - **Defensa** = esquiva, rueda, ballesteo, flexión, bloqueo, parada y paso atrás. Pivote, paso lateral y

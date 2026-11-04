@@ -36,10 +36,11 @@ export function cargarPerfil() {
 }
 
 // El movimiento de "Practicar más" de una acción ortodoxa: "1"-"6" los golpes a la cara, "cuerpo"
-// cualquier golpe al cuerpo y la familia las defensas y salidas ("rodar", "pivote").
+// cualquier golpe al cuerpo (aunque lleven número, del 7 al 12) y la familia las defensas y salidas
+// ("rodar", "pivote").
 export function movimiento(accion) {
-  if (accion.numero) return String(accion.numero);
-  return accion.tipo === "golpe" ? "cuerpo" : accion.familia;
+  if (accion.tipo === "golpe") return accion.objetivo === "cuerpo" ? "cuerpo" : String(accion.numero);
+  return accion.familia;
 }
 
 // Los que se pueden elegir en "Practicar más", en el orden del catálogo.

@@ -40,15 +40,17 @@ FICHA = {
     "PI": "pivote", "LD": "paso_lateral_der", "LI": "paso_lateral_izq", "CA": "salir",
 }
 NIVEL = {1: "básico", 2: "medio", 3: "avanzado"}
-POR_NIVEL = 50
-# Combinaciones por número de defensas en cada nivel (el reparto del entrenador con 50 por nivel).
-REPARTO = {1: {0: 20, 1: 15, 2: 15}, 2: {1: 20, 2: 20, 3: 10}, 3: {1: 5, 2: 15, 3: 20, "4-5": 10}}
+POR_NIVEL = 56
+# Combinaciones por número de defensas en cada nivel (el reparto del entrenador con 50 por nivel, más las 6 de
+# AL_CUERPO: básico 2/2/2, medio 2/3/1, avanzado 1/2/2/1).
+REPARTO = {1: {0: 22, 1: 17, 2: 17}, 2: {1: 22, 2: 23, 3: 11}, 3: {1: 6, 2: 17, 3: 22, "4-5": 11}}
 CLASICOS = ["1-2-3-2", "1-3-2", "1-2-5-2", "1-2-1-2", "3-2-3", "1-2-3", "1-1-2"]  # básico, sin defensa
 # % de cada golpe 1-6 sobre los golpes a la cara (mín, máx), en total y en cada nivel.
 # Los golpes 1-6 valen lo mismo; solo el jab puede salir más.
 CARA = {1: (20, 30), 2: (13, 17), 3: (13, 17), 4: (13, 17), 5: (13, 17), 6: (13, 17)}
 MIN_EMPIEZAN_JAB = 50    # % de las que empiezan por golpe que empiezan con el jab (a la cara)
 MIN_CUERPO = 6           # veces de cada golpe al cuerpo, en total
+MIN_CUERPO_NIVEL = 3     # combinaciones de cada nivel que llevan cada golpe al cuerpo (7-12)
 MIN_DEFENSA = 12         # veces de cada tipo de defensa, en total
 MAX_DIFERENCIA_LADO = 20  # % entre derecha e izquierda de cada defensa con lado
 MIN_SALIDA = 6           # veces de cada salida, en total
@@ -254,6 +256,32 @@ SUELTAS = [
     ("F-5c-B-4-EI-3-AD-6-CA", "flexión, gancho al cuerpo, bloqueo, crochet, esquiva y cambio de ángulo"),
 ]
 
+# Al cuerpo (fase N): 6 por nivel para que cada golpe al cuerpo (7-12) esté al menos en 3 combinaciones de cada
+# nivel. Van numeradas detrás de todas (n 151-168, por nivel) para que no se mueva ningún n de las 150 de antes.
+AL_CUERPO = [
+    # Básico
+    ("2c-4", "recto al cuerpo y crochet"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("1-4c-5", "jab, crochet al cuerpo y gancho"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("ED-4c-6", "esquiva, crochet al cuerpo y gancho"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("1-3c-B", "jab, crochet al cuerpo y bloqueo"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("EI-5c-4-B", "esquiva, gancho al cuerpo, crochet y bloqueo"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("PA-6c-3-ED", "paso atrás, gancho al cuerpo, crochet y esquiva"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    # Medio
+    ("1-4c-5-AD-3", "jab, crochet al cuerpo, gancho, rueda y crochet"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("1-5c-3-B-6", "jab, gancho al cuerpo, crochet, bloqueo y gancho"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("ED-4c-5-EI-1", "esquiva, crochet al cuerpo, gancho, esquiva y jab"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("1-6c-3-F-5-PA", "jab, gancho al cuerpo, crochet, flexión, gancho y paso atrás"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("BA-5c-3-AI-5", "ballesteo, gancho al cuerpo, crochet, rueda y gancho"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("P-1-2c-AD-6-B", "parada, jab, recto al cuerpo, rueda, gancho y bloqueo"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    # Avanzado
+    ("1-2c-3-4-AD-5-4", "jab, recto al cuerpo, doble crochet, rueda, gancho y crochet"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("1-3c-4-ED-6-3-B", "jab, crochet al cuerpo y crochet, esquiva, gancho-crochet y bloqueo"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("ED-5c-4-1-4c-5-AI-6", "esquiva, gancho al cuerpo, crochet-jab, crochet al cuerpo y rueda"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("1-1c-6-ED-4-F-5-PA", "jab arriba y abajo, gancho, esquiva, flexión y paso atrás"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("B-4c-6-AD-1-5-EI-4-LD", "bloqueo, crochet al cuerpo, gancho, rueda, esquiva y paso lateral"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("P-1-3c-ED-6-AI-5-BA-4", "parada, jab, crochet al cuerpo, esquiva, rueda y ballesteo"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+]
+
 
 # Palabras de los nombres y su familia en data/acciones.json. Los nombres solo usan estas palabras, «y» y «con».
 PALABRA_GOLPE = {"jab": "jab", "recto": "directo", "crochet": "gancho", "gancho": "uppercut"}
@@ -399,7 +427,8 @@ def cubo(nivel, defensas):
 
 
 def preparar():
-    """Todas las combinaciones, numeradas (familias primero, luego sueltas por nivel), y los problemas."""
+    """Todas las combinaciones, numeradas (familias primero, luego sueltas por nivel y al final las de AL_CUERPO por
+    nivel), y los problemas."""
     combos, por_clave = [], {}
     for fid, _, _, miembros in FAMILIAS:
         for clave, papel, origen, notacion, nombre in miembros:
@@ -408,8 +437,10 @@ def preparar():
                            "notacion": por_clave[clave], "nombre": nombre})
     sueltas = [{"clave": None, "familia": None, "papel_crudo": None, "cruda": n, "notacion": n, "nombre": nombre}
                for n, nombre in SUELTAS]
+    al_cuerpo = [{"clave": None, "familia": None, "papel_crudo": None, "cruda": n, "notacion": n, "nombre": nombre,
+                  "al_cuerpo": True} for n, nombre in AL_CUERPO]
     marcadas = marcas()
-    for c in combos + sueltas:
+    for c in combos + sueltas + al_cuerpo:
         c["ids"] = ids(c["notacion"])
         c["acciones"] = acciones_por_ids(c["ids"])
         c["nivel"] = nivel_de(c["acciones"])
@@ -418,6 +449,7 @@ def preparar():
         c["respecto"] = respecto(c["ids"])
         c["duda"] = marcadas.get(c["cruda"])
     combos += sorted(sueltas, key=lambda c: c["nivel"] or 0)
+    combos += sorted(al_cuerpo, key=lambda c: c["nivel"] or 0)
     for n, c in enumerate(combos, 1):
         c["n"] = n
     return combos, problemas(combos)
@@ -466,10 +498,14 @@ def problemas(combos):
             malos.append(f"#{c['n']} «{c['nombre']}»: el nombre lleva cifras")
         malos += [f"#{c['n']} «{c['nombre']}» ({c['notacion']}): {f}" for f in fallos_del_nombre(c["nombre"], c["acciones"])]
     usos = usos_por_id(combos)
-    for i in ("jab_cuerpo", "directo_cuerpo", "gancho_izq_cuerpo", "gancho_der_cuerpo",
-              "uppercut_izq_cuerpo", "uppercut_der_cuerpo"):
+    for i in CUERPO:
         if usos[i] < MIN_CUERPO:
             malos.append(f"{texto(acciones_por_ids([i]))}: {usos[i]} veces (mínimo {MIN_CUERPO})")
+    for nivel in (1, 2, 3):
+        for i, veces in cuerpo_por_nivel(combos, nivel).items():
+            if veces < MIN_CUERPO_NIVEL:
+                malos.append(f"{texto(acciones_por_ids([i]))} en {NIVEL[nivel]}: en {veces} combinaciones "
+                             f"(mínimo {MIN_CUERPO_NIVEL})")
     por_familia = Counter(a.familia for c in combos for a in c["acciones"])
     malos += [f"defensa {f}: {por_familia[f]} veces (mínimo {MIN_DEFENSA})"
               for f in DEFENSAS if por_familia[f] < MIN_DEFENSA]
@@ -498,6 +534,15 @@ def dos_ganchos_seguidos(acciones):
     """Si lleva un 5 y un 6 seguidos, en cualquier orden y a la cara o al cuerpo (el 5 al cuerpo y luego el 5 a la
     cara es el gancho abajo y arriba, con la misma mano: no cuenta)."""
     return any(a.familia == b.familia == "uppercut" and a.mano != b.mano for a, b in zip(acciones, acciones[1:]))
+
+
+CUERPO = ["jab_cuerpo", "directo_cuerpo", "gancho_izq_cuerpo", "gancho_der_cuerpo", "uppercut_izq_cuerpo",
+          "uppercut_der_cuerpo"]
+
+
+def cuerpo_por_nivel(combos, nivel):
+    """Cuántas combinaciones del nivel llevan cada golpe al cuerpo (una vez cada una aunque lo lleve dos veces)."""
+    return {i: sum(i in c["ids"] for c in combos if c["nivel"] == nivel) for i in CUERPO}
 
 
 def usos_por_id(combos):
@@ -561,7 +606,7 @@ def documento(combos):
     w("")
     w("> **REVISAR CON ENTRENADOR: toda esta propuesta.** Las combinaciones, sus familias y variantes, los nombres y el")
     w("> reparto. Ya es la biblioteca de la app: `data/combinaciones.json` se genera desde aquí, con las dudas de técnica")
-    w("> en «revisar», y cada nivel sortea solo de sus 50.")
+    w(f"> en «revisar», y cada nivel sortea solo de sus {POR_NIVEL}.")
     w("> Se genera con `python herramientas/biblioteca.py`: no editar a mano.")
     w("")
     w("## Cómo leerla")
@@ -604,8 +649,15 @@ def documento(combos):
     for nivel in (1, 2, 3):
         w(f"### {NIVEL[nivel].capitalize()}")
         w("")
-        tabla(w, [c for c in combos if c["familia"] is None and c["nivel"] == nivel])
+        tabla(w, [c for c in combos if c["familia"] is None and not c.get("al_cuerpo") and c["nivel"] == nivel])
         w("")
+    w("## Al cuerpo")
+    w("")
+    w(f"Añadidas para que cada golpe al cuerpo esté en al menos {MIN_CUERPO_NIVEL} combinaciones de cada nivel. Van")
+    w("detrás de todas para que no cambie el número de ninguna de antes. **REVISAR CON ENTRENADOR:** todas.")
+    w("")
+    tabla(w, [c for c in combos if c.get("al_cuerpo")])
+    w("")
     dudas(w, combos)
     salen(w, combos)
     return "\n".join(L) + "\n"
@@ -685,12 +737,14 @@ def resumen_vocabulario(w, combos):
         w(f"| {nombres[n]} | {CARA[n][0]}-{CARA[n][1]} % | {numeros[n]} | " + " | ".join(f"{coma(por_nivel[x][n])} %" for x in (None, 1, 2, 3)) + " |")
     w("")
     usos = usos_por_id(combos)
-    w("**Golpes al cuerpo**")
+    w(f"**Golpes al cuerpo** (veces en total y combinaciones de cada nivel que lo llevan; mínimo {MIN_CUERPO_NIVEL})")
     w("")
-    w("| Golpe | Veces |")
-    w("|---|---|")
+    w("| Golpe | Veces | Básico | Medio | Avanzado |")
+    w("|---|---|---|---|---|")
+    por_nivel_c = {n: cuerpo_por_nivel(combos, n) for n in (1, 2, 3)}
     for token in ("1c", "2c", "3c", "4c", "5c", "6c"):
-        w(f"| {token[0]} al cuerpo | {usos[FICHA[token]]} |")
+        i = FICHA[token]
+        w(f"| {token[0]} al cuerpo | {usos[i]} | " + " | ".join(str(por_nivel_c[n][i]) for n in (1, 2, 3)) + " |")
     w("")
     w("**Defensas y salidas**")
     w("")

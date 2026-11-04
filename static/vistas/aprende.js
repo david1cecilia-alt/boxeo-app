@@ -61,6 +61,39 @@ export function iniciarAprende() {
     return `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.titulo)}<span class="solo-lectores"> (se abre en otra pestaña)</span></a>`;
   }
 
+  // «Al cuerpo»: lo propio del golpe a la vista y, plegado, lo común a todos (está una vez, en la categoría).
+  function alCuerpo(f, comun) {
+    const plegado = comun ? `
+      <details class="avanzados comun-cuerpo">
+        <summary>Para todos los golpes al cuerpo</summary>
+        ${lista(comun.puntos.map((p) => `<strong>${esc(p.titulo)}</strong> ${esc(p.texto)}`))}
+        ${comun.fuentes?.length ? `<p class="nota fuentes-comun">Fuentes: ${comun.fuentes.map(fuente).join(" · ")}</p>` : ""}
+      </details>` : "";
+    return apartado("cuerpo", "Al cuerpo", `<p>${esc(f.al_cuerpo)}</p>${plegado}`);
+  }
+
+  // «Mostrar más»: variantes y detalles, plegados. Solo sale si la ficha tiene alguno.
+  function mostrarMas(f) {
+    const variantes = f.variantes ?? [];
+    const detalles = f.detalles ?? [];
+    if (!variantes.length && !detalles.length) return "";
+    const resumen = [...(variantes.length ? ["Variantes"] : []), ...detalles.map((d) => d.titulo)];
+    return `
+      <details class="tarjeta plegable mas-ficha">
+        <summary><span class="titulo-plegable">Mostrar más</span>
+          <span class="resumen-plegable">${resumen.map(esc).join(" · ")}</span></summary>
+        <div class="cuerpo-plegable">
+          ${variantes.length ? `<section class="mas-apartado" aria-labelledby="m-variantes">
+            <h3 id="m-variantes">Variantes</h3>
+            ${lista(variantes.map((v) => `<span class="nombre-variante">${esc(v.nombre)}</span> ${esc(v.texto)}`))}
+          </section>` : ""}
+          ${detalles.map((d, i) => `<section class="mas-apartado" aria-labelledby="m-detalle-${i}">
+            <h3 id="m-detalle-${i}">${esc(d.titulo)}</h3><p>${esc(d.texto)}</p>
+          </section>`).join("")}
+        </div>
+      </details>`;
+  }
+
   function pintarFicha(f) {
     const categoria = tecnica.categorias.find((c) => c.id === f.categoria);
     antetitulo.textContent = categoria?.titulo ?? "";
@@ -83,7 +116,9 @@ export function iniciarAprende() {
         ${apartado("errores", "Errores típicos", lista(errores))}
         ${f.ventajas ? apartado("ventajas", "Ventajas", `<p>${esc(f.ventajas)}</p>`) : ""}
         ${f.inconvenientes ? apartado("inconvenientes", "Inconvenientes", `<p>${esc(f.inconvenientes)}</p>`) : ""}
+        ${f.al_cuerpo ? alCuerpo(f, categoria?.al_cuerpo) : ""}
         ${(f.notas ?? []).map((n, i) => apartado(`nota-${i}`, esc(n.titulo), `<p>${esc(n.texto)}</p>`)).join("")}
+        ${mostrarMas(f)}
         <details class="tarjeta plegable fuentes-ficha">
           <summary><span class="titulo-plegable">Fuentes</span></summary>
           <div class="cuerpo-plegable">${lista(f.fuentes.map(fuente))}</div>

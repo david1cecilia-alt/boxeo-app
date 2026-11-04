@@ -26,7 +26,7 @@ test("Números, Nombres y Ambos (ortodoxo)", () => {
 
 test("Números y Ambos en zurdo", () => {
   const zurda = espejoCombo(accionesPorIds(["jab", "gancho_izq", "uppercut_der", "rodar_izq", "gancho_izq"]));
-  assert.equal(textoHablado(zurda, "numeros", true), "uno, tres, seis, esquiva abajo derecha, tres");
+  assert.equal(textoHablado(zurda, "numeros", true), "uno, tres, seis, rueda derecha, tres");
   assert.equal(textoHablado(zurda, "ambos", true),
-    "uno jab, tres crochet de derecha, seis gancho de izquierda, esquiva abajo derecha, tres crochet de derecha");
+    "uno jab, tres crochet de derecha, seis gancho de izquierda, rueda derecha, tres crochet de derecha");
 });

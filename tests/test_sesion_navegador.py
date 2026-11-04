@@ -61,7 +61,7 @@ def medidas(tmp_path_factory):
 
 def test_estan_todos_los_nombres_cortos_diestro_y_zurdo(medidas):
     textos = {t for t, _, _ in medidas}
-    assert {"croch. dcha. abajo", "croch. izq. abajo", "esq. abajo dcha.", "esq. abajo izq."} <= textos
+    assert {"croch. dcha. abajo", "croch. izq. abajo", "rueda dcha.", "rueda izq."} <= textos
 
 
 def test_ningun_nombre_corto_se_sale_de_la_tarjeta_a_390(medidas):

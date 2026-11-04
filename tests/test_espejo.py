@@ -26,6 +26,17 @@ def test_espejo_intercambia_mano_y_lado():
     assert espejo(cat["esquiva_der"]).lado == "izq"
 
 
+def test_la_rueda_se_invierte_como_la_esquiva():
+    # El lado es hacia dónde va el cuerpo: la rueda derecha de un diestro es la izquierda del zurdo.
+    cat = catalogo()
+    for familia in ("esquiva", "rodar"):
+        assert espejo(cat[f"{familia}_der"]) == cat[f"{familia}_izq"]
+        assert espejo(cat[f"{familia}_izq"]) == cat[f"{familia}_der"]
+    assert cat["rodar_der"].nombre_hablado == "rueda derecha"
+    assert espejo(cat["rodar_der"]).nombre_hablado == "rueda izquierda"
+    assert espejo(cat["rodar_izq"]).nombre_corto == "rueda dcha."
+
+
 def test_jab_y_recto_cambian_de_mano_pero_no_de_nombre():
     cat = catalogo()
     jab_zurdo = espejo(cat["jab"])

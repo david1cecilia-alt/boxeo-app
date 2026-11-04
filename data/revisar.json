@@ -12,9 +12,9 @@
       "texto": "tiempo para reaccionar tras la señal (hoy 1 s sin combinaciones)"
     },
     {
-      "id": "acciones-dbfd9eb2",
+      "id": "acciones-e12cf263",
       "origen": "data/acciones.json",
-      "texto": "«esquiva abajo» para el roll (antes «rueda»); puede acabar siendo otro término"
+      "texto": "«rueda» para el roll (bob and weave), Iván no ha confirmado el término; el lado es hacia dónde va el cuerpo (rueda derecha = bajas y sales hacia tu derecha), como en la esquiva"
     },
     {
       "id": "combinaciones-5f76dd4d",
@@ -32,9 +32,9 @@
       "texto": "#33 «esquiva derecha · 6 · 5 · esquiva izquierda · 1 · 2»: dos ganchos seguidos"
     },
     {
-      "id": "combinaciones-d5bccafb",
+      "id": "combinaciones-c6f56e06",
       "origen": "data/combinaciones.json",
-      "texto": "#35 «esquiva derecha · 6 · 5 · esquiva izquierda · 1 · 2 · esquiva abajo derecha · 4 · 5»: dos ganchos seguidos"
+      "texto": "#35 «esquiva derecha · 6 · 5 · esquiva izquierda · 1 · 2 · rueda derecha · 4 · 5»: dos ganchos seguidos"
     },
     {
       "id": "combinaciones-97549265",
@@ -62,24 +62,24 @@
       "texto": "#51 «4 · 5 · 6»: dos ganchos seguidos"
     },
     {
-      "id": "combinaciones-111d3dcc",
+      "id": "combinaciones-0c932bae",
       "origen": "data/combinaciones.json",
-      "texto": "#52 «1 · 2 · 6 · 3 · esquiva abajo izquierda»: recto y gancho trasero seguidos (misma mano)"
+      "texto": "#52 «1 · 2 · 6 · 3 · rueda izquierda»: recto y gancho trasero seguidos (misma mano)"
     },
     {
-      "id": "combinaciones-5ed3de27",
+      "id": "combinaciones-21fc939e",
       "origen": "data/combinaciones.json",
-      "texto": "#53 «1 · 4 · 5 · 6 · esquiva abajo derecha»: dos ganchos seguidos"
+      "texto": "#53 «1 · 4 · 5 · 6 · rueda derecha»: dos ganchos seguidos"
     },
     {
-      "id": "combinaciones-86f4293f",
+      "id": "combinaciones-43063447",
       "origen": "data/combinaciones.json",
-      "texto": "#54 «1 · 2 · 6 · 3 · esquiva abajo izquierda · 1 · 2 · esquiva izquierda»: recto y gancho trasero seguidos (misma mano)"
+      "texto": "#54 «1 · 2 · 6 · 3 · rueda izquierda · 1 · 2 · esquiva izquierda»: recto y gancho trasero seguidos (misma mano)"
     },
     {
-      "id": "combinaciones-c53b299b",
+      "id": "combinaciones-da7972d5",
       "origen": "data/combinaciones.json",
-      "texto": "#55 «1 · 4 · 5 · 6 · esquiva abajo derecha · 5 al cuerpo · 3 · ballesteo»: dos ganchos seguidos"
+      "texto": "#55 «1 · 4 · 5 · 6 · rueda derecha · 5 al cuerpo · 3 · ballesteo»: dos ganchos seguidos"
     },
     {
       "id": "combinaciones-1c2981cd",
@@ -102,14 +102,14 @@
       "texto": "#63 «flexión · 6 al cuerpo · 5»: dos ganchos seguidos"
     },
     {
-      "id": "combinaciones-cf77df3c",
+      "id": "combinaciones-fc40ff47",
       "origen": "data/combinaciones.json",
-      "texto": "#65 «flexión · 6 al cuerpo · 5 · esquiva abajo derecha · 1 · 2»: dos ganchos seguidos"
+      "texto": "#65 «flexión · 6 al cuerpo · 5 · rueda derecha · 1 · 2»: dos ganchos seguidos"
     },
     {
-      "id": "combinaciones-e12aeff1",
+      "id": "combinaciones-0042d501",
       "origen": "data/combinaciones.json",
-      "texto": "#67 «flexión · 6 al cuerpo · 5 · esquiva abajo derecha · 1 · 2 · flexión · 1 al cuerpo · 2»: dos ganchos seguidos"
+      "texto": "#67 «flexión · 6 al cuerpo · 5 · rueda derecha · 1 · 2 · flexión · 1 al cuerpo · 2»: dos ganchos seguidos"
     },
     {
       "id": "combinaciones-0790ab72",

@@ -44,10 +44,10 @@ def test_modos_de_voz():
 def test_modos_de_voz_en_zurdo():
     zurda = espejo_combo(acciones_por_ids(["jab", "gancho_izq", "uppercut_der", "rodar_izq", "gancho_izq"]))
     assert texto_hablado(zurda, "nombres", zurdo=True) == \
-        "jab, crochet de derecha, gancho de izquierda, esquiva abajo derecha, crochet de derecha"
-    assert texto_hablado(zurda, "numeros", zurdo=True) == "uno, tres, seis, esquiva abajo derecha, tres"
+        "jab, crochet de derecha, gancho de izquierda, rueda derecha, crochet de derecha"
+    assert texto_hablado(zurda, "numeros", zurdo=True) == "uno, tres, seis, rueda derecha, tres"
     assert texto_hablado(zurda, "ambos", zurdo=True) == \
-        "uno jab, tres crochet de derecha, seis gancho de izquierda, esquiva abajo derecha, tres crochet de derecha"
+        "uno jab, tres crochet de derecha, seis gancho de izquierda, rueda derecha, tres crochet de derecha"
 
 
 def test_las_defensas_se_dicen_como_orden_corta_con_su_lado():
@@ -55,7 +55,7 @@ def test_las_defensas_se_dicen_como_orden_corta_con_su_lado():
         if a.orden:
             assert {palabra_hablada(a, m) for m in MODOS_VOZ} == {{
                 "esquiva_der": "esquiva derecha", "esquiva_izq": "esquiva izquierda",
-                "rodar_der": "esquiva abajo derecha", "rodar_izq": "esquiva abajo izquierda",
+                "rodar_der": "rueda derecha", "rodar_izq": "rueda izquierda",
                 "paso_atras": "paso atrás", "bloqueo": "bloqueo", "parada": "parada",
                 "ballesteo": "ballesteo", "flexion": "flexión"}[a.id]}, a.id
 

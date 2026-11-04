@@ -187,7 +187,7 @@ def test_elegir_cambiar_y_quitar_desde_los_huecos(ajustes):
     _elegir(pagina, "rodar", "defensa")
     assert pagina.locator(".hueco.vacio").count() == 0
     assert pagina.locator(".hueco.lleno h3").all_inner_texts() == ["6 gancho de derecha", "golpes al cuerpo",
-                                                                  "esquiva abajo"]
+                                                                  "rueda"]
     assert len(set(_altos(pagina))) == 1
     assert pagina.locator("#practicar-estado").inner_text() == "3 de 3 elegidos."
     # Cuánto más: «Un poco más | Bastante más», sin el factor del sorteo.
@@ -202,7 +202,7 @@ def test_elegir_cambiar_y_quitar_desde_los_huecos(ajustes):
     assert caja["width"] >= 48 and caja["height"] >= 48
     quitar.click()
     assert _guardado(pagina) == [{"movimiento": "6", "cuanto": "poco"}, {"movimiento": "rodar", "cuanto": "bastante"}]
-    assert pagina.locator(".hueco.lleno h3").all_inner_texts() == ["6 gancho de derecha", "esquiva abajo"]
+    assert pagina.locator(".hueco.lleno h3").all_inner_texts() == ["6 gancho de derecha", "rueda"]
     foco = _foco(pagina)
     assert foco["hueco"] == "2" and "vacio" in foco["clase"]
 
@@ -275,7 +275,7 @@ def test_nada_se_sale_de_la_pantalla_a_390(ajustes):
 
 def _pestanas_quietas(pagina):
     """Al cambiar de pestaña la hoja no cambia de alto ni de sitio, y ninguna ficha se queda con hover
-    porque se haya movido bajo el ratón (pasaba con «esquiva abajo» al pulsar Defensas). Devuelve la
+    porque se haya movido bajo el ratón (pasaba con «rueda» al pulsar Defensas). Devuelve la
     hoja en cada pestaña."""
     hojas, sitios = {}, set()
     for pestana in ("golpe", "defensa", "movimiento", "golpe"):

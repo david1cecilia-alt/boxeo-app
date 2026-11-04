@@ -24,7 +24,7 @@ test("con Nombres no hay número y las defensas nunca llevan", () => {
   assert.deepEqual(pantalla(["jab", "esquiva_izq", "directo"], { voz: "nombres", zurdo: true }),
     ["jab", "esquiva izq.", "recto"]);
   assert.deepEqual(pantalla(["rodar_der", "gancho_der"], { voz: "numeros", zurdo: false }),
-    ["esq. abajo dcha.", "4 crochet dcha."]);
+    ["rueda dcha.", "4 crochet dcha."]);
 });
 
 test("en un guion zurdo, pantalla y voz dicen el mismo golpe con su lado", () => {
@@ -58,8 +58,8 @@ test("la voz de un texto guardado se deduce de sus números", () => {
   assert.equal(vozDelTexto("cúbrete, gancho de izquierda"), "nombres");
 });
 
-// Una sesión vieja (sin voz guardada, con los nombres de antes: el 3 era «gancho de izquierda» y
-// la esquiva abajo, «rueda»). La segunda combinación no lleva golpes con número: no delata la voz.
+// Una sesión vieja (sin voz guardada, con los nombres de antes: el 3 era «gancho de izquierda»; la rueda
+// ya se llamaba «rueda»). La segunda combinación no lleva golpes con número: no delata la voz.
 const vieja = (textos) => ({
   zurdo: false,
   combinaciones: [
@@ -74,8 +74,8 @@ test("sesión vieja en Ambos: se ve con los números en cifra y los nombres de h
   const s = vieja(["uno jab, tres gancho de izquierda, rueda derecha", "rueda izquierda, bloqueo", "dos recto, tres gancho de izquierda"]);
   assert.equal(vozDeSesion(s, s.combinaciones), "ambos");
   assert.deepEqual(verTextos(s), [
-    "1 jab, 3 crochet de izquierda, esquiva abajo derecha",
-    "esquiva abajo izquierda, bloqueo",
+    "1 jab, 3 crochet de izquierda, rueda derecha",
+    "rueda izquierda, bloqueo",
     "2 recto, 3 crochet de izquierda",
   ]);
 });
@@ -84,15 +84,15 @@ test("sesión vieja en Nombres: sin números", () => {
   const s = vieja(["jab, gancho de izquierda, rueda derecha", "rueda izquierda, bloqueo", "recto, gancho de izquierda"]);
   assert.equal(vozDeSesion(s, s.combinaciones), "nombres");
   assert.deepEqual(verTextos(s), [
-    "jab, crochet de izquierda, esquiva abajo derecha",
-    "esquiva abajo izquierda, bloqueo",
+    "jab, crochet de izquierda, rueda derecha",
+    "rueda izquierda, bloqueo",
     "recto, crochet de izquierda",
   ]);
 });
 
 test("sesión vieja en Números: solo la cifra de los golpes; las defensas, con su orden", () => {
   const s = vieja(["uno, tres, rueda derecha", "rueda izquierda, bloqueo", "dos, tres"]);
-  assert.deepEqual(verTextos(s), ["1, 3, esquiva abajo derecha", "esquiva abajo izquierda, bloqueo", "2, 3"]);
+  assert.deepEqual(verTextos(s), ["1, 3, rueda derecha", "rueda izquierda, bloqueo", "2, 3"]);
 });
 
 test("sesión vieja ambigua (se contradice o no delata nada): Ambos, que no pierde nada", () => {
@@ -100,13 +100,13 @@ test("sesión vieja ambigua (se contradice o no delata nada): Ambos, que no pier
   assert.equal(vozDeSesion(mezcla, mezcla.combinaciones), "ambos");
   const sinGolpes = { combinaciones: [{ asalto: 1, texto: "rueda izquierda, bloqueo", ids: ["rodar_izq", "bloqueo"] }] };
   assert.equal(vozDeSesion(sinGolpes, sinGolpes.combinaciones), "ambos");
-  assert.deepEqual(verTextos(sinGolpes), ["esquiva abajo izquierda, bloqueo"]);
+  assert.deepEqual(verTextos(sinGolpes), ["rueda izquierda, bloqueo"]);
 });
 
 test("sesión nueva con voz guardada: manda la voz, no el texto; el zurdo guarda los ids en espejo", () => {
-  const s = { ...vieja(["jab, crochet de izquierda, esquiva abajo derecha", "esquiva abajo izquierda, bloqueo", "recto, crochet de izquierda"]), voz: "ambos" };
+  const s = { ...vieja(["jab, crochet de izquierda, rueda derecha", "rueda izquierda, bloqueo", "recto, crochet de izquierda"]), voz: "ambos" };
   assert.equal(vozDeSesion(s, s.combinaciones), "ambos");
-  assert.equal(verTextos(s)[0], "1 jab, 3 crochet de izquierda, esquiva abajo derecha");
+  assert.equal(verTextos(s)[0], "1 jab, 3 crochet de izquierda, rueda derecha");
   const zurdo = { voz: "numeros", zurdo: true, combinaciones: [{ asalto: 1, texto: "uno, tres", ids: ["jab", "gancho_der"] }] }; // su 3 es gancho_der
   assert.deepEqual(verTextos(zurdo), ["1, 3"]);
 });

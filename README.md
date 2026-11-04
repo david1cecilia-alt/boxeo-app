@@ -20,9 +20,9 @@ es una PWA instalable y todo se calcula en el dispositivo.
 
 ## Qué hace
 
-- **Tres pestañas** con barra inferior: *Entrenar*, *Historial* y *Perfil*, y **Ajustes** aparte
+- **Cuatro pestañas** con barra inferior: *Entrenar*, *Aprende*, *Historial* y *Perfil*, y **Ajustes** aparte
   (engranaje arriba a la derecha en el móvil; entrada en el menú lateral en el PC). Rutas por hash
-  (`#historial`, `#ajustes`), así que funcionan en GitHub Pages y sin conexión.
+  (`#historial`, `#aprende/rodar`, `#ajustes`), así que funcionan en GitHub Pages y sin conexión.
 - **Pensada para usar con guantes a 1–2 m del móvil**: reloj enorme, combinación en grande,
   botones de 76 px y un color por fase (asalto, últimos 10 s, descanso, reacción, pausa).
   Durante la sesión solo se ve lo esencial.
@@ -189,7 +189,7 @@ Los iconos se regeneran desde `static/iconos/guante.svg` con `herramientas\gener
 |---|---|
 | `motor/` | Lógica pura en Python: acciones y espejo, reglas, sorteo, ritmo, temporizador |
 | `static/motor/` | Port JS del motor |
-| `static/vistas/` | Las tres pestañas, Ajustes, el formulario post-sesión y el gráfico SVG |
+| `static/vistas/` | Las cuatro pestañas (Aprende, con las fichas de técnica de `data/tecnica.json`), Ajustes, el formulario post-sesión y el gráfico SVG |
 | `static/` | Arranque, rutas, almacén, reproductor, voz, sonido, estilos, service worker y manifest |
 | `app/` | API FastAPI y acceso a SQLite |
 | `data/` | Vocabulario, biblioteca de combinaciones por niveles, perfil por defecto, presets y puntos a revisar (JSON): fuente única para los dos motores |

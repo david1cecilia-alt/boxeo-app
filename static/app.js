@@ -6,6 +6,7 @@ import { crearHistorial } from "./historial.js";
 import { cargarDatos } from "./motor/datos.js";
 import { iniciarRutas } from "./rutas.js";
 import { iniciarAjustes } from "./vistas/ajustes.js";
+import { iniciarAprende } from "./vistas/aprende.js";
 import { atajosEntrenar, iniciarEntrenar } from "./vistas/entrenar.js";
 import { iniciarHistorial } from "./vistas/historial.js";
 import { iniciarPerfil } from "./vistas/perfil.js";
@@ -35,6 +36,7 @@ async function arrancar() {
 
   iniciarRutas({
     entrenar,
+    aprende: iniciarAprende(),
     historial: iniciarHistorial({ almacen, historial, valoracion }),
     perfil: iniciarPerfil({ almacen }),
     ajustes: iniciarAjustes({ almacen, voz }),

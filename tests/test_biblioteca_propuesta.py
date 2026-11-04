@@ -24,8 +24,8 @@ def test_el_nombre_tiene_que_decir_sus_golpes_en_orden():
     def cuadra(nombre, notacion):
         return nombre_cuadra(nombre, acciones_por_ids(ids(notacion)))
 
-    assert not cuadra("jab, recto-gancho-recto y esquiva abajo", "1-4-5-2-AD")
-    assert cuadra("jab-crochet-gancho-recto y esquiva abajo", "1-4-5-2-AD")
+    assert not cuadra("jab, recto-gancho-recto y rueda", "1-4-5-2-AD")
+    assert cuadra("jab-crochet-gancho-recto y rueda", "1-4-5-2-AD")
     assert cuadra("jab-recto y paso lateral", "1-2-EI-5-2-LI")      # puede saltarse golpes
     assert not cuadra("recto-jab", "1-2")                           # pero no cambiar el orden
     assert not cuadra("jab-recto", "1-EI-2")                        # «X-Y» van seguidos
@@ -39,7 +39,7 @@ def test_el_nombre_tiene_que_decir_sus_golpes_en_orden():
     assert cuadra("ballesteo y jab-crochet", "BA-1-3")
     assert cuadra("esquiva derecha, dos ganchos y esquiva izquierda", "ED-6-5c-EI")
     assert not cuadra("esquivas a los dos lados con ganchos", "ED-6-EI-5c")  # las dos esquivas, antes que los ganchos
-    assert cuadra("parada, esquivas abajo a los dos lados y crochet", "P-AI-3-AD-4")
+    assert cuadra("parada, ruedas a los dos lados y crochet", "P-AI-3-AD-4")
     assert not cuadra("jab y esquiva derecha", "1-EI")             # el lado de la defensa, si lo dice, cuenta
 
 
@@ -50,9 +50,9 @@ def test_reglas_de_los_nombres():
     def fallos(nombre, notacion):
         return fallos_del_nombre(nombre, acciones_por_ids(ids(notacion)))
 
-    assert fallos("jab-recto, esquiva abajo y crochet", "1-2-AD-4") == []
-    assert fallos("esquiva abajo y gancho", "1-AD-6") == ["no empieza por la primera acción"]          # R1
-    assert fallos("ballesteo, esquiva abajo y paso lateral", "BA-1-AD-LD") == ["no nombra ningún golpe"]  # R2
+    assert fallos("jab-recto, rueda y crochet", "1-2-AD-4") == []
+    assert fallos("rueda y gancho", "1-AD-6") == ["no empieza por la primera acción"]          # R1
+    assert fallos("ballesteo, rueda y paso lateral", "BA-1-AD-LD") == ["no nombra ningún golpe"]  # R2
     assert fallos("jab, gancho y esquiva", "1-EI-6") == ["nombra algo que no está o en otro orden"]       # R3
     assert "dice la mano del golpe" in fallos("gancho de derecha y crochet", "6-3")                      # R4
     assert fallos("jab-recto con contra", "1-2") == ["palabras fuera del vocabulario: contra"]           # R5

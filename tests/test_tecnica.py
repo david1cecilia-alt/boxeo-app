@@ -5,7 +5,10 @@ import pytest
 
 from motor.acciones import RUTA_DATOS, catalogo
 
-CATEGORIAS = {"golpes", "defensas", "pies", "estrategia"}
+CATEGORIAS = {"golpes", "defensas", "salidas", "estrategia"}
+# Las defensas y las salidas, con todo lo de docs/revision/fichas-defensas.md.
+FICHAS_DEFENSA = {"esquiva", "rodar", "ballesteo", "flexion", "bloqueo", "parada", "paso_atras"}
+FICHAS_SALIDA = {"pivote", "paso_lateral", "salir"}
 
 
 @pytest.fixture(scope="module")
@@ -26,15 +29,49 @@ def test_ids_unicos(tecnica):
 
 def test_cada_ficha_tiene_su_contenido(tecnica):
     for f in tecnica["fichas"]:
-        assert f["titulo"] and f["frase"] and f["cuando"], f["id"]
-        assert f["nivel"] in (1, 2, 3), f["id"]
+        assert f["titulo"] and (f.get("que_es") or f.get("frase")) and f["cuando"], f["id"]
+        assert f.get("nivel", 1) in (1, 2, 3), f["id"]
         assert 3 <= len(f["pasos"]) <= 6, f["id"]
         assert all(p["texto"] for p in f["pasos"]), f["id"]
         assert 2 <= len(f["errores"]) <= 5, f["id"]
-        assert all(e["error"] and e["correccion"] for e in f["errores"]), f["id"]
+        assert all(e["error"] and e.get("correccion", "x") for e in f["errores"]), f["id"]
+        assert all(n["titulo"] and n["texto"] for n in f.get("notas", [])), f["id"]
         assert isinstance(f["revisar"], bool), f["id"]
-        assert f["fuentes"], f["id"]
-        assert f["palabras_clave"], f["id"]
+        assert f["fuentes"] and all(x["titulo"] for x in f["fuentes"]), f["id"]
+
+
+def test_estan_las_siete_defensas_y_las_tres_salidas_con_todos_sus_campos(tecnica):
+    por_categoria = {c: {f["id"] for f in tecnica["fichas"] if f["categoria"] == c} for c in ("defensas", "salidas")}
+    assert por_categoria == {"defensas": FICHAS_DEFENSA, "salidas": FICHAS_SALIDA}
+    for f in tecnica["fichas"]:
+        if f["categoria"] in ("defensas", "salidas"):
+            for campo in ("en_ingles", "que_es", "cuando", "ventajas", "inconvenientes"):
+                assert isinstance(f[campo], str) and f[campo].strip(), (f["id"], campo)
+            assert any("url" in x for x in f["fuentes"]), f["id"]
+
+
+def test_las_fuentes_enlazan_por_https(tecnica):
+    for f in tecnica["fichas"]:
+        for x in f["fuentes"]:
+            if "url" in x:
+                assert x["url"].startswith("https://") and " " not in x["url"], (f["id"], x["url"])
+
+
+def test_al_usuario_no_le_sale_la_marca_en_mayusculas(tecnica):
+    # La marca solo va en `pendiente` (para revisar.json); la vista dice «Pendiente de revisar con el entrenador».
+    for f in tecnica["fichas"]:
+        visible = {k: v for k, v in f.items() if k != "pendiente"}
+        assert "REVISAR" not in json.dumps(visible, ensure_ascii=False), f["id"]
+
+
+def test_la_ficha_se_titula_como_lo_dice_la_app(tecnica):
+    # Las defensas y salidas: el título es el nombre de la familia sin lado («Rueda», «Cambio de ángulo»).
+    textos = {a.familia: a.nombre_hablado for a in catalogo().values()}
+    for f in tecnica["fichas"]:
+        if f["categoria"] in ("defensas", "salidas"):
+            familia = catalogo()[f["acciones"][0]].familia
+            nombre = textos[familia].removesuffix(" derecha").removesuffix(" izquierda")
+            assert f["titulo"].lower() == nombre, (f["id"], nombre)
 
 
 def test_lo_pendiente_dice_que_hay_que_revisar(tecnica):
@@ -62,3 +99,11 @@ def test_si_la_ficha_se_llama_como_una_accion_la_incluye(tecnica):
 def test_toda_accion_tiene_exactamente_una_ficha(tecnica):
     cubiertas = [a for f in tecnica["fichas"] for a in f["acciones"]]
     assert sorted(cubiertas) == sorted(catalogo())
+
+
+def test_la_rueda_dice_contra_que_crochet_va_cada_lado_y_queda_por_revisar(tecnica):
+    rueda = next(f for f in tecnica["fichas"] if f["id"] == "rodar")
+    lados = next(n["texto"] for n in rueda["notas"] if n["titulo"] == "Derecha o izquierda")
+    assert "La rueda derecha va contra el crochet de la mano izquierda del rival" in lados
+    assert "La rueda izquierda va contra el crochet de la mano derecha del rival" in lados
+    assert "contra qué crochet va cada lado" in rueda["pendiente"]

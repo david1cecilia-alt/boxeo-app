@@ -19,22 +19,22 @@ main no tiene nada que no esté en la rama.
 |---|---|---|---|---|
 | 31 | básico | esquiva derecha, dos ganchos y esquiva izquierda | esquiva derecha · 6 · 5 · esquiva izquierda | dos ganchos seguidos |
 | 33 | medio | esquiva derecha, dos ganchos, esquiva izquierda y jab-recto | esquiva derecha · 6 · 5 · esquiva izquierda · 1 · 2 | dos ganchos seguidos |
-| 35 | avanzado | esquivas a los dos lados, esquiva abajo y crochet-gancho | esquiva derecha · 6 · 5 · esquiva izquierda · 1 · 2 · esquiva abajo derecha · 4 · 5 | dos ganchos seguidos |
+| 35 | avanzado | esquivas a los dos lados, rueda y crochet-gancho | esquiva derecha · 6 · 5 · esquiva izquierda · 1 · 2 · rueda derecha · 4 · 5 | dos ganchos seguidos |
 | 38 | básico | bloqueo, dos ganchos y bloqueo | bloqueo · 5 · 6 · bloqueo | dos ganchos seguidos |
 | 39 | básico | jab-gancho y bloqueo | 1 · 6 · bloqueo | jab y gancho trasero |
 | 41 | medio | dos bloqueos, jab y crochet | bloqueo · 5 · 6 · bloqueo · 1 · 4 | dos ganchos seguidos |
 | 43 | avanzado | dos bloqueos, esquiva, gancho, ballesteo y recto | bloqueo · 5 · 6 · bloqueo · 1 · 4 · esquiva izquierda · 5 · ballesteo · 2 | dos ganchos seguidos |
 | 51 | básico | crochet y dos ganchos | 4 · 5 · 6 | dos ganchos seguidos |
-| 52 | medio | jab-recto, gancho-crochet y esquiva abajo | 1 · 2 · 6 · 3 · esquiva abajo izquierda | recto y gancho trasero seguidos (misma mano) |
-| 53 | medio | jab-crochet, dos ganchos y esquiva abajo | 1 · 4 · 5 · 6 · esquiva abajo derecha | dos ganchos seguidos |
-| 54 | avanzado | jab-recto, gancho-crochet, esquiva abajo, jab-recto y esquiva | 1 · 2 · 6 · 3 · esquiva abajo izquierda · 1 · 2 · esquiva izquierda | recto y gancho trasero seguidos (misma mano) |
-| 55 | avanzado | jab-crochet, dos ganchos, esquiva abajo, gancho al cuerpo y ballesteo | 1 · 4 · 5 · 6 · esquiva abajo derecha · 5 al cuerpo · 3 · ballesteo | dos ganchos seguidos |
+| 52 | medio | jab-recto, gancho-crochet y rueda | 1 · 2 · 6 · 3 · rueda izquierda | recto y gancho trasero seguidos (misma mano) |
+| 53 | medio | jab-crochet, dos ganchos y rueda | 1 · 4 · 5 · 6 · rueda derecha | dos ganchos seguidos |
+| 54 | avanzado | jab-recto, gancho-crochet, rueda, jab-recto y esquiva | 1 · 2 · 6 · 3 · rueda izquierda · 1 · 2 · esquiva izquierda | recto y gancho trasero seguidos (misma mano) |
+| 55 | avanzado | jab-crochet, dos ganchos, rueda, gancho al cuerpo y ballesteo | 1 · 4 · 5 · 6 · rueda derecha · 5 al cuerpo · 3 · ballesteo | dos ganchos seguidos |
 | 57 | básico | doble jab y dos ganchos | 1 · 1 · 6 · 5 | dos ganchos seguidos |
 | 59 | medio | doble jab, dos ganchos, ballesteo y recto | 1 · 1 · 6 · 5 · ballesteo · 2 | dos ganchos seguidos |
 | 61 | avanzado | doble jab, ballesteo, bloqueo y jab-gancho | 1 · 1 · 6 · 5 · ballesteo · 2 · bloqueo · 1 · 6 | dos ganchos seguidos |
 | 63 | básico | flexión y gancho abajo y arriba | flexión · 6 al cuerpo · 5 | dos ganchos seguidos |
-| 65 | medio | flexión, gancho abajo y arriba, esquiva abajo y jab-recto | flexión · 6 al cuerpo · 5 · esquiva abajo derecha · 1 · 2 | dos ganchos seguidos |
-| 67 | avanzado | flexión, gancho abajo y arriba, esquiva abajo, flexión y recto | flexión · 6 al cuerpo · 5 · esquiva abajo derecha · 1 · 2 · flexión · 1 al cuerpo · 2 | dos ganchos seguidos |
+| 65 | medio | flexión, gancho abajo y arriba, rueda y jab-recto | flexión · 6 al cuerpo · 5 · rueda derecha · 1 · 2 | dos ganchos seguidos |
+| 67 | avanzado | flexión, gancho abajo y arriba, rueda, flexión y recto | flexión · 6 al cuerpo · 5 · rueda derecha · 1 · 2 · flexión · 1 al cuerpo · 2 | dos ganchos seguidos |
 | 75 | básico | jab abajo, jab arriba y crochet | 1 al cuerpo · 1 · 4 | crochet trasero tras dos jabs |
 | 113 | básico | jab, ballesteo, gancho y flexión | 1 · ballesteo · 6 · flexión | tras el ballesteo, gancho y no recto |
 | 144 | avanzado | jab, bloqueo, gancho, flexión, ballesteo y paso atrás | 1 · bloqueo · 5 · flexión · 2 al cuerpo · ballesteo · 6 · paso atrás | tras el bloqueo, gancho y no recto |
@@ -49,7 +49,9 @@ Sin cambiar ninguna combinación hasta que conteste.
 - **#75 (y #77 y #78, que heredan de ella):** ¿crochet de derecha tras dos jabs o mejor recto?
 - **#113 y #144:** tras el ballesteo, ¿gancho o recto?
 - **Ballesteo:** ¿cómo lo llama él, con paso o solo cuerpo, y es adecuado para el nivel de David?
-- **Flexión:** ¿qué es exactamente y en qué se diferencia de «esquiva abajo»?
+- **Flexión:** ¿qué es exactamente y en qué se diferencia de la «rueda»?
+- **Rueda:** ¿la rueda derecha (bajas y sales hacia tu derecha) va contra el crochet de su mano izquierda y la
+  izquierda contra el de su derecha? Es razonamiento nuestro, sin confirmar.
 
 ## Aparcado (no bloquea la unión)
 

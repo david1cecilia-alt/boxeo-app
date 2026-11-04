@@ -1,4 +1,4 @@
-// Rutas por hash (#entrenar, #historial, #historial/<clave>, #perfil, #ajustes): funcionan en
+// Rutas por hash (#entrenar, #aprende, #aprende/<id>, #historial, #historial/<clave>, #perfil, #ajustes): funcionan en
 // GitHub Pages y sin conexión porque nunca piden otra página al servidor.
 // `vistas`: { nombre: { mostrar(parametro, { mismaVista }) } }. Cada vista vive en <section id="vista-<nombre>">.
 // <body data-vista="<nombre>"> dice cuál se ve (el CSS esconde el engranaje en Ajustes).

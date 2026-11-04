@@ -12,9 +12,9 @@
       "texto": "tiempo para reaccionar tras la señal (hoy 1 s sin combinaciones)"
     },
     {
-      "id": "acciones-dbfd9eb2",
+      "id": "acciones-e12cf263",
       "origen": "data/acciones.json",
-      "texto": "«esquiva abajo» para el roll (antes «rueda»); puede acabar siendo otro término"
+      "texto": "«rueda» para el roll (bob and weave), Iván no ha confirmado el término; el lado es hacia dónde va el cuerpo (rueda derecha = bajas y sales hacia tu derecha), como en la esquiva"
     },
     {
       "id": "combinaciones-5f76dd4d",
@@ -32,9 +32,9 @@
       "texto": "#33 «esquiva derecha · 6 · 5 · esquiva izquierda · 1 · 2»: dos ganchos seguidos"
     },
     {
-      "id": "combinaciones-d5bccafb",
+      "id": "combinaciones-c6f56e06",
       "origen": "data/combinaciones.json",
-      "texto": "#35 «esquiva derecha · 6 · 5 · esquiva izquierda · 1 · 2 · esquiva abajo derecha · 4 · 5»: dos ganchos seguidos"
+      "texto": "#35 «esquiva derecha · 6 · 5 · esquiva izquierda · 1 · 2 · rueda derecha · 4 · 5»: dos ganchos seguidos"
     },
     {
       "id": "combinaciones-97549265",
@@ -62,24 +62,24 @@
       "texto": "#51 «4 · 5 · 6»: dos ganchos seguidos"
     },
     {
-      "id": "combinaciones-111d3dcc",
+      "id": "combinaciones-0c932bae",
       "origen": "data/combinaciones.json",
-      "texto": "#52 «1 · 2 · 6 · 3 · esquiva abajo izquierda»: recto y gancho trasero seguidos (misma mano)"
+      "texto": "#52 «1 · 2 · 6 · 3 · rueda izquierda»: recto y gancho trasero seguidos (misma mano)"
     },
     {
-      "id": "combinaciones-5ed3de27",
+      "id": "combinaciones-21fc939e",
       "origen": "data/combinaciones.json",
-      "texto": "#53 «1 · 4 · 5 · 6 · esquiva abajo derecha»: dos ganchos seguidos"
+      "texto": "#53 «1 · 4 · 5 · 6 · rueda derecha»: dos ganchos seguidos"
     },
     {
-      "id": "combinaciones-86f4293f",
+      "id": "combinaciones-43063447",
       "origen": "data/combinaciones.json",
-      "texto": "#54 «1 · 2 · 6 · 3 · esquiva abajo izquierda · 1 · 2 · esquiva izquierda»: recto y gancho trasero seguidos (misma mano)"
+      "texto": "#54 «1 · 2 · 6 · 3 · rueda izquierda · 1 · 2 · esquiva izquierda»: recto y gancho trasero seguidos (misma mano)"
     },
     {
-      "id": "combinaciones-c53b299b",
+      "id": "combinaciones-da7972d5",
       "origen": "data/combinaciones.json",
-      "texto": "#55 «1 · 4 · 5 · 6 · esquiva abajo derecha · 5 al cuerpo · 3 · ballesteo»: dos ganchos seguidos"
+      "texto": "#55 «1 · 4 · 5 · 6 · rueda derecha · 5 al cuerpo · 3 · ballesteo»: dos ganchos seguidos"
     },
     {
       "id": "combinaciones-1c2981cd",
@@ -102,14 +102,14 @@
       "texto": "#63 «flexión · 6 al cuerpo · 5»: dos ganchos seguidos"
     },
     {
-      "id": "combinaciones-cf77df3c",
+      "id": "combinaciones-fc40ff47",
       "origen": "data/combinaciones.json",
-      "texto": "#65 «flexión · 6 al cuerpo · 5 · esquiva abajo derecha · 1 · 2»: dos ganchos seguidos"
+      "texto": "#65 «flexión · 6 al cuerpo · 5 · rueda derecha · 1 · 2»: dos ganchos seguidos"
     },
     {
-      "id": "combinaciones-e12aeff1",
+      "id": "combinaciones-0042d501",
       "origen": "data/combinaciones.json",
-      "texto": "#67 «flexión · 6 al cuerpo · 5 · esquiva abajo derecha · 1 · 2 · flexión · 1 al cuerpo · 2»: dos ganchos seguidos"
+      "texto": "#67 «flexión · 6 al cuerpo · 5 · rueda derecha · 1 · 2 · flexión · 1 al cuerpo · 2»: dos ganchos seguidos"
     },
     {
       "id": "combinaciones-0790ab72",
@@ -165,6 +165,61 @@
       "id": "tecnica-423ded03",
       "origen": "data/tecnica.json",
       "texto": "jab, error «estirarse para llegar» (sustituye a «inclinarse hacia delante, con el peso en la pierna delantera»: el peso depende de la situación)"
+    },
+    {
+      "id": "tecnica-e051aadd",
+      "origen": "data/tecnica.json",
+      "texto": "esquiva, cuánto se gira el tronco y si la rodilla se flexiona en la esquiva lateral"
+    },
+    {
+      "id": "tecnica-0e670168",
+      "origen": "data/tecnica.json",
+      "texto": "rueda: el nombre («rueda», «rotativa»…; Iván no lo ha confirmado), si en su escuela se distingue de la flexión y que el lado sea hacia dónde va el cuerpo (rueda derecha = bajas y sales hacia tu derecha)"
+    },
+    {
+      "id": "tecnica-bbc78f64",
+      "origen": "data/tecnica.json",
+      "texto": "rueda: contra qué crochet va cada lado; razonamiento nuestro, sin confirmar: la rueda derecha contra el crochet de su mano izquierda (sales por tu derecha, por fuera de su brazo) y la rueda izquierda contra el de su mano derecha"
+    },
+    {
+      "id": "tecnica-7bef4771",
+      "origen": "data/tecnica.json",
+      "texto": "ballesteo, si Iván lo llama así, si va con paso o solo con el cuerpo, y si es adecuado para un principiante"
+    },
+    {
+      "id": "tecnica-276fcf0e",
+      "origen": "data/tecnica.json",
+      "texto": "flexión, la definición es nuestra, no de Iván: qué entiende él por «flexión» y en qué se diferencia de la rueda"
+    },
+    {
+      "id": "tecnica-e3bd5d1f",
+      "origen": "data/tecnica.json",
+      "texto": "bloqueo, cómo quiere Iván que se bloquee el crochet (guante a la sien, codo arriba…)"
+    },
+    {
+      "id": "tecnica-1381458f",
+      "origen": "data/tecnica.json",
+      "texto": "parada, dirección del desvío (lateral o hacia abajo) que prefiere Iván"
+    },
+    {
+      "id": "tecnica-2e2a96a0",
+      "origen": "data/tecnica.json",
+      "texto": "paso atrás, longitud del paso y qué golpe de respuesta recomienda según la distancia"
+    },
+    {
+      "id": "tecnica-961e5aaf",
+      "origen": "data/tecnica.json",
+      "texto": "pivote, hacia qué lado se pivota por defecto en guardia diestra y cuántos grados"
+    },
+    {
+      "id": "tecnica-882cc93e",
+      "origen": "data/tecnica.json",
+      "texto": "paso lateral, si conviene más moverse hacia el lado de la mano adelantada del rival"
+    },
+    {
+      "id": "tecnica-97d21aba",
+      "origen": "data/tecnica.json",
+      "texto": "cambio de ángulo, si «salir» y «cambio de ángulo» son lo mismo para Iván o dos cosas distintas"
     }
   ]
 }

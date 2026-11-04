@@ -31,6 +31,20 @@ FILAS = """() => [...document.querySelectorAll('#elegir-practicar ul.fichas')]
   return { clase: ul.className, filas: [...filas.values()] };
 })"""
 
+# Esperas a un estado, no a un tiempo fijo. Las animaciones de la página, acabadas (la entrada de la vista
+# dura 0,28 s más su retraso); una cancelada también cuenta como acabada.
+ANIMACIONES_ACABADAS = "() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {})))"
+# Dos fotogramas pintados: Chromium recalcula el hover (y lo que dependa del diseño) en el siguiente.
+DOS_FOTOGRAMAS = "() => new Promise((listo) => requestAnimationFrame(() => requestAnimationFrame(listo)))"
+# El scroll, quieto: el mismo scrollY en tres fotogramas seguidos.
+SCROLL_QUIETO = """() => new Promise((listo) => {
+  let antes = null, iguales = 0;
+  (function mirar() {
+    iguales = scrollY === antes ? iguales + 1 : 0;
+    antes = scrollY;
+    if (iguales >= 2) listo(scrollY); else requestAnimationFrame(mirar);
+  })();
+})"""
 
 @pytest.fixture(scope="module")
 def pagina(tmp_path_factory):
@@ -280,7 +294,7 @@ def _pestanas_quietas(pagina):
     hojas, sitios = {}, set()
     for pestana in ("golpe", "defensa", "movimiento", "golpe"):
         pagina.click(f"#pestana-{pestana}")
-        pagina.wait_for_timeout(100)  # Chromium recalcula el hover en el fotograma siguiente
+        pagina.evaluate(DOS_FOTOGRAMAS)  # Chromium recalcula el hover en el fotograma siguiente
         assert pagina.locator("#elegir-practicar [data-elegir]:hover").count() == 0
         sitios.add(round(pagina.locator(f"#pestana-{pestana}").bounding_box()["y"]))
         hojas[pestana] = _hoja(pagina)
@@ -355,12 +369,12 @@ def test_a_390_volver_se_queda_fijo_arriba_al_bajar_sin_tapar_nada_al_empezar(aj
     pagina = ajustes
     volver = pagina.locator("#volver-ajustes")
     pagina.evaluate("window.scrollTo(0, 0)")
-    pagina.wait_for_timeout(400)  # la entrada de la vista se anima 0,28 s
+    pagina.evaluate(ANIMACIONES_ACABADAS)  # la entrada de la vista mueve los bloques 10 px
     caja = pagina.locator("#vista-ajustes .volver-movil").bounding_box()
     cabecera = pagina.locator("#vista-ajustes .cabecera .antetitulo").bounding_box()
     assert caja["y"] + caja["height"] <= cabecera["y"]  # arriba del todo, no pisa el antetítulo
     pagina.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)")
-    pagina.wait_for_timeout(100)
+    pagina.evaluate(SCROLL_QUIETO)
     assert pagina.evaluate("window.scrollY") > 200
     fija = pagina.locator("#vista-ajustes .volver-movil").bounding_box()
     assert abs(fija["y"]) <= 1 and volver.is_visible()

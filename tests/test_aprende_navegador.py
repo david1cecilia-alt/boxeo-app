@@ -61,8 +61,8 @@ def test_la_lista_va_agrupada_en_golpes_defensas_y_salidas(pagina):
     grupos = pagina.eval_on_selector_all(".grupo-fichas", """gs => gs.map((g) => [g.querySelector('h2').textContent,
         [...g.querySelectorAll('.ficha-enlace .titular')].map((t) => t.textContent)])""")
     assert grupos == [
-        ["Golpes", ["Jab", "Recto", "Crochet de izquierda", "Crochet de derecha", "Gancho de izquierda",
-                    "Gancho de derecha"]],
+        ["Golpes", ["1/7 Jab", "2/8 Recto", "3/9 Crochet de izquierda", "4/10 Crochet de derecha",
+                    "5/11 Gancho de izquierda", "6/12 Gancho de derecha"]],
         ["Defensas", ["Esquiva", "Rueda", "Ballesteo", "Flexión", "Bloqueo", "Parada", "Paso atrás"]],
         ["Salidas", ["Pivote", "Paso lateral", "Cambio de ángulo"]],
     ]
@@ -267,3 +267,12 @@ def test_a_390_la_barra_con_aprende_cabe_sin_apretar_y_con_48_px_para_el_dedo(pa
     for p in pestanas:
         assert p["ancho"] >= 48 and p["alto"] >= 48, p
         assert p["letra"] == "12px" and p["una_linea"] and p["holgura"] >= 8, p
+
+
+def test_la_ficha_de_un_golpe_lleva_sus_dos_numeros_en_el_titulo(pagina):
+    _ir(pagina, "aprende")
+    pagina.click('[data-ficha="gancho_izq"]')
+    pagina.wait_for_selector(".aprende-ficha")
+    assert pagina.locator("#t-aprende").text_content() == "3/9 Crochet de izquierda"
+    pagina.go_back()
+    pagina.wait_for_selector(".aprende-lista")

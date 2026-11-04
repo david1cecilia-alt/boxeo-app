@@ -8,6 +8,8 @@ import { accionesPorIds, catalogo, espejo, nombreHablado, textoHablado } from ".
 import { VELOCIDADES } from "../motor/ritmo.js";
 import { movimiento, movimientos } from "../motor/sorteo.js";
 import { nombreCortoVoz } from "../voz.js";
+import { MAX_PROPIAS } from "../motor/reglas.js";
+import { RUTA as RUTA_CREADOR, iniciarCreador } from "./creador.js";
 import { $, $$, anunciar, atraparFoco, esc } from "./dom.js";
 
 const GRUPOS_PRACTICAR = { golpe: "Golpes", defensa: "Defensas", movimiento: "Salidas" };
@@ -131,6 +133,15 @@ export function iniciarAjustes({ almacen, voz }) {
     $("#volver-ajustes").href = vuelta;
     const p = almacen.datos.perfil;
     raiz.innerHTML = `
+      <a href="${RUTA_CREADOR}" class="tarjeta tarjeta-enlace" id="ir-creador">
+        <span class="tarjeta-enlace-texto">
+          <span class="titular">Mis combinaciones
+            <span class="acento">${almacen.datos.combinacionesPropias.length}/${MAX_PROPIAS}</span></span>
+          <span class="nota">Crea las tuyas y mézclalas con la biblioteca en Entrenar.</span>
+        </span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </a>
+
       <form class="tarjeta formulario" id="f-voz" aria-labelledby="t-voz">
         <div class="voz-cabeza">
           <h2 id="t-voz">Voz</h2>
@@ -266,5 +277,21 @@ export function iniciarAjustes({ almacen, voz }) {
     });
   }
 
-  return { mostrar: pintar };
+  // Subpágina «Mis combinaciones» (#ajustes/mis-combinaciones/…): sin la cabecera de Ajustes.
+  const creador = iniciarCreador({ almacen, raiz });
+  const vista = $("#vista-ajustes");
+  function mostrar(parametro = "") {
+    const [sub, ...resto] = parametro.split("/");
+    if (sub === "mis-combinaciones") {
+      vista.dataset.sub = "creador";
+      return creador.mostrar(resto.join("/"));
+    }
+    const desdeCreador = vista.dataset.sub === "creador";
+    delete vista.dataset.sub;
+    pintar();
+    // Al volver de «Mis combinaciones», el foco a su tarjeta (de donde se salió).
+    if (desdeCreador) $("#ir-creador").focus();
+  }
+
+  return { mostrar };
 }

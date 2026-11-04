@@ -526,6 +526,71 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
 #ajustes-contenido { display: grid; gap: 16px; align-content: start; min-width: 0; }
 .voz-eleccion, .voz-velocidad { display: grid; gap: 14px; align-content: start; min-width: 0; }
 
+/* ---------- Mis combinaciones (el creador, #ajustes/mis-combinaciones) ---------- */
+/* En la subpágina no se ve la cabecera de Ajustes: la subpágina trae su «Volver» y su título. */
+#vista-ajustes[data-sub] > :is(.volver-movil, .cabecera) { display: none; }
+#vista-ajustes[data-sub] #ajustes-contenido { padding-top: 0; }
+.volver-sub {
+  position: sticky; top: 0; z-index: 5; margin: 0 calc(-1 * var(--hueco)) -8px;
+  padding: calc(8px + env(safe-area-inset-top, 0px)) var(--hueco) 8px; background: var(--fondo);
+}
+.cabecera-sub { display: grid; gap: 8px; }
+.cabecera-sub h1 { font-size: clamp(2.5rem, 11.8vw, 3.6rem); }
+.cabecera-sub .nota { margin: 0; }
+/* Tarjeta-enlace de Ajustes: «Mis combinaciones 3/20», su explicación y «›». */
+.tarjeta-enlace {
+  display: flex; align-items: center; gap: 12px; min-height: 48px;
+  color: var(--texto); text-decoration: none; transition: background-color 0.15s, border-color 0.15s;
+}
+.tarjeta-enlace:hover { background: var(--superficie-hover); border-color: var(--linea-chip); }
+.tarjeta-enlace-texto { display: grid; gap: 4px; flex: 1; min-width: 0; }
+.tarjeta-enlace .titular { font-size: 1.375rem; letter-spacing: 0.04em; }
+.tarjeta-enlace .nota { margin: 0; font-size: 0.8125rem; }
+.tarjeta-enlace svg {
+  flex: none; width: 22px; height: 22px; fill: none; stroke: var(--suave); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+/* Listado: una tarjeta por combinación, con su nivel, editar y borrar (48 px) y sus fichas. */
+.lista-propias { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.propia { display: grid; gap: 12px; padding: 12px 8px 16px 16px; }
+.propia-cabecera { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.propia-cabecera h2 { margin: 0; font-size: 1.375rem; white-space: nowrap; }
+.pastilla-nivel {
+  flex: none; padding: 2px 10px; border-radius: 999px; font-size: 0.8125rem; font-weight: 600;
+  color: var(--acento); background: var(--acento-tenue);
+}
+.propia-cabecera .boton-icono:first-of-type { margin-left: auto; }
+.boton-icono {
+  display: grid; place-items: center; flex: none; width: 48px; height: 48px; padding: 0;
+  color: var(--suave); background: transparent; border: 0; border-radius: 50%; cursor: pointer;
+}
+.boton-icono:hover { color: var(--texto); background: var(--secundario); }
+.boton-icono svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* Fichas con el código de la sesión (círculo relleno = golpe, borde = defensa, discontinuo = pies). */
+.fichas-combo { list-style: none; margin: 0; padding: 0 8px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.fichas-combo > li, .chip-paso {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 4px 12px 4px 5px;
+  border-radius: 999px; background: var(--secundario); font-size: 0.875rem; white-space: nowrap;
+}
+:is(.fichas-combo, .tira-fichas) i {
+  flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+  font-style: normal; font-size: 0.75rem; font-weight: 800; letter-spacing: -0.02em;
+}
+.vacio-propias { margin: 0; color: var(--suave); }
+.anadir-propia {
+  display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 64px; width: 100%;
+  font: inherit; font-weight: 600; color: var(--texto); cursor: pointer;
+  background: transparent; border: 1px dashed var(--linea-chip); border-radius: var(--radio);
+  transition: background-color 0.15s;
+}
+.anadir-propia span { color: var(--acento); font-size: 1.4rem; font-weight: 400; line-height: 1; }
+.anadir-propia:hover:not([aria-disabled="true"]) { background: var(--secundario); }
+/* Desactivados con aria-disabled (siguen recibiendo el foco y dicen por qué): se ven apagados. */
+:is(.anadir-propia, .boton, .baldosa)[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; }
+.boton[aria-disabled="true"]:active { transform: none; }
+.motivo { margin: -4px 0 0; }
+#d-borrar h2, #d-avisos h2, #d-descartar h2 { margin: 0 0 8px; }
+:is(#d-borrar, #d-avisos, #d-descartar) .acciones { margin-top: 18px; }
+
 /* ---------- Historial ---------- */
 #vista-historial { --alto-foto: 240px; --arriba-titular: 96px; --posicion-foto: 50% 35%; }
 #vista-perfil { --alto-foto: 250px; --arriba-titular: 110px; --posicion-foto: 55% 25%; }

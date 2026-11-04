@@ -883,6 +883,50 @@ dialog.hoja { padding: 0; }
 
 .pie-perfil { margin: 0; text-align: center; font-size: 0.75rem; }
 
+/* ---------- Aprende ---------- */
+/* Lista de fichas agrupada por categoría y, en #aprende/<id>, la ficha: sus apartados en tarjetas
+   (en el PC, dos columnas) y las fuentes plegadas, como las secciones del Perfil. */
+#vista-aprende { --alto-foto: 250px; --arriba-titular: 110px; --posicion-foto: 50% 30%; }
+#vista-aprende h1 { font-size: clamp(2.5rem, 11.8vw, 3.6rem); overflow-wrap: anywhere; }
+#vista-aprende .marca-agua { top: 6px; right: -10px; font-size: 140px; opacity: 0.04; }
+#vista-aprende .foto-cabecera::after {
+  background: linear-gradient(180deg, rgba(10, 10, 10, 0.45) 0%, rgba(10, 10, 10, 0.25) 40%, var(--fondo) 100%);
+}
+#aprende-contenido { display: grid; gap: 16px; align-content: start; min-width: 0; }
+#aprende-contenido p { margin: 0; }
+/* Aviso discreto: punto ámbar y texto secundario, sin mayúsculas. */
+.aviso-pendiente { display: flex; align-items: center; gap: 8px; color: var(--suave); font-size: 0.8125rem; }
+.aviso-pendiente::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--aviso); }
+.grupo-fichas { display: grid; gap: 10px; min-width: 0; }
+.grupo-fichas h2 { margin: 12px 0 0; }
+.grupo-fichas .nota { margin-top: -6px; }
+.lista-fichas { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.lista-fichas > li { display: grid; min-width: 0; }
+.ficha-enlace {
+  display: grid; gap: 6px; align-content: start; min-height: 48px;
+  color: var(--texto); text-decoration: none; transition: background-color 0.15s, border-color 0.15s;
+}
+.ficha-enlace:hover { background: var(--superficie-hover); border-color: var(--linea-chip); }
+.ficha-enlace .titular { font-size: 1.375rem; letter-spacing: 0.04em; overflow-wrap: anywhere; }
+.resumen-ficha {
+  color: var(--suave); font-size: 0.875rem;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+#aprende-contenido .volver-ficha { margin-top: -6px; }
+.cabeza-ficha { display: grid; gap: 6px; }
+.col-ficha { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.apartado { display: grid; gap: 10px; }
+.apartado h2 { margin: 0; }
+.apartado :is(ul, ol) { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
+.pasos-ficha li::marker { color: var(--acento); font-weight: 600; }
+.correccion { display: block; margin-top: 2px; color: var(--suave); font-size: 0.875rem; }
+.fuentes-ficha .cuerpo-plegable { gap: 0; }
+.fuentes-ficha li { overflow-wrap: anywhere; }
+.pie-aprende { font-size: 0.75rem; }
+@media (min-width: 720px) {
+  .lista-fichas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 /* ---------- Diálogo post-sesión ---------- */
 dialog {
   width: min(560px, calc(100vw - 24px)); max-height: calc(100dvh - 24px);
@@ -1073,6 +1117,13 @@ dialog::backdrop { background: var(--velo); }
   /* Perfil: una sola columna (rectángulo, Sobre ti, Mi estilo), del ancho de una lectura cómoda. */
   #perfil-contenido { max-width: 760px; gap: 20px; }
   .plegable { padding: 0 24px; }
+
+  /* Aprende: fichas en tres columnas; la ficha, en dos (qué es, cuándo y cómo a la izquierda;
+     errores, ventajas, inconvenientes, notas y fuentes a la derecha). */
+  #vista-aprende h1 { font-size: 4.5rem; }
+  .lista-fichas { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .aprende-ficha { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 32px; }
+  .aprende-ficha > :is(.volver-ficha, .cabeza-ficha, .pie-aprende) { grid-column: 1 / -1; }
 }
 
 /* ---------- Animaciones sobrias ---------- */

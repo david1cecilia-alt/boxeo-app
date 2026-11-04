@@ -20,6 +20,7 @@ const FICHEROS = [
   "voz.js",
   "manifest.json",
   "vistas/ajustes.js",
+  "vistas/aprende.js",
   "vistas/campos.js",
   "vistas/dom.js",
   "vistas/entrenar.js",

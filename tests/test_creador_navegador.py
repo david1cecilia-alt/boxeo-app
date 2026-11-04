@@ -41,6 +41,21 @@ PEQUENOS = """() => [...document.querySelectorAll('#ajustes-contenido button')]
   .map((b) => ({ b, r: b.getBoundingClientRect() })).filter(({ r }) => r.height < 47.5 || r.width < 47.5)
   .map(({ b, r }) => `${b.className || b.id} ${Math.round(r.width)}x${Math.round(r.height)}`)"""
 
+# Palabras partidas en dos líneas en las baldosas y los botones (cada palabra debe ocupar un solo trozo).
+PARTIDAS = """() => [...document.querySelectorAll('#ajustes-contenido :is(.baldosa span, .boton, dialog[open] .boton)')]
+  .filter((e) => e.getClientRects().length).flatMap((e) => {
+    const nodo = [...e.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+    if (!nodo) return [];
+    const partidas = [];
+    for (const m of nodo.textContent.matchAll(/\\S+/g)) {
+      const r = document.createRange();
+      r.setStart(nodo, m.index);
+      r.setEnd(nodo, m.index + m[0].length);
+      if (r.getClientRects().length > 1) partidas.push(m[0]);
+    }
+    return partidas;
+  })"""
+
 
 @pytest.fixture(scope="module")
 def sitio(tmp_path_factory):
@@ -383,6 +398,7 @@ def test_nada_se_sale_y_los_toques_miden_48(pagina, ancho):
     pagina.evaluate(ANIMACIONES_ACABADAS)
     assert pagina.evaluate(SE_SALEN) == []
     assert pagina.evaluate(PEQUENOS) == []
+    assert pagina.evaluate(PARTIDAS) == []
     pagina.click('[data-borrar="p-1"]')
     assert pagina.evaluate(SE_SALEN) == []
     pagina.keyboard.press("Escape")
@@ -396,10 +412,12 @@ def test_nada_se_sale_y_los_toques_miden_48(pagina, ancho):
     assert len(fichas(pagina)) == 10
     assert pagina.evaluate(SE_SALEN) == []
     assert pagina.evaluate(PEQUENOS) == []
+    assert pagina.evaluate(PARTIDAS) == []
     for grupo in ("defensa", "movimiento"):
         pagina.click(f'[data-grupo="{grupo}"]')
         assert pagina.evaluate(SE_SALEN) == []
         assert pagina.evaluate(PEQUENOS) == []
+        assert pagina.evaluate(PARTIDAS) == []
     paleta = pagina.locator(".editor-paleta").bounding_box()
     caja = pagina.locator(".editor-combo").bounding_box()
     if ancho >= 1024:  # dos columnas: paleta a la izquierda, combinación a la derecha

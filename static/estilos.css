@@ -658,7 +658,7 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
   background: var(--superficie); border: 1px solid var(--linea-chip); border-radius: 16px;
   transition: background-color 0.15s, border-color 0.15s, transform 0.14s;
 }
-.baldosa span { min-width: 0; overflow-wrap: anywhere; }
+.baldosa span { min-width: 0; overflow-wrap: break-word; }
 .baldosa:hover:not([aria-disabled="true"]) { border-color: var(--acento-relleno); }
 .baldosa-golpe { min-height: 72px; }
 .baldosa b {
@@ -671,6 +671,8 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
 :is(.baldosa, .tarjeta-grupo, .chip-paso):active:not([aria-disabled="true"]) { transform: scale(0.97); }
 #d-borrar h2, #d-avisos h2, #d-descartar h2 { margin: 0 0 8px; }
 :is(#d-borrar, #d-avisos, #d-descartar) .acciones { margin-top: 18px; }
+/* Sin partir el texto de los botones: si no caben dos en una fila, uno encima del otro. */
+:is(#d-borrar, #d-avisos, #d-descartar) .boton { white-space: nowrap; }
 .lista-avisos { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 
 /* ---------- Historial ---------- */
@@ -1287,7 +1289,10 @@ dialog::backdrop { background: var(--velo); }
   .editor { grid-template-columns: minmax(0, 1fr) minmax(340px, 0.75fr); gap: 32px; align-items: start; }
   .editor-paleta { grid-column: 1; grid-row: 1; }
   .editor-combo { grid-column: 2; grid-row: 1; position: sticky; top: 24px; }
-  .baldosas-golpe { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  /* Golpes en tres columnas solo si caben sus nombres sin partir palabras (desde 1280 px). */
+  @media (min-width: 1280px) {
+    .baldosas-golpe { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
 
   /* Perfil: una sola columna (rectángulo, Sobre ti, Mi estilo), del ancho de una lectura cómoda. */
   #perfil-contenido { max-width: 760px; gap: 20px; }

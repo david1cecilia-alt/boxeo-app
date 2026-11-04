@@ -162,9 +162,84 @@
       "texto": "maniquí, jab al impacto: hombro arriba tapando la barbilla, puño horizontal (nudillos arriba) y extensión del brazo"
     },
     {
-      "id": "tecnica-423ded03",
+      "id": "tecnica-9f0aa301",
       "origen": "data/tecnica.json",
-      "texto": "jab, error «estirarse para llegar» (sustituye a «inclinarse hacia delante, con el peso en la pierna delantera»: el peso depende de la situación)"
+      "texto": "jab: las variantes y cuáles enseñar primero"
+    },
+    {
+      "id": "tecnica-ac24cdc6",
+      "origen": "data/tecnica.json",
+      "texto": "jab: el giro del puño (pulgar hacia los pómulos → nudillos arriba) y el giro de tobillo, cadera y hombro los ha descrito David; Iván respondió con un gesto y no quedó claro"
+    },
+    {
+      "id": "tecnica-6347c759",
+      "origen": "data/tecnica.json",
+      "texto": "jab: cuánto gira la cadera en el jab sin que se vea venir"
+    },
+    {
+      "id": "tecnica-6f83f184",
+      "origen": "data/tecnica.json",
+      "texto": "jab: cuándo conviene el jab con paso"
+    },
+    {
+      "id": "tecnica-e1ad240a",
+      "origen": "data/tecnica.json",
+      "texto": "jab: la guardia más relajada a larga distancia la ha descrito David; Iván habló de barbilla al pecho sin matizar la distancia"
+    },
+    {
+      "id": "tecnica-b7d828f9",
+      "origen": "data/tecnica.json",
+      "texto": "recto: las variantes"
+    },
+    {
+      "id": "tecnica-e5d43493",
+      "origen": "data/tecnica.json",
+      "texto": "recto: cuánto gira el pie de atrás y hasta dónde pasa el peso"
+    },
+    {
+      "id": "tecnica-d0628549",
+      "origen": "data/tecnica.json",
+      "texto": "crochet de izquierda: las variantes"
+    },
+    {
+      "id": "tecnica-da5b9067",
+      "origen": "data/tecnica.json",
+      "texto": "crochet de izquierda: si gira el pie de delante y cuánto"
+    },
+    {
+      "id": "tecnica-5156bced",
+      "origen": "data/tecnica.json",
+      "texto": "crochet de derecha: las variantes"
+    },
+    {
+      "id": "tecnica-55ee6d6a",
+      "origen": "data/tecnica.json",
+      "texto": "crochet de derecha: si lo ve adecuado para un principiante y si prefiere enseñarlo corto o algo más abierto"
+    },
+    {
+      "id": "tecnica-88add536",
+      "origen": "data/tecnica.json",
+      "texto": "gancho de izquierda: las variantes"
+    },
+    {
+      "id": "tecnica-40d10784",
+      "origen": "data/tecnica.json",
+      "texto": "gancho de izquierda: la carga hacia el lado del gancho la ha descrito David; confirmar cuánto se flexiona (Iván dijo que el peso depende de la situación)"
+    },
+    {
+      "id": "tecnica-9bd8117d",
+      "origen": "data/tecnica.json",
+      "texto": "gancho de derecha: las variantes"
+    },
+    {
+      "id": "tecnica-18ab4c85",
+      "origen": "data/tecnica.json",
+      "texto": "gancho de derecha: cuánto se flexiona en la carga (descrita por David)"
+    },
+    {
+      "id": "tecnica-cdd8a1ed",
+      "origen": "data/tecnica.json",
+      "texto": "gancho de derecha: dudas de la biblioteca sobre el gancho de derecha detrás del recto (#52, #54) y detrás del ballesteo (#113, #144)"
     },
     {
       "id": "tecnica-e051aadd",

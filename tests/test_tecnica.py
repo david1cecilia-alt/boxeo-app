@@ -119,6 +119,13 @@ def test_la_ficha_se_titula_como_lo_dice_la_app(tecnica):
             assert f["titulo"].lower() == nombre, (f["id"], nombre)
 
 
+def test_las_notas_internas_no_salen_en_lo_visible(tecnica):
+    # «Decidido por David», «descrito por…» van en `pendiente` (a revisar.json), nunca a la vista.
+    for f in [*tecnica["fichas"], *tecnica["categorias"]]:
+        visible = json.dumps({k: v for k, v in f.items() if k != "pendiente"}, ensure_ascii=False).lower()
+        assert "decidido por" not in visible and "descrito por" not in visible, f["id"]
+
+
 def test_lo_pendiente_dice_que_hay_que_revisar(tecnica):
     for f in tecnica["fichas"]:
         if f["revisar"]:

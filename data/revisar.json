@@ -162,6 +162,11 @@
       "texto": "maniquí, jab al impacto: hombro arriba tapando la barbilla, puño horizontal (nudillos arriba) y extensión del brazo"
     },
     {
+      "id": "tecnica-3fa91fbb",
+      "origen": "data/tecnica.json",
+      "texto": "golpes al cuerpo, que puedan salir en cualquier nivel, también en básico (decidido por David, 04-11)"
+    },
+    {
       "id": "tecnica-9f0aa301",
       "origen": "data/tecnica.json",
       "texto": "jab: las variantes y cuáles enseñar primero"
@@ -205,6 +210,11 @@
       "id": "tecnica-da5b9067",
       "origen": "data/tecnica.json",
       "texto": "crochet de izquierda: si gira el pie de delante y cuánto"
+    },
+    {
+      "id": "tecnica-a6587070",
+      "origen": "data/tecnica.json",
+      "texto": "crochet de izquierda: el puño con la palma hacia ti y no hacia abajo, como England Boxing (decidido por David, 04-11)"
     },
     {
       "id": "tecnica-5156bced",

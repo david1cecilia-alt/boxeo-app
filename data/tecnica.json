@@ -46,7 +46,7 @@
           },
           {
             "titulo": "Nivel:",
-            "texto": "los golpes al cuerpo son golpes como cualquier otro y pueden salir en cualquier nivel, también en básico. El nivel lo marca la longitud de la combinación (decidido por David, 04-11)."
+            "texto": "los golpes al cuerpo son golpes como cualquier otro y pueden salir en cualquier nivel, también en básico. El nivel lo marca la longitud de la combinación."
           }
         ],
         "fuentes": [
@@ -63,7 +63,8 @@
             "url": "https://expertboxing.com/the-art-of-body-punching"
           }
         ]
-      }
+      },
+      "pendiente": "REVISAR CON ENTRENADOR: golpes al cuerpo, que puedan salir en cualquier nivel, también en básico (decidido por David, 04-11)"
     },
     {
       "id": "defensas",
@@ -363,11 +364,11 @@
       "detalles": [
         {
           "titulo": "Puño",
-          "texto": "Hay escuelas que lo lanzan con la palma hacia abajo (así lo enseña England Boxing); en la app se explica con la palma hacia ti (decidido por David, 04-11)."
+          "texto": "Hay escuelas que lo lanzan con la palma hacia abajo (así lo enseña England Boxing); aquí se explica con la palma hacia ti."
         }
       ],
       "revisar": true,
-      "pendiente": "REVISAR CON ENTRENADOR: (1) crochet de izquierda: las variantes (2) crochet de izquierda: si gira el pie de delante y cuánto",
+      "pendiente": "REVISAR CON ENTRENADOR: (1) crochet de izquierda: las variantes (2) crochet de izquierda: si gira el pie de delante y cuánto (3) crochet de izquierda: el puño con la palma hacia ti y no hacia abajo, como England Boxing (decidido por David, 04-11)",
       "fuentes": [
         {
           "titulo": "England Boxing, «Boxing Coaching Handbook, Part 1» (Level 1)",

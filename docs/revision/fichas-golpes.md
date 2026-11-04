@@ -24,7 +24,8 @@ Criterios de redacción (los mismos que en las defensas):
 - **Mezcla cabeza y cuerpo.** Un golpe arriba hace que el rival suba la guardia y abre el cuerpo, y al revés.
 - **Objetivos:** el hígado está en el lado derecho del rival, justo bajo las últimas costillas; le llega tu crochet de izquierda (en guardia diestra es el de delante; en zurdo, el de atrás). El plexo y el estómago, por el centro (golpes rectos y ganchos). El lado izquierdo del rival, costillas y bazo, para tu crochet de derecha.
 - **Dónde se puede golpear:** la parte delantera y los lados del tronco, por encima del cinturón. Nunca por debajo del cinturón, en la espalda ni en los riñones (reglamento de World Boxing).
-- **Nivel:** los golpes al cuerpo son golpes como cualquier otro y pueden salir en cualquier nivel, también en básico. El nivel lo marca la longitud de la combinación (decidido por David, 04-11).
+- **Nivel:** los golpes al cuerpo son golpes como cualquier otro y pueden salir en cualquier nivel, también en básico. El nivel lo marca la longitud de la combinación.
+- **REVISAR CON ENTRENADOR:** golpes al cuerpo, que puedan salir en cualquier nivel, también en básico (decidido por David, 04-11).
 
 ---
 
@@ -102,8 +103,8 @@ Criterios de redacción (los mismos que en las defensas):
     - *Crochet con pivote:* giras el cuerpo más y te mueves sobre el pie de delante a la vez que golpeas, para salir del sitio con el mismo golpe.
     - *Doble crochet:* el primero al cuerpo y el segundo a la cabeza (o al revés). El rival suele defender izquierda-derecha y no espera dos seguidos con la misma mano.
     - *Crochet en diagonal:* a medio camino entre crochet y gancho; entra por un ángulo raro, por debajo de la guardia lateral.
-  - **Puño:** hay escuelas que lo lanzan con la palma hacia abajo (así lo enseña England Boxing); en la app se explica con la palma hacia ti (decidido por David, 04-11).
-- **REVISAR CON ENTRENADOR:** las variantes; si gira el pie de delante y cuánto.
+  - **Puño:** hay escuelas que lo lanzan con la palma hacia abajo (así lo enseña England Boxing); aquí se explica con la palma hacia ti.
+- **REVISAR CON ENTRENADOR:** las variantes; si gira el pie de delante y cuánto; el puño con la palma hacia ti y no hacia abajo, como England Boxing (decidido por David, 04-11).
 
 ## 4. Crochet de derecha
 - **ids esperados:** el crochet trasero y su versión al cuerpo

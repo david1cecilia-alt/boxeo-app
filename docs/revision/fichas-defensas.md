@@ -32,6 +32,7 @@ Criterios de redacción:
 - **En inglés:** roll, bob and weave
 - **Qué es:** bajar flexionando las piernas y pasar por debajo del golpe dibujando una «U» hacia un lado, para volver a subir al otro lado del brazo del rival.
 - **Derecha o izquierda:** el lado es hacia dónde va el cuerpo, como en la esquiva y el paso lateral: rueda derecha = bajas y sales hacia tu derecha.
+- **Contra qué crochet** (razonamiento nuestro, sin confirmar): la rueda derecha va contra el crochet de su mano izquierda, que te llega por tu derecha; bajas y subes por tu derecha, por fuera de su brazo, mientras el golpe sigue su curva hacia tu izquierda. La rueda izquierda, contra el crochet de su mano derecha. En zurdo se invierte todo.
 - **Cuándo suele servir:** contra golpes curvos a la cabeza (crochet). Te deja cerca del rival y en ángulo para golpear.
 - **Cómo se hace:**
   1. Ve el crochet venir.
@@ -41,7 +42,7 @@ Criterios de redacción:
 - **Errores típicos:** agacharte doblando la cintura (te deja sin equilibrio y expuesto al gancho), bajar la vista al suelo, bajar las manos, bajar más de lo necesario.
 - **Ventajas:** neutraliza golpes fuertes y te coloca en una posición buena para el contraataque.
 - **Inconvenientes:** cansa las piernas; si el rival lo espera, puede responder con un gancho.
-- **REVISAR CON ENTRENADOR:** el nombre («rueda», antes «esquiva abajo»; también «rotativa»…; Iván no lo ha confirmado) y si en su escuela se distingue de la flexión. El lado es hacia dónde va el cuerpo (decidido el 04-11-2026, también por revisar).
+- **REVISAR CON ENTRENADOR:** el nombre («rueda», antes «esquiva abajo»; también «rotativa»…; Iván no lo ha confirmado) y si en su escuela se distingue de la flexión. El lado es hacia dónde va el cuerpo (decidido el 04-11-2026, también por revisar). Y contra qué crochet va cada lado: rueda derecha contra su mano izquierda, rueda izquierda contra su derecha.
 
 ## 3. Ballesteo
 - **id esperado:** `ballesteo`

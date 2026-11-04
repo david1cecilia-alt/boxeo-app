@@ -99,3 +99,11 @@ def test_si_la_ficha_se_llama_como_una_accion_la_incluye(tecnica):
 def test_toda_accion_tiene_exactamente_una_ficha(tecnica):
     cubiertas = [a for f in tecnica["fichas"] for a in f["acciones"]]
     assert sorted(cubiertas) == sorted(catalogo())
+
+
+def test_la_rueda_dice_contra_que_crochet_va_cada_lado_y_queda_por_revisar(tecnica):
+    rueda = next(f for f in tecnica["fichas"] if f["id"] == "rodar")
+    lados = next(n["texto"] for n in rueda["notas"] if n["titulo"] == "Derecha o izquierda")
+    assert "La rueda derecha va contra el crochet de la mano izquierda del rival" in lados
+    assert "La rueda izquierda va contra el crochet de la mano derecha del rival" in lados
+    assert "contra qué crochet va cada lado" in rueda["pendiente"]

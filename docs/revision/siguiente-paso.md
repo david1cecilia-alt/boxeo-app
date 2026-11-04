@@ -50,6 +50,8 @@ Sin cambiar ninguna combinación hasta que conteste.
 - **#113 y #144:** tras el ballesteo, ¿gancho o recto?
 - **Ballesteo:** ¿cómo lo llama él, con paso o solo cuerpo, y es adecuado para el nivel de David?
 - **Flexión:** ¿qué es exactamente y en qué se diferencia de la «rueda»?
+- **Rueda:** ¿la rueda derecha (bajas y sales hacia tu derecha) va contra el crochet de su mano izquierda y la
+  izquierda contra el de su derecha? Es razonamiento nuestro, sin confirmar.
 
 ## Aparcado (no bloquea la unión)
 

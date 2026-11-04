@@ -172,9 +172,14 @@
       "texto": "esquiva, cuánto se gira el tronco y si la rodilla se flexiona en la esquiva lateral"
     },
     {
-      "id": "tecnica-afc7f347",
+      "id": "tecnica-0e670168",
       "origen": "data/tecnica.json",
-      "texto": "rueda, el nombre («rueda», «rotativa»…; Iván no lo ha confirmado), si en su escuela se distingue de la flexión y que el lado sea hacia dónde va el cuerpo (rueda derecha = bajas y sales hacia tu derecha)"
+      "texto": "rueda: el nombre («rueda», «rotativa»…; Iván no lo ha confirmado), si en su escuela se distingue de la flexión y que el lado sea hacia dónde va el cuerpo (rueda derecha = bajas y sales hacia tu derecha)"
+    },
+    {
+      "id": "tecnica-bbc78f64",
+      "origen": "data/tecnica.json",
+      "texto": "rueda: contra qué crochet va cada lado; razonamiento nuestro, sin confirmar: la rueda derecha contra el crochet de su mano izquierda (sales por tu derecha, por fuera de su brazo) y la rueda izquierda contra el de su mano derecha"
     },
     {
       "id": "tecnica-7bef4771",

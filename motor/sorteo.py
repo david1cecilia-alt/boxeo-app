@@ -2,7 +2,7 @@
 
 - Solo las del nivel elegido, todas con la misma probabilidad salvo "Practicar más" (perfil
   "practicar"): las que llevan un movimiento elegido pesan más, nunca se excluye ninguna.
-- No repite ninguna de las últimas SIN_REPETIR.
+- No repite ninguna de las últimas SIN_REPETIR (por su identidad: el número en la biblioteca).
 - Hasta que hayan salido todos los golpes del 1 al 6, solo saca las que añaden alguno (en las
   6 primeras están todos seguro).
 - Coletillas: las cortas (2-3 acciones) del nivel básico, para rellenar el final de un asalto
@@ -70,6 +70,12 @@ def numeros(combo: ComboBiblioteca) -> set[int]:
     return {a.numero for a in combo.acciones if a.numero}
 
 
+def identidad(combo: ComboBiblioteca) -> int:
+    """Lo que distingue una combinación en la ventana de no repetir: su número en la biblioteca.
+    No sus acciones, para que dos iguales no se confundan y Python y JS cuenten lo mismo."""
+    return combo.n
+
+
 class SorteoBiblioteca:
     """Da la siguiente combinación de la biblioteca para un nivel y perfil."""
 
@@ -81,11 +87,11 @@ class SorteoBiblioteca:
         self.rng = rng or random.Random()
         self.practicar = self.perfil.get("practicar") or []
         self.combos = [c for c in biblioteca() if c.nivel == nivel]
-        self.recientes: list[ComboBiblioteca] = []
+        self.recientes: list[int] = []  # identidad de las últimas sacadas
         self.faltan = set(NUMEROS)
 
     def _candidatas(self) -> list[ComboBiblioteca]:
-        libres = [c for c in self.combos if c not in self.recientes]
+        libres = [c for c in self.combos if identidad(c) not in self.recientes]
         return [c for c in libres if numeros(c) & self.faltan] or libres
 
     def siguiente(self) -> Combinacion:
@@ -94,7 +100,7 @@ class SorteoBiblioteca:
         pesos = [peso_practicar(c.acciones, self.practicar) * max(1, len(numeros(c) & self.faltan))
                  for c in candidatas]
         elegida = self.rng.choices(candidatas, weights=pesos)[0]
-        self.recientes = (self.recientes + [elegida])[-SIN_REPETIR:]
+        self.recientes = (self.recientes + [identidad(elegida)])[-SIN_REPETIR:]
         self.faltan -= numeros(elegida)
         return self._combinacion(elegida)
 

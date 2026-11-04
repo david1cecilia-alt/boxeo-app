@@ -1,7 +1,7 @@
 // Port de motor/sorteo.py: sorteo de la sesión con las combinaciones de la biblioteca.
 // - Solo las del nivel elegido, todas con la misma probabilidad salvo "Practicar más" (perfil
 //   `practicar`): las que llevan un movimiento elegido pesan más, nunca se excluye ninguna.
-// - No repite ninguna de las últimas SIN_REPETIR.
+// - No repite ninguna de las últimas SIN_REPETIR (por su identidad: el número en la biblioteca).
 // - Hasta que hayan salido todos los golpes del 1 al 6, solo saca las que añaden alguno (en las
 //   6 primeras están todos seguro).
 // - Coletillas: las cortas (2-3 acciones) del nivel básico, para rellenar el final de un asalto
@@ -45,6 +45,10 @@ export function pesoPracticar(acciones, practicar) {
 
 export const numeros = (combo) => new Set(combo.acciones.map((a) => a.numero).filter(Boolean));
 
+// Lo que distingue una combinación en la ventana de no repetir: su número en la biblioteca. No sus
+// acciones, para que dos iguales no se confundan y Python y JS cuenten lo mismo.
+export const identidad = (combo) => combo.n;
+
 // Da la siguiente combinación de la biblioteca para un nivel y perfil.
 // Devuelve { acciones, origen: "biblioteca", nombre, texto }.
 export class SorteoBiblioteca {
@@ -55,12 +59,12 @@ export class SorteoBiblioteca {
     this.azar = azar;
     this.practicar = this.perfil.practicar ?? [];
     this.combos = biblioteca().filter((c) => c.nivel === nivel);
-    this.recientes = [];
+    this.recientes = []; // identidad de las últimas sacadas
     this.faltan = new Set(NUMEROS);
   }
 
   candidatas() {
-    const libres = this.combos.filter((c) => !this.recientes.includes(c));
+    const libres = this.combos.filter((c) => !this.recientes.includes(identidad(c)));
     const nuevas = libres.filter((c) => [...numeros(c)].some((n) => this.faltan.has(n)));
     return nuevas.length ? nuevas : libres;
   }
@@ -71,7 +75,7 @@ export class SorteoBiblioteca {
     const nuevos = (c) => [...numeros(c)].filter((n) => this.faltan.has(n)).length;
     const elegida = this.azar.elegirConPesos(candidatas,
       candidatas.map((c) => pesoPracticar(c.acciones, this.practicar) * Math.max(1, nuevos(c))));
-    this.recientes = [...this.recientes, elegida].slice(-SIN_REPETIR);
+    this.recientes = [...this.recientes, identidad(elegida)].slice(-SIN_REPETIR);
     for (const n of numeros(elegida)) this.faltan.delete(n);
     return this.combinacion(elegida);
   }

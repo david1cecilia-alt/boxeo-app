@@ -50,11 +50,13 @@ class Apuntador(SorteoBiblioteca):
         super().__init__(*args, **kwargs)
         self.en_reserva = False
         self.cuentan = []
+        self.identidades = []  # la de cada una de `cuentan`
 
     def siguiente(self):
         combo = super().siguiente()
         if not self.en_reserva:
             self.cuentan.append(combo)
+            self.identidades.append(self.recientes[-1])
         return combo
 
     def restaurar(self, estado):
@@ -69,8 +71,7 @@ def test_las_reservas_no_dejan_rastro_en_el_sorteo(semilla, nivel):
     rng = random.Random(semilla)
     sorteo = Apuntador(nivel, rng=rng)
     construir_guion(ConfigSesion(asaltos=3, duracion_asalto=180, nivel=nivel), rng, sorteo)
-    sacadas = [tuple(a.id for a in c.acciones) for c in sorteo.cuentan]
-    assert [tuple(a.id for a in c.acciones) for c in sorteo.recientes] == sacadas[-SIN_REPETIR:]
+    assert sorteo.recientes == sorteo.identidades[-SIN_REPETIR:]
     dichos = set().union(*(numeros(c) for c in sorteo.cuentan))
     assert sorteo.faltan == set(NUMEROS) - dichos
 

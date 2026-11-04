@@ -44,6 +44,14 @@ const practicar = PRACTICAR.map((elegidos) => ({
   pesos: biblioteca().map((c) => pesoPracticar(c.acciones, elegidos)),
 }));
 
+// Ventana por identidad: la biblioteca de cada nivel con cada combinación dos veces (la copia, con
+// n + 1000). Se exporta el número de cada sacada.
+const duplicadas = Object.fromEntries(NIVELES.map((nivel) => {
+  const s = new SorteoBiblioteca(nivel, { azar: crearAzar(400 + nivel) });
+  s.combos = [...s.combos, ...s.combos.map((c) => ({ ...c, n: c.n + 1000 }))];
+  return [nivel, Array.from({ length: N }, () => (s.siguiente(), s.recientes.at(-1)))];
+}));
+
 const CONFIGS = [
   { asaltos: 3, duracion_asalto: 180, descanso: 60, nivel: 1 },
   { asaltos: 3, duracion_asalto: 180, descanso: 60, nivel: 1, ritmo: 1, voz: "numeros", zurdo: true },
@@ -78,4 +86,4 @@ const senales = {
   segundos: Object.fromEntries(datos().presets.reacciones.map((r) => [r.texto, segundosHabla(r.texto, VELOCIDAD_SENAL)])),
 };
 
-writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, sorteos, senales, practicar, movimientos: movimientos() }));
+writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, sorteos, senales, practicar, duplicadas, movimientos: movimientos() }));

@@ -1,6 +1,7 @@
 """Sorteo de la sesión: solo las del nivel y uniforme, sin repetir en 5 y con cobertura del 1 al 6."""
 import random
 from collections import Counter
+from dataclasses import replace
 
 import pytest
 
@@ -151,3 +152,32 @@ def test_practicar_mas_tambien_pesa_en_las_coletillas():
         sorteos = (SorteoBiblioteca(1, perfil=perfil, rng=random.Random(s)) for s in range(3000))
         return [s.coletillas()[0] for s in sorteos]
     assert _lleva(primeras(_practicar(**{"6": "bastante"})), "6") > _lleva(primeras(None), "6") + 0.1
+
+
+# ---------- Ventana de no repetir por identidad ----------
+
+def _duplicada(combos, desplazamiento=1000):
+    """La biblioteca con cada combinación dos veces: la copia, con otro número."""
+    return combos + [replace(c, n=c.n + desplazamiento) for c in combos]
+
+
+def test_la_ventana_distingue_dos_combinaciones_iguales_por_su_numero():
+    jab_recto = next(c for c in biblioteca() if c.nivel == 1)
+    s = SorteoBiblioteca(1, rng=random.Random(0))
+    s.combos = _duplicada([jab_recto])
+    elegida = s.siguiente()
+    assert s.recientes == [jab_recto.n] or s.recientes == [jab_recto.n + 1000]
+    assert [c.acciones for c in s._candidatas()] == [elegida.acciones]  # la otra, aunque sea igual
+
+
+@pytest.mark.parametrize("nivel", NIVELES)
+def test_con_la_biblioteca_duplicada_salen_las_dos_copias_sin_repetir_numero(nivel):
+    s = SorteoBiblioteca(nivel, rng=random.Random(nivel))
+    s.combos = _duplicada(s.combos)
+    sacadas = []
+    for _ in range(3000):
+        s.siguiente()
+        sacadas.append(s.recientes[-1])
+    for i, n in enumerate(sacadas):
+        assert n not in sacadas[max(0, i - SIN_REPETIR):i]
+    assert set(sacadas) == {c.n for c in s.combos}

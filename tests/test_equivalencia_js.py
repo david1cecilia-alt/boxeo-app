@@ -91,6 +91,17 @@ def _proporcion(muestra: list[list[Accion]], condicion) -> float:
     return sum(1 for acciones in muestra if condicion(acciones)) / len(muestra)
 
 
+@pytest.mark.parametrize("nivel", NIVELES)
+def test_ventana_js_por_identidad_como_la_de_python(js, nivel):
+    # Con cada combinación dos veces (la copia con n + 1000), JS no repite número en la ventana y
+    # saca las dos copias, como Python (tests/test_sorteo.py).
+    sacadas = js["duplicadas"][str(nivel)]
+    del_nivel = {c.n for c in biblioteca() if c.nivel == nivel}
+    assert set(sacadas) == del_nivel | {n + 1000 for n in del_nivel}
+    for i, n in enumerate(sacadas):
+        assert n not in sacadas[max(0, i - SIN_REPETIR):i], f"repetida en {i}"
+
+
 # ---------- "Practicar más" ----------
 
 def test_movimientos_de_practicar_iguales_en_js_y_python(js):

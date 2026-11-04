@@ -16,8 +16,8 @@ import pytest
 
 from motor.acciones import Accion, acciones_por_ids, biblioteca, catalogo, espejo, espejo_combo, texto_hablado
 from motor.reglas import nivel_de
-from motor.sorteo import (ACCIONES_COLETILLA, NIVEL_COLETILLA, NUMEROS, PROBABILIDAD_PROPIAS, SIN_REPETIR,
-                          SorteoBiblioteca, SorteoMezcla, cargar_perfil, movimiento, movimientos, numeros,
+from motor.sorteo import (NIVEL_COLETILLA, NUMEROS, PROBABILIDAD_PROPIAS, SIN_REPETIR, SorteoBiblioteca,
+                          SorteoMezcla, cargar_perfil, es_corta, mezcla_efectiva, movimiento, movimientos, numeros,
                           peso_practicar, propias_validas, ventana)
 from motor.ritmo import VELOCIDAD_SENAL, VELOCIDADES, duracion_estimada, rango_pausa, segundos_habla
 from motor.temporizador import (AVISO_ANTES_FIN, DURACION_AVISO, DURACION_REACCION, FACTOR_VOZ_RAPIDA,
@@ -187,8 +187,17 @@ def test_nivel_js_identico_al_de_python(js):
 
 # ---------- Guiones ----------
 
-def comprobar_guion(eventos: list[dict], c: ConfigSesion) -> None:
-    """Invariantes que debe cumplir cualquier guion, lo genere Python o JS."""
+def comprobar_guion(eventos: list[dict], c: ConfigSesion, propias: list[dict] | None = None,
+                    mezcla: str = "ninguna") -> None:
+    """Invariantes que debe cumplir cualquier guion, lo genere Python o JS, con o sin propias."""
+    validas = propias_validas(propias)
+    efectiva = mezcla_efectiva(mezcla, validas, c.nivel)
+    de_propias = {tuple(a.id for a in p.acciones) for p in validas
+                  if efectiva == "solo" or (efectiva != "ninguna" and p.nivel == c.nivel)}
+    permitidas = (set() if efectiva == "solo" else _del_nivel(c.nivel)) | de_propias
+    cortas = {tuple(a.id for a in co.acciones) for co in biblioteca() if co.nivel == NIVEL_COLETILLA and es_corta(co)}
+    if efectiva != "ninguna":
+        cortas |= {tuple(a.id for a in p.acciones) for p in validas if es_corta(p)}
     assert [e["t"] for e in eventos] == sorted(e["t"] for e in eventos)
     textos_reaccion = {r["texto"] for r in cargar_presets()["reacciones"]}
     final = c.asaltos * c.duracion_asalto + (c.asaltos - 1) * c.descanso
@@ -225,12 +234,10 @@ def comprobar_guion(eventos: list[dict], c: ConfigSesion) -> None:
             acciones = acciones_por_ids(k["ids"])
             ortodoxas = espejo_combo(acciones) if c.zurdo else acciones
             if k["tipo"] != "coletilla":
-                assert tuple(a.id for a in ortodoxas) in _del_nivel(c.nivel), "no es de su nivel"
+                assert tuple(a.id for a in ortodoxas) in permitidas, "no es de su nivel ni de las propias"
             assert k["duracion"] == duracion_estimada(acciones, k["texto"], c.velocidad)
             assert k["texto"] == texto_hablado(acciones, c.voz, c.zurdo)
             assert minima <= k["hueco"] <= maxima
-        cortas = {tuple(a.id for a in co.acciones) for co in biblioteca()
-                  if co.nivel == NIVEL_COLETILLA and ACCIONES_COLETILLA[0] <= len(co.acciones) <= ACCIONES_COLETILLA[1]}
         for k in coletillas:
             acciones = acciones_por_ids(k["ids"])
             assert tuple(a.id for a in (espejo_combo(acciones) if c.zurdo else acciones)) in cortas
@@ -278,6 +285,27 @@ def test_guiones_python_cumplen_los_mismos_invariantes(js):
     for g in js["guiones"]:
         config = ConfigSesion(**g["config"])
         comprobar_guion(guion_a_dict(construir_guion(config, random.Random(g["semilla"]))), config)
+
+
+def test_hay_guiones_con_cada_mezcla_y_con_reaccion(js):
+    assert {g["mezcla"] for g in js["guiones_mezcla"]} == {"poco", "bastante", "mucho", "solo"}
+    assert any(g["config"].get("modo_reaccion") and g["mezcla"] == "solo" for g in js["guiones_mezcla"])
+
+
+def test_guiones_js_con_propias_cumplen_los_invariantes(js):
+    for g in js["guiones_mezcla"]:
+        config = ConfigSesion(**g["config"])
+        comprobar_guion(g["eventos"], config, g["propias"], g["mezcla"])
+        dichas = [e for e in g["eventos"] if e["tipo"] in ("combo", "reserva")]
+        assert any(tuple(e["ids"]) in {tuple(p["ids"]) for p in g["propias"]} for e in dichas) or g["mezcla"] == "poco"
+
+
+def test_guiones_python_con_propias_cumplen_los_mismos_invariantes(js):
+    for g in js["guiones_mezcla"]:
+        config = ConfigSesion(**g["config"])
+        rng = random.Random(g["semilla"])
+        sorteo = SorteoMezcla(config.nivel, zurdo=config.zurdo, rng=rng, propias=g["propias"], mezcla=g["mezcla"])
+        comprobar_guion(guion_a_dict(construir_guion(config, rng, sorteo)), config, g["propias"], g["mezcla"])
 
 
 # ---------- Reproducibilidad ----------

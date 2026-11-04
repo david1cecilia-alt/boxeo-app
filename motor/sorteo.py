@@ -119,10 +119,26 @@ def identidad(combo: ComboBiblioteca | ComboPropia) -> int | str:
     return combo.id if isinstance(combo, ComboPropia) else combo.n
 
 
+def es_corta(combo) -> bool:
+    """Si vale de coletilla por su número de acciones (ACCIONES_COLETILLA)."""
+    minimo, maximo = ACCIONES_COLETILLA
+    return minimo <= len(combo.acciones) <= maximo
+
+
 def ventana(n_combos: int) -> int:
     """Cuántas de las últimas no se repiten en un grupo de n_combos: SIN_REPETIR, o n − 1 si son
     menos (siempre queda alguna libre)."""
     return max(0, min(SIN_REPETIR, n_combos - 1))
+
+
+def orden_ponderado(combos, practicar: list[dict], rng: random.Random) -> list:
+    """Las combinaciones en un orden al azar ponderado por "Practicar más": la primera de la lista
+    que cumpla una condición sale con la probabilidad de su peso entre las que la cumplen."""
+    def clave(peso):  # u^(1/peso): ordenar por ella es sortear sin reemplazo con esos pesos
+        u = rng.random()
+        return u ** (1 / peso) if peso > 0 else 0.0
+    claves = {id(c): clave(peso_practicar(c.acciones, practicar)) for c in combos}
+    return sorted(combos, key=lambda c: claves[id(c)], reverse=True)
 
 
 class SorteoGrupo:
@@ -180,13 +196,8 @@ class SorteoBiblioteca(SorteoGrupo):
         """Todas las coletillas en un orden al azar ponderado por "Practicar más": la primera de la
         lista que cumpla una condición sale con la probabilidad de su peso entre las que la
         cumplen. No cambia lo que recuerda el sorteo (recientes ni golpes que faltan)."""
-        minimo, maximo = ACCIONES_COLETILLA
-        cortas = [c for c in biblioteca() if c.nivel == NIVEL_COLETILLA and minimo <= len(c.acciones) <= maximo]
-        def clave(peso):  # u^(1/peso): ordenar por ella es sortear sin reemplazo con esos pesos
-            u = self.rng.random()
-            return u ** (1 / peso) if peso > 0 else 0.0
-        claves = {id(c): clave(peso_practicar(c.acciones, self.practicar)) for c in cortas}
-        return [self._combinacion(c) for c in sorted(cortas, key=lambda c: claves[id(c)], reverse=True)]
+        cortas = [c for c in biblioteca() if c.nivel == NIVEL_COLETILLA and es_corta(c)]
+        return [self._combinacion(c) for c in orden_ponderado(cortas, self.practicar, self.rng)]
 
 
 class SorteoMezcla:
@@ -200,6 +211,12 @@ class SorteoMezcla:
       más"; la cobertura del 1 al 6 solo filtra la biblioteca, pero los golpes de las propias
       cuentan como ya salidos.
     - "solo": todas las propias, de cualquier nivel, sin cobertura.
+
+    Coletillas: las propias cortas (2-3 acciones, de cualquier nivel) entre las de la biblioteca,
+    con la misma moneda en cada puesto de la lista. Con «Solo las mías», primero todas las propias
+    cortas y detrás las de la biblioteca, solo para rellenar: el guion dice la primera que quepa y
+    no se haya dicho hace poco, y las propias suelen estar entre las recientes (son las del asalto).
+    Sin propias cortas, las de la biblioteca (y Entrenar lo avisa).
     """
 
     def __init__(self, nivel: int, perfil: dict | None = None, zurdo: bool = False,
@@ -208,6 +225,7 @@ class SorteoMezcla:
         self.rng = rng or random.Random()
         self.biblioteca = SorteoBiblioteca(nivel, perfil, zurdo, self.rng)
         validas = propias_validas(propias)
+        self.cortas = [p for p in validas if es_corta(p)]
         self.mezcla = mezcla_efectiva(mezcla, validas, nivel)
         del_grupo = validas if self.mezcla == "solo" else [p for p in validas if p.nivel == nivel]
         self.propias = SorteoGrupo(del_grupo, self.biblioteca.practicar, zurdo, self.rng, cobertura=False)
@@ -222,7 +240,18 @@ class SorteoMezcla:
         return self.biblioteca.siguiente()
 
     def coletillas(self) -> list[Combinacion]:
-        return self.biblioteca.coletillas()
+        de_biblioteca = self.biblioteca.coletillas()
+        if self.mezcla == "ninguna" or not self.cortas:
+            return de_biblioteca
+        propias = [self.propias._combinacion(c)
+                   for c in orden_ponderado(self.cortas, self.biblioteca.practicar, self.rng)]
+        if self.mezcla == "solo":
+            return propias + de_biblioteca
+        p = PROBABILIDAD_PROPIAS[self.mezcla]
+        mezcladas = []
+        while propias and de_biblioteca:
+            mezcladas.append((propias if self.rng.random() < p else de_biblioteca).pop(0))
+        return mezcladas + propias + de_biblioteca
 
     def guardar(self):
         """Lo que recuerdan los dos grupos (ver SorteoGrupo.guardar)."""

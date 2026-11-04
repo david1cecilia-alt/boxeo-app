@@ -61,6 +61,22 @@ export const numeros = (combo) => new Set(combo.acciones.map((a) => a.numero).fi
 // de la propia. No sus acciones, para que dos iguales no se confundan y Python y JS cuenten lo mismo.
 export const identidad = (combo) => (combo.propia ? combo.id : combo.n);
 
+// Si vale de coletilla por su número de acciones (ACCIONES_COLETILLA).
+export const esCorta = (combo) =>
+  combo.acciones.length >= ACCIONES_COLETILLA[0] && combo.acciones.length <= ACCIONES_COLETILLA[1];
+
+// Las combinaciones en un orden al azar ponderado por "Practicar más": la primera de la lista que
+// cumpla una condición sale con la probabilidad de su peso entre las que la cumplen.
+export function ordenPonderado(combos, practicar, azar) {
+  // u^(1/peso): ordenar por ella es sortear sin reemplazo con esos pesos.
+  const clave = (peso) => {
+    const u = azar.random();
+    return peso > 0 ? u ** (1 / peso) : 0.0;
+  };
+  const claves = new Map(combos.map((c) => [c, clave(pesoPracticar(c.acciones, practicar))]));
+  return [...combos].sort((a, b) => claves.get(b) - claves.get(a));
+}
+
 // Cuántas de las últimas no se repiten en un grupo de nCombos: SIN_REPETIR, o n − 1 si son menos
 // (siempre queda alguna libre).
 export const ventana = (nCombos) => Math.max(0, Math.min(SIN_REPETIR, nCombos - 1));
@@ -149,16 +165,8 @@ export class SorteoBiblioteca extends SorteoGrupo {
   // que cumpla una condición sale con la probabilidad de su peso entre las que la cumplen. No cambia
   // lo que recuerda el sorteo (recientes ni golpes que faltan).
   coletillas() {
-    const [minimo, maximo] = ACCIONES_COLETILLA;
-    const cortas = biblioteca().filter((c) => c.nivel === NIVEL_COLETILLA
-      && c.acciones.length >= minimo && c.acciones.length <= maximo);
-    // u^(1/peso): ordenar por ella es sortear sin reemplazo con esos pesos.
-    const clave = (peso) => {
-      const u = this.azar.random();
-      return peso > 0 ? u ** (1 / peso) : 0.0;
-    };
-    const claves = new Map(cortas.map((c) => [c, clave(pesoPracticar(c.acciones, this.practicar))]));
-    return [...cortas].sort((a, b) => claves.get(b) - claves.get(a)).map((c) => this.combinacion(c));
+    const cortas = biblioteca().filter((c) => c.nivel === NIVEL_COLETILLA && esCorta(c));
+    return ordenPonderado(cortas, this.practicar, this.azar).map((c) => this.combinacion(c));
   }
 }
 
@@ -171,11 +179,17 @@ export class SorteoBiblioteca extends SorteoGrupo {
 //   cobertura del 1 al 6 solo filtra la biblioteca, pero los golpes de las propias cuentan como ya
 //   salidos.
 // - "solo": todas las propias, de cualquier nivel, sin cobertura.
+// Coletillas: las propias cortas (2-3 acciones, de cualquier nivel) entre las de la biblioteca, con
+// la misma moneda en cada puesto de la lista. Con «Solo las mías», primero todas las propias cortas
+// y detrás las de la biblioteca, solo para rellenar: el guion dice la primera que quepa y no se haya
+// dicho hace poco, y las propias suelen estar entre las recientes (son las del asalto). Sin propias
+// cortas, las de la biblioteca (y Entrenar lo avisa).
 export class SorteoMezcla {
   constructor(nivel, { perfil = null, zurdo = false, azar, propias = [], mezcla = "ninguna" }) {
     this.azar = azar;
     this.biblioteca = new SorteoBiblioteca(nivel, { perfil, zurdo, azar });
     const validas = propiasValidas(propias);
+    this.cortas = validas.filter(esCorta);
     this.mezcla = mezclaEfectiva(mezcla, validas, nivel);
     const delGrupo = this.mezcla === "solo" ? validas : validas.filter((p) => p.nivel === nivel);
     this.propias = new SorteoGrupo(delGrupo,
@@ -193,7 +207,17 @@ export class SorteoMezcla {
   }
 
   coletillas() {
-    return this.biblioteca.coletillas();
+    const deBiblioteca = this.biblioteca.coletillas();
+    if (this.mezcla === "ninguna" || !this.cortas.length) return deBiblioteca;
+    const propias = ordenPonderado(this.cortas, this.biblioteca.practicar, this.azar)
+      .map((c) => this.propias.combinacion(c));
+    if (this.mezcla === "solo") return [...propias, ...deBiblioteca];
+    const p = PROBABILIDAD_PROPIAS[this.mezcla];
+    const mezcladas = [];
+    while (propias.length && deBiblioteca.length) {
+      mezcladas.push((this.azar.random() < p ? propias : deBiblioteca).shift());
+    }
+    return [...mezcladas, ...propias, ...deBiblioteca];
   }
 
   // Lo que recuerdan los dos grupos (ver SorteoGrupo.guardar).

@@ -6,6 +6,7 @@ from collections import Counter
 import pytest
 
 from motor.acciones import acciones_por_ids, espejo_combo, numero, texto_hablado
+from motor.temporizador import ConfigSesion, construir_guion
 from motor.sorteo import (MEZCLAS, MIN_SOLO_PROPIAS, NUMEROS, PROBABILIDAD_PROPIAS, SIN_REPETIR, SorteoBiblioteca,
                           SorteoMezcla, mezcla_efectiva, numeros, propias_validas)
 
@@ -218,3 +219,72 @@ def test_ninguna_con_propias_saca_lo_mismo_que_la_biblioteca():
         for _ in range(300):
             assert mezcla.siguiente() == biblioteca.siguiente()
         assert numeros(mezcla.coletillas()[0]) == numeros(biblioteca.coletillas()[0])
+
+
+# ---------- Coletillas ----------
+
+def _coletillas(propias, mezcla, semilla=0, nivel=2):
+    s = SorteoMezcla(nivel, rng=random.Random(semilla), propias=propias, mezcla=mezcla)
+    return s.coletillas()
+
+
+def _cortas_biblioteca():
+    return {ids(c) for c in SorteoBiblioteca(1, rng=random.Random(0)).coletillas()}
+
+
+def test_coletillas_con_la_mezcla_llevan_las_propias_cortas_y_todas_las_de_la_biblioteca():
+    cortas = de_propias(BASICAS[:2])  # la tercera tiene 4 acciones
+    lista = [ids(c) for c in _coletillas(TODAS, "mucho")]
+    # Alguna propia puede ser igual que una de la biblioteca: están las dos.
+    assert set(lista) == _cortas_biblioteca() | cortas and len(lista) == len(_cortas_biblioteca()) + len(cortas)
+    # La moneda en cada puesto: en la primera, una propia con probabilidad ~p.
+    primeras = [_coletillas(TODAS, "poco", semilla)[0].origen for semilla in range(3000)]
+    assert abs(primeras.count("propia") / 3000 - PROBABILIDAD_PROPIAS["poco"]) <= TOLERANCIA
+
+
+def test_coletillas_con_solo_las_mias_primero_las_propias_y_la_biblioteca_de_relleno():
+    lista = _coletillas(TODAS, "solo")
+    n = 2  # las dos básicas de 2-3 acciones
+    assert {ids(c) for c in lista[:n]} == de_propias(BASICAS[:2]) and {c.origen for c in lista[:n]} == {"propia"}
+    assert {ids(c) for c in lista[n:]} == _cortas_biblioteca()
+
+
+def test_coletillas_con_solo_las_mias_sin_propias_cortas_son_las_de_la_biblioteca():
+    lista = _coletillas(MEDIAS + AVANZADAS + [propia(9, ["jab"] * 7)], "solo")
+    assert {c.origen for c in lista} == {"biblioteca"} and {ids(c) for c in lista} == _cortas_biblioteca()
+
+
+# ---------- Guion con propias (Reacción incluida) ----------
+
+@pytest.mark.parametrize("mezcla", ["poco", "mucho", "solo"])
+@pytest.mark.parametrize("modo_reaccion", [False, True])
+@pytest.mark.parametrize("zurdo", [False, True])
+def test_guion_con_propias_dice_las_propias_por_sus_acciones(mezcla, modo_reaccion, zurdo):
+    config = ConfigSesion(nivel=2, modo_reaccion=modo_reaccion, zurdo=zurdo, voz="ambos")
+    vistas = set()
+    for semilla in range(5):
+        rng = random.Random(semilla)
+        s = SorteoMezcla(2, zurdo=zurdo, rng=rng, propias=TODAS, mezcla=mezcla)
+        for e in construir_guion(config, rng, s):
+            if e.tipo not in ("combo", "reserva", "coletilla"):
+                continue
+            acciones = acciones_por_ids(e.ids)
+            orto = tuple(a.id for a in (espejo_combo(acciones) if zurdo else acciones))
+            assert e.texto == texto_hablado(acciones, "ambos", zurdo)  # nunca un nombre
+            vistas.add(orto)
+            if e.tipo != "coletilla" and mezcla == "solo":
+                assert orto in de_propias(TODAS)
+    assert de_propias(MEDIAS) <= vistas
+
+
+def test_las_reservas_con_propias_no_dejan_rastro_en_el_sorteo():
+    config = ConfigSesion(nivel=1, modo_reaccion=True)
+    rng = random.Random(4)
+    s = SorteoMezcla(1, rng=rng, propias=TODAS, mezcla="mucho")
+    guion = construir_guion(config, rng, s)
+    combos = [e for e in guion if e.tipo == "combo"]
+    assert any(e.tipo == "reserva" for e in guion)
+    # Lo que recuerda la ventana de propias sale solo de las combinaciones dichas.
+    dichas = [tuple(e.ids) for e in combos]
+    por_id = {p["id"]: tuple(p["ids"]) for p in TODAS}
+    assert all(por_id[i] in dichas for i in s.propias.recientes)

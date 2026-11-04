@@ -93,6 +93,27 @@ CONFIGS.forEach((config, i) => {
   }
 });
 
+// Guiones con propias: cada mezcla, con y sin Reacción, en ortodoxo y zurdo. «Solo las mías» también
+// con unas propias sin ninguna corta (las coletillas son entonces las de la biblioteca).
+const SIN_CORTAS = PROPIAS.filter((p) => p.ids.length > 3);
+const guionesMezcla = [];
+[
+  ["poco", PROPIAS, { nivel: 2 }],
+  ["bastante", PROPIAS, { nivel: 1, modo_reaccion: true, zurdo: true, voz: "numeros" }],
+  ["mucho", PROPIAS, { nivel: 3, modo_reaccion: true, voz: "ambos" }],
+  ["solo", PROPIAS, { nivel: 2, modo_reaccion: true }],
+  ["solo", PROPIAS, { nivel: 1, zurdo: true, ritmo: 5 }],
+  ["solo", SIN_CORTAS, { nivel: 3, modo_reaccion: true, voz: "ambos" }],
+  ["mucho", PROPIAS, { asaltos: 2, duracion_asalto: 30, descanso: 10, nivel: 2, modo_reaccion: true }],
+].forEach(([mezcla, propias, extra], i) => {
+  const config = { asaltos: 3, duracion_asalto: 180, descanso: 60, ...extra };
+  for (let semilla = 0; semilla < 4; semilla++) {
+    const azar = crearAzar(7000 + 10 * i + semilla);
+    const sorteo = new SorteoMezcla(config.nivel, { zurdo: config.zurdo ?? false, azar, propias, mezcla });
+    guionesMezcla.push({ config, semilla, mezcla, propias, eventos: construirGuion(config, azar, sorteo) });
+  }
+});
+
 const espejos = Object.fromEntries([...catalogo().values()].map((a) => [a.id, accionPlana(espejo(a))]));
 
 // Nivel de combinaciones de 0 a 12 acciones, alternando golpes, defensas y salidas.
@@ -108,4 +129,4 @@ const senales = {
   segundos: Object.fromEntries(datos().presets.reacciones.map((r) => [r.texto, segundosHabla(r.texto, VELOCIDAD_SENAL)])),
 };
 
-writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, sorteos, senales, practicar, duplicadas, mezclas, movimientos: movimientos() }));
+writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, sorteos, senales, practicar, duplicadas, mezclas, guiones_mezcla: guionesMezcla, movimientos: movimientos() }));

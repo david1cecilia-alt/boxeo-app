@@ -225,3 +225,84 @@ def test_sesion_con_solo_las_mias_en_zurdo_dice_solo_propias_y_las_guarda_como_e
     }""", sesiones[0])
     assert pagina.locator("#postsesion .check span").all_text_contents() == vistas
     assert len(vistas) == len(combinaciones)
+
+
+# ---------- «Escuchar» en el editor ----------
+
+def abrir_editor(pagina, sesion=None, voz=None):
+    pagina.goto(f"{ORIGEN}/__pagina__.html")
+    pagina.wait_for_function("window.listo === true")
+    perfil = {}
+    if sesion:
+        perfil["sesion"] = sesion
+    if voz:
+        perfil["voz"] = voz
+    pagina.evaluate("(d) => localStorage.setItem('boxeo', d)",
+                    json.dumps({"version": 8, "combinacionesPropias": [], "perfil": perfil}))
+    pagina.goto(f"{ORIGEN}/index.html#ajustes/mis-combinaciones/nueva")
+    pagina.wait_for_selector("#caja-combo #escuchar")
+
+
+@pytest.mark.parametrize("modo, velocidad, esperado", [
+    ("numeros", "lenta", "uno, rueda derecha, tres"),
+    ("nombres", "normal", "jab, rueda derecha, crochet de izquierda"),
+    ("ambos", "rapida", "uno jab, rueda derecha, tres crochet de izquierda"),
+])
+def test_escuchar_dicta_la_combinacion_en_el_modo_de_voz_y_a_la_velocidad_de_ajustes(pagina, modo, velocidad, esperado):
+    abrir_editor(pagina, {"voz": modo}, {"id": None, "velocidad": velocidad})
+    for id_ in ("jab", "gancho_izq"):
+        pagina.click(f'[data-anadir="{id_}"]')
+    pagina.click('[data-grupo="defensa"]')
+    pagina.click('[data-anadir="rodar_der"]')
+    # En el orden en que se añadieron: jab, crochet de izquierda, rueda derecha.
+    pagina.click('[data-quitar="1"]')
+    pagina.click('[data-grupo="golpe"]')
+    pagina.click('[data-anadir="gancho_izq"]')
+    pagina.evaluate("window.dichos = []")
+    pagina.focus("#escuchar")
+    pagina.keyboard.press("Enter")
+    pagina.wait_for_function("window.dichos.length === 1")
+    dicho = pagina.evaluate("window.dichos[0]")
+    assert dicho["texto"] == esperado
+    assert round(dicho["velocidad"], 3) == {"lenta": 0.9, "normal": 1.1, "rapida": 1.3}[velocidad]
+    assert pagina.evaluate("document.activeElement.id") == "escuchar"
+    # Otra vez con Espacio: se vuelve a decir (la voz corta lo que estuviera diciendo).
+    pagina.keyboard.press(" ")
+    pagina.wait_for_function("window.dichos.length === 2")
+
+
+def test_escuchar_esta_desactivado_sin_acciones_y_dice_por_que(pagina):
+    abrir_editor(pagina)
+    boton = pagina.locator("#escuchar")
+    assert boton.get_attribute("aria-disabled") == "true"
+    assert boton.get_attribute("aria-describedby") == "motivo-escuchar"
+    assert pagina.inner_text("#motivo-escuchar") == "Añade alguna acción para escucharla."
+    pagina.evaluate("window.dichos = []")
+    boton.click(force=True)
+    boton.focus()
+    pagina.keyboard.press("Enter")
+    pagina.wait_for_timeout(100)
+    assert pagina.evaluate("window.dichos") == []
+    # Con una acción ya se puede; al quitarla, vuelve a estar desactivado.
+    pagina.click('[data-anadir="jab"]')
+    assert pagina.locator("#escuchar").get_attribute("aria-disabled") is None
+    assert pagina.locator("#motivo-escuchar").count() == 0
+    pagina.click("#escuchar")
+    pagina.wait_for_function("window.dichos.length === 1")
+    assert pagina.evaluate("window.dichos[0].texto") == "jab"
+    pagina.click("#quitar-ultima")
+    assert pagina.locator("#escuchar").get_attribute("aria-disabled") == "true"
+
+
+def test_escuchar_cabe_y_se_toca_con_48_px_en_cada_ancho(pagina):
+    for ancho in (390, 1024, 1440):
+        pagina.set_viewport_size({"width": ancho, "height": 900})
+        abrir_editor(pagina)
+        for id_ in ("jab", "directo", "gancho_izq", "gancho_der", "uppercut_izq", "uppercut_der",
+                    "jab", "directo", "gancho_izq", "directo"):
+            pagina.click(f'[data-anadir="{id_}"]')
+        caja = pagina.locator("#caja-combo").bounding_box()
+        boton = pagina.locator("#escuchar").bounding_box()
+        assert boton["height"] >= 48 and boton["width"] >= 48, ancho
+        assert boton["x"] >= caja["x"] and boton["x"] + boton["width"] <= caja["x"] + caja["width"], ancho
+        assert pagina.evaluate("document.documentElement.scrollWidth") <= ancho, ancho

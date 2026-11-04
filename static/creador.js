@@ -2,6 +2,7 @@
 // El editor trabaja en guardia ortodoxa: lo que se ve son los ids tal cual (el zurdo los recibe en
 // espejo en la sesión). Los textos de baldosas y fichas salen del catálogo (data/acciones.json), los
 // avisos y si se puede guardar, de motor/reglas.js. Aquí solo se decide qué se enseña y cómo se dice.
+import { opcionesVoz } from "./ajustes.js";
 import { accionesPorIds, catalogo, nombreCorto, numero, textoHablado } from "./motor/acciones.js";
 import { ACCIONES_POR_NIVEL, MAX_ACCIONES, MAX_PROPIAS, NOMBRE_NIVEL, avisosCreador, nivelDe } from "./motor/reglas.js";
 
@@ -10,6 +11,7 @@ export const GRUPOS = { golpe: "Golpes", defensa: "Defensas", movimiento: "Salid
 
 export const TEXTO_MINIMO = `Mínimo ${MIN_ACCIONES}`;
 export const TEXTO_MAXIMO = `Máximo ${MAX_ACCIONES} acciones`;
+export const TEXTO_ESCUCHAR_VACIA = "Añade alguna acción para escucharla.";
 export const TEXTO_LLENO = `Ya tienes ${MAX_PROPIAS} combinaciones: borra alguna para crear otra.`;
 
 const mayuscula = (t) => t.charAt(0).toUpperCase() + t.slice(1);
@@ -34,6 +36,15 @@ export function baldosas(grupo, alCuerpo = false) {
 
 // Cómo la oye un lector de pantalla: con los nombres enteros («recto al cuerpo»).
 export const textoParaLectores = (ids) => textoHablado(accionesPorIds(ids), "nombres", false);
+
+// «Escuchar»: la combinación como se dirá en la sesión, en el modo de voz que se eligió en Entrenar
+// («Nombrar combinaciones»: Números, Nombres o Ambos) y a la velocidad de Ajustes. En ortodoxo, como
+// se ve en el editor. Sin acciones, null (el botón está desactivado).
+export function escuchar(ids, perfilUsuario) {
+  if (!ids.length) return null;
+  const modo = perfilUsuario?.sesion?.voz ?? "nombres";
+  return { texto: textoHablado(accionesPorIds(ids), modo, false), velocidad: opcionesVoz(perfilUsuario).velocidad };
+}
 
 // ---------- Estado del editor (inmutable: cada cambio devuelve uno nuevo) ----------
 

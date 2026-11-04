@@ -74,15 +74,14 @@ def capturar(sitio: Path) -> list[Path]:
             entera(pagina, guardar("5-solo", ancho))
             ir(pagina, "#entrenar", CINCO, {"mezcla": "mucho", "nivel": 2})
             entera(pagina, guardar("5-mucho-medio", ancho))
-            if pagina.query_selector("#escuchar") is not None or "--editor" in sys.argv:
-                ir(pagina, "#ajustes/mis-combinaciones/nueva")
-                entera(pagina, guardar("editor-vacio", ancho))
-                for id_ in ("jab", "directo", "gancho_izq"):
-                    pagina.click(f'[data-anadir="{id_}"]')
-                pagina.click('[data-grupo="defensa"]')
-                pagina.click('[data-anadir="rodar_der"]')
-                pagina.evaluate("document.activeElement.blur()")
-                entera(pagina, guardar("editor-escuchar", ancho))
+            ir(pagina, "#ajustes/mis-combinaciones/nueva")
+            entera(pagina, guardar("editor-vacio", ancho))
+            for id_ in ("jab", "directo", "gancho_izq"):
+                pagina.click(f'[data-anadir="{id_}"]')
+            pagina.click('[data-grupo="defensa"]')
+            pagina.click('[data-anadir="rodar_der"]')
+            pagina.evaluate("document.activeElement.blur()")
+            entera(pagina, guardar("editor-escuchar", ancho))
             assert not errores, errores
     return rutas
 

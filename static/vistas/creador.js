@@ -2,8 +2,8 @@
 // navegador. Listado con editar y borrar (con confirmación). Solo presenta: qué se enseña y cómo se
 // dice está en ../creador.js; guardar, en el almacén.
 import {
-  GRUPOS, anadir, anuncio, baldosas, cambiarCuerpo, combinacionesParaListar, editorNuevo, elegirGrupo, ficha,
-  hayCambios, puedeCrear, quitar, quitarUltima, resumen, textoBorrar,
+  GRUPOS, TEXTO_ESCUCHAR_VACIA, anadir, anuncio, baldosas, cambiarCuerpo, combinacionesParaListar, editorNuevo,
+  elegirGrupo, escuchar, ficha, hayCambios, puedeCrear, quitar, quitarUltima, resumen, textoBorrar,
 } from "../creador.js";
 import { ACCIONES_POR_NIVEL, MAX_ACCIONES, MAX_PROPIAS, NOMBRE_NIVEL } from "../motor/reglas.js";
 import { $, anunciar, atraparFoco, esc } from "./dom.js";
@@ -12,6 +12,7 @@ export const RUTA = "#ajustes/mis-combinaciones";
 
 const ICONO_EDITAR = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4"/></svg>`;
 const ICONO_BORRAR = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>`;
+const ICONO_ESCUCHAR = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9zM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>`;
 const ICONOS_GRUPO = {
   golpe: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V6a2 2 0 0 1 4 0v4M11 9V5a2 2 0 0 1 4 0v5M15 9a2 2 0 0 1 4 0v4a7 7 0 0 1-7 7h-1a6 6 0 0 1-6-6v-2a2 2 0 0 1 4 0"/></svg>`,
   defensa: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg>`,
@@ -62,7 +63,7 @@ function conectarDialogo(dialogo) {
   });
 }
 
-export function iniciarCreador({ almacen, raiz }) {
+export function iniciarCreador({ almacen, raiz, voz }) {
   const propias = () => almacen.datos.combinacionesPropias;
 
   // ---------- Listado ----------
@@ -202,6 +203,11 @@ export function iniciarCreador({ almacen, raiz }) {
           aria-label="Quitar ${esc(f.texto)}, acción ${i + 1}"><i>${f.numero ?? ""}</i>${esc(f.texto)}<span class="aspa" aria-hidden="true">×</span></button></li>`;
       }).join("")}</ol>`
       : `<p class="nota tira-vacia">Toca un golpe, una defensa o una salida para empezar.</p>`}
+      <div class="fila-escuchar">
+        <button type="button" class="boton secundario escuchar" id="escuchar"
+          ${estado.ids.length ? "" : 'aria-disabled="true" aria-describedby="motivo-escuchar"'}>${ICONO_ESCUCHAR}Escuchar</button>
+        ${estado.ids.length ? "" : `<span class="nota motivo" id="motivo-escuchar">${TEXTO_ESCUCHAR_VACIA}</span>`}
+      </div>
       <p class="nota">${NOTA_ORTODOXA}</p>`;
 
     const guardar = $("#guardar", raiz);
@@ -278,6 +284,11 @@ export function iniciarCreador({ almacen, raiz }) {
       return actualizar({ foco: "#quitar-ultima" });
     }
     if (boton.id === "guardar") return intentarGuardar();
+    if (boton.id === "escuchar") {
+      // Si ya está hablando, la voz corta y empieza otra vez.
+      const frase = escuchar(estado.ids, almacen.datos.perfil);
+      if (frase) voz?.decir(frase.texto, { velocidad: frase.velocidad });
+    }
   }
 
   // Los avisos (sin golpes, igual que una de la biblioteca o que otra propia) no impiden guardar:
@@ -398,6 +409,7 @@ export function iniciarCreador({ almacen, raiz }) {
 
   // `ruta`: lo que va detrás de «mis-combinaciones/» («», «nueva», «editar/<id>»).
   function mostrar(ruta) {
+    if (editor) voz?.callar(); // lo que se estaba escuchando no sigue en otra pantalla
     editor = null;
     if (ruta === "nueva") {
       if (!puedeCrear(propias()).puede) return aListado();

@@ -636,6 +636,11 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
 @keyframes ficha-nueva { from { opacity: 0; transform: scale(0.9); } }
 .chip-paso.nuevo { animation: ficha-nueva 0.18s cubic-bezier(0.23, 1, 0.32, 1); }
 .acciones-editor .boton { flex: 1 1 120px; }
+/* «Escuchar», bajo la tira: la combinación como se dirá en la sesión. */
+.fila-escuchar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.boton.escuchar { gap: 8px; min-height: 48px; padding: 0 18px; }
+.boton.escuchar svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.fila-escuchar .motivo { margin: 0; font-size: 0.8125rem; }
 /* Grupos: tres tarjetas grandes con icono; la abierta, en claro. */
 .grupos-paleta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .tarjeta-grupo {

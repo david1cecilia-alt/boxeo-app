@@ -278,7 +278,7 @@ export function iniciarAjustes({ almacen, voz }) {
   }
 
   // Subpágina «Mis combinaciones» (#ajustes/mis-combinaciones/…): sin la cabecera de Ajustes.
-  const creador = iniciarCreador({ almacen, raiz });
+  const creador = iniciarCreador({ almacen, raiz, voz });
   const vista = $("#vista-ajustes");
   function mostrar(parametro = "") {
     const [sub, ...resto] = parametro.split("/");

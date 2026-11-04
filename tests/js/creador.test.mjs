@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import {
   GRUPOS, TEXTO_LLENO, TEXTO_MAXIMO, TEXTO_MINIMO, anadir, anuncio, baldosas, cambiarCuerpo, combinacionesParaListar,
-  editorNuevo, ficha, hayCambios, puedeCrear, quitar, quitarUltima, resumen, textoBorrar, textoParaLectores,
+  editorNuevo, escuchar, ficha, hayCambios, puedeCrear, quitar, quitarUltima, resumen, textoBorrar, textoParaLectores,
 } from "../../static/creador.js";
 import { MAX_ACCIONES, MAX_PROPIAS } from "../../static/motor/reglas.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
@@ -120,4 +120,19 @@ test("borrar avisa de que las siguientes se renumeran (y no si es la última)", 
   assert.match(textoBorrar(2, 3).detalle, /La combinación 3 pasará a ser la 2/);
   assert.match(textoBorrar(1, 3).detalle, /se renumeran: la 2 pasará a ser la 1, y así hasta la 3/);
   assert.equal(textoBorrar(1, 3).titulo, "¿Borrar la combinación 1?");
+});
+
+test("«Escuchar» dice la combinación en el modo de voz de Entrenar y a la velocidad de Ajustes, en ortodoxo", () => {
+  const ids = ["jab", "rodar_der", "gancho_izq"];
+  const perfil = (voz, velocidad) => ({ sesion: { voz }, voz: { id: null, velocidad } });
+  assert.deepEqual(escuchar(ids, perfil("numeros", "lenta")), { texto: "uno, rueda derecha, tres", velocidad: 0.9 });
+  assert.deepEqual(escuchar(ids, perfil("nombres", "normal")),
+    { texto: "jab, rueda derecha, crochet de izquierda", velocidad: 1.1 });
+  assert.deepEqual(escuchar(ids, perfil("ambos", "rapida")),
+    { texto: "uno jab, rueda derecha, tres crochet de izquierda", velocidad: 1.3 });
+  assert.equal(escuchar([], perfil("ambos", "rapida")), null, "sin acciones no hay nada que decir");
+  // Una propia sin golpes se dice igual en los tres modos (las órdenes de las defensas).
+  const defensas = ["bloqueo", "parada", "paso_atras"];
+  const textos = ["numeros", "nombres", "ambos"].map((m) => escuchar(defensas, perfil(m, "normal")).texto);
+  assert.equal(new Set(textos).size, 1);
 });

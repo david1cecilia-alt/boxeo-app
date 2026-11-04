@@ -20,7 +20,7 @@ from motor.sorteo import (NIVEL_COLETILLA, NUMEROS, PROBABILIDAD_PROPIAS, SIN_RE
                           SorteoMezcla, cargar_perfil, es_corta, mezcla_efectiva, movimiento, movimientos, numeros,
                           peso_practicar, propias_validas, ventana)
 from motor.ritmo import VELOCIDAD_SENAL, VELOCIDADES, duracion_estimada, rango_pausa, segundos_habla
-from motor.temporizador import (AVISO_ANTES_FIN, DURACION_AVISO, DURACION_REACCION, FACTOR_VOZ_RAPIDA,
+from motor.temporizador import (AVISO_ANTES_FIN, DURACION_AVISO, TEXTO_AVISO, DURACION_REACCION, FACTOR_VOZ_RAPIDA,
                                 MARGEN, PREPARACION, ConfigSesion, cargar_presets, construir_guion,
                                 guion_a_dict)
 
@@ -245,7 +245,7 @@ def comprobar_guion(eventos: list[dict], c: ConfigSesion, propias: list[dict] | 
 
         assert [e["t"] for e in de_tipo("inicio_asalto")] == [inicio]
         assert [e["t"] for e in de_tipo("fin_asalto")] == [fin]
-        assert [(e["t"], e["duracion"]) for e in de_tipo("aviso")] == [(aviso, DURACION_AVISO)]
+        assert [(e["t"], e["duracion"], e["texto"]) for e in de_tipo("aviso")] == [(aviso, DURACION_AVISO, TEXTO_AVISO)]
         descansos = [(e["t"], e["duracion"]) for e in de_tipo("descanso")]
         assert descansos == ([(fin, c.descanso)] if n < c.asaltos else [])
 

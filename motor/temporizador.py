@@ -13,7 +13,10 @@ from motor.ritmo import (RITMO_POR_DEFECTO, VELOCIDAD_MEDIDA, VELOCIDADES, durac
 
 PREPARACION = 3.0         # segundos al inicio del asalto antes del primer combo
 AVISO_ANTES_FIN = 10.0    # aviso a los 10 s del final
-DURACION_AVISO = 1.5      # lo que ocupa decir "diez segundos"
+# No empieza por «diez»: en Números el crochet de derecha al cuerpo se dice «diez».
+# REVISAR CON ENTRENADOR: el aviso dice «Últimos diez segundos» para no confundirlo con el 10 (crochet de derecha al cuerpo)
+TEXTO_AVISO = "Últimos diez segundos"
+DURACION_AVISO = 1.5      # lo que se reserva en el guion para el aviso (el dictado espera a la voz de verdad)
 # Lo que se reserva en el guion para decir una señal de Reacción (a VELOCIDAD_SENAL, cabe en 2 s).
 # Después, el dictado deja 1 s sin combinaciones (PARA_REACCIONAR en static/dictado.js).
 # REVISAR CON ENTRENADOR: tiempo para reaccionar tras la señal (hoy 1 s sin combinaciones).
@@ -156,7 +159,7 @@ def construir_guion(config: ConfigSesion, rng: random.Random | None = None,
             reservados += [(e.t, e.t + e.duracion) for e in senales]
         reservados.sort()
         if aviso > inicio:
-            eventos.append(Evento(aviso, "aviso", n, DURACION_AVISO, "diez segundos"))
+            eventos.append(Evento(aviso, "aviso", n, DURACION_AVISO, TEXTO_AVISO))
 
         # Colocar combinaciones en los huecos libres, como las dirá el dictado si la voz tarda
         # lo estimado.

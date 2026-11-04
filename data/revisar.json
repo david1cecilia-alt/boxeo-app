@@ -12,6 +12,11 @@
       "texto": "el ×2 para que salgan los golpes al cuerpo que falten"
     },
     {
+      "id": "temporizador-eea2cb1e",
+      "origen": "motor/temporizador.py",
+      "texto": "el aviso dice «Últimos diez segundos» para no confundirlo con el 10 (crochet de derecha al cuerpo)"
+    },
+    {
       "id": "temporizador-bfe0e33f",
       "origen": "motor/temporizador.py",
       "texto": "tiempo para reaccionar tras la señal (hoy 1 s sin combinaciones)"

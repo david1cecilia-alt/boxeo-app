@@ -9,7 +9,10 @@ import {
 
 export const PREPARACION = 3.0;        // segundos al inicio del asalto antes del primer combo
 export const AVISO_ANTES_FIN = 10.0;   // aviso a los 10 s del final
-export const DURACION_AVISO = 1.5;     // lo que ocupa decir "diez segundos"
+// No empieza por «diez»: en Números el crochet de derecha al cuerpo se dice «diez».
+// REVISAR CON ENTRENADOR (motor/temporizador.py).
+export const TEXTO_AVISO = "Últimos diez segundos";
+export const DURACION_AVISO = 1.5;     // lo que se reserva en el guion para el aviso (el dictado espera a la voz de verdad)
 // Lo que se reserva en el guion para decir una señal de Reacción (a VELOCIDAD_SENAL, cabe en 2 s).
 // Después, el dictado deja 1 s sin combinaciones (PARA_REACCIONAR en static/dictado.js).
 // REVISAR CON ENTRENADOR: tiempo para reaccionar tras la señal (hoy 1 s sin combinaciones).
@@ -151,7 +154,7 @@ export function construirGuion(config, azar, sorteo = null) {
     }
     reservados.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
     if (aviso > inicio) {
-      eventos.push(evento(aviso, "aviso", n, { duracion: DURACION_AVISO, texto: "diez segundos" }));
+      eventos.push(evento(aviso, "aviso", n, { duracion: DURACION_AVISO, texto: TEXTO_AVISO }));
     }
 
     // Colocar combinaciones en los huecos libres, como las dirá el dictado si la voz tarda lo

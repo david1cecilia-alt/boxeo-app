@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { crearAlmacen, perfilPorDefecto } from "../../static/almacen.js";
 import {
-  MAX_PRACTICAR, cambiarPracticar, nuevoGuion, opcionesVoz, perfilSorteo, personalizadaValida, preferencias, recordarSesion, resumenElecciones,
+  MAX_PRACTICAR, OPCIONES_MEZCLA, cambiarPracticar, estadoMezcla, nuevoGuion, opcionesVoz, perfilSorteo, personalizadaValida, preferencias, recordarSesion, resumenElecciones,
 } from "../../static/ajustes.js";
 import { crearAzar } from "../../static/motor/azar.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
@@ -200,4 +200,44 @@ test("«Mucho» mezcla propias del nivel y biblioteca; en zurdo, las propias sal
   assert.deepEqual(medio, nuevoGuion(CONFIG, perfilPorDefecto(), crearAzar(8)));
   const zurdo = dichas(nuevoGuion({ ...CONFIG, asaltos: 6, zurdo: true, mezcla: "solo" }, perfilPorDefecto(), crearAzar(8), PROPIAS));
   assert.ok(zurdo.some((e) => e.ids.includes("esquiva_der") && e.ids.includes("gancho_der")), "esquiva y crochet cambian de lado");
+});
+
+test("«Tus combinaciones»: cinco opciones con el porcentaje de motor/sorteo.js", () => {
+  assert.deepEqual(OPCIONES_MEZCLA.map((o) => `${o.nombre} ${o.porcentaje}`),
+    ["Ninguna 0", "Poco 20", "Bastante 35", "Mucho 50", "Solo las mías 100"]);
+});
+
+test("estadoMezcla: sin propias, con menos de 3 y con «Solo las mías»", () => {
+  const sin = estadoMezcla("ninguna", [], 2);
+  assert.deepEqual(sin, { total: 0, efectiva: "ninguna", motivoSolo: null, aviso: null, nivelCuenta: true });
+  // Una guardada que ya no vale (ids fuera del catálogo) no cuenta.
+  assert.equal(estadoMezcla("mucho", [{ id: "p-x", ids: ["jab", "patada"] }], 1).total, 0);
+
+  const dos = PROPIAS.slice(0, 2);
+  assert.equal(estadoMezcla("ninguna", dos, 1).motivoSolo, "«Solo las mías» necesita al menos 3 combinaciones (tienes 2).");
+  const soloConDos = estadoMezcla("solo", dos, 1);
+  assert.equal(soloConDos.efectiva, "ninguna");
+  assert.match(soloConDos.motivoSolo, /tienes 2\): de momento salen las de la biblioteca\.$/);
+  assert.equal(soloConDos.nivelCuenta, true);
+
+  const solo = estadoMezcla("solo", PROPIAS, 3);
+  assert.deepEqual(solo, { total: 3, efectiva: "solo", motivoSolo: null, aviso: null, nivelCuenta: false });
+});
+
+test("estadoMezcla: avisa sin propias del nivel y con «Solo las mías» sin ninguna de 2-3 acciones", () => {
+  assert.equal(estadoMezcla("bastante", PROPIAS, 1).aviso, null);
+  assert.equal(estadoMezcla("bastante", PROPIAS, 2).aviso,
+    "No tienes combinaciones de nivel medio: solo saldrán las de la biblioteca.");
+  assert.equal(estadoMezcla("bastante", PROPIAS, 2).efectiva, "ninguna");
+  const largas = [["jab", "directo", "gancho_izq", "directo"], ["jab", "jab", "directo", "bloqueo"],
+    ["directo", "gancho_izq", "directo", "esquiva_izq"]].map((ids, i) => ({ id: `p-${i}`, ids }));
+  assert.equal(estadoMezcla("solo", largas, 2).aviso, "Añade alguna de 2-3 acciones para que el final del asalto sea solo tuyo.");
+  assert.equal(estadoMezcla("ninguna", largas, 2).aviso, null);
+});
+
+test("el resumen de «Tu sesión» dice la mezcla efectiva y, con «Solo las mías», no el nivel", () => {
+  const base = { nivel: 2, ritmo: 4, voz: "numeros", zurdo: false, modo_reaccion: false };
+  assert.equal(resumenElecciones({ ...base, mezcla: "ninguna" }), "Medio · Vivo · Números");
+  assert.equal(resumenElecciones({ ...base, mezcla: "mucho" }), "Medio · Mucho de las tuyas · Vivo · Números");
+  assert.equal(resumenElecciones({ ...base, mezcla: "solo", zurdo: true }), "Solo las tuyas · Vivo · Números · Zurdo");
 });

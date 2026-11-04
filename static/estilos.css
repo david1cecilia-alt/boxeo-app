@@ -258,6 +258,22 @@ hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
 }
 :is(.niveles legend, .cabeza-campo) span:first-child { font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
 .modos-voz b { font-size: 20px; white-space: nowrap; }
+/* «Tus combinaciones»: los cuatro porcentajes en una fila y «Solo las mías» debajo, a todo el ancho
+   (más bajo y en línea: es la opción aparte). */
+.mezcla { display: grid; gap: 8px; }
+.mezclas { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.mezclas b { font-size: 20px; white-space: nowrap; }
+.mezclas .mezcla-solo { grid-column: 1 / -1; }
+.mezclas .mezcla-solo span {
+  display: flex; justify-content: center; align-items: baseline; gap: 10px; min-height: 52px; font-size: 0.875rem;
+}
+.mezclas .mezcla-solo b { margin: 0; }
+/* Desactivados de verdad (disabled): apagados y sin el puntero de elegir. */
+.niveles input:disabled + span { opacity: 0.45; }
+.niveles input:disabled { cursor: not-allowed; }
+.nota-campo { margin: 0; font-size: 0.8125rem; }
+.nota-campo a { color: var(--texto); font-weight: 600; }
+#niveles + .nota-campo { margin-top: -6px; }
 
 /* Ritmo: barra 1-5, de Calmado a Intenso. Solo se mueve arrastrando la bolita: la barra no recibe
    el puntero (tocarla en el móvil saltaba a Intenso sin querer). El teclado sigue funcionando. */
@@ -1219,6 +1235,7 @@ dialog::backdrop { background: var(--velo); }
   .resumen-presets { display: none; } /* ya sale en «Tu sesión» (los lectores lo siguen oyendo en los chips) */
   .niveles label span { min-height: 84px; font-size: 0.875rem; }
   .niveles b { font-size: 32px; }
+  .mezclas b { font-size: 24px; } /* cuatro por fila: «35 %» no cabe a 32 px en la columna de 1024 */
   .config-sesion {
     position: sticky; top: 24px; gap: 16px; padding: 28px;
     background: var(--superficie); border: 1px solid var(--linea); border-radius: 22px;

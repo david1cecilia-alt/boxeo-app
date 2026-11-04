@@ -3,7 +3,9 @@
 import { PERSONALIZADA_POR_DEFECTO } from "./almacen.js";
 import { datos } from "./motor/datos.js";
 import { VELOCIDADES, VELOCIDAD_POR_DEFECTO } from "./motor/ritmo.js";
-import { MEZCLAS, SorteoMezcla } from "./motor/sorteo.js";
+import {
+  MEZCLAS, MIN_SOLO_PROPIAS, PROBABILIDAD_PROPIAS, SorteoMezcla, esCorta, mezclaEfectiva, propiasValidas,
+} from "./motor/sorteo.js";
 import { construirGuion, validarConfig } from "./motor/temporizador.js";
 
 export const PERSONALIZADO = "personalizado"; // el asalto que no es un preset de data/presets.json
@@ -13,10 +15,42 @@ export const NOMBRE_RITMO = { 1: "Calmado", 2: "Tranquilo", 3: "Constante", 4: "
 export const NOMBRE_VOZ = { numeros: "Números", nombres: "Nombres", ambos: "Ambos" };
 
 // Lo elegido en una línea para «Tu sesión»: «Medio · Vivo · Números · Reacción». Zurdo y
-// Reacción solo si están activados.
-export function resumenElecciones({ nivel, ritmo, voz, zurdo, modo_reaccion }) {
-  return [NOMBRE_NIVEL[nivel], NOMBRE_RITMO[ritmo], NOMBRE_VOZ[voz], zurdo && "Zurdo", modo_reaccion && "Reacción"]
+// Reacción solo si están activados. `mezcla`, la efectiva (estadoMezcla): con «Solo las mías» el
+// nivel no cuenta y no se dice; con «Ninguna», nada.
+export function resumenElecciones({ nivel, ritmo, voz, zurdo, modo_reaccion, mezcla = "ninguna" }) {
+  const nivelOMezcla = mezcla === "solo" ? [RESUMEN_MEZCLA.solo] : [NOMBRE_NIVEL[nivel], RESUMEN_MEZCLA[mezcla]];
+  return [...nivelOMezcla, NOMBRE_RITMO[ritmo], NOMBRE_VOZ[voz], zurdo && "Zurdo", modo_reaccion && "Reacción"]
     .filter(Boolean).join(" · ");
+}
+
+// «Tus combinaciones» en Entrenar: cada opción con el porcentaje de propias que sale (de
+// PROBABILIDAD_PROPIAS; «Solo las mías», todas).
+export const NOMBRE_MEZCLA = { ninguna: "Ninguna", poco: "Poco", bastante: "Bastante", mucho: "Mucho", solo: "Solo las mías" };
+const RESUMEN_MEZCLA = { poco: "Poco de las tuyas", bastante: "Bastante de las tuyas", mucho: "Mucho de las tuyas", solo: "Solo las tuyas" };
+export const OPCIONES_MEZCLA = MEZCLAS.map((id) => ({
+  id, nombre: NOMBRE_MEZCLA[id],
+  porcentaje: id === "solo" ? 100 : Math.round(100 * (PROBABILIDAD_PROPIAS[id] ?? 0)),
+}));
+
+// Qué enseña Entrenar de «Tus combinaciones» con lo elegido (`mezcla`, la guardada), las propias del
+// almacén y el nivel: cuántas se pueden sortear, la mezcla con la que se sorteará de verdad, si
+// «Solo las mías» se puede elegir (y por qué no), si el nivel cuenta y el aviso que toque. Sin
+// propias, el selector se desactiva (Entrenar pone el enlace al creador).
+export function estadoMezcla(mezcla, propias, nivel) {
+  const validas = propiasValidas(propias);
+  const total = validas.length;
+  const efectiva = mezclaEfectiva(mezcla, validas, nivel);
+  const motivoSolo = total > 0 && total < MIN_SOLO_PROPIAS
+    ? `«Solo las mías» necesita al menos ${MIN_SOLO_PROPIAS} combinaciones (tienes ${total})`
+      + (mezcla === "solo" ? ": de momento salen las de la biblioteca." : ".")
+    : null;
+  let aviso = null;
+  if (efectiva === "solo" && !validas.some(esCorta)) {
+    aviso = "Añade alguna de 2-3 acciones para que el final del asalto sea solo tuyo.";
+  } else if (total > 0 && Object.hasOwn(PROBABILIDAD_PROPIAS, mezcla) && efectiva === "ninguna") {
+    aviso = `No tienes combinaciones de nivel ${NOMBRE_NIVEL[nivel].toLowerCase()}: solo saldrán las de la biblioteca.`;
+  }
+  return { total, efectiva, motivoSolo, aviso, nivelCuenta: efectiva !== "solo" };
 }
 
 export const NOMBRE_VELOCIDAD = { lenta: "Lenta", normal: "Normal", rapida: "Rápida" };

@@ -45,12 +45,20 @@
           </div>
 
           <div class="tarjeta cristal config-tarjeta">
-            <fieldset class="niveles">
+            <fieldset class="niveles" id="niveles" aria-describedby="nota-nivel">
               <legend><span>Nivel</span></legend>
               <label><input type="radio" name="nivel" value="1"><span><b>1</b>Básico</span></label>
               <label><input type="radio" name="nivel" value="2"><span><b>2</b>Medio</span></label>
               <label><input type="radio" name="nivel" value="3"><span><b>3</b>Avanzado</span></label>
             </fieldset>
+            <p id="nota-nivel" class="nota nota-campo" hidden></p>
+            <hr>
+            <div class="mezcla">
+              <fieldset class="niveles mezclas" id="mezclas" aria-describedby="nota-mezcla">
+                <legend><span>Tus combinaciones</span></legend>
+              </fieldset>
+              <p id="nota-mezcla" class="nota nota-campo" hidden></p>
+            </div>
             <hr>
             <div class="ritmo">
               <label for="ritmo" class="cabeza-campo"><span>Ritmo</span><span id="resumen-ritmo" class="resumen-config"></span></label>

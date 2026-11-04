@@ -28,8 +28,8 @@ es una PWA instalable y todo se calcula en el dispositivo.
   Durante la sesión solo se ve lo esencial.
 - **Pausa y Reanudar** separados de **Parar**: la pausa congela el reloj, la voz y el guion, y
   reanuda en el mismo punto. La pantalla sigue encendida (Wake Lock).
-- **Entrenar recuerda tus elecciones**: asalto, nivel, ritmo, «Nombrar combinaciones», zurdo y
-  Reacción quedan como los dejaste. La sesión **Personalizada** (asaltos, duración y descanso) se
+- **Entrenar recuerda tus elecciones**: asalto, nivel, «Tus combinaciones», ritmo, «Nombrar
+  combinaciones», zurdo y Reacción quedan como los dejaste. La sesión **Personalizada** (asaltos, duración y descanso) se
   guarda sola al cambiarla y no se pierde al elegir Amateur o Prueba. Cambiar la guardia o el nivel
   en Ajustes también los cambia en Entrenar; elegirlos en Entrenar no toca Ajustes.
 - **Asaltos configurables** (preset amateur 3×3 min con 1 min de descanso): campana al empezar y
@@ -38,6 +38,10 @@ es una PWA instalable y todo se calcula en el dispositivo.
   ("uno, dos, tres"), por **Nombres** ("jab, recto, crochet de izquierda") o **Ambos** ("uno jab,
   dos recto"). La sesión las sortea de una biblioteca por niveles (`data/combinaciones.json`) que
   pasa las reglas del motor.
+- **Tus combinaciones** (las que creas en Ajustes › Mis combinaciones) se mezclan con la biblioteca:
+  Ninguna, Poco (20 %), Bastante (35 %), Mucho (50 %) de las de tu nivel, o **Solo las mías** (todas,
+  sin mirar el nivel; desde 3). Sin ninguna propia, el selector está desactivado y lleva al creador.
+  Se dicen como las demás y se guardan en el Historial igual.
 - **3 niveles** (básico, medio y avanzado): cada combinación de la biblioteca tiene el suyo; la
   pausa entre combinaciones depende del ritmo.
 - **Ritmo a tu medida**: golpeas mientras oyes la combinación; la siguiente llega tras un hueco desde

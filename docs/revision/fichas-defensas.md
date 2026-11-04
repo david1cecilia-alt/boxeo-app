@@ -7,7 +7,7 @@ Criterios de redacción:
 - Idea de Iván: el boxeo es situacional. Nada de «siempre X»: cada ficha dice *cuándo suele servir*, no una regla fija.
 - Guardia de referencia: barbilla al pecho (bajada), manos arriba, codos cerrados.
 - Español de España. El término en inglés solo entre paréntesis, para buscar vídeos.
-- Los textos de «Cómo se hace» están pensados para un diestro (ortodoxo). En zurdo se invierten los lados, igual que hace el espejo de la app.
+- Los textos de «Cómo se hace» están pensados para un diestro (ortodoxo). **En zurdo cambia cuál de tus manos y de tus pies va delante; lo que se refiere al rival no se invierte:** su hígado sigue en su lado derecho y su crochet de izquierda te sigue llegando por tu derecha.
 - Los identificadores (`id`) hay que comprobarlos contra `data/acciones.json`; aquí van los que se esperan.
 
 ---
@@ -32,7 +32,7 @@ Criterios de redacción:
 - **En inglés:** roll, bob and weave
 - **Qué es:** bajar flexionando las piernas y pasar por debajo del golpe dibujando una «U» hacia un lado, para volver a subir al otro lado del brazo del rival.
 - **Derecha o izquierda:** el lado es hacia dónde va el cuerpo, como en la esquiva y el paso lateral: rueda derecha = bajas y sales hacia tu derecha.
-- **Contra qué crochet** (razonamiento nuestro, sin confirmar): la rueda derecha va contra el crochet de su mano izquierda, que te llega por tu derecha; bajas y subes por tu derecha, por fuera de su brazo, mientras el golpe sigue su curva hacia tu izquierda. La rueda izquierda, contra el crochet de su mano derecha. En zurdo se invierte todo.
+- **Contra qué crochet** (razonamiento nuestro, sin confirmar): la rueda derecha va contra el crochet de su mano izquierda, que te llega por tu derecha; bajas y subes por tu derecha, por fuera de su brazo, mientras el golpe sigue su curva hacia tu izquierda. La rueda izquierda, contra el crochet de su mano derecha. En zurdo no se invierte: habla de la mano del rival y de por dónde te llega su golpe, que no cambian.
 - **Cuándo suele servir:** contra golpes curvos a la cabeza (crochet). Te deja cerca del rival y en ángulo para golpear.
 - **Cómo se hace:**
   1. Ve el crochet venir.

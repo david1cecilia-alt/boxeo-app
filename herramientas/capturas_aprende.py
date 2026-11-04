@@ -25,7 +25,7 @@ ANCHOS = (390, 768, 1024, 1440)
 ALTO = {390: 844, 768: 1024, 1024: 768, 1440: 900}
 VACIA = """<!doctype html><meta charset="utf-8"><script>localStorage.clear(); window.listo = true;</script>"""
 # Espera a que acaben las animaciones (la entrada de la vista) y a que se carguen las imágenes.
-QUIETA = """() => Promise.all([...document.getAnimations().map((a) => a.finished),
+QUIETA = """() => Promise.all([...document.getAnimations().map((a) => a.finished.catch(() => {})),
   ...[...document.images].filter((i) => i.offsetParent).map((i) => i.decode().catch(() => {}))])"""
 
 

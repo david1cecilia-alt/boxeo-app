@@ -48,7 +48,8 @@ def _ir(pagina, hash_, ancho=390):
     pagina.set_viewport_size({"width": ancho, "height": ALTO[ancho]})
     pagina.goto(f"{ORIGEN}/index.html#{hash_}")
     pagina.wait_for_selector(".aprende-ficha" if "/" in hash_ else ".lista-fichas")
-    pagina.evaluate("Promise.all(document.getAnimations().map((a) => a.finished))")
+    # Una animación cancelada al navegar (su `finished` se rechaza) también ha terminado.
+    pagina.evaluate("Promise.all(document.getAnimations().map((a) => a.finished.catch(() => null)))")
 
 
 def _activo(pagina):
@@ -75,6 +76,14 @@ def test_el_aviso_de_revision_es_discreto_y_nunca_en_mayusculas(pagina):
         assert "Pendiente de revisar con el entrenador" in texto
         assert "REVISAR" not in texto and "REVISAR" not in pagina.locator("#vista-aprende").inner_text()
         assert pagina.locator(".aviso-pendiente").evaluate("e => getComputedStyle(e).textTransform") == "none"
+
+
+def test_la_nota_del_zurdo_dice_que_lo_del_rival_no_cambia(pagina):
+    for hash_ in ("aprende", "aprende/gancho_izq"):
+        _ir(pagina, hash_)
+        nota = pagina.locator(".pie-aprende").text_content()
+        assert "cambia izquierda por derecha en tus manos y tus pies" in nota
+        assert "Lo que se refiere al rival no cambia: su hígado sigue en su lado derecho" in nota
 
 
 def test_abrir_una_ficha_y_volver_lleva_el_foco_a_su_sitio(pagina):

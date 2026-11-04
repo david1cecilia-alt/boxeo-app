@@ -2,10 +2,13 @@
 // #aprende es la lista, agrupada por categoría (Golpes, Defensas, Salidas; las vacías no salen);
 // #aprende/<id> es una ficha. La cabecera es la misma: en la ficha, el antetítulo dice su categoría
 // y el h1 su nombre, así el foco al cambiar de pestaña cae en el título de lo que se ve.
-// Las fichas están escritas para guardia diestra: una nota lo dice (no se invierten los textos).
+// Las fichas están escritas para guardia diestra: una nota lo dice (no se invierten los textos). En zurdo
+// cambian tus manos y tus pies, no lo que se refiere al rival.
 import { $, esc } from "./dom.js";
 
-const NOTA_ZURDO = "Escrito para guardia diestra (pie izquierdo delante). Si eres zurdo, cambia izquierda por derecha.";
+const NOTA_ZURDO =
+  "Escrito para guardia diestra (pie izquierdo delante). Si eres zurdo, cambia izquierda por derecha en tus manos y tus pies." +
+  " Lo que se refiere al rival no cambia: su hígado sigue en su lado derecho y su crochet de izquierda te sigue llegando por tu derecha.";
 const PENDIENTE = "Pendiente de revisar con el entrenador";
 
 export function iniciarAprende() {

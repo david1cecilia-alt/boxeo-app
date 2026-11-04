@@ -190,6 +190,44 @@ def test_al_cuerpo_comun_se_abre_con_el_teclado_dentro_de_cada_golpe(pagina):
     assert pagina.locator("#a-cuerpo, .mas-ficha").count() == 0
 
 
+# Contraste WCAG entre el color del texto y el primer fondo opaco de sus antepasados.
+CONTRASTE = """(e) => {
+  const rgb = (c) => c.match(/[\\d.]+/g).map(Number);
+  const lum = ([r, g, b]) => 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+  const f = (x) => ((x /= 255) <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4);
+  let fondo = e;
+  while (fondo && (rgb(getComputedStyle(fondo).backgroundColor)[3] ?? 1) === 0) fondo = fondo.parentElement;
+  const [a, b] = [lum(rgb(getComputedStyle(e).color)), lum(rgb(getComputedStyle(fondo).backgroundColor))];
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}"""
+
+
+def test_a_390_lo_comun_al_cuerpo_se_toca_bien_y_se_lee_con_contraste_aa(pagina):
+    _ir(pagina, "aprende/gancho_izq")
+    resumen = pagina.locator(".comun-cuerpo > summary")
+    assert resumen.bounding_box()["height"] >= 48
+    assert resumen.evaluate(CONTRASTE) >= 4.5
+
+
+def test_a_390_el_resumen_de_mostrar_mas_va_debajo_en_una_linea_sin_desbordar(pagina):
+    _ir(pagina, "aprende/jab")
+    caja = pagina.locator(".mas-ficha .resumen-plegable").evaluate("""(r) => {
+        const t = r.parentElement.querySelector('.titulo-plegable').getBoundingClientRect();
+        const c = r.getBoundingClientRect(), s = r.parentElement.getBoundingClientRect();
+        return { debajo: c.top >= t.bottom - 1, alineado: Math.abs(c.left - t.left) < 1,
+                 una_linea: c.height < 1.6 * parseFloat(getComputedStyle(r).fontSize),
+                 dentro: c.right <= s.right + 1, cortado: r.scrollWidth > r.clientWidth,
+                 puntos: getComputedStyle(r).textOverflow };
+    }""")
+    assert caja == {"debajo": True, "alineado": True, "una_linea": True, "dentro": True, "cortado": caja["cortado"],
+                    "puntos": "ellipsis"}, caja
+    assert pagina.locator(".mas-ficha > summary").bounding_box()["height"] >= 48
+    # En el PC sigue a la derecha del título.
+    _ir(pagina, "aprende/jab", 1024)
+    assert pagina.locator(".mas-ficha .resumen-plegable").evaluate(
+        "(r) => r.getBoundingClientRect().top < r.parentElement.querySelector('.titulo-plegable').getBoundingClientRect().bottom")
+
+
 def test_el_gancho_de_izquierda_solo_trae_variantes(pagina):
     _ir(pagina, "aprende/uppercut_izq")
     assert pagina.locator(".mas-ficha .resumen-plegable").text_content() == "Variantes"

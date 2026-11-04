@@ -5,7 +5,8 @@ vacío. Guarda en .playwright-mcp/capturas/ (no se versiona):
 - aprende-lista-<ancho>.png: la lista de fichas, entera.
 - aprende-ficha-rodar-<ancho>.png: la ficha de la rueda, entera.
 - aprende-ficha-jab-<ancho>.png y aprende-ficha-jab-mas-<ancho>.png: el jab con «Mostrar más» cerrado y abierto.
-- aprende-ficha-crochet-cuerpo-<ancho>.png: el crochet de izquierda con lo común de «Al cuerpo» abierto.
+- aprende-ficha-crochet-cuerpo-<ancho>.png: el crochet de izquierda con lo común de «Al cuerpo» abierto
+  (aprende-ficha-crochet-390.png: cerrado).
 - aprende-ficha-salir-390.png: la de «Cambio de ángulo» (el título más largo).
 - aprende-barra-390.png: la barra de pestañas con Aprende.
 - ajustes-practicar-rueda-390.png: «Practicar más» con la rueda elegida y el panel de Defensas.
@@ -74,6 +75,8 @@ def capturar(sitio: Path) -> list[Path]:
             pagina.click(".mas-ficha > summary")
             entera(pagina, guardar(f"aprende-ficha-jab-mas-{ancho}"))
             ir(pagina, "aprende/gancho_izq", ".comun-cuerpo")
+            if ancho == 390:
+                entera(pagina, guardar("aprende-ficha-crochet-390"))
             pagina.click(".comun-cuerpo > summary")
             entera(pagina, guardar(f"aprende-ficha-crochet-cuerpo-{ancho}"))
             if ancho == 390:

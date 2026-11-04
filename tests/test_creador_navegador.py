@@ -21,10 +21,8 @@ pytestmark = pytest.mark.skipif(not HAY_PLAYWRIGHT and not os.environ.get("CI"),
 SEMBRAR = """<!doctype html><meta charset="utf-8">
 <script>localStorage.clear(); window.listo = true;</script>"""
 # Las pruebas sirven la app desde http://boxeo.local, que no es un contexto seguro: ahí Chromium no tiene
-# crypto.randomUUID (en https y en localhost, sí). Solo para estas pruebas, uno equivalente.
-UUID_SIN_HTTPS = """if (!crypto.randomUUID) crypto.randomUUID = () =>
-  '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) =>
-    (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16));"""
+# crypto.randomUUID, como al abrir la app por http desde otra máquina de la red local. El almacén usa
+# entonces getRandomValues (crearUuid), así que se prueba tal cual, sin parches.
 RUTA = "#ajustes/mis-combinaciones"
 EJEMPLOS = [["jab", "rodar_der", "uppercut_der"], ["jab", "directo", "esquiva_izq", "gancho_izq", "directo"],
             ["bloqueo", "parada", "paso_atras"]]
@@ -66,7 +64,6 @@ def sitio(tmp_path_factory):
 @pytest.fixture(scope="module")
 def navegador(sitio):
     with abrir(sitio, SEMBRAR, 390, 844, barras=True) as (pagina, errores):
-        pagina.add_init_script(UUID_SIN_HTTPS)
         yield pagina
         assert not errores
 
@@ -200,6 +197,8 @@ def test_borrar_pide_confirmacion_avisa_de_la_renumeracion_y_devuelve_el_foco(pa
 
 def test_crear_con_el_teclado_al_cuerpo_se_apaga_solo_y_guardar_vuelve_al_listado(pagina):
     ir(pagina, RUTA)
+    # http sin contexto seguro: sin crypto.randomUUID, y aun así se guarda (crearUuid del almacén).
+    assert pagina.evaluate("typeof crypto.randomUUID") == "undefined"
     pagina.focus("#anadir-propia")
     pagina.keyboard.press("Enter")
     pagina.wait_for_selector("#caja-combo")

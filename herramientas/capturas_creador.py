@@ -27,10 +27,6 @@ ANCHOS = (390, 1024, 1440)
 ALTO = {390: 844, 1024: 768, 1440: 900}
 RUTA = "#ajustes/mis-combinaciones"
 VACIA = """<!doctype html><meta charset="utf-8"><script>localStorage.clear(); window.listo = true;</script>"""
-# La web se sirve desde http://boxeo.local (sin https no hay crypto.randomUUID): uno equivalente.
-UUID_SIN_HTTPS = """if (!crypto.randomUUID) crypto.randomUUID = () =>
-  '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) =>
-    (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16));"""
 EJEMPLOS = [["jab", "rodar_der", "uppercut_der"], ["jab", "directo", "esquiva_izq", "gancho_izq", "directo"],
             ["bloqueo", "parada", "paso_atras"]]
 
@@ -66,7 +62,6 @@ def capturar(sitio: Path) -> list[Path]:
 
     for ancho in ANCHOS:
         with abrir(sitio, VACIA, ancho, ALTO[ancho], barras=True) as (pagina, errores):
-            pagina.add_init_script(UUID_SIN_HTTPS)
             ir(pagina, "#ajustes", EJEMPLOS)
             entera(pagina, guardar("ajustes", ancho))
             ir(pagina, RUTA)

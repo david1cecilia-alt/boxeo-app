@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { VERSION, claveSesion, crearAlmacen, historialPorDefecto, migrar, sesionPorDefecto, vacio, vozPorDefecto } from "../../static/almacen.js";
+import { VERSION, claveSesion, crearAlmacen, crearUuid, historialPorDefecto, migrar, sesionPorDefecto, vacio, vozPorDefecto } from "../../static/almacen.js";
 
 // localStorage falso. `roto: true` simula un navegador que no deja guardar.
 function almacenamiento(inicial = {}, { roto = false } = {}) {
@@ -618,4 +618,41 @@ test("no se añaden más de 20 propias; los ids por defecto son p-<randomUUID>",
   for (let i = 1; i < 20; i++) assert.ok(almacen.anadirPropia(["jab", "directo"]));
   assert.equal(almacen.anadirPropia(["jab", "directo"]), null);
   assert.equal(almacen.datos.combinacionesPropias.length, 20);
+});
+
+// Por http desde la red local (el móvil contra el PC) no hay crypto.randomUUID, pero sí getRandomValues.
+const V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+const cryptoReal = globalThis.crypto;
+const sinRandomUUID = { getRandomValues: (b) => cryptoReal.getRandomValues(b) };
+
+test("crearUuid sin randomUUID forma un v4 con getRandomValues y no se repite", () => {
+  const vistos = new Set();
+  for (let i = 0; i < 2000; i++) {
+    const id = crearUuid(sinRandomUUID);
+    assert.match(id, V4);
+    vistos.add(id);
+  }
+  assert.equal(vistos.size, 2000);
+  // Con bytes extremos, la versión y la variante siguen bien puestas.
+  for (const relleno of [0x00, 0xff]) {
+    assert.match(crearUuid({ getRandomValues: (b) => b.fill(relleno) }), V4);
+  }
+  assert.equal(crearUuid({ randomUUID: () => "de-randomUUID" }), "de-randomUUID");
+});
+
+test("sin crypto.randomUUID (http en la red local) se pueden guardar propias y migrar", () => {
+  const original = Object.getOwnPropertyDescriptor(globalThis, "crypto");
+  Object.defineProperty(globalThis, "crypto", { value: sinRandomUUID, configurable: true, writable: true });
+  try {
+    assert.equal(globalThis.crypto.randomUUID, undefined);
+    const almacen = crearAlmacen({ storage: almacenamiento() });
+    const id = almacen.anadirPropia(["jab", "directo"]);
+    assert.match(id.slice(2), V4);
+    assert.ok(id.startsWith("p-"));
+    const { datos } = migrar({ version: 0, sesiones: [{ id: 1, fecha: "2026-01-01T10:00:00Z" }] });
+    assert.equal(datos.version, VERSION);
+    assert.match(datos.sesiones[0].id, V4);
+  } finally {
+    Object.defineProperty(globalThis, "crypto", original);
+  }
 });

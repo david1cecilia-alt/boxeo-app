@@ -4,6 +4,9 @@ Monta la web en una carpeta temporal (sin fotos del maniquí) y la abre en Chrom
 vacío. Guarda en .playwright-mcp/capturas/ (no se versiona):
 - aprende-lista-<ancho>.png: la lista de fichas, entera.
 - aprende-ficha-rodar-<ancho>.png: la ficha de la rueda, entera.
+- aprende-ficha-jab-<ancho>.png y aprende-ficha-jab-mas-<ancho>.png: el jab con «Mostrar más» cerrado y abierto.
+- aprende-ficha-crochet-cuerpo-<ancho>.png: el crochet de izquierda con lo común de «Al cuerpo» abierto
+  (aprende-ficha-crochet-390.png: cerrado).
 - aprende-ficha-salir-390.png: la de «Cambio de ángulo» (el título más largo).
 - aprende-barra-390.png: la barra de pestañas con Aprende.
 - ajustes-practicar-rueda-390.png: «Practicar más» con la rueda elegida y el panel de Defensas.
@@ -25,7 +28,7 @@ ANCHOS = (390, 768, 1024, 1440)
 ALTO = {390: 844, 768: 1024, 1024: 768, 1440: 900}
 VACIA = """<!doctype html><meta charset="utf-8"><script>localStorage.clear(); window.listo = true;</script>"""
 # Espera a que acaben las animaciones (la entrada de la vista) y a que se carguen las imágenes.
-QUIETA = """() => Promise.all([...document.getAnimations().map((a) => a.finished),
+QUIETA = """() => Promise.all([...document.getAnimations().map((a) => a.finished.catch(() => {})),
   ...[...document.images].filter((i) => i.offsetParent).map((i) => i.decode().catch(() => {}))])"""
 
 
@@ -67,6 +70,15 @@ def capturar(sitio: Path) -> list[Path]:
             pagina.click('[data-ficha="rodar"]')
             pagina.wait_for_selector(".aprende-ficha")
             entera(pagina, guardar(f"aprende-ficha-rodar-{ancho}"))
+            ir(pagina, "aprende/jab", ".mas-ficha")
+            entera(pagina, guardar(f"aprende-ficha-jab-{ancho}"))
+            pagina.click(".mas-ficha > summary")
+            entera(pagina, guardar(f"aprende-ficha-jab-mas-{ancho}"))
+            ir(pagina, "aprende/gancho_izq", ".comun-cuerpo")
+            if ancho == 390:
+                entera(pagina, guardar("aprende-ficha-crochet-390"))
+            pagina.click(".comun-cuerpo > summary")
+            entera(pagina, guardar(f"aprende-ficha-crochet-cuerpo-{ancho}"))
             if ancho == 390:
                 ir(pagina, "aprende/salir", ".aprende-ficha")
                 entera(pagina, guardar("aprende-ficha-salir-390"))

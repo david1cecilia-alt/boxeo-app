@@ -52,6 +52,8 @@ Sin cambiar ninguna combinación hasta que conteste.
 - **Flexión:** ¿qué es exactamente y en qué se diferencia de la «rueda»?
 - **Rueda:** ¿la rueda derecha (bajas y sales hacia tu derecha) va contra el crochet de su mano izquierda y la
   izquierda contra el de su derecha? Es razonamiento nuestro, sin confirmar.
+- **Rueda en zurdo:** en la sesión, el espejo convierte «rueda derecha» en «rueda izquierda» para el zurdo, como
+  si el rival también fuera zurdo. ¿Le parece bien?
 
 ## Aparcado (no bloquea la unión)
 

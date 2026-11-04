@@ -920,6 +920,24 @@ dialog.hoja { padding: 0; }
 .apartado :is(ul, ol) { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
 .pasos-ficha li::marker { color: var(--acento); font-weight: 600; }
 .correccion { display: block; margin-top: 2px; color: var(--suave); font-size: 0.875rem; }
+/* «Al cuerpo»: lo común, plegado dentro de la tarjeta; «Mostrar más»: variantes y detalles. */
+.comun-cuerpo > summary { margin: 0; min-height: 48px; }
+.comun-cuerpo[open] > summary { margin-bottom: 4px; }
+#aprende-contenido .fuentes-comun { margin-top: 10px; font-size: 0.8125rem; overflow-wrap: anywhere; }
+.mas-ficha .titulo-plegable { white-space: nowrap; }
+/* En pantallas estrechas el resumen va debajo del título (alineado con él), en una línea y cortado con «…». */
+@media (max-width: 719px) {
+  .mas-ficha > summary { flex-wrap: wrap; row-gap: 4px; padding: 10px 0; }
+  .mas-ficha .resumen-plegable {
+    flex: 0 0 calc(100% - 20px); min-width: 0; margin-left: 20px; text-align: left;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+}
+.mas-ficha .cuerpo-plegable { gap: 18px; }
+.mas-apartado { display: grid; gap: 8px; }
+.mas-apartado h3 { margin: 0; font-size: 1rem; }
+.mas-apartado ul { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
+.nombre-variante { display: block; font-weight: 600; }
 .fuentes-ficha .cuerpo-plegable { gap: 0; }
 .fuentes-ficha li { overflow-wrap: anywhere; }
 .pie-aprende { font-size: 0.75rem; }

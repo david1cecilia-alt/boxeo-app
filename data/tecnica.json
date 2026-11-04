@@ -1,11 +1,70 @@
 {
-  "_nota": "Fichas de la pestaña Aprende. Todo en guardia ORTODOXA (izquierda delante); el zurdo lo lee en espejo (la vista lo avisa). `acciones` son ids de acciones.json (vacío en estrategia). que_es, cuando, pasos, errores (con o sin correccion), ventajas, inconvenientes y notas son lo que se ve; en_ingles sirve para buscar vídeos. Cada paso puede llevar una `postura` de posturas.json. Las combinaciones relacionadas NO se escriben: salen de combinaciones.json. `revisar: true` = pendiente de revisar con el entrenador; `pendiente` dice qué (lo recoge herramientas/extraer_revisar.py en revisar.json; la vista solo avisa, no lo enseña). fuentes: {titulo, url}. Textos redactados con palabras propias a partir de las fuentes.",
+  "_nota": "Fichas de la pestaña Aprende. Todo en guardia ORTODOXA (izquierda delante); en zurdo cambian tus manos y tus pies, no lo que se refiere al rival (la vista lo avisa). `acciones` son ids de acciones.json (vacío en estrategia). que_es, cuando, pasos, errores (con o sin correccion), ventajas, inconvenientes y notas son lo que se ve; en_ingles sirve para buscar vídeos. Opcionales (los usan los golpes): al_cuerpo (texto visible, en «Al cuerpo»), variantes [{nombre, texto}] y detalles [{titulo, texto}], plegados en «Mostrar más». Lo común a todos los golpes al cuerpo está una sola vez, en la categoría golpes: al_cuerpo {puntos [{titulo, texto}], fuentes}, y cada ficha con al_cuerpo lo enseña plegado. Cada paso puede llevar una `postura` de posturas.json. Las combinaciones relacionadas NO se escriben: salen de combinaciones.json. `revisar: true` = pendiente de revisar con el entrenador; `pendiente` dice qué (lo recoge herramientas/extraer_revisar.py en revisar.json; la vista solo avisa, no lo enseña). fuentes: {titulo, url}. Textos redactados con palabras propias a partir de las fuentes.",
   "categorias": [
     {
       "id": "golpes",
       "titulo": "Golpes",
       "frase": "Qué lanzar y cómo lanzarlo sin abrirte.",
-      "imagen": null
+      "imagen": null,
+      "al_cuerpo": {
+        "puntos": [
+          {
+            "titulo": "Baja con las piernas, no con la cintura ni con el puño.",
+            "texto": "Flexiona las rodillas con la espalda recta. En los golpes rectos (jab y recto), baja hasta que tu hombro quede más o menos a la altura del objetivo. Tirar el puño hacia abajo desde arriba quita fuerza y deja la barbilla al descubierto."
+          },
+          {
+            "titulo": "Cada golpe conserva su trayectoria.",
+            "texto": "El jab y el recto al cuerpo van rectos; el crochet al cuerpo va en curva o algo en diagonal; el gancho al cuerpo sube."
+          },
+          {
+            "titulo": "Sin perder el equilibrio.",
+            "texto": "Ajusta antes la distancia con los pies; no te estires ni eches la cabeza por delante de los pies para llegar."
+          },
+          {
+            "titulo": "La cabeza, fuera de la línea.",
+            "texto": "Al bajar quedas más expuesto a golpes a la cabeza; bajar algo hacia un lado ayuda."
+          },
+          {
+            "titulo": "La otra mano, en la cara.",
+            "texto": "Es el error más castigado al ir al cuerpo."
+          },
+          {
+            "titulo": "No te quedes abajo.",
+            "texto": "Golpea y vuelve a la guardia, o sube con un golpe a la cabeza."
+          },
+          {
+            "titulo": "Mezcla cabeza y cuerpo.",
+            "texto": "Un golpe arriba hace que el rival suba la guardia y abre el cuerpo, y al revés."
+          },
+          {
+            "titulo": "Objetivos:",
+            "texto": "el hígado está en el lado derecho del rival, justo bajo las últimas costillas; le llega tu crochet de izquierda (en guardia diestra es el de delante; en zurdo, el de atrás). El plexo y el estómago, por el centro (golpes rectos y ganchos). El lado izquierdo del rival, costillas y bazo, para tu crochet de derecha."
+          },
+          {
+            "titulo": "Dónde se puede golpear:",
+            "texto": "la parte delantera y los lados del tronco, por encima del cinturón. Nunca por debajo del cinturón, en la espalda ni en los riñones (reglamento de World Boxing)."
+          },
+          {
+            "titulo": "Nivel:",
+            "texto": "los golpes al cuerpo son golpes como cualquier otro y pueden salir en cualquier nivel, también en básico. El nivel lo marca la longitud de la combinación."
+          }
+        ],
+        "fuentes": [
+          {
+            "titulo": "World Boxing, «Competition Rules» (en vigor desde marzo de 2026)",
+            "url": "https://worldboxing.org/wp-content/uploads/2026/10/World-Boxing-Competition-Rules-March-2026-v5.0.pdf"
+          },
+          {
+            "titulo": "England Boxing, «Boxing Coaching Handbook, Part 1» (Level 1)",
+            "url": "https://www.englandboxing.org/wp-content/uploads/2022/03/EB_Boxing-Coaching-Handbook-Part-1_v8-002.pdf"
+          },
+          {
+            "titulo": "ExpertBoxing, «The Art of Body Punching»",
+            "url": "https://expertboxing.com/the-art-of-body-punching"
+          }
+        ]
+      },
+      "pendiente": "REVISAR CON ENTRENADOR: golpes al cuerpo, que puedan salir en cualquier nivel, también en básico (decidido por David, 04-11)"
     },
     {
       "id": "defensas",
@@ -31,71 +90,557 @@
       "id": "jab",
       "categoria": "golpes",
       "acciones": [
-        "jab"
+        "jab",
+        "jab_cuerpo"
       ],
       "titulo": "Jab",
-      "frase": "El golpe más rápido y el que lo abre todo: mide, molesta y prepara.",
-      "nivel": 1,
-      "palabras_clave": [
-        "jab",
-        "mano adelantada",
-        "mano izquierda",
-        "distancia",
-        "medir"
-      ],
+      "en_ingles": "jab",
+      "que_es": "El golpe recto con la mano de delante. Es el más rápido y el que más se usa: sirve para medir la distancia, molestar al rival, mantenerlo lejos y abrir paso a los golpes fuertes.",
+      "cuando": "Casi siempre. Para empezar una combinación, para tantear, para frenar a un rival que entra y para salir de una defensa.",
       "pasos": [
         {
-          "texto": "Parte de la guardia: pie izquierdo delante, manos arriba y barbilla al pecho.",
+          "texto": "En la guardia, el puño de delante está con el pulgar mirando hacia tus pómulos.",
           "postura": "guardia"
         },
         {
-          "texto": "Lanza la mano izquierda recta desde donde está, sin echarla atrás antes.",
+          "texto": "La mano sale recta desde la barbilla hacia el objetivo, sin echarla atrás antes.",
           "postura": "jab_salida"
         },
         {
-          "texto": "Al final gira el puño hasta dejarlo horizontal (nudillos arriba), sube el hombro izquierdo para tapar la barbilla y suelta aire corto. El brazo va suelto en el recorrido; la tensión, solo al tocar.",
+          "texto": "A la vez, gira un poco el tobillo de delante, y con él la cadera y después el hombro: así el golpe lleva más energía y gana alcance.",
           "postura": "jab_impacto"
         },
         {
-          "texto": "La mano derecha no se mueve: sigue pegada a la cara durante todo el golpe.",
+          "texto": "Durante el recorrido la muñeca rota hasta que el puño llega con los nudillos arriba (palma hacia abajo).",
           "postura": "jab_impacto"
         },
         {
-          "texto": "Recoge por el mismo camino, al menos igual de rápido que al salir, hasta la guardia.",
+          "texto": "El hombro de delante sube y tapa la barbilla.",
+          "postura": "jab_impacto"
+        },
+        {
+          "texto": "La mano de atrás no se mueve de la cara.",
+          "postura": "jab_impacto"
+        },
+        {
+          "texto": "Vuelve por el mismo camino a la guardia, igual de rápido que salió.",
           "postura": "guardia"
         }
       ],
       "errores": [
         {
-          "error": "Bajar la mano derecha mientras sale el jab.",
-          "correccion": "Déjala apoyada en la mejilla; al practicar, comprueba que el guante sigue tocándote la cara."
+          "error": "Abrir el codo hacia fuera al lanzarlo."
         },
         {
-          "error": "Echar la mano atrás antes de golpear (se ve venir).",
-          "correccion": "Sale directo desde donde está en la guardia: el puño viaja en línea recta al objetivo."
+          "error": "Bajar la mano al volver."
         },
         {
-          "error": "Abrir el codo hacia fuera al lanzar (el golpe sale en curva).",
-          "correccion": "El codo mira al suelo durante todo el recorrido, por debajo del puño."
+          "error": "Echar la cabeza hacia delante con el golpe."
         },
         {
-          "error": "Estirarse para llegar.",
-          "correccion": "Si no llegas, da un paso: el cuerpo no se estira."
+          "error": "Avisar el golpe moviendo los hombros antes."
         },
         {
-          "error": "Dejar el brazo estirado después del golpe.",
-          "correccion": "La vuelta es parte del golpe: recoge en cuanto toques, sin quedarte a mirar."
+          "error": "Bajar la mano de atrás."
         }
       ],
-      "cuando": "Para medir la distancia, molestar y romper el ritmo del rival, y para abrir combinaciones: casi todas empiezan con él. También sirve de freno: un jab seco corta al rival que entra. Si estás algo lejos, acompáñalo con un paso corto del pie izquierdo; el derecho lo sigue enseguida para no perder la guardia. Contra un rival más alto, el jab puede subir por encima del hombro.",
-      "revisar": true,
-      "pendiente": "REVISAR CON ENTRENADOR: jab, error «estirarse para llegar» (sustituye a «inclinarse hacia delante, con el peso en la pierna delantera»: el peso depende de la situación)",
-      "fuentes": [
+      "ventajas": "Rápido, gasta poco y te deja en buena posición para defender y seguir.",
+      "inconvenientes": "Poca fuerza; un jab flojo o repetido siempre igual invita al contragolpe.",
+      "al_cuerpo": "Baja flexionando las piernas, sobre todo la de delante, y lanza el jab recto al estómago o al plexo. Suele ir con paso. Ojo: al bajar dejas la cabeza más expuesta a un contragolpe.",
+      "variantes": [
         {
-          "titulo": "ExpertBoxing (artículos sobre el jab)"
+          "nombre": "Jab parado",
+          "texto": "Ya estás a distancia y solo sale la mano. El más rápido y el que menos te descoloca."
         },
         {
-          "titulo": "Reglamento técnico de World Boxing (golpe válido: con los nudillos del guante cerrado)"
+          "nombre": "Jab con paso",
+          "texto": "El pie de delante avanza a la vez que el golpe, para acortar distancia. Llega más lejos y con más fuerza."
+        },
+        {
+          "nombre": "Jab de potencia",
+          "texto": "Primero avanza el pie de delante y el jab sale con todo el cuerpo yendo hacia delante. Deja el pie de atrás apoyado y listo para el recto."
+        },
+        {
+          "nombre": "Jab con pivote",
+          "texto": "Giras sobre el pie de delante mientras lanzas, para cambiar de ángulo a la vez. Durante el giro estás menos equilibrado."
+        },
+        {
+          "nombre": "Jab al retroceder",
+          "texto": "Lo lanzas mientras das el paso atrás, para frenar a un rival que entra. Tiene menos fuerza; sirve para molestar, no para hacer daño."
+        },
+        {
+          "nombre": "Doble jab",
+          "texto": "Dos seguidos, el primero para medir o tapar la vista y el segundo para llegar."
+        }
+      ],
+      "detalles": [
+        {
+          "titulo": "Guardia según la distancia",
+          "texto": "A larga distancia, en guardia más estática, el brazo de delante se adelanta un poco y la barbilla se relaja. A media y corta distancia conviene protegerse más: brazo recogido y barbilla al pecho."
+        },
+        {
+          "titulo": "Altura",
+          "texto": "A la altura de la cabeza del rival. Si es más alto, el jab sube por encima de tu hombro."
+        }
+      ],
+      "revisar": true,
+      "pendiente": "REVISAR CON ENTRENADOR: (1) jab: las variantes y cuáles enseñar primero (2) jab: el giro del puño (pulgar hacia los pómulos → nudillos arriba) y el giro de tobillo, cadera y hombro los ha descrito David; Iván respondió con un gesto y no quedó claro (3) jab: cuánto gira la cadera en el jab sin que se vea venir (4) jab: cuándo conviene el jab con paso (5) jab: la guardia más relajada a larga distancia la ha descrito David; Iván habló de barbilla al pecho sin matizar la distancia",
+      "fuentes": [
+        {
+          "titulo": "England Boxing, «Boxing Coaching Handbook, Part 1» (Level 1)",
+          "url": "https://www.englandboxing.org/wp-content/uploads/2022/03/EB_Boxing-Coaching-Handbook-Part-1_v8-002.pdf"
+        },
+        {
+          "titulo": "ExpertBoxing, «How to Throw a Jab»",
+          "url": "https://expertboxing.com/how-to-throw-a-jab"
+        },
+        {
+          "titulo": "ExpertBoxing, «The 5 Types of Jabs»",
+          "url": "https://expertboxing.com/5-types-of-jabs"
+        },
+        {
+          "titulo": "Respuestas de Iván, 02-11-2026"
+        }
+      ]
+    },
+    {
+      "id": "directo",
+      "categoria": "golpes",
+      "acciones": [
+        "directo",
+        "directo_cuerpo"
+      ],
+      "titulo": "Recto",
+      "en_ingles": "cross, straight right",
+      "que_es": "El golpe recto con la mano de atrás. Recorre más camino que el jab, pero lleva la fuerza de las piernas y la cadera.",
+      "cuando": "Detrás del jab (el 1-2), como contragolpe cuando el rival falla, o detrás de un crochet de izquierda.",
+      "pasos": [
+        {
+          "texto": "Empuja con el pie de atrás y gira el talón hacia fuera."
+        },
+        {
+          "texto": "La cadera y el hombro de atrás giran hacia delante."
+        },
+        {
+          "texto": "El puño sale recto desde la barbilla, por el centro. Como en el jab, empieza con el pulgar hacia tus pómulos y la muñeca rota hasta llegar con los nudillos arriba."
+        },
+        {
+          "texto": "La mano de delante vuelve a la cara mientras el recto sale."
+        },
+        {
+          "texto": "Barbilla abajo; vuelve a la guardia por el mismo camino."
+        }
+      ],
+      "errores": [
+        {
+          "error": "Echar la mano atrás antes de lanzar (se ve venir)."
+        },
+        {
+          "error": "Levantar el codo."
+        },
+        {
+          "error": "Cargar todo el peso delante y quedarte sin poder defender ni seguir."
+        },
+        {
+          "error": "Bajar la mano de delante."
+        },
+        {
+          "error": "Levantar la barbilla."
+        }
+      ],
+      "ventajas": "Es el golpe recto más fuerte y llega lejos.",
+      "inconvenientes": "Recorre más camino que el jab y el rival lo ve venir todo el rato, así que sin preparación se defiende con más facilidad. Si lo fallas y no vuelves a la guardia, te deja abierto al contragolpe.",
+      "al_cuerpo": "Baja flexionando sobre todo la pierna de delante y lanza el recto al plexo o al estómago; la cabeza un poco fuera de la línea. Suele ir detrás de golpes a la cabeza, cuando el rival sube la guardia.",
+      "variantes": [
+        {
+          "nombre": "Recto parado",
+          "texto": "Detrás del jab, sin mover los pies. El 1-2 de siempre."
+        },
+        {
+          "nombre": "Recto con paso",
+          "texto": "El pie de delante avanza a la vez, para llegar a un rival que está algo lejos."
+        },
+        {
+          "nombre": "Recto de contragolpe",
+          "texto": "Justo después de parar o esquivar el jab del rival, cuando su brazo aún está fuera."
+        },
+        {
+          "nombre": "Recto de salida",
+          "texto": "Sin jab delante. Sorprende, pero se ve más venir: úsalo poco."
+        }
+      ],
+      "detalles": [
+        {
+          "titulo": "Puño",
+          "texto": "Igual que en el jab, del pulgar hacia los pómulos a los nudillos arriba."
+        }
+      ],
+      "revisar": true,
+      "pendiente": "REVISAR CON ENTRENADOR: (1) recto: las variantes (2) recto: cuánto gira el pie de atrás y hasta dónde pasa el peso",
+      "fuentes": [
+        {
+          "titulo": "England Boxing, «Boxing Coaching Handbook, Part 1» (Level 1)",
+          "url": "https://www.englandboxing.org/wp-content/uploads/2022/03/EB_Boxing-Coaching-Handbook-Part-1_v8-002.pdf"
+        },
+        {
+          "titulo": "Evolve University, «How To Throw A Cross»",
+          "url": "https://evolve-university.com/blog/wba-boxing-world-champion-drian-francisco-demonstrates-how-to-throw-a-cross/"
+        },
+        {
+          "titulo": "My Boxing Coach, «How to Throw a Right Cross»",
+          "url": "https://myboxingcoach.com/how-to-throw-a-right-cross"
+        },
+        {
+          "titulo": "Respuestas de Iván, 02-11-2026"
+        }
+      ]
+    },
+    {
+      "id": "gancho_izq",
+      "categoria": "golpes",
+      "acciones": [
+        "gancho_izq",
+        "gancho_izq_cuerpo"
+      ],
+      "titulo": "Crochet de izquierda",
+      "en_ingles": "lead hook, left hook",
+      "que_es": "Golpe curvo con la mano de delante. El brazo va doblado y el golpe llega por un lado, fuera del campo de visión del rival.",
+      "cuando": "A corta y media distancia. Muy habitual detrás del recto (1-2-3), porque el giro del recto deja cargado el crochet.",
+      "pasos": [
+        {
+          "texto": "Desde la guardia, sin echar el brazo atrás."
+        },
+        {
+          "texto": "Gira la cadera y el pie de delante hacia dentro; el golpe sale del giro del cuerpo, no del brazo."
+        },
+        {
+          "texto": "El codo, doblado más o menos en ángulo recto y a la altura del puño: el brazo queda paralelo al suelo, con la palma hacia ti."
+        },
+        {
+          "texto": "La mano de atrás, pegada a la cara."
+        },
+        {
+          "texto": "Golpe corto; vuelve a la guardia."
+        }
+      ],
+      "errores": [
+        {
+          "error": "Abrir el brazo (se convierte en un golpe largo y lento)."
+        },
+        {
+          "error": "Echarlo atrás antes."
+        },
+        {
+          "error": "Golpear solo con el brazo sin girar."
+        },
+        {
+          "error": "Bajar la mano de atrás."
+        },
+        {
+          "error": "Girar de más y quedarte descolocado."
+        }
+      ],
+      "ventajas": "Muy potente a corta distancia y difícil de ver.",
+      "inconvenientes": "Necesita estar cerca. Si lo abres demasiado, el rival entra con un recto por dentro.",
+      "al_cuerpo": "El golpe clásico al hígado, en el lado derecho del rival, justo bajo las costillas. Baja flexionando y lánzalo algo de abajo arriba, para meterlo bajo las costillas. En zurdo, tu crochet de delante es el de derecha y va a su lado izquierdo; al hígado le llega tu crochet de atrás.",
+      "variantes": [
+        {
+          "nombre": "Crochet corto",
+          "texto": "A muy corta distancia, casi sin abrir el brazo. Permite tirar varios seguidos sin descolocarte."
+        },
+        {
+          "nombre": "Crochet con pivote",
+          "texto": "Giras el cuerpo más y te mueves sobre el pie de delante a la vez que golpeas, para salir del sitio con el mismo golpe."
+        },
+        {
+          "nombre": "Doble crochet",
+          "texto": "El primero al cuerpo y el segundo a la cabeza (o al revés). El rival suele defender izquierda-derecha y no espera dos seguidos con la misma mano."
+        },
+        {
+          "nombre": "Crochet en diagonal",
+          "texto": "A medio camino entre crochet y gancho; entra por un ángulo raro, por debajo de la guardia lateral."
+        }
+      ],
+      "detalles": [
+        {
+          "titulo": "Puño",
+          "texto": "Hay escuelas que lo lanzan con la palma hacia abajo (así lo enseña England Boxing); aquí se explica con la palma hacia ti."
+        }
+      ],
+      "revisar": true,
+      "pendiente": "REVISAR CON ENTRENADOR: (1) crochet de izquierda: las variantes (2) crochet de izquierda: si gira el pie de delante y cuánto (3) crochet de izquierda: el puño con la palma hacia ti y no hacia abajo, como England Boxing (decidido por David, 04-11)",
+      "fuentes": [
+        {
+          "titulo": "England Boxing, «Boxing Coaching Handbook, Part 1» (Level 1)",
+          "url": "https://www.englandboxing.org/wp-content/uploads/2022/03/EB_Boxing-Coaching-Handbook-Part-1_v8-002.pdf"
+        },
+        {
+          "titulo": "ExpertBoxing, «Mastering the Left Hook»",
+          "url": "https://expertboxing.com/mastering-the-left-hook"
+        },
+        {
+          "titulo": "ExpertBoxing, «Setting Up the Left Hook»",
+          "url": "https://expertboxing.com/setting-up-the-left-hook"
+        },
+        {
+          "titulo": "Evolve MMA, «How To Set Up And Land A Perfect Liver Shot»",
+          "url": "https://evolve-mma.com/blog/how-to-set-up-and-land-a-perfect-liver-shot-in-boxing/"
+        },
+        {
+          "titulo": "My Boxing Coach, «Liver Shots Destroy Boxers»",
+          "url": "https://www.myboxingcoach.com/liver-shots-destroy-boxers-why-and-how"
+        },
+        {
+          "titulo": "Soloboxeo, «Técnica del boxeo»",
+          "url": "https://soloboxeo.com/?p=208"
+        },
+        {
+          "titulo": "Respuestas de Iván, 02-11-2026"
+        }
+      ]
+    },
+    {
+      "id": "gancho_der",
+      "categoria": "golpes",
+      "acciones": [
+        "gancho_der",
+        "gancho_der_cuerpo"
+      ],
+      "titulo": "Crochet de derecha",
+      "en_ingles": "rear hook, right hook",
+      "que_es": "Golpe curvo con la mano de atrás. Recorre más camino que el crochet de izquierda y por eso lleva más fuerza, pero se ve más.",
+      "cuando": "A corta distancia, detrás de un jab o de un crochet de izquierda, o cuando el rival cierra el centro y deja el lado libre.",
+      "pasos": [
+        {
+          "texto": "Gira el pie de atrás y la cadera, como en el recto."
+        },
+        {
+          "texto": "El brazo va doblado y llega por el lado, paralelo al suelo, con la palma hacia ti."
+        },
+        {
+          "texto": "La mano de delante, pegada a la cara."
+        },
+        {
+          "texto": "Vuelve enseguida a la guardia."
+        }
+      ],
+      "errores": [
+        {
+          "error": "Abrirlo mucho (se ve venir)."
+        },
+        {
+          "error": "Dejar caer la mano de delante."
+        },
+        {
+          "error": "Perder el equilibrio hacia delante."
+        }
+      ],
+      "ventajas": "Mucha fuerza; entra por el lado cuando el rival protege el centro.",
+      "inconvenientes": "Recorre bastante camino; si lo abres o lo preparas mucho se ve venir y te contragolpean.",
+      "al_cuerpo": "Al lado izquierdo del rival (costillas, bazo). Baja con las piernas y no dejes caer la mano de delante. En zurdo, tu crochet de atrás es el de izquierda y es el que llega al hígado.",
+      "variantes": [
+        {
+          "nombre": "Crochet corto",
+          "texto": "Muy cerca, detrás de un crochet de izquierda o de un jab. Es la forma más segura."
+        },
+        {
+          "nombre": "Crochet más abierto",
+          "texto": "Llega por fuera de la guardia del rival. Tiene más fuerza, pero se ve venir antes."
+        },
+        {
+          "nombre": "Crochet tras defensa",
+          "texto": "Sale de una esquiva o una rueda que te deja el peso cargado en el lado derecho."
+        }
+      ],
+      "detalles": [
+        {
+          "titulo": "Puño",
+          "texto": "Con la palma hacia ti, igual que el crochet de izquierda."
+        }
+      ],
+      "revisar": true,
+      "pendiente": "REVISAR CON ENTRENADOR: (1) crochet de derecha: las variantes (2) crochet de derecha: si lo ve adecuado para un principiante y si prefiere enseñarlo corto o algo más abierto",
+      "fuentes": [
+        {
+          "titulo": "England Boxing, «Boxing Coaching Handbook, Part 1» (Level 1)",
+          "url": "https://www.englandboxing.org/wp-content/uploads/2022/03/EB_Boxing-Coaching-Handbook-Part-1_v8-002.pdf"
+        },
+        {
+          "titulo": "Soloboxeo, «Técnica del boxeo»",
+          "url": "https://soloboxeo.com/?p=208"
+        },
+        {
+          "titulo": "Respuestas de Iván, 02-11-2026"
+        }
+      ]
+    },
+    {
+      "id": "uppercut_izq",
+      "categoria": "golpes",
+      "acciones": [
+        "uppercut_izq",
+        "uppercut_izq_cuerpo"
+      ],
+      "titulo": "Gancho de izquierda",
+      "en_ingles": "lead uppercut",
+      "que_es": "Golpe de abajo arriba con la mano de delante. Entra por el centro, por debajo de la guardia del rival.",
+      "cuando": "A muy corta distancia, cuando el rival se inclina hacia delante o cierra la guardia por los lados. Suele salir después de una esquiva o una rueda hacia la izquierda, que carga ese lado.",
+      "pasos": [
+        {
+          "texto": "Desde la guardia, sin bajar antes la mano (se vería)."
+        },
+        {
+          "texto": "Haz una pequeña carga: flexiona un poco hacia tu izquierda, el lado del gancho."
+        },
+        {
+          "texto": "Desde esa carga, gira la pierna y la cadera; ese giro es el que da la fuerza. El puño sube corto, con la palma hacia ti."
+        },
+        {
+          "texto": "El codo no se levanta: sube la mano, no el codo."
+        },
+        {
+          "texto": "La otra mano en la cara; vuelve enseguida."
+        }
+      ],
+      "errores": [
+        {
+          "error": "Bajar la mano antes de lanzarlo."
+        },
+        {
+          "error": "Subir todo el cuerpo con el golpe (pierdes tiempo y equilibrio)."
+        },
+        {
+          "error": "Lanzarlo largo o desde lejos."
+        },
+        {
+          "error": "Levantar el codo."
+        }
+      ],
+      "ventajas": "Entra por donde el rival no mira y es muy difícil de ver a corta distancia.",
+      "inconvenientes": "Muy corto; desde lejos no llega y te deja abierto al crochet.",
+      "al_cuerpo": "Al plexo o al estómago, por el centro, por encima del cinturón. No es solo el mismo golpe apuntando más bajo: bajas más con las piernas y el recorrido es más corto y más hacia delante.",
+      "variantes": [
+        {
+          "nombre": "Gancho corto",
+          "texto": "Pegado al rival, el recorrido mínimo. El más difícil de ver."
+        },
+        {
+          "nombre": "Gancho tras defensa",
+          "texto": "Después de una esquiva o una rueda hacia la izquierda, que ya te deja la carga hecha."
+        },
+        {
+          "nombre": "Gancho en diagonal",
+          "texto": "A medio camino hacia el crochet, para entrar entre los brazos del rival."
+        },
+        {
+          "nombre": "Gancho de contragolpe",
+          "texto": "Cuando el rival entra agachado o con la cabeza por delante."
+        }
+      ],
+      "revisar": true,
+      "pendiente": "REVISAR CON ENTRENADOR: (1) gancho de izquierda: las variantes (2) gancho de izquierda: la carga hacia el lado del gancho la ha descrito David; confirmar cuánto se flexiona (Iván dijo que el peso depende de la situación)",
+      "fuentes": [
+        {
+          "titulo": "England Boxing, «Boxing Coaching Handbook, Part 1» (Level 1)",
+          "url": "https://www.englandboxing.org/wp-content/uploads/2022/03/EB_Boxing-Coaching-Handbook-Part-1_v8-002.pdf"
+        },
+        {
+          "titulo": "ExpertBoxing, «How to Throw an Uppercut»",
+          "url": "https://expertboxing.com/how-to-throw-an-uppercut"
+        },
+        {
+          "titulo": "ExpertBoxing, «Uppercut Power Tips and Technique»",
+          "url": "https://expertboxing.com/uppercut-power-tips-and-technique"
+        },
+        {
+          "titulo": "Respuestas de Iván, 02-11-2026"
+        }
+      ]
+    },
+    {
+      "id": "uppercut_der",
+      "categoria": "golpes",
+      "acciones": [
+        "uppercut_der",
+        "uppercut_der_cuerpo"
+      ],
+      "titulo": "Gancho de derecha",
+      "en_ingles": "rear uppercut",
+      "que_es": "Golpe de abajo arriba con la mano de atrás. Lleva el impulso de la pierna y la cadera de atrás, y suele resultar más cómodo de lanzar con fuerza que el de izquierda.",
+      "cuando": "A corta distancia, cuando el rival se agacha o se cierra, después de un crochet de izquierda o de una esquiva a la derecha.",
+      "pasos": [
+        {
+          "texto": "Haz una pequeña carga: flexiona un poco hacia tu derecha, el lado del gancho."
+        },
+        {
+          "texto": "Desde esa carga, gira la cadera y el pie de atrás, como en el recto."
+        },
+        {
+          "texto": "El puño sube corto por el centro, con la palma hacia ti."
+        },
+        {
+          "texto": "La mano de delante, pegada a la cara."
+        },
+        {
+          "texto": "Vuelve enseguida a la guardia."
+        }
+      ],
+      "errores": [
+        {
+          "error": "Bajar la mano antes."
+        },
+        {
+          "error": "Abrirlo."
+        },
+        {
+          "error": "Subir el cuerpo entero."
+        },
+        {
+          "error": "Dejar caer la mano de delante."
+        }
+      ],
+      "ventajas": "Mucha fuerza y llega por debajo de la guardia.",
+      "inconvenientes": "Necesitas estar muy cerca; si fallas, quedas expuesto al contragolpe.",
+      "al_cuerpo": "Al plexo o al estómago, por el centro y por encima del cinturón, con un recorrido corto. No te dobles de más.",
+      "variantes": [
+        {
+          "nombre": "Gancho tras esquiva",
+          "texto": "Después de una esquiva a la derecha, que te deja cargado ese lado."
+        },
+        {
+          "nombre": "Gancho tras crochet de izquierda",
+          "texto": "El giro del crochet te deja cargado el lado derecho para el gancho."
+        },
+        {
+          "nombre": "Gancho como un recto",
+          "texto": "Misma mecánica de piernas y cadera que el recto, pero el puño sube por el centro. Llega algo más lejos que el gancho corto."
+        },
+        {
+          "nombre": "Doble gancho",
+          "texto": "Izquierda-derecha o derecha-izquierda por el centro, cuando el rival se cierra."
+        }
+      ],
+      "revisar": true,
+      "pendiente": "REVISAR CON ENTRENADOR: (1) gancho de derecha: las variantes (2) gancho de derecha: cuánto se flexiona en la carga (descrita por David) (3) gancho de derecha: dudas de la biblioteca sobre el gancho de derecha detrás del recto (#52, #54) y detrás del ballesteo (#113, #144)",
+      "fuentes": [
+        {
+          "titulo": "England Boxing, «Boxing Coaching Handbook, Part 1» (Level 1)",
+          "url": "https://www.englandboxing.org/wp-content/uploads/2022/03/EB_Boxing-Coaching-Handbook-Part-1_v8-002.pdf"
+        },
+        {
+          "titulo": "Straight2Boxing, «Lead and Rear Uppercuts»",
+          "url": "https://straight2boxing.com/2017/08/08/lead-and-rear-uppercuts/"
+        },
+        {
+          "titulo": "ExpertBoxing, «How to Throw an Uppercut»",
+          "url": "https://expertboxing.com/how-to-throw-an-uppercut"
+        },
+        {
+          "titulo": "ExpertBoxing, «Uppercut Power Tips and Technique»",
+          "url": "https://expertboxing.com/uppercut-power-tips-and-technique"
+        },
+        {
+          "titulo": "Respuestas de Iván, 02-11-2026"
         }
       ]
     },

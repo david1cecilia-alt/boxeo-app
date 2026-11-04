@@ -8,7 +8,7 @@ import { accionesPorIds, catalogo, espejo, nombreHablado, textoHablado } from ".
 import { VELOCIDADES } from "../motor/ritmo.js";
 import { movimiento, movimientos } from "../motor/sorteo.js";
 import { nombreCortoVoz } from "../voz.js";
-import { $, $$, anunciar, esc } from "./dom.js";
+import { $, $$, anunciar, atraparFoco, esc } from "./dom.js";
 
 const GRUPOS_PRACTICAR = { golpe: "Golpes", defensa: "Defensas", movimiento: "Salidas" };
 // Cuánto más, sin el factor del sorteo (×2, ×4): la frecuencia exacta no se enseña.
@@ -82,19 +82,6 @@ function elegirPestana(pestana) {
     p.setAttribute("aria-selected", String(activa));
     p.tabIndex = activa ? 0 : -1;
     document.getElementById(p.getAttribute("aria-controls")).hidden = !activa;
-  }
-}
-
-// El <dialog> modal deja el resto de la página inerte, pero con Tab el foco puede irse a la barra
-// del navegador: del último se vuelve al primero (y al revés con Mayús+Tab).
-function atraparFoco(e) {
-  if (e.key !== "Tab") return;
-  const enfocables = $$("button, input", e.currentTarget)
-    .filter((el) => el.tabIndex >= 0 && el.getClientRects().length && !el.closest("[hidden]"));
-  const [primero, ultimo] = [enfocables[0], enfocables.at(-1)];
-  if (e.shiftKey ? document.activeElement === primero : document.activeElement === ultimo) {
-    e.preventDefault();
-    (e.shiftKey ? ultimo : primero).focus();
   }
 }
 

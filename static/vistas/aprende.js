@@ -114,12 +114,12 @@ export function iniciarAprende() {
         ${apartado("que", "Qué es", `<p>${esc(f.que_es ?? f.frase)}</p>`)}
         ${apartado("cuando", "Cuándo suele servir", `<p>${esc(f.cuando)}</p>`)}
         ${apartado("como", "Cómo se hace", `<ol class="pasos-ficha">${f.pasos.map((p) => `<li>${esc(p.texto)}</li>`).join("")}</ol>`)}
+        ${f.al_cuerpo ? alCuerpo(f, categoria?.al_cuerpo) : ""}
       </div>
       <div class="col-ficha">
         ${apartado("errores", "Errores típicos", lista(errores))}
         ${f.ventajas ? apartado("ventajas", "Ventajas", `<p>${esc(f.ventajas)}</p>`) : ""}
         ${f.inconvenientes ? apartado("inconvenientes", "Inconvenientes", `<p>${esc(f.inconvenientes)}</p>`) : ""}
-        ${f.al_cuerpo ? alCuerpo(f, categoria?.al_cuerpo) : ""}
         ${(f.notas ?? []).map((n, i) => apartado(`nota-${i}`, esc(n.titulo), `<p>${esc(n.texto)}</p>`)).join("")}
         ${mostrarMas(f)}
         <details class="tarjeta plegable fuentes-ficha">

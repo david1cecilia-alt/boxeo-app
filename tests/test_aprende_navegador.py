@@ -153,8 +153,9 @@ def _plegado(pagina, selector):
 def test_mostrar_mas_del_jab_se_abre_con_el_teclado_y_trae_variantes_y_detalles(pagina):
     _ir(pagina, "aprende/jab")
     apartados = pagina.locator(".apartado h2").all_text_contents()
-    assert apartados == ["Qué es", "Cuándo suele servir", "Cómo se hace", "Errores típicos", "Ventajas",
-                         "Inconvenientes", "Al cuerpo"]
+    # «Al cuerpo» sigue a «Cómo se hace» (en el PC, en la misma columna: así no se descompensan).
+    assert apartados == ["Qué es", "Cuándo suele servir", "Cómo se hace", "Al cuerpo", "Errores típicos",
+                         "Ventajas", "Inconvenientes"]
     assert _plegado(pagina, ".mas-ficha") == {"abierto": False, "visible": False}
     resumen = pagina.locator(".mas-ficha > summary")
     assert resumen.locator(".titulo-plegable").text_content() == "Mostrar más"

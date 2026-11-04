@@ -924,6 +924,7 @@ dialog.hoja { padding: 0; }
 .comun-cuerpo > summary { margin: 0; }
 .comun-cuerpo[open] > summary { margin-bottom: 4px; }
 #aprende-contenido .fuentes-comun { margin-top: 10px; font-size: 0.8125rem; overflow-wrap: anywhere; }
+.mas-ficha .titulo-plegable { white-space: nowrap; }
 .mas-ficha .cuerpo-plegable { gap: 18px; }
 .mas-apartado { display: grid; gap: 8px; }
 .mas-apartado h3 { margin: 0; font-size: 1rem; }

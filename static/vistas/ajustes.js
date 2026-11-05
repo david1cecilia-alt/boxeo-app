@@ -8,7 +8,9 @@ import { accionesPorIds, catalogo, espejo, nombreHablado, textoHablado } from ".
 import { VELOCIDADES } from "../motor/ritmo.js";
 import { movimiento, movimientos } from "../motor/sorteo.js";
 import { nombreCortoVoz } from "../voz.js";
-import { $, $$, anunciar, esc } from "./dom.js";
+import { MAX_PROPIAS } from "../motor/reglas.js";
+import { RUTA as RUTA_CREADOR, iniciarCreador } from "./creador.js";
+import { $, $$, anunciar, atraparFoco, esc } from "./dom.js";
 
 const GRUPOS_PRACTICAR = { golpe: "Golpes", defensa: "Defensas", movimiento: "Salidas" };
 // Cuánto más, sin el factor del sorteo (×2, ×4): la frecuencia exacta no se enseña.
@@ -22,8 +24,8 @@ function movimientosPracticar(zurdo) {
   for (const a of catalogo().values()) if (!primera.has(movimiento(a))) primera.set(movimiento(a), a);
   return movimientos().map((m) => {
     const a = primera.get(m);
-    const nombre = a.numero ? `${a.numero} ${nombreHablado(zurdo ? espejo(a) : a)}`
-      : m === "cuerpo" ? "golpes al cuerpo" : a.orden || a.plantilla.replace(" {lado}", "");
+    const nombre = m === "cuerpo" ? "golpes al cuerpo"
+      : a.numero ? `${a.numero} ${nombreHablado(zurdo ? espejo(a) : a)}` : a.orden || a.plantilla.replace(" {lado}", "");
     return { movimiento: m, nombre, grupo: a.tipo };
   });
 }
@@ -85,19 +87,6 @@ function elegirPestana(pestana) {
   }
 }
 
-// El <dialog> modal deja el resto de la página inerte, pero con Tab el foco puede irse a la barra
-// del navegador: del último se vuelve al primero (y al revés con Mayús+Tab).
-function atraparFoco(e) {
-  if (e.key !== "Tab") return;
-  const enfocables = $$("button, input", e.currentTarget)
-    .filter((el) => el.tabIndex >= 0 && el.getClientRects().length && !el.closest("[hidden]"));
-  const [primero, ultimo] = [enfocables[0], enfocables.at(-1)];
-  if (e.shiftKey ? document.activeElement === primero : document.activeElement === ultimo) {
-    e.preventDefault();
-    (e.shiftKey ? ultimo : primero).focus();
-  }
-}
-
 // Pestañas con el teclado: flechas (en círculo), Inicio y Fin; solo la activa está en el orden de Tab.
 function teclasPestanas(e) {
   const pestana = e.target.closest?.('[role="tab"]');
@@ -144,6 +133,15 @@ export function iniciarAjustes({ almacen, voz }) {
     $("#volver-ajustes").href = vuelta;
     const p = almacen.datos.perfil;
     raiz.innerHTML = `
+      <a href="${RUTA_CREADOR}" class="tarjeta tarjeta-enlace" id="ir-creador">
+        <span class="tarjeta-enlace-texto">
+          <span class="titular">Mis combinaciones
+            <span class="acento">${almacen.datos.combinacionesPropias.length}/${MAX_PROPIAS}</span></span>
+          <span class="nota">Crea las tuyas y mézclalas con la biblioteca en Entrenar.</span>
+        </span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </a>
+
       <form class="tarjeta formulario" id="f-voz" aria-labelledby="t-voz">
         <div class="voz-cabeza">
           <h2 id="t-voz">Voz</h2>
@@ -279,5 +277,21 @@ export function iniciarAjustes({ almacen, voz }) {
     });
   }
 
-  return { mostrar: pintar };
+  // Subpágina «Mis combinaciones» (#ajustes/mis-combinaciones/…): sin la cabecera de Ajustes.
+  const creador = iniciarCreador({ almacen, raiz, voz });
+  const vista = $("#vista-ajustes");
+  function mostrar(parametro = "") {
+    const [sub, ...resto] = parametro.split("/");
+    if (sub === "mis-combinaciones") {
+      vista.dataset.sub = "creador";
+      return creador.mostrar(resto.join("/"));
+    }
+    const desdeCreador = vista.dataset.sub === "creador";
+    delete vista.dataset.sub;
+    pintar();
+    // Al volver de «Mis combinaciones», el foco a su tarjeta (de donde se salió).
+    if (desdeCreador) $("#ir-creador").focus();
+  }
+
+  return { mostrar };
 }

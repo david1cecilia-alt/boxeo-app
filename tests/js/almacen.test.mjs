@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { VERSION, claveSesion, crearAlmacen, historialPorDefecto, migrar, sesionPorDefecto, vacio, vozPorDefecto } from "../../static/almacen.js";
+import { VERSION, claveSesion, crearAlmacen, crearUuid, historialPorDefecto, migrar, sesionPorDefecto, vacio, vozPorDefecto } from "../../static/almacen.js";
 
 // localStorage falso. `roto: true` simula un navegador que no deja guardar.
 function almacenamiento(inicial = {}, { roto = false } = {}) {
@@ -105,7 +105,7 @@ test("v3 → v4: nivel y zurdo salen de «Tus datos» y se conserva todo lo dem�
   assert.equal(migrado, true);
   assert.equal(datos.version, VERSION);
   assert.deepEqual(datos.perfil.sesion, {
-    voz: "ambos", ritmo: 5, asalto: "amateur", nivel: 2, zurdo: true, reaccion: false,
+    voz: "ambos", ritmo: 5, asalto: "amateur", nivel: 2, zurdo: true, reaccion: false, mezcla: "ninguna",
     personalizada: { asaltos: 3, duracion_asalto: 180, descanso: 60 },
   });
   // Historial, valoraciones y el resto del perfil, intactos; las notas y revisiones del entrenador,
@@ -298,7 +298,7 @@ test("v6 → v7: fuera notas, revisiones y la guardia y el nivel de «Tus datos�
   const v6 = almacenV6();
   const { datos, migrado } = migrar(structuredClone(v6));
   assert.equal(migrado, true);
-  assert.equal(datos.version, 7);
+  assert.equal(datos.version, VERSION);
   assert.equal("notas_entrenador" in datos, false);
   assert.equal("revisiones" in datos, false);
   assert.deepEqual(datos.perfil.basicos, { inicio: "2025-09-01", altura_cm: 178, peso_kg: 75, alcance_cm: 183 });
@@ -311,7 +311,7 @@ test("v6 → v7: fuera notas, revisiones y la guardia y el nivel de «Tus datos�
   const { basicos: _, sesion: sesionV6, ...perfilV6 } = v6.perfil;
   assert.deepEqual(perfil, perfilV6);
   assert.deepEqual({ ...sesion, nivel: null, zurdo: null }, sesionV6);
-  assert.deepEqual(Object.keys(datos).sort(), ["perfil", "sesiones", "valoraciones", "version"]);
+  assert.deepEqual(Object.keys(datos).sort(), ["combinacionesPropias", "perfil", "sesiones", "valoraciones", "version"]);
 });
 
 test("v6 → v7: lo ya elegido en Entrenar manda sobre «Tus datos»; con «No lo sé», sin elegir", () => {
@@ -327,12 +327,12 @@ test("v6 → v7: lo ya elegido en Entrenar manda sobre «Tus datos»; con «No l
   assert.deepEqual(migrar({ version: 6, sesiones: [] }).datos.perfil, vacio().perfil);
 });
 
-test("al abrir un almacén v6 se guarda en v7 sin lo que sobra; importar una copia v6 da lo mismo", () => {
+test("al abrir un almacén v6 se guarda en la versión actual sin lo que sobra; importar una copia v6 da lo mismo", () => {
   const v6 = almacenV6();
   const storage = almacenamiento({ boxeo: JSON.stringify(v6) });
   const almacen = crearAlmacen({ storage });
   const guardado = JSON.parse(storage.mapa.get("boxeo"));
-  assert.equal(guardado.version, 7);
+  assert.equal(guardado.version, VERSION);
   assert.deepEqual(guardado, almacen.datos);
   assert.equal("notas_entrenador" in guardado, false);
   // Copia de seguridad v6 por un fichero JSON, como en la app.
@@ -344,7 +344,7 @@ test("al abrir un almacén v6 se guarda en v7 sin lo que sobra; importar una cop
   assert.deepEqual(JSON.parse(otroStorage.mapa.get("boxeo")), almacen.datos);
   // Y la copia nueva ya no lleva notas ni revisiones.
   const nueva = otro.exportar();
-  assert.equal(nueva.version, 7);
+  assert.equal(nueva.version, VERSION);
   assert.equal("revisiones" in nueva.datos, false);
 });
 
@@ -390,7 +390,7 @@ test("la gráfica del Historial (asaltos o RPE) se guarda y se relee sin cambiar
   const releido = crearAlmacen({ storage }).datos;
   assert.deepEqual(releido.perfil.historial, { agrupar: "semana", grafica: "rpe" });
   assert.equal(releido.version, VERSION);
-  assert.equal(VERSION, 7);
+  assert.equal(VERSION, 8);
 });
 
 test("completa la sesión personalizada a medias con los valores por defecto", () => {
@@ -405,7 +405,7 @@ test("guardar y releer la sesión: cada elección y la personalizada persisten",
   const storage = almacenamiento();
   const almacen = crearAlmacen({ storage });
   const sesion = {
-    voz: "numeros", ritmo: 4, asalto: "personalizado", nivel: 3, zurdo: true, reaccion: true,
+    voz: "numeros", ritmo: 4, asalto: "personalizado", nivel: 3, zurdo: true, reaccion: true, mezcla: "bastante",
     personalizada: { asaltos: 4, duracion_asalto: 120, descanso: 45 },
   };
   almacen.guardarPerfil({ ...almacen.datos.perfil, sesion });
@@ -513,4 +513,146 @@ test("importar rechaza ficheros que no son copias de Boxeo", () => {
   const almacen = crearAlmacen({ storage: almacenamiento() });
   assert.throws(() => almacen.importar({ hola: 1 }), /no es una copia/);
   assert.throws(() => almacen.importar({ app: "boxeo", datos: { version: 99 } }), /más nueva/);
+});
+
+// ---------- v8: combinaciones propias ----------
+
+// Almacén v7, como lo tiene hoy quien usa la app: con sesiones, valoraciones, perfil y lo elegido en
+// Entrenar, sin combinaciones propias ni mezcla.
+function almacenV7() {
+  const { combinacionesPropias, ...datos } = migrar(almacenV6()).datos;
+  const { mezcla, ...sesion } = datos.perfil.sesion;
+  return { ...datos, version: 7, perfil: { ...datos.perfil, sesion: { ...sesion, ritmo: 2, nivel: 2 } } };
+}
+
+const PROPIA = { id: "p-uno", ids: ["jab", "directo", "rodar_izq"], creada: "2026-11-04T10:00:00Z" };
+
+test("v7 → v8: sin combinaciones propias, Entrenar con «Ninguna», y se conserva todo lo demás", () => {
+  const v7 = almacenV7();
+  const { datos, migrado } = migrar(structuredClone(v7));
+  assert.equal(migrado, true);
+  assert.equal(datos.version, 8);
+  assert.deepEqual(datos.combinacionesPropias, []);
+  assert.equal(datos.perfil.sesion.mezcla, "ninguna");
+  const { mezcla, ...sesion } = datos.perfil.sesion;
+  assert.deepEqual(sesion, v7.perfil.sesion);
+  assert.deepEqual({ ...datos.perfil, sesion: v7.perfil.sesion }, v7.perfil);
+  assert.deepEqual(datos.sesiones, v7.sesiones);
+  assert.deepEqual(datos.valoraciones, v7.valoraciones);
+  assert.deepEqual(migrar({ version: 7, sesiones: [] }).datos, vacio());
+});
+
+test("al abrir un almacén v7 se guarda en v8 sin perder perfil ni historial", () => {
+  const v7 = almacenV7();
+  const storage = almacenamiento({ boxeo: JSON.stringify(v7) });
+  const almacen = crearAlmacen({ storage });
+  const guardado = JSON.parse(storage.mapa.get("boxeo"));
+  assert.equal(guardado.version, 8);
+  assert.deepEqual(guardado, almacen.datos);
+  assert.deepEqual(guardado.sesiones, v7.sesiones);
+  assert.deepEqual(guardado.valoraciones, v7.valoraciones);
+  assert.deepEqual({ ...guardado.perfil, sesion: { ...guardado.perfil.sesion, mezcla: undefined } },
+    { ...v7.perfil, sesion: { ...v7.perfil.sesion, mezcla: undefined } });
+});
+
+test("importar copias v5, v6 y v7 deja la lista vacía y «Ninguna», con el resto migrado", () => {
+  for (const [version, datos] of [[5, almacenV5()], [6, almacenV6()], [7, almacenV7()]]) {
+    const copia = JSON.parse(JSON.stringify({ app: "boxeo", version, exportado: "2026-11-01T10:00:00Z", datos }));
+    const otro = crearAlmacen({ storage: almacenamiento() });
+    assert.equal(otro.importar(copia), true, `v${version}`);
+    assert.equal(otro.datos.version, 8);
+    assert.deepEqual(otro.datos.combinacionesPropias, [], `v${version}`);
+    assert.equal(otro.datos.perfil.sesion.mezcla, "ninguna");
+    assert.deepEqual(otro.datos.sesiones, datos.sesiones, `v${version}`);
+    assert.deepEqual(otro.datos, migrar(structuredClone(datos)).datos);
+  }
+});
+
+test("exportar lleva las combinaciones propias y la mezcla; importar las recupera", () => {
+  const almacen = crearAlmacen({ storage: almacenamiento(), crearId: ids() });
+  almacen.anadirPropia(["jab", "directo"]);
+  almacen.anadirPropia(["esquiva_der", "gancho_izq", "directo"]);
+  almacen.guardarPerfil({ ...almacen.datos.perfil, sesion: { ...almacen.datos.perfil.sesion, mezcla: "mucho" } });
+  const copia = JSON.parse(JSON.stringify(almacen.exportar()));
+  assert.equal(copia.version, 8);
+  assert.deepEqual(copia.datos.combinacionesPropias.map((p) => p.ids), [["jab", "directo"], ["esquiva_der", "gancho_izq", "directo"]]);
+  const otro = crearAlmacen({ storage: almacenamiento() });
+  otro.importar(copia);
+  assert.deepEqual(otro.datos.combinacionesPropias, almacen.datos.combinacionesPropias);
+  assert.equal(otro.datos.perfil.sesion.mezcla, "mucho");
+});
+
+test("una copia v8 rara se sanea: fuera las propias mal formadas, como mucho 20, mezcla desconocida a «Ninguna»", () => {
+  const malas = [{ ids: ["jab", "jab"] }, { id: "p-x", ids: ["jab"] }, { id: "p-y", ids: Array(11).fill("jab") },
+    { id: "p-z", ids: "jab" }, null, { id: "p-w", ids: ["jab", 3] }];
+  const muchas = Array.from({ length: 25 }, (_, i) => ({ ...PROPIA, id: `p-${i}` }));
+  const datos = { ...vacio(), combinacionesPropias: [...malas, ...muchas] };
+  datos.perfil.sesion.mezcla = "todas";
+  const { datos: saneados } = migrar(datos);
+  assert.deepEqual(saneados.combinacionesPropias, muchas.slice(0, 20));
+  assert.equal(saneados.perfil.sesion.mezcla, "ninguna");
+  assert.deepEqual(migrar({ ...vacio(), combinacionesPropias: "no" }).datos.combinacionesPropias, []);
+});
+
+test("añadir, cambiar y borrar propias: id p-<uuid>, fecha y persisten al recargar", () => {
+  const storage = almacenamiento();
+  const almacen = crearAlmacen({ storage, crearId: ids(), ahora: () => "2026-11-04T10:00:00Z" });
+  assert.equal(almacen.anadirPropia(["jab", "directo"]), "p-id-1");
+  const ids2 = ["bloqueo", "gancho_izq"];
+  const id = almacen.anadirPropia(ids2);
+  ids2.push("jab"); // guarda una copia
+  assert.deepEqual(almacen.datos.combinacionesPropias[1], { id: "p-id-2", ids: ["bloqueo", "gancho_izq"], creada: "2026-11-04T10:00:00Z" });
+  assert.equal(almacen.cambiarPropia(id, ["bloqueo", "gancho_izq", "directo"]), true);
+  assert.equal(almacen.cambiarPropia("p-no", ["jab", "jab"]), false);
+  assert.equal(almacen.cambiarPropia(id, ["jab"]), false);
+  assert.equal(almacen.anadirPropia(["jab"]), null);
+  almacen.borrarPropia("p-id-1");
+  assert.deepEqual(crearAlmacen({ storage }).datos.combinacionesPropias,
+    [{ id: "p-id-2", ids: ["bloqueo", "gancho_izq", "directo"], creada: "2026-11-04T10:00:00Z" }]);
+});
+
+test("no se añaden más de 20 propias; los ids por defecto son p-<randomUUID>", () => {
+  const almacen = crearAlmacen({ storage: almacenamiento() });
+  const primero = almacen.anadirPropia(["jab", "directo"]);
+  assert.match(primero, /^p-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+  for (let i = 1; i < 20; i++) assert.ok(almacen.anadirPropia(["jab", "directo"]));
+  assert.equal(almacen.anadirPropia(["jab", "directo"]), null);
+  assert.equal(almacen.datos.combinacionesPropias.length, 20);
+});
+
+// Por http desde la red local (el móvil contra el PC) no hay crypto.randomUUID, pero sí getRandomValues.
+const V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+const cryptoReal = globalThis.crypto;
+const sinRandomUUID = { getRandomValues: (b) => cryptoReal.getRandomValues(b) };
+
+test("crearUuid sin randomUUID forma un v4 con getRandomValues y no se repite", () => {
+  const vistos = new Set();
+  for (let i = 0; i < 2000; i++) {
+    const id = crearUuid(sinRandomUUID);
+    assert.match(id, V4);
+    vistos.add(id);
+  }
+  assert.equal(vistos.size, 2000);
+  // Con bytes extremos, la versión y la variante siguen bien puestas.
+  for (const relleno of [0x00, 0xff]) {
+    assert.match(crearUuid({ getRandomValues: (b) => b.fill(relleno) }), V4);
+  }
+  assert.equal(crearUuid({ randomUUID: () => "de-randomUUID" }), "de-randomUUID");
+});
+
+test("sin crypto.randomUUID (http en la red local) se pueden guardar propias y migrar", () => {
+  const original = Object.getOwnPropertyDescriptor(globalThis, "crypto");
+  Object.defineProperty(globalThis, "crypto", { value: sinRandomUUID, configurable: true, writable: true });
+  try {
+    assert.equal(globalThis.crypto.randomUUID, undefined);
+    const almacen = crearAlmacen({ storage: almacenamiento() });
+    const id = almacen.anadirPropia(["jab", "directo"]);
+    assert.match(id.slice(2), V4);
+    assert.ok(id.startsWith("p-"));
+    const { datos } = migrar({ version: 0, sesiones: [{ id: 1, fecha: "2026-01-01T10:00:00Z" }] });
+    assert.equal(datos.version, VERSION);
+    assert.match(datos.sesiones[0].id, V4);
+  } finally {
+    Object.defineProperty(globalThis, "crypto", original);
+  }
 });

@@ -4,12 +4,22 @@
 // y el h1 su nombre, así el foco al cambiar de pestaña cae en el título de lo que se ve.
 // Las fichas están escritas para guardia diestra: una nota lo dice (no se invierten los textos). En zurdo
 // cambian tus manos y tus pies, no lo que se refiere al rival.
+// Las fichas de golpes llevan en el título sus dos números, a la cara y al cuerpo («1/7 Jab»), leídos
+// de data/acciones.json (en ortodoxo, como los textos): tecnica.json no lleva cifras.
+import { catalogo } from "../motor/acciones.js";
 import { $, esc } from "./dom.js";
 
 const NOTA_ZURDO =
   "Escrito para guardia diestra (pie izquierdo delante). Si eres zurdo, cambia izquierda por derecha en tus manos y tus pies." +
   " Lo que se refiere al rival no cambia: su hígado sigue en su lado derecho y su crochet de izquierda te sigue llegando por tu derecha.";
 const PENDIENTE = "Pendiente de revisar con el entrenador";
+
+// «3/9 Crochet de izquierda»: la ficha tiene el id del golpe a la cara; el del cuerpo es <id>_cuerpo.
+export function tituloFicha(f) {
+  const cara = catalogo().get(f.id)?.numero;
+  const cuerpo = catalogo().get(`${f.id}_cuerpo`)?.numero;
+  return cara != null && cuerpo != null ? `${cara}/${cuerpo} ${f.titulo}` : f.titulo;
+}
 
 export function iniciarAprende() {
   const raiz = $("#aprende-contenido");
@@ -42,7 +52,7 @@ export function iniciarAprende() {
           <ul class="lista-fichas">
             ${g.fichas.map((f) => `
               <li><a class="tarjeta ficha-enlace" href="#aprende/${esc(f.id)}" data-ficha="${esc(f.id)}">
-                <span class="titular">${esc(f.titulo)}</span>
+                <span class="titular">${esc(tituloFicha(f))}</span>
                 <span class="resumen-ficha">${esc(f.que_es ?? f.frase)}</span>
               </a></li>`).join("")}
           </ul>
@@ -100,7 +110,7 @@ export function iniciarAprende() {
   function pintarFicha(f) {
     const categoria = tecnica.categorias.find((c) => c.id === f.categoria);
     antetitulo.textContent = categoria?.titulo ?? "";
-    titulo.textContent = f.titulo;
+    titulo.textContent = tituloFicha(f);
     const errores = f.errores.map((e) =>
       e.correccion ? `${esc(e.error)} <span class="correccion">${esc(e.correccion)}</span>` : esc(e.error));
     raiz.className = "aprende-ficha";

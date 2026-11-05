@@ -5,7 +5,7 @@ import random
 import pytest
 
 from motor.acciones import acciones_por_ids, biblioteca
-from motor.sorteo import ACCIONES_COLETILLA, NIVEL_COLETILLA, NUMEROS, SIN_REPETIR, SorteoBiblioteca, numeros
+from motor.sorteo import ACCIONES_COLETILLA, NIVEL_COLETILLA, NUMEROS, NUMEROS_CUERPO, SIN_REPETIR, SorteoBiblioteca, numeros
 from motor.temporizador import (FACTOR_VOZ_RAPIDA, MARGEN, ConfigSesion, Evento, construir_guion,
                                 elegir_siguiente, siguiente_tras_voz)
 
@@ -50,11 +50,13 @@ class Apuntador(SorteoBiblioteca):
         super().__init__(*args, **kwargs)
         self.en_reserva = False
         self.cuentan = []
+        self.identidades = []  # la de cada una de `cuentan`
 
     def siguiente(self):
         combo = super().siguiente()
         if not self.en_reserva:
             self.cuentan.append(combo)
+            self.identidades.append(self.recientes[-1])
         return combo
 
     def restaurar(self, estado):
@@ -65,14 +67,13 @@ class Apuntador(SorteoBiblioteca):
 @pytest.mark.parametrize("semilla", range(20))
 @pytest.mark.parametrize("nivel", [1, 2, 3])
 def test_las_reservas_no_dejan_rastro_en_el_sorteo(semilla, nivel):
-    # Sin rastro: la cobertura del 1 al 6 y lo que no se repite siguen como sin reservas.
+    # Sin rastro: la cobertura (1-6 y 7-12) y lo que no se repite siguen como sin reservas.
     rng = random.Random(semilla)
     sorteo = Apuntador(nivel, rng=rng)
     construir_guion(ConfigSesion(asaltos=3, duracion_asalto=180, nivel=nivel), rng, sorteo)
-    sacadas = [tuple(a.id for a in c.acciones) for c in sorteo.cuentan]
-    assert [tuple(a.id for a in c.acciones) for c in sorteo.recientes] == sacadas[-SIN_REPETIR:]
+    assert sorteo.recientes == sorteo.identidades[-SIN_REPETIR:]
     dichos = set().union(*(numeros(c) for c in sorteo.cuentan))
-    assert sorteo.faltan == set(NUMEROS) - dichos
+    assert sorteo.faltan == set(NUMEROS | NUMEROS_CUERPO) - dichos
 
 
 # ---------- elegir_siguiente ----------
@@ -100,6 +101,21 @@ def test_al_final_si_no_cabe_la_del_nivel_va_una_coletilla_que_quepa():
 def test_la_coletilla_no_repite_las_recientes():
     siguiente = combo(6.0, ("jab", "directo", "gancho_izq"))
     assert elegir_siguiente(176.0, siguiente, [CORTA, OTRA_CORTA], [], 180, [("jab", "jab")]) == (OTRA_CORTA, 176.0)
+
+
+def test_con_repetibles_si_no_cabe_ninguna_libre_va_una_reciente_antes_que_la_ultima():
+    siguiente = combo(6.0, ("jab", "directo", "gancho_izq"))
+    recientes = [("jab", "directo"), ("jab", "jab")]  # la última dicha: jab, jab
+    # Sin repetibles (la biblioteca y las otras mezclas): como siempre, nada.
+    assert elegir_siguiente(176.0, siguiente, [CORTA, OTRA_CORTA], [], 180, recientes) is None
+    # Con repetibles: una reciente, pero no la última si cabe otra.
+    assert elegir_siguiente(176.0, siguiente, [CORTA, OTRA_CORTA], [], 180, recientes, True) == (OTRA_CORTA, 176.0)
+    # Si solo cabe la última, la última (mejor repetida que el silencio).
+    assert elegir_siguiente(177.8, siguiente, [CORTA, OTRA_CORTA], [], 180, recientes, True) == (CORTA, 177.8)
+    # Una libre que cabe va antes que cualquier reciente.
+    otra = combo(2.0, ("directo", "directo"), tipo="coletilla")
+    assert elegir_siguiente(176.0, siguiente, [CORTA, OTRA_CORTA, otra], [], 180, recientes, True) == (otra, 176.0)
+    assert siguiente_tras_voz(174.0, 2.0, 2.0, siguiente, [CORTA], [], 180, [("jab", "jab")], True) == (CORTA, 176.0)
 
 
 def test_antes_de_una_reaccion_se_espera_y_antes_del_aviso_va_una_coletilla():

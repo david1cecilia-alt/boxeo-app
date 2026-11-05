@@ -2,7 +2,8 @@
 // guantes a 1–2 m del móvil). No contiene reglas de boxeo: el guion lo genera el motor y
 // el reproductor lo lanza en tiempo de sesión (con pausa).
 import {
-  NOMBRE_RITMO, PERSONALIZADO, nuevoGuion, opcionesVoz, personalizadaValida, preferencias, recordarSesion, resumenElecciones,
+  NOMBRE_RITMO, OPCIONES_MEZCLA, PERSONALIZADO, estadoMezcla, nuevoGuion, opcionesVoz, personalizadaValida, preferencias,
+  recordarSesion, repetirColetillas, resumenElecciones,
 } from "../ajustes.js";
 import { crearAzar, semillaAleatoria } from "../motor/azar.js";
 import { datos } from "../motor/datos.js";
@@ -36,6 +37,10 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     `<label class="chip-opcion"><input type="radio" name="preset" value="${id}"><span>${esc(nombre)}</span></label>`;
   $("#presets").insertAdjacentHTML("beforeend",
     presets.map((p) => chip(p.id, p.nombre)).join("") + chip(PERSONALIZADO, "Personalizado"));
+  // «Tus combinaciones»: Ninguna · Poco · Bastante · Mucho en una fila y «Solo las mías» debajo.
+  $("#mezclas").insertAdjacentHTML("beforeend", OPCIONES_MEZCLA.map(({ id, nombre, porcentaje }) =>
+    `<label${id === "solo" ? ' class="mezcla-solo"' : ""}><input type="radio" name="mezcla" value="${id}">`
+    + `<span><b>${porcentaje} %</b>${esc(nombre)}</span></label>`).join(""));
   aplicarPreferencias();
 
   // Marca el asalto y rellena sus valores: los del preset o los de la personalizada guardada.
@@ -68,9 +73,10 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   function aplicarPreferencias() {
     if (perfilAplicado === almacen.datos.perfil) return;
     perfilAplicado = almacen.datos.perfil;
-    const { asalto, nivel, zurdo, voz, ritmo, reaccion, personalizada } = preferencias(perfilAplicado);
+    const { asalto, nivel, zurdo, voz, ritmo, reaccion, mezcla, personalizada } = preferencias(perfilAplicado);
     elegirAsalto(asalto, personalizada);
     $(`input[name="nivel"][value="${nivel}"]`).checked = true;
+    $(`input[name="mezcla"][value="${mezcla}"]`).checked = true;
     $(`input[name="voz"][value="${voz}"]`).checked = true;
     $("#ritmo").value = ritmo;
     $("#zurdo").checked = zurdo;
@@ -95,6 +101,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       pausa: null, // la del ritmo
       ritmo: Number($("#ritmo").value),
       voz: $('input[name="voz"]:checked')?.value ?? "nombres",
+      mezcla: $('input[name="mezcla"]:checked')?.value ?? "ninguna",
       velocidad: opcionesVoz(almacen.datos.perfil).velocidad, // la de Ajustes
     };
   }
@@ -110,7 +117,28 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     const resumen = `${c.asaltos} × ${minutos(c.duracion_asalto)} · descanso ${minutos(c.descanso)}`;
     $("#resumen-config").textContent = resumen;
     $("#resumen-grande").textContent = resumen;
-    $("#resumen-elecciones").textContent = resumenElecciones(c);
+    $("#resumen-elecciones").textContent = resumenElecciones({ ...c, mezcla: pintarMezcla(c) });
+  }
+
+  // Estados de «Tus combinaciones» (y del nivel) con las propias de ahora. Devuelve la mezcla con
+  // la que se sorteará de verdad. Los desactivados lo están de verdad (disabled): el motivo va
+  // escrito debajo y en aria-describedby del grupo.
+  function pintarMezcla(c) {
+    const { total, efectiva, motivoSolo, aviso, nivelCuenta } = estadoMezcla(c.mezcla, almacen.datos.combinacionesPropias, c.nivel);
+    $("#mezclas").disabled = total === 0;
+    $('input[name="mezcla"][value="solo"]').disabled = total > 0 && Boolean(motivoSolo);
+    $("#niveles").disabled = !nivelCuenta;
+    const notaNivel = $("#nota-nivel");
+    notaNivel.hidden = nivelCuenta;
+    notaNivel.textContent = nivelCuenta ? "" : "Con «Solo las mías» no cuenta el nivel: salen todas las tuyas.";
+    const nota = $("#nota-mezcla");
+    if (total === 0) {
+      nota.innerHTML = 'Aún no tienes combinaciones propias. <a href="#ajustes/mis-combinaciones/nueva">Crea la primera</a> y mézclala con la biblioteca.';
+    } else {
+      nota.textContent = [motivoSolo, aviso].filter(Boolean).join(" ");
+    }
+    nota.hidden = !nota.textContent;
+    return efectiva;
   }
 
   function leerConfigSegura() {
@@ -132,8 +160,8 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     });
   }
   form.addEventListener("change", (e) => {
-    const { nivel, zurdo, modo_reaccion, ritmo, voz } = leerConfig();
-    const cambio = { nivel: { nivel }, voz: { voz } }[e.target.name]
+    const { nivel, zurdo, modo_reaccion, ritmo, voz, mezcla } = leerConfig();
+    const cambio = { nivel: { nivel }, voz: { voz }, mezcla: { mezcla } }[e.target.name]
       ?? { ritmo: { ritmo }, zurdo: { zurdo }, reaccion: { reaccion: modo_reaccion } }[e.target.id];
     if (cambio) recordar(cambio);
     resumir();
@@ -151,9 +179,11 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       alert("Configuración no válida:\n" + errores.join("\n"));
       return;
     }
-    const eventos = nuevoGuion(config, almacen.datos.perfil, crearAzar(semillaAleatoria()));
+    const eventos = nuevoGuion(config, almacen.datos.perfil, crearAzar(semillaAleatoria()),
+      almacen.datos.combinacionesPropias);
     estado = {
       config,
+      repetibles: repetirColetillas(config, almacen.datos.combinacionesPropias),
       fase: "asalto",
       finFase: 0,
       reaccionHasta: -1,
@@ -242,6 +272,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
           reservados: reservados(e.asalto),
           desde: e.t + PREPARACION,
           fin: estado.finFase,
+          repetibles: estado.repetibles,
         });
         break;
       case "reaccion": {
@@ -381,6 +412,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     mostrar() {
       if (estado) return;
       aplicarPreferencias();
+      resumir(); // las propias pueden haber cambiado en Ajustes
       document.fonts.ready.then(verChipElegido); // el ancho de los chips depende de la fuente
     },
     get entrenando() { return estado !== null; },

@@ -45,3 +45,16 @@ export function anunciar(texto) {
   estado.textContent = "";
   setTimeout(() => (estado.textContent = texto), 50);
 }
+
+// El <dialog> modal deja el resto de la página inerte, pero con Tab el foco puede irse a la barra
+// del navegador: del último se vuelve al primero (y al revés con Mayús+Tab). Para su `keydown`.
+export function atraparFoco(e) {
+  if (e.key !== "Tab") return;
+  const enfocables = $$("button, input, a[href]", e.currentTarget)
+    .filter((el) => el.tabIndex >= 0 && el.getClientRects().length && !el.closest("[hidden]"));
+  const [primero, ultimo] = [enfocables[0], enfocables.at(-1)];
+  if (e.shiftKey ? document.activeElement === primero : document.activeElement === ultimo) {
+    e.preventDefault();
+    (e.shiftKey ? ultimo : primero).focus();
+  }
+}

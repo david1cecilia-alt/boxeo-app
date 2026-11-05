@@ -7,6 +7,16 @@
       "texto": "¿alguna acción no es para principiantes?"
     },
     {
+      "id": "sorteo-629bf593",
+      "origen": "motor/sorteo.py",
+      "texto": "el ×2 para que salgan los golpes al cuerpo que falten"
+    },
+    {
+      "id": "temporizador-eea2cb1e",
+      "origen": "motor/temporizador.py",
+      "texto": "el aviso dice «Últimos diez segundos» para no confundirlo con el 10 (crochet de derecha al cuerpo)"
+    },
+    {
       "id": "temporizador-bfe0e33f",
       "origen": "motor/temporizador.py",
       "texto": "tiempo para reaccionar tras la señal (hoy 1 s sin combinaciones)"
@@ -130,6 +140,96 @@
       "id": "combinaciones-e502fce9",
       "origen": "data/combinaciones.json",
       "texto": "#146 «bloqueo · 1 · bloqueo · 5 · esquiva izquierda · 5 · flexión · 3 al cuerpo»: tras el bloqueo, gancho y no recto"
+    },
+    {
+      "id": "combinaciones-a85483b0",
+      "origen": "data/combinaciones.json",
+      "texto": "#151 «2 al cuerpo · 4»: nueva para los golpes al cuerpo (técnica y nombre)"
+    },
+    {
+      "id": "combinaciones-7f2ff639",
+      "origen": "data/combinaciones.json",
+      "texto": "#152 «1 · 4 al cuerpo · 5»: nueva para los golpes al cuerpo (técnica y nombre)"
+    },
+    {
+      "id": "combinaciones-1d115462",
+      "origen": "data/combinaciones.json",
+      "texto": "#153 «esquiva derecha · 4 al cuerpo · 6»: nueva para los golpes al cuerpo (técnica y nombre)"
+    },
+    {
+      "id": "combinaciones-467902ca",
+      "origen": "data/combinaciones.json",
+      "texto": "#154 «1 · 3 al cuerpo · bloqueo»: nueva para los golpes al cuerpo (técnica y nombre)"
+    },
+    {
+      "id": "combinaciones-34a2a84e",
+      "origen": "data/combinaciones.json",
+      "texto": "#155 «esquiva izquierda · 5 al cuerpo · 4 · bloqueo»: nueva para los golpes al cuerpo (técnica y nombre)"
+    },
+    {
+      "id": "combinaciones-93e04031",
+      "origen": "data/combinaciones.json",
+      "texto": "#156 «paso atrás · 6 al cuerpo · 3 · esquiva derecha»: nueva para los golpes al cuerpo (técnica y nombre)"
+    },
+    {
+      "id": "combinaciones-6c551f93",
+      "origen": "data/combinaciones.json",
+      "texto": "#157 «1 · 4 al cuerpo · 5 · rueda derecha · 3»: nueva para los golpes al cuerpo (técnica y nombre)"
+    },
+    {
+      "id": "combinaciones-aed6f52f",
+      "origen": "data/combinaciones.json",
+      "texto": "#158 «1 · 5 al cuerpo · 3 · bloqueo · 6»: nueva para los golpes al cuerpo (técnica y nombre)"
+    },
+    {
+      "id": "combinaciones-3e0df65e",
+      "origen": "data/combinaciones.json",
+      "texto": "#159 «esquiva derecha · 4 al cuerpo · 5 · esquiva izquierda · 1»: nueva para los golpes al cuerpo (técnica y nombre)"
+    },
+    {
+      "id": "combinaciones-2975bc9e",
+      "origen": "data/combinaciones.json",
+      "texto": "#160 «1 · 6 al cuerpo · 3 · flexión · 5 · paso atrás»: nueva para los golpes al cuerpo (técnica y nombre)"
+    },
+    {
+      "id": "combinaciones-595c0785",
+      "origen": "data/combinaciones.json",
+      "texto": "#161 «ballesteo · 5 al cuerpo · 3 · rueda izquierda · 5»: nueva para los golpes al cuerpo (técnica y nombre)"
+    },
+    {
+      "id": "combinaciones-756515d3",
+      "origen": "data/combinaciones.json",
+      "texto": "#162 «parada · 1 · 2 al cuerpo · rueda derecha · 6 · bloqueo»: nueva para los golpes al cuerpo (técnica y nombre)"
+    },
+    {
+      "id": "combinaciones-6f9b6a5c",
+      "origen": "data/combinaciones.json",
+      "texto": "#163 «1 · 2 al cuerpo · 3 · 4 · rueda derecha · 5 · 4»: nueva para los golpes al cuerpo (técnica y nombre)"
+    },
+    {
+      "id": "combinaciones-f9b6db0f",
+      "origen": "data/combinaciones.json",
+      "texto": "#164 «1 · 3 al cuerpo · 4 · esquiva derecha · 6 · 3 · bloqueo»: nueva para los golpes al cuerpo (técnica y nombre)"
+    },
+    {
+      "id": "combinaciones-b86731b7",
+      "origen": "data/combinaciones.json",
+      "texto": "#165 «esquiva derecha · 5 al cuerpo · 4 · 1 · 4 al cuerpo · 5 · rueda izquierda · 6»: nueva para los golpes al cuerpo (técnica y nombre)"
+    },
+    {
+      "id": "combinaciones-7d19f497",
+      "origen": "data/combinaciones.json",
+      "texto": "#166 «1 · 1 al cuerpo · 6 · esquiva derecha · 4 · flexión · 5 · paso atrás»: nueva para los golpes al cuerpo (técnica y nombre)"
+    },
+    {
+      "id": "combinaciones-579a6c5a",
+      "origen": "data/combinaciones.json",
+      "texto": "#167 «bloqueo · 4 al cuerpo · 6 · rueda derecha · 1 · 5 · esquiva izquierda · 4 · paso lateral derecha»: nueva para los golpes al cuerpo (técnica y nombre)"
+    },
+    {
+      "id": "combinaciones-63076d76",
+      "origen": "data/combinaciones.json",
+      "texto": "#168 «parada · 1 · 3 al cuerpo · esquiva derecha · 6 · rueda izquierda · 5 · ballesteo · 4»: nueva para los golpes al cuerpo (técnica y nombre)"
     },
     {
       "id": "estilos-da16430f",

@@ -33,6 +33,15 @@ def test_aviso_a_los_10_segundos_del_final_de_cada_asalto():
     assert [e.t for e in de_tipo(guion, "aviso")] == [f - AVISO_ANTES_FIN for f in finales]
 
 
+def test_el_aviso_no_empieza_por_un_numero_que_se_dicte():
+    # En Números «diez» es el crochet de derecha al cuerpo: el aviso no puede empezar así.
+    from motor.acciones import palabras_numero
+    avisos = {e.texto for e in de_tipo(construir_guion(preset_amateur(), random.Random(0)), "aviso")}
+    assert avisos == {"Últimos diez segundos"}
+    primeras = {t.split()[0].lower() for t in avisos}
+    assert not primeras & set(palabras_numero().values())
+
+
 def test_combos_dentro_del_asalto_y_sin_solaparse():
     guion = construir_guion(preset_amateur(), random.Random(0))
     asaltos = {e.asalto: (e.t, e.t + 180) for e in de_tipo(guion, "inicio_asalto")}

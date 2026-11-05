@@ -67,3 +67,40 @@ def test_estan_todos_los_nombres_cortos_diestro_y_zurdo(medidas):
 def test_ningun_nombre_corto_se_sale_de_la_tarjeta_a_390(medidas):
     fuera = {t: round(px, 1) for t, px, _ in medidas if px > 0.5}
     assert not fuera, f"Se salen de la tarjeta (px): {fuera}"
+
+
+# Cada número del 1 al 12 en el círculo de un golpe: cuánto le sobra (px) a cada lado al texto.
+MEDIR_NUMEROS = """() => {
+  const combo = document.querySelector("#combo");
+  return Array.from({ length: 12 }, (_, i) => {
+    combo.innerHTML = `<ol class="pasos"><li class="paso-golpe"><i>${i + 1}</i>crochet</li></ol>`;
+    const circulo = combo.querySelector("i");
+    const rango = document.createRange();
+    rango.selectNodeContents(circulo);
+    const texto = rango.getBoundingClientRect(), caja = circulo.getBoundingClientRect();
+    return [i + 1, Math.min(texto.left - caja.left, caja.right - texto.right), Math.round(caja.width)];
+  });
+}"""
+
+
+@pytest.fixture(scope="module")
+def numeros(tmp_path_factory):
+    assert HAY_PLAYWRIGHT, "Las pruebas de la sesión necesitan Playwright (pip install -r requirements.txt)"
+    sitio = construir(tmp_path_factory.mktemp("sitio") / "_site", "prueba", fotos=False)
+    with abrir(sitio, VACIA, 390, 844) as (pagina, errores):
+        pagina.goto(f"{ORIGEN}/__pagina__.html")
+        pagina.wait_for_function("window.listo === true")
+        pagina.goto(f"{ORIGEN}/index.html#entrenar")
+        pagina.click("#empezar")
+        pagina.wait_for_selector(".tarjeta-combo", state="visible")
+        pagina.click("#pausa")
+        resultado = pagina.evaluate(MEDIR_NUMEROS)
+        assert not errores, errores
+        return resultado
+
+
+def test_los_numeros_de_dos_cifras_caben_en_el_circulo_a_390(numeros):
+    # Del 7 al 12 son los golpes al cuerpo: «10», «11» y «12» tienen que caber en el círculo de 28 px.
+    assert {ancho for _, _, ancho in numeros} == {28}
+    justos = {n: round(margen, 1) for n, margen, _ in numeros if margen < 3}
+    assert not justos, f"Al número le quedan menos de 3 px a algún lado: {justos}"

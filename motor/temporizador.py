@@ -13,7 +13,10 @@ from motor.ritmo import (RITMO_POR_DEFECTO, VELOCIDAD_MEDIDA, VELOCIDADES, durac
 
 PREPARACION = 3.0         # segundos al inicio del asalto antes del primer combo
 AVISO_ANTES_FIN = 10.0    # aviso a los 10 s del final
-DURACION_AVISO = 1.5      # lo que ocupa decir "diez segundos"
+# No empieza por «diez»: en Números el crochet de derecha al cuerpo se dice «diez».
+# REVISAR CON ENTRENADOR: el aviso dice «Últimos diez segundos» para no confundirlo con el 10 (crochet de derecha al cuerpo)
+TEXTO_AVISO = "Últimos diez segundos"
+DURACION_AVISO = 1.5      # lo que se reserva en el guion para el aviso (el dictado espera a la voz de verdad)
 # Lo que se reserva en el guion para decir una señal de Reacción (a VELOCIDAD_SENAL, cabe en 2 s).
 # Después, el dictado deja 1 s sin combinaciones (PARA_REACCIONAR en static/dictado.js).
 # REVISAR CON ENTRENADOR: tiempo para reaccionar tras la señal (hoy 1 s sin combinaciones).
@@ -81,7 +84,7 @@ def _cabe(t: float, d: float, reservados: list[tuple[float, float]], fin: float)
 
 def elegir_siguiente(t: float, siguiente: Evento | None, coletillas: list[Evento],
                      reservados: list[tuple[float, float]], fin: float,
-                     recientes: list[tuple[str, ...]]) -> tuple[Evento, float] | None:
+                     recientes: list[tuple[str, ...]], repetibles: bool = False) -> tuple[Evento, float] | None:
     """Qué combinación decir desde el segundo t y cuándo: (combinación, empieza), o None si ya no
     cabe ninguna en el asalto. La usan el guion (con lo estimado) y el dictado (con la voz real).
 
@@ -89,14 +92,20 @@ def elegir_siguiente(t: float, siguiente: Evento | None, coletillas: list[Evento
     al azar; `recientes`: ids de las últimas dichas, que una coletilla no repite;
     `reservados`: señales previstas, ordenadas (la última es el aviso).
     Si la siguiente no cabe (pisaría una señal o se pasa del final) y ya solo queda el aviso por
-    delante, se dice la primera coletilla que quepa; si tampoco, se espera a que pase la señal."""
+    delante, se dice la primera coletilla que quepa; si tampoco, se espera a que pase la señal.
+    Con `repetibles` («Solo las mías» con propias cortas, ver sorteo.coletillas_repetibles), si
+    ninguna coletilla libre cabe, vale una reciente: antes una que no sea la última dicha."""
     while True:
         if siguiente and _cabe(t, siguiente.duracion, reservados, fin):
             return siguiente, t
         if all(ini <= t for ini, _ in reservados[:-1]):
-            for c in coletillas:
-                if tuple(c.ids) not in recientes and _cabe(t, c.duracion, reservados, fin):
-                    return c, t
+            caben = [c for c in coletillas if _cabe(t, c.duracion, reservados, fin)]
+            libres = [c for c in caben if tuple(c.ids) not in recientes]
+            if repetibles and not libres:
+                ultima = recientes[-1] if recientes else None
+                libres = [c for c in caben if tuple(c.ids) != ultima] or caben
+            if libres:
+                return libres[0], t
         despues = [r_fin + MARGEN for _, r_fin in reservados if r_fin + MARGEN > t]
         if not despues:
             return None
@@ -105,13 +114,13 @@ def elegir_siguiente(t: float, siguiente: Evento | None, coletillas: list[Evento
 
 def siguiente_tras_voz(fin_voz: float, hueco: float, hueco_minimo: float, siguiente: Evento | None,
                        coletillas: list[Evento], reservados: list[tuple[float, float]], fin: float,
-                       recientes: list[tuple[str, ...]]) -> tuple[Evento, float] | None:
+                       recientes: list[tuple[str, ...]], repetibles: bool = False) -> tuple[Evento, float] | None:
     """Como elegir_siguiente tras callar la voz en fin_voz y esperar el hueco. Si con ese hueco ya
     no cabe nada en el asalto, se prueba con el mínimo del ritmo: así el silencio final es como
     mucho ese mínimo más lo que dura la coletilla más corta."""
-    return (elegir_siguiente(round(fin_voz + hueco, 2), siguiente, coletillas, reservados, fin, recientes)
+    return (elegir_siguiente(round(fin_voz + hueco, 2), siguiente, coletillas, reservados, fin, recientes, repetibles)
             or elegir_siguiente(round(fin_voz + hueco_minimo, 2), siguiente, coletillas, reservados, fin,
-                                recientes))
+                                recientes, repetibles))
 
 
 def _reacciones(inicio: float, limite: float, rng: random.Random,
@@ -131,6 +140,7 @@ def construir_guion(config: ConfigSesion, rng: random.Random | None = None,
     siguiente(), coletillas(), guardar() y restaurar()."""
     rng = rng or random.Random()
     sorteo = sorteo or SorteoBiblioteca(config.nivel, zurdo=config.zurdo, rng=rng)
+    repetibles = getattr(sorteo, "coletillas_repetibles", False)
     reacciones = cargar_presets()["reacciones"]
     hueco_minimo = rango_pausa(config.ritmo, config.pausa)[0]
     eventos: list[Evento] = []
@@ -156,7 +166,7 @@ def construir_guion(config: ConfigSesion, rng: random.Random | None = None,
             reservados += [(e.t, e.t + e.duracion) for e in senales]
         reservados.sort()
         if aviso > inicio:
-            eventos.append(Evento(aviso, "aviso", n, DURACION_AVISO, "diez segundos"))
+            eventos.append(Evento(aviso, "aviso", n, DURACION_AVISO, TEXTO_AVISO))
 
         # Colocar combinaciones en los huecos libres, como las dirá el dictado si la voz tarda
         # lo estimado.
@@ -165,7 +175,7 @@ def construir_guion(config: ConfigSesion, rng: random.Random | None = None,
         siguiente = replace(pendiente, asalto=n) if pendiente else a_evento(sorteo.siguiente(), "combo", n)
         apartada = None
         t = inicio + PREPARACION
-        eleccion = elegir_siguiente(t, siguiente, coletillas, reservados, fin, recientes)
+        eleccion = elegir_siguiente(t, siguiente, coletillas, reservados, fin, recientes, repetibles)
         # Asalto muy corto y aún vacío: la que no cabe espera al siguiente y se prueba otra.
         for _ in range(REINTENTOS):
             if eleccion:
@@ -173,7 +183,7 @@ def construir_guion(config: ConfigSesion, rng: random.Random | None = None,
             apartada = apartada or siguiente
             antes = sorteo.guardar()
             siguiente = a_evento(sorteo.siguiente(), "combo", n)
-            eleccion = elegir_siguiente(t, siguiente, coletillas, reservados, fin, recientes)
+            eleccion = elegir_siguiente(t, siguiente, coletillas, reservados, fin, recientes, repetibles)
         dichas = []
         while eleccion:
             elegida, empieza = eleccion
@@ -184,7 +194,7 @@ def construir_guion(config: ConfigSesion, rng: random.Random | None = None,
             dichas.append(dicha)
             recientes = (recientes + [tuple(dicha.ids)])[-SIN_REPETIR:]
             eleccion = siguiente_tras_voz(empieza + dicha.duracion, dicha.hueco, hueco_minimo, siguiente,
-                                          coletillas, reservados, fin, recientes)
+                                          coletillas, reservados, fin, recientes, repetibles)
         eventos += dichas
         pendiente = apartada or siguiente
 

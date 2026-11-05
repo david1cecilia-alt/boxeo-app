@@ -9,6 +9,7 @@ import { test } from "node:test";
 import { PARA_REACCIONAR, crearDictado } from "../../static/dictado.js";
 import { crearAzar } from "../../static/motor/azar.js";
 import { RITMO_POR_DEFECTO, VELOCIDADES, VELOCIDAD_SENAL, rangoPausa, segundosHabla } from "../../static/motor/ritmo.js";
+import { SorteoMezcla } from "../../static/motor/sorteo.js";
 import { COMBINACIONES, DURACION_REACCION, PREPARACION, construirGuion } from "../../static/motor/temporizador.js";
 import { crearReproductor } from "../../static/reproductor.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
@@ -25,6 +26,28 @@ const configDe = (modo_reaccion) => ({
   asaltos: 3, duracion_asalto: 180, descanso: 60, nivel: 2, modo_reaccion, velocidad: VELOCIDADES.normal,
 });
 
+// Con propias (como tests/test_silencio_final.py): la mezcla y «Solo las mías» con una sola corta,
+// con varias y sin ninguna. Sin excepciones: el mismo máximo.
+const propias = (...listas) => listas.map((ids, i) => ({ id: `p-${i}`, ids }));
+const UNA_CORTA = propias(["jab", "directo"], ["jab", "directo", "gancho_izq", "gancho_der", "uppercut_izq"],
+  ["jab", "rodar_der", "directo", "gancho_izq", "esquiva_izq", "directo"]);
+const VARIAS_CORTAS = propias(["jab", "directo"], ["esquiva_der", "gancho_izq", "directo"], ["jab", "bloqueo"],
+  ["jab", "jab", "directo", "pivote", "gancho_der"]);
+const SIN_CORTAS = propias(Array(8).fill("jab"), ["jab", "directo", "jab", "directo", "jab", "directo", "jab", "directo"],
+  ["jab", "directo", "rodar_der", "gancho_izq", "directo"]);
+const MEZCLAS = {
+  ninguna: [[], "ninguna"],
+  mucho: [VARIAS_CORTAS, "mucho"],
+  "solo, una corta": [UNA_CORTA, "solo"],
+  "solo, varias cortas": [VARIAS_CORTAS, "solo"],
+  "solo, sin cortas": [SIN_CORTAS, "solo"],
+};
+function guion(config, semilla, mezcla = "ninguna") {
+  const azar = crearAzar(semilla);
+  const [lista, cual] = MEZCLAS[mezcla];
+  return construirGuion(config, azar, new SorteoMezcla(config.nivel, { azar, propias: lista, mezcla: cual }));
+}
+
 function silenciosDelGuion(eventos) {
   return eventos.filter((e) => e.tipo === "fin_asalto").map((fin) => {
     const dichos = eventos.filter((e) => e.asalto === fin.asalto && e.t < fin.t
@@ -36,8 +59,11 @@ function silenciosDelGuion(eventos) {
 // Reproduce la sesión entera. Devuelve, por asalto, el silencio desde la última combinación;
 // además, lo que sonó (`voces`: { texto, combo, velocidad, ini, fin }), las señales de Reacción
 // del guion, lo que se avisó con alDecir y lo que el dictado guarda (`dichas`).
-async function reproducir(config, semilla, factor) {
-  const eventos = construirGuion(config, crearAzar(semilla));
+async function reproducir(config, semilla, factor, mezcla = "ninguna") {
+  const eventos = guion(config, semilla, mezcla);
+  // Como Entrenar (repetirColetillas): con «Solo las mías» y propias cortas, el dictado puede repetirlas.
+  const [lista, cual] = MEZCLAS[mezcla];
+  const { coletillasRepetibles: repetibles } = new SorteoMezcla(config.nivel, { azar: crearAzar(0), propias: lista, mezcla: cual });
   const combos = eventos.filter((e) => COMBINACIONES.includes(e.tipo));
   const fijos = eventos.filter((e) => !COMBINACIONES.includes(e.tipo));
   let ms = 0;
@@ -59,6 +85,7 @@ async function reproducir(config, semilla, factor) {
           reservados: fijos.filter((f) => f.asalto === e.asalto && (f.tipo === "aviso" || f.tipo === "reaccion"))
             .map((f) => [f.t, f.t + f.duracion]),
           fin: e.t + config.duracion_asalto,
+          repetibles,
         });
       } else if (e.tipo === "reaccion") dictado.reaccion(e.texto); // como vistas/entrenar.js
       else if (e.tipo === "aviso") dictado.senal(e.texto);
@@ -90,18 +117,32 @@ async function reproducir(config, semilla, factor) {
   return { silencios, voces, reacciones, avisadas, combos, dichas: dictado.dichas };
 }
 
-const silenciosDelDictado = async (config, semilla, factor) => (await reproducir(config, semilla, factor)).silencios;
+const silenciosDelDictado = async (config, semilla, factor, mezcla) =>
+  (await reproducir(config, semilla, factor, mezcla)).silencios;
 
 const resumen = (s) => `media ${(s.reduce((a, b) => a + b, 0) / s.length).toFixed(1)} s, máximo ${Math.max(...s).toFixed(1)} s`;
 
 for (const modoReaccion of [false, true]) {
   const nombre = modoReaccion ? "con Reacción" : "sin Reacción";
 
-  test(`guion ${nombre}: silencio final corto`, () => {
-    const s = SEMILLAS.flatMap((semilla) => silenciosDelGuion(construirGuion(configDe(modoReaccion), crearAzar(semilla))));
-    console.log(`guion ${nombre}: ${resumen(s)}`);
-    assert.ok(Math.max(...s) <= SILENCIO_MAXIMO, resumen(s));
-  });
+  for (const mezcla of Object.keys(MEZCLAS)) {
+    test(`guion ${nombre}, propias «${mezcla}»: silencio final corto`, () => {
+      const s = SEMILLAS.flatMap((semilla) => silenciosDelGuion(guion(configDe(modoReaccion), semilla, mezcla)));
+      console.log(`guion ${nombre}, propias «${mezcla}»: ${resumen(s)}`);
+      assert.ok(Math.max(...s) <= SILENCIO_MAXIMO, resumen(s));
+    });
+  }
+
+  // «Solo las mías» con la voz de verdad: tarda lo estimado o no avisa al acabar.
+  for (const mezcla of ["solo, una corta", "solo, sin cortas"]) {
+    for (const factor of [0.7, null]) {
+      test(`dictado ${nombre}, propias «${mezcla}», voz ${factor ?? "sin onend"}: silencio final corto`, async () => {
+        const s = [];
+        for (const semilla of SEMILLAS) s.push(...await silenciosDelDictado(configDe(modoReaccion), semilla, factor, mezcla));
+        assert.ok(Math.max(...s) <= SILENCIO_MAXIMO, resumen(s));
+      });
+    }
+  }
 
   // 1 = la voz tarda lo estimado; 0,85 y 0,7 = más rápida (la estimación lleva margen y es de
   // Microsoft Helena en Windows); null = onend no llega y manda el tope.

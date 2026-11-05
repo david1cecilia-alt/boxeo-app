@@ -49,6 +49,7 @@ export const biblioteca = segunDatos((d) => d.combinaciones.combinaciones.map((c
   const acciones = accionesPorIds(c.ids);
   return Object.freeze({
     notacion: c.notacion, nivel: c.nivel, acciones, nombre: c.nombre ?? null,
+    n: c.n, // su número en la biblioteca: la identifica (ver identidad en sorteo.js)
   });
 }));
 

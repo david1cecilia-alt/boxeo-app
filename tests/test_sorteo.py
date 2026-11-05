@@ -1,11 +1,12 @@
 """Sorteo de la sesión: solo las del nivel y uniforme, sin repetir en 5 y con cobertura del 1 al 6."""
 import random
 from collections import Counter
+from dataclasses import replace
 
 import pytest
 
 from motor.acciones import acciones_por_ids, biblioteca, espejo_combo, numero
-from motor.sorteo import NUMEROS, SIN_REPETIR, SorteoBiblioteca, movimiento, movimientos, peso_practicar
+from motor.sorteo import NUMEROS, NUMEROS_CUERPO, PESO_CUERPO, SIN_REPETIR, SorteoBiblioteca, movimiento, movimientos, peso_practicar
 from motor.temporizador import ConfigSesion, cargar_presets, construir_guion
 
 N = 3000
@@ -40,7 +41,7 @@ def test_no_repite_ninguna_de_las_ultimas_5(nivel):
 def test_los_golpes_del_1_al_6_salen_enseguida(nivel, semilla):
     # Cada sorteo que falta cobertura añade al menos un número: 6 bastan siempre.
     combos = _sortear(nivel, n=6, semilla=semilla)
-    assert {a.numero for c in combos for a in c.acciones if a.numero} == NUMEROS
+    assert {a.numero for c in combos for a in c.acciones if a.numero} & NUMEROS == NUMEROS
 
 
 def _config(preset, **extra):
@@ -57,7 +58,7 @@ def test_en_cada_sesion_salen_todos_los_golpes_del_1_al_6(preset, nivel, zurdo):
     for semilla in range(20):
         config = _config(preset, nivel=nivel, zurdo=zurdo)
         combos = [e for e in construir_guion(config, random.Random(semilla)) if e.tipo == "combo"]
-        dichos = {numero(a, zurdo) for e in combos[:6] for a in acciones_por_ids(e.ids)} - {None}
+        dichos = {numero(a, zurdo) for e in combos[:6] for a in acciones_por_ids(e.ids)} & NUMEROS
         if preset == "amateur" or len(combos) >= 6:
             assert dichos == NUMEROS, f"semilla {semilla}: faltan {NUMEROS - dichos}"
 
@@ -69,7 +70,7 @@ def test_en_la_prueba_corta_de_basico_casi_siempre_salen_todos(nivel=1):
     for semilla in range(100):
         combos = [e for e in construir_guion(_config("prueba", nivel=nivel), random.Random(semilla))
                   if e.tipo == "combo"]
-        completas += {a.numero for e in combos for a in acciones_por_ids(e.ids) if a.numero} == NUMEROS
+        completas += {a.numero for e in combos for a in acciones_por_ids(e.ids) if a.numero} & NUMEROS == NUMEROS
     assert completas >= 90, f"solo {completas} de 100"
 
 
@@ -97,6 +98,16 @@ def _practicar(**cuanto):
 def test_los_movimientos_de_practicar_mas():
     assert movimientos() == ["1", "2", "3", "4", "5", "6", "cuerpo", "esquiva", "rodar", "paso_atras",
                              "bloqueo", "parada", "ballesteo", "flexion", "paso_lateral", "pivote", "salir"]
+
+
+def test_los_golpes_al_cuerpo_son_cuerpo_en_practicar_mas_aunque_lleven_numero():
+    # Del 7 al 12 llevan número, pero «Practicar más» los sigue juntando en «cuerpo» (lo que guarda el almacén).
+    for id_ in ("jab_cuerpo", "directo_cuerpo", "gancho_izq_cuerpo", "gancho_der_cuerpo", "uppercut_izq_cuerpo",
+                "uppercut_der_cuerpo"):
+        a = acciones_por_ids([id_])[0]
+        assert a.numero in range(7, 13) and movimiento(a) == "cuerpo", id_
+    assert _peso(["directo_cuerpo"], cuerpo="bastante") == 4
+    assert _peso(["directo_cuerpo"], **{"8": "bastante"}) == 1  # «8» no es un movimiento
 
 
 def _peso(ids, **cuanto):
@@ -151,3 +162,61 @@ def test_practicar_mas_tambien_pesa_en_las_coletillas():
         sorteos = (SorteoBiblioteca(1, perfil=perfil, rng=random.Random(s)) for s in range(3000))
         return [s.coletillas()[0] for s in sorteos]
     assert _lleva(primeras(_practicar(**{"6": "bastante"})), "6") > _lleva(primeras(None), "6") + 0.1
+
+
+# ---------- Ventana de no repetir por identidad ----------
+
+def _duplicada(combos, desplazamiento=1000):
+    """La biblioteca con cada combinación dos veces: la copia, con otro número."""
+    return combos + [replace(c, n=c.n + desplazamiento) for c in combos]
+
+
+def test_la_ventana_distingue_dos_combinaciones_iguales_por_su_numero():
+    jab_recto = next(c for c in biblioteca() if c.nivel == 1)
+    s = SorteoBiblioteca(1, rng=random.Random(0))
+    s.combos = _duplicada([jab_recto])
+    elegida = s.siguiente()
+    assert s.recientes == [jab_recto.n] or s.recientes == [jab_recto.n + 1000]
+    assert [c.acciones for c in s._candidatas()] == [elegida.acciones]  # la otra, aunque sea igual
+
+
+@pytest.mark.parametrize("nivel", NIVELES)
+def test_con_la_biblioteca_duplicada_salen_las_dos_copias_sin_repetir_numero(nivel):
+    s = SorteoBiblioteca(nivel, rng=random.Random(nivel))
+    s.combos = _duplicada(s.combos)
+    sacadas = []
+    for _ in range(3000):
+        s.siguiente()
+        sacadas.append(s.recientes[-1])
+    for i, n in enumerate(sacadas):
+        assert n not in sacadas[max(0, i - SIN_REPETIR):i]
+    assert set(sacadas) == {c.n for c in s.combos}
+
+
+# ---------- Cobertura en dos pasos: 1-6 y luego 7-12 ----------
+
+def test_paso_2_las_que_anaden_un_golpe_al_cuerpo_que_falte_pesan_el_doble_sin_filtrar():
+    s = SorteoBiblioteca(1, rng=random.Random(3))
+    assert all(numeros_de(c) & NUMEROS for c in s._candidatas())  # paso 1: filtra por el 1-6
+    s.faltan -= NUMEROS
+    assert len(s._candidatas()) == len(s.combos)  # paso 2: no filtra
+    con = next(c for c in s.combos if numeros_de(c) & NUMEROS_CUERPO)
+    sin = next(c for c in s.combos if not numeros_de(c) & NUMEROS_CUERPO)
+    assert (s._peso_cobertura(con), s._peso_cobertura(sin)) == (PESO_CUERPO, 1) == (2.0, 1)
+    s.faltan -= numeros_de(con)
+    assert s._peso_cobertura(con) == 1  # lo que ya ha salido no pesa
+
+
+@pytest.mark.parametrize("nivel", NIVELES)
+def test_en_casi_todas_las_sesiones_amateur_salen_los_seis_golpes_al_cuerpo(nivel):
+    con_todos = 0
+    for semilla in range(100):
+        combos = [e for e in construir_guion(_config("amateur", nivel=nivel), random.Random(semilla))
+                  if e.tipo == "combo"]
+        dichos = {a.numero for e in combos for a in acciones_por_ids(e.ids) if a.numero}
+        con_todos += NUMEROS_CUERPO <= dichos
+    assert con_todos >= 95, f"nivel {nivel}: solo {con_todos} de 100"
+
+
+def numeros_de(combo):
+    return {a.numero for a in combo.acciones if a.numero}

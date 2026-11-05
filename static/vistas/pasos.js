@@ -26,12 +26,14 @@ export function vozDelTexto(texto) {
 
 // Cómo se dictó una sesión guardada: la voz que guardó o, si no la guardó, deducida UNA vez de
 // todas sus combinaciones (no de cada una: una sin golpes con número no delata nada). Solo
-// cuentan las que llevan algún golpe con número; si no hay ninguna o no coinciden, «ambos»: en
-// pantalla da el número y el nombre, así no se pierde nada.
+// cuentan las que llevan algún golpe del 1 al 6: los únicos con número cuando no se guardaba la
+// voz (una de solo golpes al cuerpo se dictaba con su nombre en todos los modos). Si no hay
+// ninguna o no coinciden, «ambos»: en pantalla da el número y el nombre, así no se pierde nada.
 export function vozDeSesion(sesion, combinaciones) {
   if (sesion.voz) return sesion.voz;
+  const de1a6 = (id) => catalogo().get(id)?.objetivo === "cabeza" && catalogo().get(id)?.numero != null;
   const votos = new Set(combinaciones
-    .filter((c) => c.ids.some((id) => catalogo().get(id)?.numero != null))
+    .filter((c) => c.ids.some(de1a6))
     .map((c) => vozDelTexto(c.texto)));
   return votos.size === 1 ? [...votos][0] : "ambos";
 }

@@ -2,14 +2,15 @@
 
 > **REVISAR CON ENTRENADOR: toda esta propuesta.** Las combinaciones, sus familias y variantes, los nombres y el
 > reparto. Ya es la biblioteca de la app: `data/combinaciones.json` se genera desde aquí, con las dudas de técnica
-> en «revisar», y cada nivel sortea solo de sus 50.
+> en «revisar», y cada nivel sortea solo de sus 56.
 > Se genera con `python herramientas/biblioteca.py`: no editar a mano.
 
 ## Cómo leerla
 
 - Todo en guardia **ortodoxa** (el zurdo lo hace en espejo). Los golpes van por número: 1 jab, 2 recto, 3 crochet
   adelantado, 4 crochet trasero, 5 gancho adelantado, 6 gancho trasero; «3 al cuerpo» es el crochet adelantado al
-  cuerpo. Las defensas y salidas, como las dice la app («rueda derecha»).
+  cuerpo, que la app numera 9 (al cuerpo, del 7 al 12: «1 al cuerpo» es el 7). Las defensas y salidas, como las
+  dice la app («rueda derecha»).
 - **Nivel** = número total de acciones (golpes + defensas + salidas), calculado con `motor.reglas.nivel_de`:
   básico 2-4, medio 5-6, avanzado 7-10.
 - **Defensa** = esquiva, rueda, ballesteo, flexión, bloqueo, parada y paso atrás. Pivote, paso lateral y
@@ -29,27 +30,27 @@
 
 | Nivel | Combinaciones | Defensas | Hay | % real | % pedido | Desviación |
 |---|---|---|---|---|---|---|
-| básico | 50 | 0 | 20 | 40 % | 40 % | +0 |
-| básico | 50 | 1 | 15 | 30 % | 30 % | +0 |
-| básico | 50 | 2 | 15 | 30 % | 30 % | +0 |
-| medio | 50 | 1 | 20 | 40 % | 40 % | +0 |
-| medio | 50 | 2 | 20 | 40 % | 40 % | +0 |
-| medio | 50 | 3 | 10 | 20 % | 20 % | +0 |
-| avanzado | 50 | 1 | 5 | 10 % | 10 % | +0 |
-| avanzado | 50 | 2 | 15 | 30 % | 30 % | +0 |
-| avanzado | 50 | 3 | 20 | 40 % | 40 % | +0 |
-| avanzado | 50 | 4-5 | 10 | 20 % | 20 % | +0 |
+| básico | 56 | 0 | 22 | 39 % | 39 % | +0 |
+| básico | 56 | 1 | 17 | 30 % | 30 % | +0 |
+| básico | 56 | 2 | 17 | 30 % | 30 % | +0 |
+| medio | 56 | 1 | 22 | 39 % | 39 % | +0 |
+| medio | 56 | 2 | 23 | 41 % | 41 % | +0 |
+| medio | 56 | 3 | 11 | 20 % | 20 % | +0 |
+| avanzado | 56 | 1 | 6 | 11 % | 11 % | +0 |
+| avanzado | 56 | 2 | 17 | 30 % | 30 % | +0 |
+| avanzado | 56 | 3 | 22 | 39 % | 39 % | +0 |
+| avanzado | 56 | 4-5 | 11 | 20 % | 20 % | +0 |
 
-**Total: 150 combinaciones**, 50 por nivel (97 en 16 familias y 53 sueltas). El reparto cuadra exacto: desviación 0 en todos.
+**Total: 168 combinaciones**, 56 por nivel (97 en 16 familias y 71 sueltas). El reparto cuadra exacto: desviación 0 en todos.
 Los clásicos 1-2-3-2, 1-3-2, 1-2-5-2, 1-2-1-2, 3-2-3, 1-2-3, 1-1-2 están en básico sin defensa.
 
 ### Cuántas veces sale cada una
 
 | Nivel | Combinaciones | Se dicen por sesión Amateur 3×3 (mín · media · máx) | Veces que sale cada una (media) | Con 25 | Con 15 |
 |---|---|---|---|---|---|
-| básico | 50 | 50 · 73 · 101 | 1,5 | 2,9 | 4,9 |
-| medio | 50 | 38 · 53 · 66 | 1,1 | 2,1 | 3,5 |
-| avanzado | 50 | 28 · 35 · 42 | 0,7 | 1,4 | 2,3 |
+| básico | 56 | 49 · 73 · 98 | 1,3 | 2,9 | 4,8 |
+| medio | 56 | 39 · 52 · 67 | 0,9 | 2,1 | 3,5 |
+| avanzado | 56 | 29 · 35 · 41 | 0,6 | 1,4 | 2,3 |
 
 Sale de simular 60 sesiones Amateur por nivel (ritmos 1, 3 y 5) con estas combinaciones, sorteando solo de su
 nivel y sin repetir ninguna de las 5 últimas. Las columnas «Con 25» y «Con 15» dicen cuántas veces saldría cada
@@ -63,42 +64,42 @@ cada defensa con lado, a menos de un 20 % de diferencia; cada salida, al menos 6
 que empiezan por golpe, al menos el 50 % empiezan con el jab. Los golpes 2 a 6 valen lo mismo;
 solo el jab puede salir más.
 
-**Cómo empiezan:** 78 de 150 empiezan por golpe y, de ellas, 57 con el jab (73 %). Empiezan con 5 o 6: 5.
+**Cómo empiezan:** 87 de 168 empiezan por golpe y, de ellas, 65 con el jab (75 %). Empiezan con 5 o 6: 5.
 
 **Golpes a la cara** (% sobre los golpes a la cara)
 
 | Golpe | Rango | Veces | Total | Básico | Medio | Avanzado |
 |---|---|---|---|---|---|---|
-| 1 jab | 20-30 % | 127 | 25,2 % | 27,2 % | 24,7 % | 24,7 % |
-| 2 recto | 13-17 % | 83 | 16,5 % | 16,5 % | 16,0 % | 16,7 % |
-| 3 crochet adelantado | 13-17 % | 78 | 15,5 % | 15,5 % | 14,8 % | 15,9 % |
-| 4 crochet trasero | 13-17 % | 76 | 15,1 % | 13,6 % | 16,0 % | 15,1 % |
-| 5 gancho adelantado | 13-17 % | 69 | 13,7 % | 13,6 % | 13,6 % | 13,8 % |
-| 6 gancho trasero | 13-17 % | 71 | 14,1 % | 13,6 % | 14,8 % | 13,8 % |
+| 1 jab | 20-30 % | 140 | 25,4 % | 27,3 % | 25,4 % | 24,6 % |
+| 2 recto | 13-17 % | 83 | 15,1 % | 15,5 % | 14,7 % | 15,2 % |
+| 3 crochet adelantado | 13-17 % | 85 | 15,4 % | 15,5 % | 15,8 % | 15,2 % |
+| 4 crochet trasero | 13-17 % | 85 | 15,4 % | 14,5 % | 14,7 % | 16,3 % |
+| 5 gancho adelantado | 13-17 % | 79 | 14,3 % | 13,6 % | 14,7 % | 14,4 % |
+| 6 gancho trasero | 13-17 % | 79 | 14,3 % | 13,6 % | 14,7 % | 14,4 % |
 
-**Golpes al cuerpo**
+**Golpes al cuerpo** (veces en total y combinaciones de cada nivel que lo llevan; mínimo 3)
 
-| Golpe | Veces |
-|---|---|
-| 1 al cuerpo | 14 |
-| 2 al cuerpo | 9 |
-| 3 al cuerpo | 13 |
-| 4 al cuerpo | 8 |
-| 5 al cuerpo | 8 |
-| 6 al cuerpo | 9 |
+| Golpe | Veces | Básico | Medio | Avanzado |
+|---|---|---|---|---|
+| 1 al cuerpo | 15 | 3 | 4 | 8 |
+| 2 al cuerpo | 12 | 3 | 5 | 4 |
+| 3 al cuerpo | 16 | 3 | 4 | 9 |
+| 4 al cuerpo | 14 | 3 | 3 | 8 |
+| 5 al cuerpo | 12 | 3 | 3 | 6 |
+| 6 al cuerpo | 11 | 3 | 3 | 5 |
 
 **Defensas y salidas**
 
 | Acción | Veces | Derecha | Izquierda |
 |---|---|---|---|
-| esquiva | 66 | 35 | 31 |
-| rueda | 60 | 30 | 30 |
-| ballesteo | 26 | — | — |
-| flexión | 30 | — | — |
-| bloqueo | 46 | — | — |
-| parada | 17 | — | — |
-| paso atrás | 26 | — | — |
-| paso lateral | 12 | 6 | 6 |
+| esquiva | 76 | 42 | 34 |
+| rueda | 67 | 34 | 33 |
+| ballesteo | 28 | — | — |
+| flexión | 32 | — | — |
+| bloqueo | 52 | — | — |
+| parada | 19 | — | — |
+| paso atrás | 29 | — | — |
+| paso lateral | 13 | 7 | 6 |
 | pivote | 13 | — | — |
 | cambio de ángulo | 11 | — | — |
 
@@ -383,6 +384,32 @@ Se suelta y se pivota para no quedarse delante.
 | 149 | ballesteo, esquiva, rueda y paso atrás con jab | — | ballesteo · 2 · esquiva derecha · 6 al cuerpo · 3 · rueda izquierda · 4 · paso atrás · 1 | 9 | 5 | 4 | — | inicio, entre golpes | avanzado | nueva |
 | 150 | flexión, gancho al cuerpo, bloqueo, crochet, esquiva y cambio de ángulo | — | flexión · 5 al cuerpo · bloqueo · 4 · esquiva izquierda · 3 · rueda derecha · 6 · cambio de ángulo | 9 | 4 | 4 | cambio de ángulo | inicio, entre golpes | avanzado | nueva |
 
+## Al cuerpo
+
+Añadidas para que cada golpe al cuerpo esté en al menos 3 combinaciones de cada nivel. Van
+detrás de todas para que no cambie el número de ninguna de antes. **REVISAR CON ENTRENADOR:** todas.
+
+| # | Nombre | Papel | Acciones | Total | Golpes | Defensas | Salidas | Defensa en | Nivel | Respecto a la anterior |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 151 | recto al cuerpo y crochet | — | 2 al cuerpo · 4 | 2 | 2 | 0 | — | — | básico | nueva |
+| 152 | jab, crochet al cuerpo y gancho | — | 1 · 4 al cuerpo · 5 | 3 | 3 | 0 | — | — | básico | nueva |
+| 153 | esquiva, crochet al cuerpo y gancho | — | esquiva derecha · 4 al cuerpo · 6 | 3 | 2 | 1 | — | inicio | básico | nueva |
+| 154 | jab, crochet al cuerpo y bloqueo | — | 1 · 3 al cuerpo · bloqueo | 3 | 2 | 1 | — | final | básico | nueva |
+| 155 | esquiva, gancho al cuerpo, crochet y bloqueo | — | esquiva izquierda · 5 al cuerpo · 4 · bloqueo | 4 | 2 | 2 | — | inicio, final | básico | nueva |
+| 156 | paso atrás, gancho al cuerpo, crochet y esquiva | — | paso atrás · 6 al cuerpo · 3 · esquiva derecha | 4 | 2 | 2 | — | inicio, final | básico | nueva |
+| 157 | jab, crochet al cuerpo, gancho, rueda y crochet | — | 1 · 4 al cuerpo · 5 · rueda derecha · 3 | 5 | 4 | 1 | — | entre golpes | medio | nueva |
+| 158 | jab, gancho al cuerpo, crochet, bloqueo y gancho | — | 1 · 5 al cuerpo · 3 · bloqueo · 6 | 5 | 4 | 1 | — | entre golpes | medio | nueva |
+| 159 | esquiva, crochet al cuerpo, gancho, esquiva y jab | — | esquiva derecha · 4 al cuerpo · 5 · esquiva izquierda · 1 | 5 | 3 | 2 | — | inicio, entre golpes | medio | nueva |
+| 160 | jab, gancho al cuerpo, crochet, flexión, gancho y paso atrás | — | 1 · 6 al cuerpo · 3 · flexión · 5 · paso atrás | 6 | 4 | 2 | — | entre golpes, final | medio | nueva |
+| 161 | ballesteo, gancho al cuerpo, crochet, rueda y gancho | — | ballesteo · 5 al cuerpo · 3 · rueda izquierda · 5 | 5 | 3 | 2 | — | inicio, entre golpes | medio | nueva |
+| 162 | parada, jab, recto al cuerpo, rueda, gancho y bloqueo | — | parada · 1 · 2 al cuerpo · rueda derecha · 6 · bloqueo | 6 | 3 | 3 | — | inicio, entre golpes, final | medio | nueva |
+| 163 | jab, recto al cuerpo, doble crochet, rueda, gancho y crochet | — | 1 · 2 al cuerpo · 3 · 4 · rueda derecha · 5 · 4 | 7 | 6 | 1 | — | entre golpes | avanzado | nueva |
+| 164 | jab, crochet al cuerpo y crochet, esquiva, gancho-crochet y bloqueo | — | 1 · 3 al cuerpo · 4 · esquiva derecha · 6 · 3 · bloqueo | 7 | 5 | 2 | — | entre golpes, final | avanzado | nueva |
+| 165 | esquiva, gancho al cuerpo, crochet-jab, crochet al cuerpo y rueda | — | esquiva derecha · 5 al cuerpo · 4 · 1 · 4 al cuerpo · 5 · rueda izquierda · 6 | 8 | 6 | 2 | — | inicio, entre golpes | avanzado | nueva |
+| 166 | jab arriba y abajo, gancho, esquiva, flexión y paso atrás | — | 1 · 1 al cuerpo · 6 · esquiva derecha · 4 · flexión · 5 · paso atrás | 8 | 5 | 3 | — | entre golpes, final | avanzado | nueva |
+| 167 | bloqueo, crochet al cuerpo, gancho, rueda, esquiva y paso lateral | — | bloqueo · 4 al cuerpo · 6 · rueda derecha · 1 · 5 · esquiva izquierda · 4 · paso lateral derecha | 9 | 5 | 3 | paso lateral derecha | inicio, entre golpes | avanzado | nueva |
+| 168 | parada, jab, crochet al cuerpo, esquiva, rueda y ballesteo | — | parada · 1 · 3 al cuerpo · esquiva derecha · 6 · rueda izquierda · 5 · ballesteo · 4 | 9 | 5 | 4 | — | inicio, entre golpes | avanzado | nueva |
+
 ## Dudas de técnica
 
 Golpes cambiados para cuadrar el balance que pueden no ser naturales. **REVISAR CON ENTRENADOR.**
@@ -399,6 +426,24 @@ Golpes cambiados para cuadrar el balance que pueden no ser naturales. **REVISAR 
 | 113 | 1 · ballesteo · 6 · flexión | tras el ballesteo, gancho y no recto |
 | 144 | 1 · bloqueo · 5 · flexión · 2 al cuerpo · ballesteo · 6 · paso atrás | tras el bloqueo, gancho y no recto |
 | 146 | bloqueo · 1 · bloqueo · 5 · esquiva izquierda · 5 · flexión · 3 al cuerpo | tras el bloqueo, gancho y no recto |
+| 151 | 2 al cuerpo · 4 | nueva para los golpes al cuerpo (técnica y nombre) |
+| 152 | 1 · 4 al cuerpo · 5 | nueva para los golpes al cuerpo (técnica y nombre) |
+| 153 | esquiva derecha · 4 al cuerpo · 6 | nueva para los golpes al cuerpo (técnica y nombre) |
+| 154 | 1 · 3 al cuerpo · bloqueo | nueva para los golpes al cuerpo (técnica y nombre) |
+| 155 | esquiva izquierda · 5 al cuerpo · 4 · bloqueo | nueva para los golpes al cuerpo (técnica y nombre) |
+| 156 | paso atrás · 6 al cuerpo · 3 · esquiva derecha | nueva para los golpes al cuerpo (técnica y nombre) |
+| 157 | 1 · 4 al cuerpo · 5 · rueda derecha · 3 | nueva para los golpes al cuerpo (técnica y nombre) |
+| 158 | 1 · 5 al cuerpo · 3 · bloqueo · 6 | nueva para los golpes al cuerpo (técnica y nombre) |
+| 159 | esquiva derecha · 4 al cuerpo · 5 · esquiva izquierda · 1 | nueva para los golpes al cuerpo (técnica y nombre) |
+| 160 | 1 · 6 al cuerpo · 3 · flexión · 5 · paso atrás | nueva para los golpes al cuerpo (técnica y nombre) |
+| 161 | ballesteo · 5 al cuerpo · 3 · rueda izquierda · 5 | nueva para los golpes al cuerpo (técnica y nombre) |
+| 162 | parada · 1 · 2 al cuerpo · rueda derecha · 6 · bloqueo | nueva para los golpes al cuerpo (técnica y nombre) |
+| 163 | 1 · 2 al cuerpo · 3 · 4 · rueda derecha · 5 · 4 | nueva para los golpes al cuerpo (técnica y nombre) |
+| 164 | 1 · 3 al cuerpo · 4 · esquiva derecha · 6 · 3 · bloqueo | nueva para los golpes al cuerpo (técnica y nombre) |
+| 165 | esquiva derecha · 5 al cuerpo · 4 · 1 · 4 al cuerpo · 5 · rueda izquierda · 6 | nueva para los golpes al cuerpo (técnica y nombre) |
+| 166 | 1 · 1 al cuerpo · 6 · esquiva derecha · 4 · flexión · 5 · paso atrás | nueva para los golpes al cuerpo (técnica y nombre) |
+| 167 | bloqueo · 4 al cuerpo · 6 · rueda derecha · 1 · 5 · esquiva izquierda · 4 · paso lateral derecha | nueva para los golpes al cuerpo (técnica y nombre) |
+| 168 | parada · 1 · 3 al cuerpo · esquiva derecha · 6 · rueda izquierda · 5 · ballesteo · 4 | nueva para los golpes al cuerpo (técnica y nombre) |
 
 Con 5-6 o 6-5 seguidos (a la cara o al cuerpo; como mucho 5 por nivel) hay 15: #31, #33, #35, #38, #41, #43, #51, #53, #55, #57, #59, #61, #63, #65, #67.
 

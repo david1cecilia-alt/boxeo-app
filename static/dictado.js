@@ -79,8 +79,9 @@ export function crearDictado({ reproductor, voz, config, alDecir = () => {} }) {
 
   // Dicta un asalto desde el segundo `desde`. `cola`: sus combinaciones y, detrás, sus reservas,
   // en orden; `coletillas`: las cortas, en su orden al azar (las del guion con t = fin); `reservados`: [[ini, fin]] de las
-  // señales previstas del asalto, que una combinación no debe pisar; `fin`: final del asalto.
-  function asalto({ cola, coletillas = [], reservados, desde, fin }) {
+  // señales previstas del asalto, que una combinación no debe pisar; `fin`: final del asalto;
+  // `repetibles`: si una coletilla puede repetir una reciente («Solo las mías», ver elegirSiguiente).
+  function asalto({ cola, coletillas = [], reservados, desde, fin, repetibles = false }) {
     const esta = ++ronda;
     const viva = () => esta === ronda;
     let i = 0; // la próxima de la cola
@@ -93,7 +94,7 @@ export function crearDictado({ reproductor, voz, config, alDecir = () => {} }) {
       if (!viva()) return;
       const real = reproductor.tiempo();
       const ahora = previsto !== null && real - previsto <= RETRASO_TIC ? Math.min(real, previsto) : real;
-      const eleccion = elegirSiguiente(ahora, cola[i] ?? null, coletillas, reservados, fin, recientes);
+      const eleccion = elegirSiguiente(ahora, cola[i] ?? null, coletillas, reservados, fin, recientes, repetibles);
       if (!eleccion) return; // ya no cabe nada: se acaba el asalto
       const [combo, empieza] = eleccion;
       if (empieza > ahora) {
@@ -110,7 +111,8 @@ export function crearDictado({ reproductor, voz, config, alDecir = () => {} }) {
       // guion para esta combinación (no se sortea otra vez): si la voz tarda lo estimado, se dice
       // lo mismo que en el guion; si no, el desfase solo viene de la voz.
       const ya = reproductor.tiempo();
-      const despues = siguienteTrasVoz(ya, combo.hueco, huecoMinimo, cola[i] ?? null, coletillas, reservados, fin, recientes);
+      const despues = siguienteTrasVoz(ya, combo.hueco, huecoMinimo, cola[i] ?? null, coletillas, reservados, fin, recientes,
+        repetibles);
       if (despues) reproductor.programar(Math.max(0, despues[1] - ya), () => intentar(despues[1]));
     }
 

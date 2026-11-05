@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { crearAlmacen, perfilPorDefecto } from "../../static/almacen.js";
 import {
-  MAX_PRACTICAR, cambiarPracticar, nuevoGuion, opcionesVoz, perfilSorteo, personalizadaValida, preferencias, recordarSesion, resumenElecciones,
+  MAX_PRACTICAR, OPCIONES_MEZCLA, cambiarPracticar, estadoMezcla, nuevoGuion, opcionesVoz, perfilSorteo, personalizadaValida, preferencias, recordarSesion, resumenElecciones,
 } from "../../static/ajustes.js";
 import { crearAzar } from "../../static/motor/azar.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
@@ -58,7 +58,7 @@ test("sin nada elegido en Entrenar: Amateur, nivel y guardia de data/perfil.json
   const p = perfilPorDefecto();
   assert.deepEqual(preferencias(p), {
     asalto: "amateur", nivel: datos.perfil.nivel, zurdo: datos.perfil.guardia === "zurda", voz: "nombres", ritmo: 3,
-    reaccion: false, personalizada: { asaltos: 3, duracion_asalto: 180, descanso: 60 },
+    reaccion: false, mezcla: "ninguna", personalizada: { asaltos: 3, duracion_asalto: 180, descanso: 60 },
   });
   // Lo que quede de «Tus datos» (datos escritos a mano) ya no cuenta: solo Entrenar.
   p.basicos = { ...p.basicos, nivel: "3", guardia: "zurda" };
@@ -69,7 +69,7 @@ test("sin nada elegido en Entrenar: Amateur, nivel y guardia de data/perfil.json
 });
 
 test("cada elección de Entrenar se guarda y se lee igual al recargar", () => {
-  const eleccion = { asalto: "prueba", nivel: 3, ritmo: 4, voz: "numeros", zurdo: true, reaccion: true };
+  const eleccion = { asalto: "prueba", nivel: 3, ritmo: 4, voz: "numeros", zurdo: true, reaccion: true, mezcla: "mucho" };
   for (const [campo, valor] of Object.entries(eleccion)) {
     const storage = almacenamiento();
     recordarSesion(crearAlmacen({ storage }), { [campo]: valor });
@@ -159,4 +159,85 @@ test("el guion de Entrenar usa la velocidad de Ajustes", () => {
   const normal = nuevoGuion({ ...config, velocidad: 1.1 }, perfil, crearAzar(1)).filter((e) => e.tipo === "combo");
   assert.equal(lento[0].texto, normal[0].texto);
   assert.ok(lento[0].duracion > normal[0].duracion);
+});
+
+// ---------- «Tus combinaciones» en el guion ----------
+
+const PROPIAS = [["jab", "directo"], ["jab", "esquiva_izq", "gancho_izq"], ["bloqueo", "directo", "gancho_izq", "directo"]]
+  .map((ids, i) => ({ id: `p-${i}`, ids, creada: "2026-11-04T10:00:00Z" }));
+const CONFIG = { asaltos: 2, duracion_asalto: 90, descanso: 30, nivel: 2, ritmo: 3, pausa: null, voz: "nombres",
+  zurdo: false, modo_reaccion: false, velocidad: 1.1 };
+const dichas = (eventos) => eventos.filter((e) => e.tipo === "combo" || e.tipo === "coletilla");
+const esPropia = (ids) => PROPIAS.some((p) => p.ids.join() === ids.join());
+
+test("una mezcla que no se recuerda vale «Ninguna»", () => {
+  const p = perfilPorDefecto();
+  for (const mezcla of ["ninguna", "poco", "bastante", "mucho", "solo"]) {
+    assert.equal(preferencias({ ...p, sesion: { ...p.sesion, mezcla } }).mezcla, mezcla);
+  }
+  assert.equal(preferencias({ ...p, sesion: { ...p.sesion, mezcla: "todo" } }).mezcla, "ninguna");
+});
+
+test("el guion de Entrenar usa la mezcla: «Ninguna» sale igual que sin propias", () => {
+  const p = perfilPorDefecto();
+  const sin = nuevoGuion(CONFIG, p, crearAzar(3));
+  assert.deepEqual(nuevoGuion({ ...CONFIG, mezcla: "ninguna" }, p, crearAzar(3), PROPIAS), sin);
+});
+
+test("«Solo las mías»: todas las combinaciones son propias, de cualquier nivel, y nunca se nombran", () => {
+  const eventos = nuevoGuion({ ...CONFIG, mezcla: "solo" }, perfilPorDefecto(), crearAzar(5), PROPIAS);
+  const combos = eventos.filter((e) => e.tipo === "combo");
+  assert.ok(combos.length > 5);
+  for (const e of combos) assert.ok(esPropia(e.ids), e.ids.join());
+  assert.ok(new Set(combos.map((e) => e.ids.join())).size === PROPIAS.length, "salen las de los tres niveles");
+});
+
+test("«Mucho» mezcla propias del nivel y biblioteca; en zurdo, las propias salen en espejo", () => {
+  // Las tres son de básico (2-4 acciones): en medio, «Mucho» no tiene propias del nivel.
+  const basico = dichas(nuevoGuion({ ...CONFIG, nivel: 1, asaltos: 6, mezcla: "mucho" }, perfilPorDefecto(), crearAzar(8), PROPIAS));
+  assert.ok(basico.some((e) => esPropia(e.ids)) && basico.some((e) => !esPropia(e.ids)));
+  const medio = nuevoGuion({ ...CONFIG, mezcla: "mucho" }, perfilPorDefecto(), crearAzar(8), PROPIAS);
+  assert.deepEqual(medio, nuevoGuion(CONFIG, perfilPorDefecto(), crearAzar(8)));
+  const zurdo = dichas(nuevoGuion({ ...CONFIG, asaltos: 6, zurdo: true, mezcla: "solo" }, perfilPorDefecto(), crearAzar(8), PROPIAS));
+  assert.ok(zurdo.some((e) => e.ids.includes("esquiva_der") && e.ids.includes("gancho_der")), "esquiva y crochet cambian de lado");
+});
+
+test("«Tus combinaciones»: cinco opciones con el porcentaje de motor/sorteo.js", () => {
+  assert.deepEqual(OPCIONES_MEZCLA.map((o) => `${o.nombre} ${o.porcentaje}`),
+    ["Ninguna 0", "Poco 20", "Bastante 35", "Mucho 50", "Solo las mías 100"]);
+});
+
+test("estadoMezcla: sin propias, con menos de 3 y con «Solo las mías»", () => {
+  const sin = estadoMezcla("ninguna", [], 2);
+  assert.deepEqual(sin, { total: 0, efectiva: "ninguna", motivoSolo: null, aviso: null, nivelCuenta: true });
+  // Una guardada que ya no vale (ids fuera del catálogo) no cuenta.
+  assert.equal(estadoMezcla("mucho", [{ id: "p-x", ids: ["jab", "patada"] }], 1).total, 0);
+
+  const dos = PROPIAS.slice(0, 2);
+  assert.equal(estadoMezcla("ninguna", dos, 1).motivoSolo, "«Solo las mías» necesita al menos 3 combinaciones (tienes 2).");
+  const soloConDos = estadoMezcla("solo", dos, 1);
+  assert.equal(soloConDos.efectiva, "ninguna");
+  assert.match(soloConDos.motivoSolo, /tienes 2\): de momento salen las de la biblioteca\.$/);
+  assert.equal(soloConDos.nivelCuenta, true);
+
+  const solo = estadoMezcla("solo", PROPIAS, 3);
+  assert.deepEqual(solo, { total: 3, efectiva: "solo", motivoSolo: null, aviso: null, nivelCuenta: false });
+});
+
+test("estadoMezcla: avisa sin propias del nivel y con «Solo las mías» sin ninguna de 2-3 acciones", () => {
+  assert.equal(estadoMezcla("bastante", PROPIAS, 1).aviso, null);
+  assert.equal(estadoMezcla("bastante", PROPIAS, 2).aviso,
+    "No tienes combinaciones de nivel medio: solo saldrán las de la biblioteca.");
+  assert.equal(estadoMezcla("bastante", PROPIAS, 2).efectiva, "ninguna");
+  const largas = [["jab", "directo", "gancho_izq", "directo"], ["jab", "jab", "directo", "bloqueo"],
+    ["directo", "gancho_izq", "directo", "esquiva_izq"]].map((ids, i) => ({ id: `p-${i}`, ids }));
+  assert.equal(estadoMezcla("solo", largas, 2).aviso, "Añade alguna de 2-3 acciones para que el final del asalto sea solo tuyo.");
+  assert.equal(estadoMezcla("ninguna", largas, 2).aviso, null);
+});
+
+test("el resumen de «Tu sesión» dice la mezcla efectiva y, con «Solo las mías», no el nivel", () => {
+  const base = { nivel: 2, ritmo: 4, voz: "numeros", zurdo: false, modo_reaccion: false };
+  assert.equal(resumenElecciones({ ...base, mezcla: "ninguna" }), "Medio · Vivo · Números");
+  assert.equal(resumenElecciones({ ...base, mezcla: "mucho" }), "Medio · Mucho de las tuyas · Vivo · Números");
+  assert.equal(resumenElecciones({ ...base, mezcla: "solo", zurdo: true }), "Solo las tuyas · Vivo · Números · Zurdo");
 });

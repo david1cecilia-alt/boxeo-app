@@ -258,6 +258,22 @@ hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
 }
 :is(.niveles legend, .cabeza-campo) span:first-child { font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
 .modos-voz b { font-size: 20px; white-space: nowrap; }
+/* «Tus combinaciones»: los cuatro porcentajes en una fila y «Solo las mías» debajo, a todo el ancho
+   (más bajo y en línea: es la opción aparte). */
+.mezcla { display: grid; gap: 8px; }
+.mezclas { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.mezclas b { font-size: 20px; white-space: nowrap; }
+.mezclas .mezcla-solo { grid-column: 1 / -1; }
+.mezclas .mezcla-solo span {
+  display: flex; justify-content: center; align-items: baseline; gap: 10px; min-height: 52px; font-size: 0.875rem;
+}
+.mezclas .mezcla-solo b { margin: 0; }
+/* Desactivados de verdad (disabled): apagados y sin el puntero de elegir. */
+.niveles input:disabled + span { opacity: 0.45; }
+.niveles input:disabled { cursor: not-allowed; }
+.nota-campo { margin: 0; font-size: 0.8125rem; }
+.nota-campo a { color: var(--texto); font-weight: 600; }
+#niveles + .nota-campo { margin-top: -6px; }
 
 /* Ritmo: barra 1-5, de Calmado a Intenso. Solo se mueve arrastrando la bolita: la barra no recibe
    el puntero (tocarla en el móvil saltaba a Intenso sin querer). El teclado sigue funcionando. */
@@ -525,6 +541,160 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
 #vista-ajustes .marca-agua { top: 6px; right: -10px; font-size: 140px; opacity: 0.04; }
 #ajustes-contenido { display: grid; gap: 16px; align-content: start; min-width: 0; }
 .voz-eleccion, .voz-velocidad { display: grid; gap: 14px; align-content: start; min-width: 0; }
+
+/* ---------- Mis combinaciones (el creador, #ajustes/mis-combinaciones) ---------- */
+/* En la subpágina no se ve la cabecera de Ajustes: la subpágina trae su «Volver» y su título. */
+#vista-ajustes[data-sub] > :is(.volver-movil, .cabecera) { display: none; }
+#vista-ajustes[data-sub] #ajustes-contenido { padding-top: 0; }
+.volver-sub {
+  position: sticky; top: 0; z-index: 5; margin: 0 calc(-1 * var(--hueco)) -8px;
+  padding: calc(8px + env(safe-area-inset-top, 0px)) var(--hueco) 8px; background: var(--fondo);
+}
+.cabecera-sub { display: grid; gap: 8px; }
+.cabecera-sub h1 { font-size: clamp(2.5rem, 11.8vw, 3.6rem); }
+.cabecera-sub .nota { margin: 0; }
+/* Tarjeta-enlace de Ajustes: «Mis combinaciones 3/20», su explicación y «›». */
+.tarjeta-enlace {
+  display: flex; align-items: center; gap: 12px; min-height: 48px;
+  color: var(--texto); text-decoration: none; transition: background-color 0.15s, border-color 0.15s;
+}
+.tarjeta-enlace:hover { background: var(--superficie-hover); border-color: var(--linea-chip); }
+.tarjeta-enlace-texto { display: grid; gap: 4px; flex: 1; min-width: 0; }
+.tarjeta-enlace .titular { font-size: 1.375rem; letter-spacing: 0.04em; }
+.tarjeta-enlace .nota { margin: 0; font-size: 0.8125rem; }
+.tarjeta-enlace svg {
+  flex: none; width: 22px; height: 22px; fill: none; stroke: var(--suave); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+/* Listado: una tarjeta por combinación, con su nivel, editar y borrar (48 px) y sus fichas. */
+.lista-propias { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.propia { display: grid; gap: 12px; padding: 12px 8px 16px 16px; }
+.propia-cabecera { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.propia-cabecera h2 { margin: 0; font-size: 1.375rem; white-space: nowrap; }
+.pastilla-nivel {
+  flex: none; padding: 2px 10px; border-radius: 999px; font-size: 0.8125rem; font-weight: 600;
+  color: var(--acento); background: var(--acento-tenue);
+}
+.propia-cabecera .boton-icono:first-of-type { margin-left: auto; }
+.boton-icono {
+  display: grid; place-items: center; flex: none; width: 48px; height: 48px; padding: 0;
+  color: var(--suave); background: transparent; border: 0; border-radius: 50%; cursor: pointer;
+}
+.boton-icono:hover { color: var(--texto); background: var(--secundario); }
+.boton-icono svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* Fichas con el código de la sesión (círculo relleno = golpe, borde = defensa, discontinuo = pies). */
+.fichas-combo { list-style: none; margin: 0; padding: 0 8px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.fichas-combo > li, .chip-paso {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 4px 12px 4px 5px;
+  border-radius: 999px; background: var(--secundario); font-size: 0.875rem; white-space: nowrap;
+}
+:is(.fichas-combo, .tira-fichas) i {
+  flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+  font-style: normal; font-size: 0.75rem; font-weight: 800; letter-spacing: -0.02em;
+}
+.vacio-propias { margin: 0; color: var(--suave); }
+.anadir-propia {
+  display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 64px; width: 100%;
+  font: inherit; font-weight: 600; color: var(--texto); cursor: pointer;
+  background: transparent; border: 1px dashed var(--linea-chip); border-radius: var(--radio);
+  transition: background-color 0.15s;
+}
+.anadir-propia span { color: var(--acento); font-size: 1.4rem; font-weight: 400; line-height: 1; }
+.anadir-propia:hover:not([aria-disabled="true"]) { background: var(--secundario); }
+/* Desactivados con aria-disabled (siguen recibiendo el foco y dicen por qué): se ven apagados. */
+:is(.anadir-propia, .boton, .baldosa)[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; }
+.boton[aria-disabled="true"]:active { transform: none; }
+.motivo { margin: -4px 0 0; }
+.motivo[hidden] { display: none; }
+
+/* Editor: la caja de la combinación y sus botones; debajo (a la izquierda en el PC), la paleta. */
+.editor, .editor-combo, .editor-paleta { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.caja-combo { display: grid; gap: 12px; padding: 16px; }
+.caja-cabeza { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.caja-cabeza p { margin: 0; }
+.contador { color: var(--suave); font-size: 0.875rem; font-variant-numeric: tabular-nums; }
+.nivel-grande { font-family: var(--letra-titular); text-transform: uppercase; font-size: 1.75rem; line-height: 1; letter-spacing: 0.02em; }
+.nivel-grande.sin-nivel { color: var(--suave); font-size: 1.25rem; }
+/* Medidor: 10 segmentos, agrupados por nivel con su nombre debajo. */
+.medidor { display: grid; grid-template-columns: 4fr 2fr 4fr; gap: 8px; }
+.zona { display: grid; gap: 6px; min-width: 0; }
+.segmentos { display: grid; grid-template-columns: repeat(var(--segmentos), minmax(0, 1fr)); gap: 3px; }
+.segmentos span { height: 6px; border-radius: 3px; background: var(--linea-chip); }
+.segmentos .lleno { background: var(--acento-relleno); }
+.zona-nombre { color: var(--suave); font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.2; }
+.zona-nombre { white-space: nowrap; }
+.zona:last-child .zona-nombre { justify-self: end; }
+.zona:nth-child(2) .zona-nombre { justify-self: center; }
+/* Tira de fichas: tocar una (o su ×) la quita. */
+.tira-fichas { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-paso {
+  min-height: 48px; padding-right: 14px; font: inherit; font-size: 0.875rem; color: var(--texto);
+  border: 1px solid transparent; cursor: pointer;
+}
+.chip-paso:hover { border-color: var(--linea-chip); }
+.chip-paso .aspa { color: var(--suave); font-size: 1rem; line-height: 1; }
+.tira-vacia { margin: 0; }
+@keyframes ficha-nueva { from { opacity: 0; transform: scale(0.9); } }
+.chip-paso.nuevo { animation: ficha-nueva 0.18s cubic-bezier(0.23, 1, 0.32, 1); }
+.acciones-editor .boton { flex: 1 1 120px; }
+/* «Escuchar», bajo la tira: la combinación como se dirá en la sesión. */
+.fila-escuchar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.boton.escuchar { gap: 8px; min-height: 48px; padding: 0 18px; }
+.boton.escuchar svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.fila-escuchar .motivo { margin: 0; font-size: 0.8125rem; }
+/* Grupos: tres tarjetas grandes con icono; la abierta, en claro. */
+.grupos-paleta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.tarjeta-grupo {
+  display: grid; justify-items: center; gap: 6px; min-height: 76px; padding: 12px 6px;
+  font: inherit; font-weight: 600; font-size: 0.9375rem; color: var(--texto); cursor: pointer;
+  background: var(--superficie); border: 1px solid var(--linea-chip); border-radius: 18px;
+  transition: background-color 0.15s, transform 0.14s;
+}
+.tarjeta-grupo svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tarjeta-grupo:hover:not([aria-expanded="true"]) { background: var(--superficie-hover); }
+.tarjeta-grupo[aria-expanded="true"] { background: var(--chip-activo); border-color: var(--chip-activo); color: var(--sobre-chip-activo); }
+.paleta { display: grid; gap: 12px; }
+/* «Al cuerpo»: interruptor grande (48 px de alto). */
+.fila-cuerpo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; }
+.fila-cuerpo .nota { margin: 0; font-size: 0.8125rem; }
+.interruptor {
+  display: inline-flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 6px 0 0;
+  font: inherit; font-weight: 600; color: var(--texto); background: none; border: 0; cursor: pointer;
+}
+.pista {
+  position: relative; flex: none; width: 52px; height: 30px; border-radius: 15px;
+  background: var(--linea-chip); transition: background-color 0.15s;
+}
+.pista::after {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--texto); transition: transform 0.18s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.interruptor[aria-checked="true"] .pista { background: var(--acento-relleno); }
+.interruptor[aria-checked="true"] .pista::after { transform: translateX(22px); }
+/* Baldosas: los golpes con su número enorme en rojo; defensas y salidas con su círculo. */
+.baldosas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.baldosas > li { display: grid; min-width: 0; }
+.baldosa {
+  display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 8px 12px; text-align: left;
+  font: inherit; font-weight: 600; font-size: 0.9375rem; line-height: 1.2; color: var(--texto); cursor: pointer;
+  background: var(--superficie); border: 1px solid var(--linea-chip); border-radius: 16px;
+  transition: background-color 0.15s, border-color 0.15s, transform 0.14s;
+}
+.baldosa span { min-width: 0; overflow-wrap: break-word; }
+.baldosa:hover:not([aria-disabled="true"]) { border-color: var(--acento-relleno); }
+.baldosa-golpe { min-height: 72px; }
+.baldosa b {
+  flex: none; min-width: 1ch; font-family: var(--letra-titular); font-weight: 400; font-size: 2.75rem;
+  line-height: 1; color: var(--acento); letter-spacing: -0.02em;
+}
+.baldosa i { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid currentColor; }
+.baldosa-movimiento { border-style: dashed; }
+.baldosa-movimiento i { border-style: dashed; color: var(--suave); }
+:is(.baldosa, .tarjeta-grupo, .chip-paso):active:not([aria-disabled="true"]) { transform: scale(0.97); }
+#d-borrar h2, #d-avisos h2, #d-descartar h2 { margin: 0 0 8px; }
+:is(#d-borrar, #d-avisos, #d-descartar) .acciones { margin-top: 18px; }
+/* Sin partir el texto de los botones: si no caben dos en una fila, uno encima del otro. */
+:is(#d-borrar, #d-avisos, #d-descartar) .boton { white-space: nowrap; }
+.lista-avisos { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 
 /* ---------- Historial ---------- */
 #vista-historial { --alto-foto: 240px; --arriba-titular: 96px; --posicion-foto: 50% 35%; }
@@ -1070,6 +1240,7 @@ dialog::backdrop { background: var(--velo); }
   .resumen-presets { display: none; } /* ya sale en «Tu sesión» (los lectores lo siguen oyendo en los chips) */
   .niveles label span { min-height: 84px; font-size: 0.875rem; }
   .niveles b { font-size: 32px; }
+  .mezclas b { font-size: 24px; } /* cuatro por fila: «35 %» no cabe a 32 px en la columna de 1024 */
   .config-sesion {
     position: sticky; top: 24px; gap: 16px; padding: 28px;
     background: var(--superficie); border: 1px solid var(--linea); border-radius: 22px;
@@ -1131,6 +1302,19 @@ dialog::backdrop { background: var(--velo); }
   #ajustes-contenido { gap: 24px; }
   #f-voz { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 32px; }
   .voz-cabeza { grid-column: 1 / -1; }
+
+  /* Mis combinaciones: el listado, del ancho de una lectura cómoda; el editor, en dos columnas
+     (paleta a la izquierda, golpes en tres columnas; la caja y Guardar a la derecha, fijas al bajar). */
+  .volver-sub { position: static; margin: 0 0 -8px; padding: 32px 0 0; background: none; }
+  .cabecera-sub h1 { font-size: 4.5rem; }
+  #vista-ajustes[data-sub] #ajustes-contenido > :is(.cabecera-sub, .lista-propias, .vacio-propias, .anadir-propia, .motivo) { max-width: 760px; }
+  .editor { grid-template-columns: minmax(0, 1fr) minmax(340px, 0.75fr); gap: 32px; align-items: start; }
+  .editor-paleta { grid-column: 1; grid-row: 1; }
+  .editor-combo { grid-column: 2; grid-row: 1; position: sticky; top: 24px; }
+  /* Golpes en tres columnas solo si caben sus nombres sin partir palabras (desde 1280 px). */
+  @media (min-width: 1280px) {
+    .baldosas-golpe { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
 
   /* Perfil: una sola columna (rectángulo, Sobre ti, Mi estilo), del ancho de una lectura cómoda. */
   #perfil-contenido { max-width: 760px; gap: 20px; }

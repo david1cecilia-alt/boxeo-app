@@ -82,6 +82,7 @@ class ComboBiblioteca:
     nivel: int                 # 1 básico, 2 medio, 3 avanzado
     acciones: tuple[Accion, ...]
     nombre: str | None = None  # los clásicos de antes conservan su nombre
+    n: int | None = None       # su número en la biblioteca: la identifica (ver motor.sorteo.identidad)
 
 
 @lru_cache
@@ -93,7 +94,8 @@ def _leer_biblioteca() -> dict:
 @lru_cache
 def biblioteca() -> tuple[ComboBiblioteca, ...]:
     """Combinaciones escritas a mano (data/combinaciones.json), en ortodoxo."""
-    return tuple(ComboBiblioteca(c["notacion"], c["nivel"], tuple(acciones_por_ids(c["ids"])), c.get("nombre"))
+    return tuple(ComboBiblioteca(c["notacion"], c["nivel"], tuple(acciones_por_ids(c["ids"])), c.get("nombre"),
+                                 c["n"])
                  for c in _leer_biblioteca()["combinaciones"])
 
 

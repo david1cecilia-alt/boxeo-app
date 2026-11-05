@@ -51,7 +51,7 @@ def pagina_v5(sitio):
 
 @pytest.mark.parametrize("sesion, esperados", [
     ("vieja-ortodoxa", ["1 jab, 3 crochet de izquierda", "esquiva derecha, 2 recto, 3 crochet de izquierda",
-                        "jab al cuerpo, 2 recto, pivote",
+                        "7 jab al cuerpo, 2 recto, pivote",  # el número nuevo del golpe al cuerpo, sin migrar
                         "bloqueo, 3 crochet de izquierda, 2 recto, paso lateral izquierda"]),
     ("vieja-zurda", ["1 jab, 3 crochet de derecha"]),
 ])

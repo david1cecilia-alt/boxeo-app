@@ -1,15 +1,30 @@
 // Almacén de los datos del usuario en el navegador (localStorage): sesiones sin servidor,
-// valoraciones y perfil (con lo elegido en Entrenar, la voz y «Practicar más» de Ajustes y cómo se
-// agrupa el Historial). Nunca va al repo ni a data/.
+// valoraciones, combinaciones propias (las del creador) y perfil (con lo elegido en Entrenar, la voz
+// y «Practicar más» de Ajustes y cómo se agrupa el Historial). Nunca va al repo ni a data/.
 //
 // Esquema versionado: si cambia, se sube VERSION y se añade una migración en MIGRACIONES.
 // Si el almacenamiento falla, todo sigue funcionando en memoria y `persistente` pasa a false.
 
-export const VERSION = 7;
+import { MAX_ACCIONES, MAX_PROPIAS } from "./motor/reglas.js";
+import { MEZCLAS, MIN_ACCIONES_PROPIA } from "./motor/sorteo.js";
+
+export const VERSION = 8;
 const CLAVE = "boxeo";
 const CLAVE_V0 = "boxeo.historial"; // versión 0: un array de sesiones, antes del almacén
 
 export const NO_SE = "no_se";
+
+// Un UUID v4 para los ids locales. crypto.randomUUID solo existe en contextos seguros (https o
+// localhost); abriendo la app por http desde otra máquina de la red local (el móvil contra el PC) no
+// está, pero getRandomValues sí: con él se forma el mismo v4 (versión 4, variante 10xx).
+export function crearUuid(c = globalThis.crypto) {
+  if (typeof c.randomUUID === "function") return c.randomUUID();
+  const b = c.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const h = [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
 
 // Lo que se elige en Entrenar y se recuerda para la próxima sesión. `nivel` y `zurdo` en null:
 // los de data/perfil.json (aún no se han elegido).
@@ -18,6 +33,7 @@ export const PERSONALIZADA_POR_DEFECTO = Object.freeze({ asaltos: 3, duracion_as
 export function sesionPorDefecto() {
   return {
     voz: "nombres", ritmo: 3, asalto: "amateur", nivel: null, zurdo: null, reaccion: false,
+    mezcla: "ninguna", // «Tus combinaciones»: una de MEZCLAS de motor/sorteo.js
     personalizada: { ...PERSONALIZADA_POR_DEFECTO },
   };
 }
@@ -63,6 +79,7 @@ export function vacio() {
     version: VERSION,
     sesiones: [],
     valoraciones: {},
+    combinacionesPropias: [], // [{ id: "p-<uuid>", ids, creada }], en ortodoxo y en su orden
     perfil: perfilPorDefecto(),
   };
 }
@@ -125,23 +142,41 @@ const MIGRACIONES = {
     sesion.zurdo ??= desde.zurdo;
     return { ...resto, version: 7, perfil: { ...v6.perfil, basicos, sesion } };
   },
+  // v7 → v8: el creador de combinaciones. Sin propias, y Entrenar sin mezclarlas («Ninguna»).
+  7: (v7) => ({
+    ...v7,
+    version: 8,
+    combinacionesPropias: [],
+    perfil: { ...v7.perfil, sesion: { ...v7.perfil?.sesion, mezcla: "ninguna" } },
+  }),
 };
+
+// Una combinación propia bien formada: id de texto e ids de 2 a 10 (los que el catálogo no conozca
+// los ignora el sorteo). Como mucho se guardan MAX_PROPIAS.
+function propiaValida(p) {
+  return typeof p?.id === "string" && Array.isArray(p.ids)
+    && p.ids.length >= MIN_ACCIONES_PROPIA && p.ids.length <= MAX_ACCIONES && p.ids.every((i) => typeof i === "string");
+}
 
 // Rellena lo que falte con los valores por defecto (datos escritos a mano o a medias).
 function completar(datos) {
   const base = vacio();
   const perfil = datos.perfil ?? {};
+  const sesion = { ...base.perfil.sesion, ...perfil.sesion };
   return {
     ...base,
     ...datos,
+    // Escritas a mano o de una copia rara: fuera las mal formadas, como mucho MAX_PROPIAS.
+    combinacionesPropias: (Array.isArray(datos.combinacionesPropias) ? datos.combinacionesPropias : [])
+      .filter(propiaValida).slice(0, MAX_PROPIAS),
     perfil: {
       ...base.perfil,
       ...perfil,
       basicos: { ...base.perfil.basicos, ...perfil.basicos },
       estilo: { ...base.perfil.estilo, ...perfil.estilo },
       sesion: {
-        ...base.perfil.sesion,
-        ...perfil.sesion,
+        ...sesion,
+        mezcla: MEZCLAS.includes(sesion.mezcla) ? sesion.mezcla : base.perfil.sesion.mezcla,
         personalizada: { ...base.perfil.sesion.personalizada, ...perfil.sesion?.personalizada },
       },
       voz: { ...base.perfil.voz, ...perfil.voz },
@@ -155,7 +190,7 @@ function completar(datos) {
  * Lleva unos datos de cualquier versión conocida a la actual.
  * Devuelve { datos, migrado }. Lanza ErrorAlmacen si la versión es de una app más nueva.
  */
-export function migrar(datos, { crearId = () => crypto.randomUUID() } = {}) {
+export function migrar(datos, { crearId = () => crearUuid() } = {}) {
   if (datos == null) return { datos: vacio(), migrado: false };
   let version = datos.version;
   if (!Number.isInteger(version) || version < 0) throw new ErrorAlmacen("Datos sin versión válida");
@@ -174,7 +209,7 @@ export const claveSesion = (origen, id) => `${origen}:${id}`;
 
 export function crearAlmacen({
   storage = globalThis.localStorage,
-  crearId = () => crypto.randomUUID(),
+  crearId = () => crearUuid(),
   ahora = () => new Date().toISOString(),
   alFallar = () => {}, // la app muestra el aviso
 } = {}) {
@@ -243,6 +278,27 @@ export function crearAlmacen({
     },
     borrarValoracion(clave) {
       delete datos.valoraciones[clave];
+      guardar();
+    },
+
+    // ---- Combinaciones propias (las del creador, en ortodoxo) ----
+    // Comprueba antes avisosCreador (motor/reglas.js): aquí solo se rechaza lo mal formado (null).
+    anadirPropia(ids) {
+      const propia = { id: `p-${crearId()}`, ids: [...ids], creada: ahora() };
+      if (!propiaValida(propia) || datos.combinacionesPropias.length >= MAX_PROPIAS) return null;
+      datos.combinacionesPropias.push(propia);
+      guardar();
+      return propia.id;
+    },
+    cambiarPropia(id, ids) {
+      const propia = datos.combinacionesPropias.find((p) => p.id === id);
+      if (!propia || !propiaValida({ id, ids })) return false;
+      propia.ids = [...ids];
+      guardar();
+      return true;
+    },
+    borrarPropia(id) {
+      datos.combinacionesPropias = datos.combinacionesPropias.filter((p) => p.id !== id);
       guardar();
     },
 

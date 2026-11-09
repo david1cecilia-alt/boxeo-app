@@ -1,14 +1,13 @@
-"""Capturas de C3 («Tus combinaciones» en Entrenar y «Escuchar» en el editor) a 390, 1024 y 1440.
+"""Capturas de «Mis combinaciones»: el interruptor de Entrenar y «Cuánto aparecen» de Ajustes, a 390, 1024 y 1440.
 
 Monta la web en una carpeta temporal (sin fotos del maniquí) y la abre en Chromium headless. Las
 combinaciones de ejemplo solo viven en el localStorage de ese Chromium. Guarda en .playwright-mcp/capturas/
 (no se versiona), con el ancho al final del nombre:
-- mezcla-sin-propias: el selector desactivado con el enlace al creador.
-- mezcla-2: con 2 propias, «Solo las mías» desactivada con su motivo.
-- mezcla-5-solo: con 5 propias y «Solo las mías»: el nivel desactivado con su nota.
-- mezcla-5-mucho-medio: «Mucho» en nivel medio sin propias de ese nivel: el aviso.
-- mezcla-editor-escuchar: el editor con 4 acciones y «Escuchar».
-- mezcla-editor-vacio: el editor sin acciones («Escuchar» desactivado con su motivo).
+- mis-combinaciones-entrenar-desactivado: sin propias, el interruptor desactivado con el enlace a Ajustes.
+- mis-combinaciones-entrenar-apagado: con 5 propias y el interruptor apagado (solo biblioteca).
+- mis-combinaciones-entrenar-encendido: encendido con «Bastante» (lo de Ajustes) en básico.
+- mis-combinaciones-entrenar-solo: encendido con «Solo las mías»: el nivel desactivado con su nota.
+- mis-combinaciones-ajustes: Ajustes → Mis combinaciones con «Cuánto aparecen» (Bastante) y el listado.
 Uso: python herramientas/capturas_mezcla.py
 """
 import json
@@ -42,16 +41,15 @@ def entera(pagina, ruta):
     pagina.set_viewport_size({"width": ancho, "height": alto})
 
 
-def ir(pagina, ruta, propias=(), sesion=None):
+def ir(pagina, ruta, propias=(), sesion=None, cuanto="bastante"):
     pagina.goto(f"{ORIGEN}/__pagina__.html")
     pagina.wait_for_function("window.listo === true")
-    datos = {"version": 8, "combinacionesPropias": [
-        {"id": f"p-{i}", "ids": ids, "creada": "2026-11-04T10:00:00"} for i, ids in enumerate(propias)]}
-    if sesion:
-        datos["perfil"] = {"sesion": sesion}
+    datos = {"version": 9, "combinacionesPropias": [
+        {"id": f"p-{i}", "ids": ids, "creada": "2026-11-04T10:00:00"} for i, ids in enumerate(propias)],
+        "perfil": {"sesion": sesion or {}, "misCombinaciones": {"cuanto": cuanto}}}
     pagina.evaluate("(d) => localStorage.setItem('boxeo', d)", json.dumps(datos))
     pagina.goto(f"{ORIGEN}/index.html{ruta}")
-    pagina.wait_for_selector("#t-creador" if ruta.startswith("#ajustes") else "#mezclas label")
+    pagina.wait_for_selector("#t-creador" if ruta.startswith("#ajustes") else "#vista-entrenar:not([hidden]) #mis-combinaciones")
     pagina.wait_for_timeout(450)  # la entrada de la vista
     pagina.evaluate("document.activeElement.blur()")
 
@@ -61,27 +59,21 @@ def capturar(sitio: Path) -> list[Path]:
     rutas = []
 
     def guardar(nombre, ancho):
-        rutas.append(SALIDA / f"mezcla-{nombre}-{ancho}.png")
+        rutas.append(SALIDA / f"mis-combinaciones-{nombre}-{ancho}.png")
         return rutas[-1]
 
     for ancho in ANCHOS:
         with abrir(sitio, VACIA, ancho, ALTO[ancho], barras=True) as (pagina, errores):
-            ir(pagina, "#entrenar")
-            entera(pagina, guardar("sin-propias", ancho))
-            ir(pagina, "#entrenar", CINCO[:2], {"mezcla": "bastante", "nivel": 1})
-            entera(pagina, guardar("2", ancho))
-            ir(pagina, "#entrenar", CINCO, {"mezcla": "solo", "nivel": 2})
-            entera(pagina, guardar("5-solo", ancho))
-            ir(pagina, "#entrenar", CINCO, {"mezcla": "mucho", "nivel": 2})
-            entera(pagina, guardar("5-mucho-medio", ancho))
-            ir(pagina, "#ajustes/mis-combinaciones/nueva")
-            entera(pagina, guardar("editor-vacio", ancho))
-            for id_ in ("jab", "directo", "gancho_izq"):
-                pagina.click(f'[data-anadir="{id_}"]')
-            pagina.click('[data-grupo="defensa"]')
-            pagina.click('[data-anadir="rodar_der"]')
-            pagina.evaluate("document.activeElement.blur()")
-            entera(pagina, guardar("editor-escuchar", ancho))
+            ir(pagina, "#entrenar", (), {"usarMisCombinaciones": True, "nivel": 1})
+            entera(pagina, guardar("entrenar-desactivado", ancho))
+            ir(pagina, "#entrenar", CINCO, {"usarMisCombinaciones": False, "nivel": 1})
+            entera(pagina, guardar("entrenar-apagado", ancho))
+            ir(pagina, "#entrenar", CINCO, {"usarMisCombinaciones": True, "nivel": 1})
+            entera(pagina, guardar("entrenar-encendido", ancho))
+            ir(pagina, "#entrenar", CINCO, {"usarMisCombinaciones": True, "nivel": 2}, cuanto="solo")
+            entera(pagina, guardar("entrenar-solo", ancho))
+            ir(pagina, "#ajustes/mis-combinaciones", CINCO)
+            entera(pagina, guardar("ajustes", ancho))
             assert not errores, errores
     return rutas
 

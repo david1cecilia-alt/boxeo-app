@@ -55,6 +55,13 @@ export function motivoSolo(total, elegida) {
     + (elegida ? ": de momento salen las de la biblioteca." : ".");
 }
 
+// La nota bajo «Cuánto aparecen» en Ajustes: dónde se usa y, si hace falta, por qué «Solo las mías»
+// aún no sortea solo propias (`total`: las propias que se pueden sortear).
+export function notaCuanto(total, cuanto) {
+  return ["Se usa en Entrenar con «Mis combinaciones» encendido.", motivoSolo(total, cuanto === "solo")]
+    .filter(Boolean).join(" ");
+}
+
 // Qué enseña Entrenar con la mezcla pedida (mezclaPedida), las propias del almacén y el nivel:
 // cuántas se pueden sortear, la mezcla con la que se sorteará de verdad, por qué «Solo las mías» aún
 // no vale (si es la pedida), si el nivel cuenta y el aviso que toque. Sin propias, el interruptor se

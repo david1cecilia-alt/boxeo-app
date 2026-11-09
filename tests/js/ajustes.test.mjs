@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { crearAlmacen, perfilPorDefecto } from "../../static/almacen.js";
 import {
-  MAX_PRACTICAR, NOTA_NIVEL_SOLO, OPCIONES_CUANTO, cambiarPracticar, cuantoGuardado, estadoMezcla, guardarCuanto, mezclaPedida, motivoSolo, nuevoGuion, opcionesVoz, perfilSorteo, personalizadaValida, preferencias, recordarSesion, resumenElecciones,
+  MAX_PRACTICAR, NOTA_NIVEL_SOLO, OPCIONES_CUANTO, cambiarPracticar, cuantoGuardado, estadoMezcla, guardarCuanto, mezclaPedida, motivoSolo, notaCuanto, nuevoGuion, opcionesVoz, perfilSorteo, personalizadaValida, preferencias, recordarSesion, resumenElecciones,
 } from "../../static/ajustes.js";
 import { crearAzar } from "../../static/motor/azar.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
@@ -240,6 +240,15 @@ test("«Cuánto aparecen»: cuatro opciones, sin porcentajes", () => {
     { id: "solo", nombre: "Solo las mías" },
   ]);
   assert.equal(NOTA_NIVEL_SOLO, "Con «Solo las mías» no se usa el nivel.");
+});
+
+test("la nota de «Cuánto aparecen» dice dónde se usa y, con menos de 3, por qué «Solo las mías» aún no vale", () => {
+  const donde = "Se usa en Entrenar con «Mis combinaciones» encendido.";
+  assert.equal(notaCuanto(0, "solo"), donde);
+  assert.equal(notaCuanto(5, "solo"), donde);
+  assert.equal(notaCuanto(2, "mucho"), `${donde} «Solo las mías» necesita al menos 3 combinaciones (tienes 2).`);
+  assert.equal(notaCuanto(2, "solo"),
+    `${donde} «Solo las mías» necesita al menos 3 combinaciones (tienes 2): de momento salen las de la biblioteca.`);
 });
 
 test("estadoMezcla: sin propias, con menos de 3 y con «Solo las mías»", () => {

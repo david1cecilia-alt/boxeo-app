@@ -115,6 +115,19 @@ def test_el_interruptor_se_guarda_y_se_recuerda_como_el_resto(pagina):
     assert interruptor(pagina)["encendido"] is False
 
 
+def test_encendido_usa_lo_elegido_en_ajustes(pagina):
+    ir(pagina, CINCO, {"nivel": 1, "usarMisCombinaciones": True}, cuanto="mucho")
+    assert pagina.text_content("#resumen-elecciones").startswith("Básico · Mucho de las tuyas")
+    # Se cambia en Ajustes y Entrenar lo usa al volver; el interruptor sigue como estaba.
+    pagina.goto(f"{ORIGEN}/index.html#ajustes/mis-combinaciones")
+    pagina.wait_for_selector("#cuantos")
+    pagina.click('label:has(input[name="cuanto"][value="poco"])')
+    pagina.goto(f"{ORIGEN}/index.html#entrenar")
+    pagina.wait_for_selector("#vista-entrenar:not([hidden])")
+    assert interruptor(pagina)["encendido"] is True
+    assert pagina.text_content("#resumen-elecciones").startswith("Básico · Poco de las tuyas")
+
+
 def test_una_v8_publicada_con_mezcla_se_abre_con_el_interruptor_encendido_y_esa_cantidad(pagina):
     ir(pagina, CINCO, {"nivel": 1, "mezcla": "mucho"}, version=8)
     assert interruptor(pagina) == {"encendido": True, "desactivado": False}
@@ -273,6 +286,60 @@ def test_sesion_con_el_interruptor_encendido_y_solo_las_mias_saca_las_raras(pagi
     combinaciones = sesion_entera(pagina)["combinaciones"]
     raras = {tuple(r) for r in RARAS}
     assert combinaciones and all(tuple(c["ids"]) in raras for c in combinaciones)
+
+
+# ---------- «Cuánto aparecen» en Ajustes → Mis combinaciones ----------
+
+def test_ajustes_cuanto_aparecen_por_defecto_bastante_sin_porcentajes(pagina):
+    ir(pagina, CINCO, ruta="#ajustes/mis-combinaciones")
+    opciones = pagina.locator("#cuantos label").all_inner_texts()
+    assert [o.strip() for o in opciones] == ["Poco", "Bastante", "Mucho", "Solo las mías"]
+    assert pagina.text_content("#cuantos legend") == "Cuánto aparecen"
+    assert pagina.is_checked('input[name="cuanto"][value="bastante"]')
+    assert "%" not in pagina.inner_text("#ajustes-contenido")
+    assert pagina.inner_text("#nota-cuantos") == "Se usa en Entrenar con «Mis combinaciones» encendido."
+    assert pagina.get_attribute("#cuantos", "aria-describedby") == "nota-cuantos"
+
+
+def test_ajustes_guarda_la_cantidad_y_la_recuerda_sin_tocar_el_interruptor(pagina):
+    ir(pagina, CINCO, {"usarMisCombinaciones": False}, ruta="#ajustes/mis-combinaciones")
+    pagina.click('label:has(input[name="cuanto"][value="mucho"])')
+    datos = guardado(pagina)
+    assert datos["perfil"]["misCombinaciones"] == {"cuanto": "mucho"}
+    assert datos["perfil"]["sesion"]["usarMisCombinaciones"] is False
+    # Con el teclado: las flechas recorren el grupo y guardan.
+    pagina.focus('input[name="cuanto"][value="mucho"]')
+    pagina.keyboard.press("ArrowRight")
+    assert guardado(pagina)["perfil"]["misCombinaciones"] == {"cuanto": "solo"}
+    pagina.reload()
+    pagina.wait_for_selector("#cuantos")
+    assert pagina.is_checked('input[name="cuanto"][value="solo"]')
+
+
+def test_ajustes_solo_las_mias_con_menos_de_tres_se_puede_elegir_y_se_explica(pagina):
+    ir(pagina, CINCO[:2], ruta="#ajustes/mis-combinaciones")
+    assert pagina.inner_text("#nota-cuantos") == (
+        "Se usa en Entrenar con «Mis combinaciones» encendido. «Solo las mías» necesita al menos 3 combinaciones (tienes 2).")
+    pagina.click('label:has(input[name="cuanto"][value="solo"])')
+    assert guardado(pagina)["perfil"]["misCombinaciones"] == {"cuanto": "solo"}
+    assert pagina.inner_text("#nota-cuantos") == (
+        "Se usa en Entrenar con «Mis combinaciones» encendido. «Solo las mías» necesita al menos 3 "
+        "combinaciones (tienes 2): de momento salen las de la biblioteca.")
+
+
+def test_ajustes_cuanto_aparecen_cabe_y_cada_opcion_se_toca_con_48_px(pagina):
+    for ancho in (390, 1024, 1440):
+        pagina.set_viewport_size({"width": ancho, "height": 900})
+        ir(pagina, CINCO, ruta="#ajustes/mis-combinaciones")
+        medidas = pagina.eval_on_selector_all("#cuantos label span", """(spans) => spans.map((s) => {
+          const r = s.getBoundingClientRect();
+          return [s.textContent, r.width, r.height, s.scrollWidth - s.clientWidth, r.right];
+        })""")
+        assert len(medidas) == 4
+        for texto, ancho_op, alto, desborde, derecha in medidas:
+            assert ancho_op >= 48 and alto >= 48, (ancho, texto)
+            assert desborde <= 0 and derecha <= ancho - 16, (ancho, texto)
+        assert pagina.evaluate("document.documentElement.scrollWidth") <= ancho, ancho
 
 
 # ---------- «Escuchar» en el editor ----------

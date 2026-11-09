@@ -559,6 +559,11 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
 .tarjeta-enlace svg {
   flex: none; width: 22px; height: 22px; fill: none; stroke: var(--suave); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
 }
+/* «Cuánto aparecen»: Poco · Bastante · Mucho en una fila y «Solo las mías» debajo, a todo el ancho
+   (es la opción aparte). Sin porcentajes: solo el nombre. */
+.cuanto-aparecen { display: grid; gap: 10px; }
+.niveles.cuantos label span { min-height: 52px; font-size: 0.9375rem; font-weight: 600; }
+.cuantos .cuanto-solo { grid-column: 1 / -1; }
 /* Listado: una tarjeta por combinación, con su nivel, editar y borrar (48 px) y sus fichas. */
 .lista-propias { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 .propia { display: grid; gap: 12px; padding: 12px 8px 16px 16px; }
@@ -1300,7 +1305,7 @@ dialog::backdrop { background: var(--velo); }
      (paleta a la izquierda, golpes en tres columnas; la caja y Guardar a la derecha, fijas al bajar). */
   .volver-sub { position: static; margin: 0 0 -8px; padding: 32px 0 0; background: none; }
   .cabecera-sub h1 { font-size: 4.5rem; }
-  #vista-ajustes[data-sub] #ajustes-contenido > :is(.cabecera-sub, .lista-propias, .vacio-propias, .anadir-propia, .motivo) { max-width: 760px; }
+  #vista-ajustes[data-sub] #ajustes-contenido > :is(.cabecera-sub, .cuanto-aparecen, .lista-propias, .vacio-propias, .anadir-propia, .motivo) { max-width: 760px; }
   .editor { grid-template-columns: minmax(0, 1fr) minmax(340px, 0.75fr); gap: 32px; align-items: start; }
   .editor-paleta { grid-column: 1; grid-row: 1; }
   .editor-combo { grid-column: 2; grid-row: 1; position: sticky; top: 24px; }

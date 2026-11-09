@@ -1,11 +1,13 @@
 // «Mis combinaciones» (#ajustes/mis-combinaciones): las combinaciones propias, en el almacén de este
-// navegador. Listado con editar y borrar (con confirmación). Solo presenta: qué se enseña y cómo se
+// navegador. «Cuánto aparecen» en Entrenar y el listado con editar y borrar (con confirmación). Solo presenta: qué se enseña y cómo se
 // dice está en ../creador.js; guardar, en el almacén.
 import {
   GRUPOS, TEXTO_ESCUCHAR_VACIA, anadir, anuncio, baldosas, cambiarCuerpo, combinacionesParaListar, editorNuevo,
   elegirGrupo, escuchar, ficha, hayCambios, puedeCrear, quitar, quitarUltima, resumen, textoBorrar,
 } from "../creador.js";
+import { OPCIONES_CUANTO, cuantoGuardado, guardarCuanto, notaCuanto } from "../ajustes.js";
 import { ACCIONES_POR_NIVEL, MAX_ACCIONES, MAX_PROPIAS, NOMBRE_NIVEL } from "../motor/reglas.js";
+import { propiasValidas } from "../motor/sorteo.js";
 import { $, anunciar, atraparFoco, esc } from "./dom.js";
 
 export const RUTA = "#ajustes/mis-combinaciones";
@@ -70,12 +72,21 @@ export function iniciarCreador({ almacen, raiz, voz }) {
   function pintarListado({ foco = null } = {}) {
     const lista = combinacionesParaListar(propias());
     const crear = puedeCrear(propias());
+    const cuanto = cuantoGuardado(almacen.datos.perfil);
     raiz.innerHTML = `
       <p class="volver-sub"><a href="#ajustes" class="volver">← Volver</a></p>
       <header class="cabecera-sub">
         <h1 id="t-creador" tabindex="-1">Mis <span class="acento">combinaciones</span></h1>
         <p class="nota">${lista.length} de ${MAX_PROPIAS}. ${NOTA_ORTODOXA}</p>
       </header>
+      <div class="tarjeta cristal cuanto-aparecen">
+        <fieldset class="niveles cuantos" id="cuantos" aria-describedby="nota-cuantos">
+          <legend><span>Cuánto aparecen</span></legend>
+          ${OPCIONES_CUANTO.map(({ id, nombre }) => `<label${id === "solo" ? ' class="cuanto-solo"' : ""}>
+            <input type="radio" name="cuanto" value="${id}"${id === cuanto ? " checked" : ""}><span>${esc(nombre)}</span></label>`).join("")}
+        </fieldset>
+        <p class="nota nota-campo" id="nota-cuantos">${esc(notaCuanto(propiasValidas(propias()).length, cuanto))}</p>
+      </div>
       ${lista.length ? `<ol class="lista-propias">${lista.map((c) => `
         <li class="tarjeta propia" data-propia="${esc(c.id)}">
           <div class="propia-cabecera">
@@ -326,6 +337,13 @@ export function iniciarCreador({ almacen, raiz, voz }) {
     if (desdeListado) history.back();
     else location.replace(RUTA);
   }
+
+  // «Cuánto aparecen»: se guarda al momento (Entrenar lo usa con el interruptor encendido).
+  raiz.addEventListener("change", (e) => {
+    if (editor || e.target.name !== "cuanto") return;
+    guardarCuanto(almacen, e.target.value);
+    $("#nota-cuantos", raiz).textContent = notaCuanto(propiasValidas(propias()).length, e.target.value);
+  });
 
   // ---------- Clics y rutas ----------
   raiz.addEventListener("click", (e) => {

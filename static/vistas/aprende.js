@@ -10,8 +10,20 @@ import { catalogo } from "../motor/acciones.js";
 import { $, esc } from "./dom.js";
 
 const NOTA_ZURDO =
-  "Escrito para guardia diestra (pie izquierdo delante). Si eres zurdo, cambia izquierda por derecha en tus manos y tus pies." +
-  " Lo que se refiere al rival no cambia: su hígado sigue en su lado derecho y su crochet de izquierda te sigue llegando por tu derecha.";
+  "Escrito para guardia diestra.<br>En zurdo, cambia izquierda por derecha en tus manos y pies; lo que se refiere al rival no cambia.";
+
+// El resumen de «Mostrar más», corto para que quepa entero a 390: lo que trae cada ficha, sin repetir títulos.
+function resumenMas(f) {
+  const cosas = [
+    f.cuando && "cuándo",
+    (f.ventajas || f.inconvenientes) && "ventajas",
+    f.al_cuerpo && "al cuerpo",
+    f.variantes?.length && "variantes",
+    (f.notas?.length || f.detalles?.length) && "detalles",
+  ].filter(Boolean).slice(0, 4); // con 5 ya no cabe a 390
+  const texto = cosas.join(", ");
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
 const PENDIENTE = "Pendiente de revisar con el entrenador";
 
 // «3/9 Crochet de izquierda»: la ficha tiene el id del golpe a la cara; el del cuerpo es <id>_cuerpo.
@@ -99,7 +111,7 @@ export function iniciarAprende() {
     return `
       <details class="tarjeta plegable mas-ficha">
         <summary><span class="titulo-plegable">Mostrar más</span>
-          <span class="resumen-plegable">${partes.map(([, t]) => esc(t)).join(" · ")}</span></summary>
+          <span class="resumen-plegable">${esc(resumenMas(f))}</span></summary>
         <div class="cuerpo-plegable">
           ${partes.map(([id, t, cuerpo]) => `<section class="mas-apartado" aria-labelledby="m-${id}">
             <h3 id="m-${id}">${esc(t)}</h3>${cuerpo}

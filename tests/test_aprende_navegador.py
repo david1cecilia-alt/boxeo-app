@@ -82,9 +82,10 @@ def test_el_aviso_de_revision_es_discreto_y_nunca_en_mayusculas(pagina):
 def test_la_nota_del_zurdo_dice_que_lo_del_rival_no_cambia(pagina):
     for hash_ in ("aprende", "aprende/gancho_izq"):
         _ir(pagina, hash_)
-        nota = pagina.locator(".pie-aprende").text_content()
-        assert "cambia izquierda por derecha en tus manos y tus pies" in nota
-        assert "Lo que se refiere al rival no cambia: su hígado sigue en su lado derecho" in nota
+        # Dos líneas: para quién está escrito y qué cambia en zurdo.
+        assert pagina.locator(".pie-aprende").inner_text().split("\n") == [
+            "Escrito para guardia diestra.",
+            "En zurdo, cambia izquierda por derecha en tus manos y pies; lo que se refiere al rival no cambia."]
 
 
 def test_abrir_una_ficha_y_volver_lleva_el_foco_a_su_sitio(pagina):
@@ -159,7 +160,7 @@ def test_mostrar_mas_del_jab_se_abre_con_el_teclado_y_trae_variantes_y_detalles(
     assert _plegado(pagina, ".mas-ficha") == {"abierto": False, "visible": False}
     resumen = pagina.locator(".mas-ficha > summary")
     assert resumen.locator(".titulo-plegable").text_content() == "Mostrar más"
-    assert resumen.locator(".resumen-plegable").text_content() == " · ".join(MAS_JAB)
+    assert resumen.locator(".resumen-plegable").text_content() == "Cuándo, ventajas, al cuerpo, variantes"
     resumen.focus()
     pagina.keyboard.press("Enter")
     assert _plegado(pagina, ".mas-ficha") == {"abierto": True, "visible": True}
@@ -221,7 +222,7 @@ def test_a_390_el_resumen_de_mostrar_mas_va_debajo_en_una_linea_sin_desbordar(pa
                  dentro: c.right <= s.right + 1, cortado: r.scrollWidth > r.clientWidth,
                  puntos: getComputedStyle(r).textOverflow };
     }""")
-    assert caja == {"debajo": True, "alineado": True, "una_linea": True, "dentro": True, "cortado": caja["cortado"],
+    assert caja == {"debajo": True, "alineado": True, "una_linea": True, "dentro": True, "cortado": False,
                     "puntos": "ellipsis"}, caja
     assert pagina.locator(".mas-ficha > summary").bounding_box()["height"] >= 48
     # En el PC sigue a la derecha del título.
@@ -232,7 +233,22 @@ def test_a_390_el_resumen_de_mostrar_mas_va_debajo_en_una_linea_sin_desbordar(pa
 
 def test_el_gancho_de_izquierda_no_tiene_detalles(pagina):
     _ir(pagina, "aprende/uppercut_izq")
-    assert pagina.locator(".mas-ficha .resumen-plegable").text_content() ==         "Cuándo suele servir · Ventajas · Inconvenientes · Al cuerpo · Variantes · En inglés"
+    assert pagina.locator(".mas-ficha .resumen-plegable").text_content() == "Cuándo, ventajas, al cuerpo, variantes"
+
+
+RESUMENES = {"jab": "Cuándo, ventajas, al cuerpo, variantes", "rodar": "Cuándo, ventajas, detalles",
+             "bloqueo": "Cuándo, ventajas", "salir": "Cuándo, ventajas, detalles"}
+
+
+@pytest.mark.parametrize("id_", ["jab", "directo", "gancho_izq", "gancho_der", "uppercut_izq", "uppercut_der", "esquiva",
+                                 "rodar", "ballesteo", "flexion", "bloqueo", "parada", "paso_atras", "pivote",
+                                 "paso_lateral", "salir"])
+def test_a_390_el_resumen_de_mostrar_mas_cabe_entero(pagina, id_):
+    _ir(pagina, f"aprende/{id_}")
+    resumen = pagina.locator(".mas-ficha .resumen-plegable")
+    assert resumen.evaluate("(r) => r.scrollWidth <= r.clientWidth"), resumen.text_content()
+    if id_ in RESUMENES:
+        assert resumen.text_content() == RESUMENES[id_]
 
 
 @pytest.mark.parametrize("abierto", (False, True), ids=("cerrado", "abierto"))

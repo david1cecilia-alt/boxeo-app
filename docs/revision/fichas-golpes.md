@@ -19,7 +19,7 @@ Criterios de redacción (los mismos que en las defensas):
 - **Baja con las piernas, no con la cintura ni con el puño.** Rodillas flexionadas y espalda recta; en el jab y el recto, hasta que tu hombro quede a la altura del objetivo.
 - **La otra mano, en la cara.** Es el error más castigado al ir al cuerpo.
 - **No te quedes abajo.** Golpea y vuelve a la guardia, o sube con un golpe a la cabeza.
-- **Objetivos:** el hígado está en el lado derecho del rival, bajo las últimas costillas: le llega tu crochet de izquierda (en zurdo, el de atrás). El plexo y el estómago, por el centro; siempre por encima del cinturón.
+- **Objetivos:** el hígado está en el lado derecho del rival, bajo las últimas costillas: le llega tu crochet de izquierda (en zurdo, el de atrás). El plexo y el estómago, por el centro; siempre por encima del cinturón y nunca en la espalda ni en los riñones (reglamento de World Boxing).
 - **REVISAR CON ENTRENADOR:** golpes al cuerpo, que puedan salir en cualquier nivel, también en básico (decidido por David, 04-11).
 
 ---
@@ -60,7 +60,7 @@ Criterios de redacción (los mismos que en las defensas):
   3. El puño sale recto por el centro y llega con los nudillos arriba.
   4. Barbilla abajo y la otra mano en la cara; vuelve por el mismo camino.
 - **Errores típicos:**
-  - Echar la mano atrás antes de lanzar (se ve venir).
+  - Cargar todo el peso delante: te quedas sin poder defender ni seguir.
   - Bajar la mano de delante.
   - Levantar la barbilla.
 - **Mostrar más:**

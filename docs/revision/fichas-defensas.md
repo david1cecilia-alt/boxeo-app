@@ -9,114 +9,145 @@ Criterios de redacción:
 - Español de España. El término en inglés solo entre paréntesis, para buscar vídeos.
 - Los textos de «Cómo se hace» están pensados para un diestro (ortodoxo). **En zurdo cambia cuál de tus manos y de tus pies va delante; lo que se refiere al rival no se invierte:** su hígado sigue en su lado derecho y su crochet de izquierda te sigue llegando por tu derecha.
 - Los identificadores (`id`) hay que comprobarlos contra `data/acciones.json`; aquí van los que se esperan.
+- **Lo que se ve y «Mostrar más»:** a la vista solo van Qué es (1–2 frases), Cómo se hace (máximo 4 pasos) y Errores típicos (máximo 3, los que más castigan). Plegado en **«Mostrar más»** van Cuándo suele servir, Ventajas, Inconvenientes, las notas (derecha o izquierda…) y el nombre en inglés, una línea cada uno. Las fuentes no salen en la app: están al final de este documento.
+- Versión corta (10-11-2026): solo se ha acortado, sin técnica nueva. Lo que se quitó sigue en el historial de git de este documento.
 
 ---
 
 ## 1. Esquiva (derecha / izquierda)
 - **id esperado:** `esquiva_der`, `esquiva_izq`
-- **En inglés:** slip
-- **Qué es:** apartar la cabeza un palmo hacia un lado para que el golpe pase al lado, sin tocarte. Las manos quedan libres para devolver.
-- **Cuándo suele servir:** contra golpes rectos (jab y recto). Cuesta más contra golpes curvos y no sirve para los golpes al cuerpo.
+- **Qué es:** apartar la cabeza un palmo hacia un lado para que el golpe pase sin tocarte, con las manos libres para devolver.
 - **Cómo se hace:**
-  1. Desde la guardia, gira un poco el tronco y flexiona algo la rodilla del lado al que vas.
-  2. La cabeza se mueve lo justo para salir de la línea del golpe; los ojos siguen en el rival.
+  1. Gira un poco el tronco y flexiona algo la rodilla del lado al que vas.
+  2. Mueve la cabeza lo justo para salir de la línea, sin dejar de mirar al rival.
   3. Las manos se quedan en guardia.
-  4. Vuelve al centro o aprovecha la posición para devolver.
-- **Errores típicos:** moverte demasiado (pierdes el equilibrio y tardas en volver), bajar las manos, dejar de mirar al rival, esquivar siempre hacia el mismo lado.
-- **Ventajas:** no recibes nada y el rival queda abierto tras fallar.
-- **Inconvenientes:** pide buena vista y tiempo de reacción; si te amagan o te equivocas de lado, recibes el golpe de lleno.
+  4. Vuelve al centro o devuelve desde ahí.
+- **Errores típicos:**
+  - Moverte demasiado: pierdes el equilibrio y tardas en volver.
+  - Bajar las manos.
+  - Dejar de mirar al rival.
+- **Mostrar más:**
+  - **Cuándo suele servir:** contra golpes rectos (jab y recto); cuesta más contra los curvos y no sirve para los golpes al cuerpo.
+  - **Ventajas:** no recibes nada y el rival queda abierto tras fallar.
+  - **Inconvenientes:** pide buena vista; si te amagan o fallas el lado, recibes el golpe de lleno.
+  - **Derecha o izquierda:** el lado es hacia dónde va la cabeza: en la esquiva derecha te apartas hacia tu derecha.
+  - **En inglés:** slip
 - **REVISAR CON ENTRENADOR:** cuánto se gira el tronco y si la rodilla se flexiona en la esquiva lateral.
 
 ## 2. Rueda (derecha / izquierda)
 - **id:** `rodar_der`, `rodar_izq` (en el borrador se esperaba `esquiva_abajo_*`)
-- **En inglés:** roll, bob and weave
-- **Qué es:** bajar flexionando las piernas y pasar por debajo del golpe dibujando una «U» hacia un lado, para volver a subir al otro lado del brazo del rival.
-- **Derecha o izquierda:** el lado es hacia dónde va el cuerpo, como en la esquiva y el paso lateral: rueda derecha = bajas y sales hacia tu derecha.
-- **Contra qué crochet** (razonamiento nuestro, sin confirmar): la rueda derecha va contra el crochet de su mano izquierda, que te llega por tu derecha; bajas y subes por tu derecha, por fuera de su brazo, mientras el golpe sigue su curva hacia tu izquierda. La rueda izquierda, contra el crochet de su mano derecha. En zurdo no se invierte: habla de la mano del rival y de por dónde te llega su golpe, que no cambian.
-- **Cuándo suele servir:** contra golpes curvos a la cabeza (crochet). Te deja cerca del rival y en ángulo para golpear.
+- **Qué es:** bajar flexionando las piernas y pasar por debajo del golpe en «U», para subir al otro lado del brazo del rival.
 - **Cómo se hace:**
-  1. Ve el crochet venir.
-  2. Baja flexionando las rodillas, no doblando la espalda.
-  3. Mueve el cuerpo en «U» por debajo del brazo que golpea.
+  1. Ve venir el crochet.
+  2. Baja flexionando las rodillas, no la espalda.
+  3. Pasa en «U» por debajo del brazo que golpea.
   4. Sube al otro lado con la guardia puesta, listo para devolver.
-- **Errores típicos:** agacharte doblando la cintura (te deja sin equilibrio y expuesto al gancho), bajar la vista al suelo, bajar las manos, bajar más de lo necesario.
-- **Ventajas:** neutraliza golpes fuertes y te coloca en una posición buena para el contraataque.
-- **Inconvenientes:** cansa las piernas; si el rival lo espera, puede responder con un gancho.
+- **Errores típicos:**
+  - Doblar la cintura: pierdes el equilibrio y te expones al gancho.
+  - Bajar la vista o las manos.
+  - Bajar más de lo necesario.
+- **Mostrar más:**
+  - **Cuándo suele servir:** contra el crochet a la cabeza; te deja cerca del rival y en ángulo para golpear.
+  - **Ventajas:** neutraliza golpes fuertes y te deja listo para contraatacar.
+  - **Inconvenientes:** cansa las piernas; si el rival la espera, puede responder con un gancho.
+  - **Derecha o izquierda:** en la rueda derecha bajas y sales hacia tu derecha, contra el crochet de su mano izquierda; la izquierda, al revés.
+  - **En inglés:** roll, bob and weave
 - **REVISAR CON ENTRENADOR:** el nombre («rueda», antes «esquiva abajo»; también «rotativa»…; Iván no lo ha confirmado) y si en su escuela se distingue de la flexión. El lado es hacia dónde va el cuerpo (decidido el 04-11-2026, también por revisar). Y contra qué crochet va cada lado: rueda derecha contra su mano izquierda, rueda izquierda contra su derecha.
 
 ## 3. Ballesteo
 - **id esperado:** `ballesteo`
-- **En inglés:** pull back, lean back
 - **Qué es:** echar el tronco y la cabeza hacia atrás para que el golpe se quede corto, sin mover los pies (o con un paso muy corto).
-- **Cuándo suele servir:** contra el jab o golpes rectos a la cara, sobre todo cuando quieres quedarte a distancia para devolver con un recto.
 - **Cómo se hace:**
-  1. Desde la guardia, pasa algo de peso a la pierna de atrás.
-  2. Echa el tronco hacia atrás lo justo para que el golpe no llegue.
+  1. Pasa algo de peso a la pierna de atrás.
+  2. Echa el tronco atrás lo justo para que el golpe no llegue.
   3. Barbilla abajo y manos arriba.
-  4. Vuelve hacia delante; esa vuelta puede ser ya tu golpe.
-- **Errores típicos:** echarte demasiado atrás (pierdes el equilibrio y no puedes devolver), levantar la barbilla, hacerlo contra golpes largos que te siguen alcanzando.
-- **Ventajas:** rápido y sencillo; te deja a la distancia justa para contraatacar.
-- **Inconvenientes:** si el rival da un paso adelante o encadena golpes, te alcanza. Con mal equilibrio es peligroso.
+  4. Vuelve hacia delante: esa vuelta puede ser ya tu golpe.
+- **Errores típicos:**
+  - Echarte demasiado atrás: pierdes el equilibrio y no puedes devolver.
+  - Levantar la barbilla.
+  - Usarlo contra golpes largos que te siguen alcanzando.
+- **Mostrar más:**
+  - **Cuándo suele servir:** contra el jab o golpes rectos a la cara, cuando quieres quedarte a distancia para devolver con un recto.
+  - **Ventajas:** rápido y sencillo; te deja a la distancia justa para contraatacar.
+  - **Inconvenientes:** si el rival da un paso adelante o encadena golpes, te alcanza.
+  - **En inglés:** pull back, lean back
 - **REVISAR CON ENTRENADOR:** si Iván lo llama así, si va con paso o solo con el cuerpo, y si es adecuado para un principiante.
 
 ## 4. Flexión
 - **id esperado:** `flexion`
-- **En inglés:** duck
 - **Qué es:** bajar recto flexionando las piernas para que el golpe pase por encima de la cabeza, sin irte hacia ningún lado.
-- **Cuándo suele servir:** contra golpes que van a la altura de la cabeza (crochets amplios, golpes por encima). Es como la rueda, pero sin el movimiento en «U».
 - **Cómo se hace:**
   1. Flexiona las rodillas con la espalda recta.
   2. Baja lo justo para que el golpe pase por encima.
   3. Manos arriba y mirada al rival.
   4. Sube enseguida o golpea al cuerpo desde abajo.
-- **Errores típicos:** doblar la cintura en lugar de las piernas, bajar la cabeza por debajo de la cintura del rival, quedarte abajo demasiado tiempo.
-- **Ventajas:** sencilla y te deja cerca del cuerpo del rival.
-- **Inconvenientes:** te expone al gancho; cansa las piernas.
+- **Errores típicos:**
+  - Doblar la cintura en lugar de las piernas.
+  - Bajar la cabeza por debajo de la cintura del rival.
+  - Quedarte abajo demasiado tiempo.
+- **Mostrar más:**
+  - **Cuándo suele servir:** contra golpes a la altura de la cabeza (crochets amplios, golpes por encima).
+  - **Ventajas:** sencilla y te deja cerca del cuerpo del rival.
+  - **Inconvenientes:** te expone al gancho y cansa las piernas.
+  - **Diferencia con la rueda:** es como la rueda, pero sin el movimiento en «U».
+  - **En inglés:** duck
 - **REVISAR CON ENTRENADOR:** la definición es nuestra, no de Iván. Confirmar qué entiende él por «flexión» y en qué se diferencia de la rueda.
 
 ## 5. Bloqueo
 - **id esperado:** `bloqueo`
-- **En inglés:** block, cover
 - **Qué es:** recibir el golpe en los guantes, los antebrazos o los codos en vez de en la cara o el cuerpo.
-- **Cuándo suele servir:** casi contra cualquier golpe, también al cuerpo. Es la defensa más fácil y la base para empezar.
 - **Cómo se hace:**
-  1. Mantén la guardia cerrada: guantes junto a la cara, codos pegados al cuerpo.
-  2. Recibe el golpe con el guante o el antebrazo del lado por el que viene.
-  3. Golpes al cuerpo: baja un poco el codo para cubrir las costillas.
+  1. Guardia cerrada: guantes junto a la cara y codos pegados al cuerpo.
+  2. Recibe con el guante o el antebrazo del lado por el que viene.
+  3. Al cuerpo, baja un poco el codo para cubrir las costillas.
   4. No te quedes encerrado: devuelve en cuanto acabe el golpe.
-- **Errores típicos:** cerrar los ojos, quedarte encerrado sin devolver, apartar el guante de la cara al recibir.
-- **Ventajas:** fácil, gasta poco y te deja a distancia para devolver.
-- **Inconvenientes:** recibes parte de la fuerza; contra un rival que pega fuerte o mucho te puede ir empujando.
+- **Errores típicos:**
+  - Cerrar los ojos.
+  - Quedarte encerrado sin devolver.
+  - Apartar el guante de la cara al recibir.
+- **Mostrar más:**
+  - **Cuándo suele servir:** casi contra cualquier golpe, también al cuerpo; es la defensa más fácil y la base para empezar.
+  - **Ventajas:** fácil, gasta poco y te deja a distancia para devolver.
+  - **Inconvenientes:** recibes parte de la fuerza; un rival que pega fuerte o mucho te va empujando.
+  - **En inglés:** block, cover
 - **REVISAR CON ENTRENADOR:** cómo quiere Iván que se bloquee el crochet (guante a la sien, codo arriba…).
 
 ## 6. Parada
 - **id esperado:** `parada`
-- **En inglés:** parry, catch
 - **Qué es:** desviar el golpe con un toque corto del guante para sacarlo de la línea, en vez de aguantarlo.
-- **Cuándo suele servir:** contra golpes rectos, sobre todo el jab. Funciona peor contra golpes curvos y al cuerpo.
 - **Cómo se hace:**
-  1. Desde la guardia, usa la mano de atrás para el jab del rival.
-  2. Toque corto y lateral (o hacia abajo) del guante contra el golpe; la mano no se va lejos de la cara.
+  1. Usa la mano de atrás para el jab del rival.
+  2. Toque corto, lateral o hacia abajo, sin alejar la mano de la cara.
   3. La cabeza puede apartarse un poco a la vez.
-  4. El brazo del rival queda desviado: devuelve.
-- **Errores típicos:** salir al encuentro del golpe con la mano (te abres), hacer un movimiento demasiado grande, picar en los amagos.
-- **Ventajas:** gasta poco y descoloca al rival, que tarda más en recoger el brazo.
-- **Inconvenientes:** pide coordinación; si te amagan, te dejas la cara descubierta.
+  4. Con su brazo desviado, devuelve.
+- **Errores típicos:**
+  - Salir al encuentro del golpe con la mano (te abres).
+  - Hacer un movimiento demasiado grande.
+  - Picar en los amagos.
+- **Mostrar más:**
+  - **Cuándo suele servir:** contra golpes rectos, sobre todo el jab; funciona peor contra los curvos y al cuerpo.
+  - **Ventajas:** gasta poco y descoloca al rival, que tarda más en recoger el brazo.
+  - **Inconvenientes:** pide coordinación; si te amagan, dejas la cara descubierta.
+  - **En inglés:** parry, catch
 - **REVISAR CON ENTRENADOR:** dirección del desvío (lateral o hacia abajo) que prefiere Iván.
 
 ## 7. Paso atrás
 - **id esperado:** `paso_atras`
-- **En inglés:** step back
 - **Qué es:** retroceder con un paso para quedar fuera del alcance del golpe.
-- **Cuándo suele servir:** contra casi cualquier golpe si lo ves venir con tiempo. Según la distancia a la que te quedes, después puedes responder con un recto, un crochet o un gancho (no hay un golpe fijo).
 - **Cómo se hace:**
   1. Empuja con el pie de delante y mueve primero el de atrás.
-  2. El de delante lo sigue; termina con los pies a la misma distancia que en la guardia.
-  3. No cruces los pies ni saltes.
+  2. El de delante lo sigue, hasta la distancia de tu guardia.
+  3. Sin cruzar los pies ni saltar.
   4. Guardia puesta durante todo el paso.
-- **Errores típicos:** retroceder en línea recta una y otra vez (te acaban arrinconando), cruzar los pies, echar el peso hacia atrás y quedarte sin poder devolver.
-- **Ventajas:** evita el golpe del todo.
-- **Inconvenientes:** te aleja, así que para devolver tienes que volver a entrar; si lo repites mucho, el rival te lleva contra las cuerdas.
+- **Errores típicos:**
+  - Retroceder en línea recta una y otra vez: te acaban arrinconando.
+  - Cruzar los pies.
+  - Echar el peso atrás y quedarte sin poder devolver.
+- **Mostrar más:**
+  - **Cuándo suele servir:** contra casi cualquier golpe que veas venir con tiempo; luego, según la distancia, respondes con recto, crochet o gancho.
+  - **Ventajas:** evita el golpe del todo.
+  - **Inconvenientes:** para devolver tienes que volver a entrar; si lo repites mucho, acabas en las cuerdas.
+  - **En inglés:** step back
 - **REVISAR CON ENTRENADOR:** longitud del paso y qué golpe de respuesta recomienda según la distancia.
 
 ---
@@ -127,47 +158,61 @@ Las salidas no son defensas: sirven para salir de la línea del rival o cambiar 
 
 ## 8. Pivote
 - **id esperado:** `pivote`
-- **En inglés:** pivot
 - **Qué es:** girar sobre la punta del pie de delante, moviendo el de atrás en arco, para cambiar de ángulo respecto al rival.
-- **Cuándo suele servir:** para salir del sitio después de golpear, cuando te están metiendo presión o para buscar un ángulo nuevo desde el que golpear.
 - **Cómo se hace:**
   1. Apoya el peso en la parte delantera del pie de delante.
-  2. Gira sobre él y lleva el pie de atrás en arco (empieza con giros pequeños, de unos 45°).
-  3. Mantén la guardia y la mirada en el rival durante el giro.
-  4. Termina en guardia, con el rival delante de ti y él fuera de ángulo.
-- **Errores típicos:** girar sobre el talón, cruzar los pies, bajar las manos al girar, girar tanto que pierdes al rival de vista.
-- **Ventajas:** te saca de la línea sin alejarte y te deja en ángulo para golpear.
-- **Inconvenientes:** si te pillan a mitad del giro estás desequilibrado.
+  2. Gira sobre él y lleva el pie de atrás en arco (empieza con unos 45°).
+  3. Guardia y mirada en el rival durante el giro.
+  4. Termina en guardia, con el rival delante y fuera de ángulo.
+- **Errores típicos:**
+  - Girar sobre el talón.
+  - Bajar las manos al girar.
+  - Girar tanto que pierdes al rival de vista.
+- **Mostrar más:**
+  - **Cuándo suele servir:** para salir del sitio tras golpear, cuando te meten presión o para buscar un ángulo nuevo desde el que golpear.
+  - **Ventajas:** te saca de la línea sin alejarte y te deja en ángulo para golpear.
+  - **Inconvenientes:** si te pillan a mitad del giro, estás desequilibrado.
+  - **En inglés:** pivot
 - **REVISAR CON ENTRENADOR:** hacia qué lado se pivota por defecto en guardia diestra y cuántos grados.
 
 ## 9. Paso lateral (izquierda / derecha)
 - **id esperado:** `paso_lateral_izq`, `paso_lateral_der`
-- **En inglés:** side step
 - **Qué es:** desplazarte de lado con pasos cortos para salir de la línea de ataque del rival.
-- **Cuándo suele servir:** para no retroceder siempre en línea recta, salir de una esquina o de las cuerdas, o buscar un ángulo.
 - **Cómo se hace:**
-  1. Mueve primero el pie del lado hacia el que vas.
+  1. Mueve primero el pie del lado al que vas.
   2. El otro lo sigue sin juntarse ni cruzarse.
   3. Pasos cortos, sin saltar.
   4. Guardia y mirada en el rival.
-- **Errores típicos:** cruzar los pies, juntarlos, dar pasos tan largos que te descolocas.
-- **Ventajas:** sencillo y te mantiene a distancia de golpear.
-- **Inconvenientes:** gasta energía si se hace mucho; si es predecible, el rival te corta el paso.
+- **Errores típicos:**
+  - Cruzar los pies.
+  - Juntarlos.
+  - Dar pasos tan largos que te descolocas.
+- **Mostrar más:**
+  - **Cuándo suele servir:** para no retroceder siempre en línea recta, salir de una esquina o de las cuerdas, o buscar un ángulo.
+  - **Ventajas:** sencillo y te mantiene a distancia de golpear.
+  - **Inconvenientes:** cansa si lo haces mucho; si es predecible, el rival te corta el paso.
+  - **Derecha o izquierda:** el lado es hacia dónde vas: en el paso lateral derecha te mueves hacia tu derecha.
+  - **En inglés:** side step
 - **REVISAR CON ENTRENADOR:** si conviene más moverse hacia el lado de la mano adelantada del rival.
 
 ## 10. Cambio de ángulo (salir)
 - **Nota:** también se dice «salir». La ficha se titula como lo dice la app; el dictado no cambia.
 - **id esperado:** `salir`
-- **En inglés:** angle out, exit
-- **Qué es:** acabar la combinación saliendo de la línea del rival, para que no pueda devolverte enseguida. Es una salida libre.
-- **Cuándo suele servir:** justo después de terminar una combinación, cuando el rival suele intentar contestar.
+- **Qué es:** acabar la combinación saliendo de la línea del rival, para que no pueda devolverte enseguida.
 - **Cómo se hace:**
   1. Termina el último golpe con la guardia ya volviendo.
-  2. Sal de la línea del rival con lo que mejor te venga en ese momento: pivote o paso lateral (el paso atrás no: no cambia el ángulo y tiene su propia ficha).
+  2. Sal de la línea con lo que mejor te venga: pivote o paso lateral.
   3. No te quedes delante del rival en línea.
-- **Errores típicos:** quedarte quieto admirando el golpe, salir siempre igual, bajar las manos al salir.
-- **Ventajas:** evita el contraataque y te prepara para la siguiente entrada.
-- **Inconvenientes:** si sales demasiado lejos tienes que volver a entrar.
+- **Errores típicos:**
+  - Quedarte quieto admirando el golpe.
+  - Salir siempre igual.
+  - Bajar las manos al salir.
+- **Mostrar más:**
+  - **Cuándo suele servir:** justo al terminar una combinación, cuando el rival suele intentar contestar.
+  - **Ventajas:** evita el contraataque y te prepara para la siguiente entrada.
+  - **Inconvenientes:** si sales demasiado lejos, tienes que volver a entrar.
+  - **También se dice salir:** es una salida libre, sin movimiento fijo. El paso atrás no sirve aquí: no cambia el ángulo.
+  - **En inglés:** angle out, exit
 - **REVISAR CON ENTRENADOR:** si «salir» y «cambio de ángulo» son lo mismo para Iván o dos cosas distintas.
 
 ---

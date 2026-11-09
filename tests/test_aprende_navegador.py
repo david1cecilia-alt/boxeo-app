@@ -1,8 +1,9 @@
 """Aprende en un navegador de verdad (Chromium headless con Playwright).
 
-La lista agrupada (Golpes, Defensas, Salidas), una ficha abierta, el foco al entrar y al volver, las fuentes en
-pestaña nueva, «Al cuerpo» y «Mostrar más» plegados y manejables con el teclado, sin desbordes a 390, 768, 1024
-y 1440 (con todo desplegado), y la barra de pestañas con Aprende a 390 sin apretar.
+La lista agrupada (Golpes, Defensas, Salidas), una ficha abierta, el foco al entrar y al volver, a la vista solo
+qué es, cómo se hace y errores (sin fuentes), lo demás y «Al cuerpo» en «Mostrar más» y manejable con el teclado,
+sin desbordes a 390, 768, 1024 y 1440 (con todo desplegado), el final de la ficha por encima de la barra fija y la
+barra de pestañas con Aprende a 390 sin apretar.
 Sin Playwright se salta en local; en CI falla.
 """
 import importlib.util
@@ -96,8 +97,7 @@ def test_abrir_una_ficha_y_volver_lleva_el_foco_a_su_sitio(pagina):
     assert _activo(pagina) == "t-aprende"
     assert pagina.evaluate("window.scrollY") == 0
     apartados = pagina.locator(".apartado h2").all_text_contents()
-    assert apartados[:6] == ["Qué es", "Cuándo suele servir", "Cómo se hace", "Errores típicos", "Ventajas",
-                             "Inconvenientes"]
+    assert apartados == ["Qué es", "Cómo se hace", "Errores típicos"]
     assert "rueda derecha bajas y sales hacia tu derecha" in pagina.locator(".aprende-ficha").text_content()
     pagina.click(".volver-ficha a")
     pagina.wait_for_selector(".lista-fichas")
@@ -121,7 +121,7 @@ def test_la_salida_se_titula_como_la_dice_la_app_y_sin_paso_atras(pagina):
     _ir(pagina, "aprende/salir")
     assert pagina.locator("#t-aprende").text_content() == "Cambio de ángulo"
     assert pagina.locator("#antetitulo-aprende").text_content() == "Salidas"
-    assert "También se dice salir" in pagina.locator(".apartado h2").all_text_contents()
+    assert "También se dice salir" in pagina.locator(".mas-ficha h3").all_text_contents()
     assert "paso atrás" not in pagina.locator("#a-como + ol").text_content()
 
 
@@ -132,17 +132,12 @@ def test_una_ficha_que_no_existe_lleva_a_la_lista(pagina):
     assert pagina.locator("#t-aprende").inner_text().startswith("APRENDE")
 
 
-def test_las_fuentes_se_abren_en_pestana_nueva_y_por_https(pagina):
-    _ir(pagina, "aprende/bloqueo")
-    fuentes = pagina.locator(".fuentes-ficha")
-    assert fuentes.evaluate("d => d.open") is False
-    pagina.click(".fuentes-ficha summary")
-    enlaces = fuentes.locator("a").evaluate_all(
-        "as => as.map((a) => [a.getAttribute('href'), a.target, a.rel, a.textContent])")
-    assert len(enlaces) == 4
-    for href, destino, rel, texto in enlaces:
-        assert href.startswith("https://") and destino == "_blank" and "noopener" in rel.split()
-        assert texto.endswith("(se abre en otra pestaña)")
+@pytest.mark.parametrize("hash_", ("aprende/bloqueo", "aprende/jab", "aprende/paso_lateral"))
+def test_ninguna_ficha_ensena_fuentes(pagina, hash_):
+    _ir(pagina, hash_)
+    pagina.evaluate("document.querySelectorAll('#aprende-contenido details').forEach((d) => (d.open = true))")
+    assert pagina.locator("#aprende-contenido a[target='_blank'], .fuentes-ficha, .fuentes-comun").count() == 0
+    assert "Fuentes" not in pagina.locator("#aprende-contenido").text_content()
 
 
 def _plegado(pagina, selector):
@@ -150,44 +145,50 @@ def _plegado(pagina, selector):
         visible: [...d.children].slice(1).some((h) => h.checkVisibility()) })""")
 
 
+MAS_JAB = ["Cuándo suele servir", "Ventajas", "Inconvenientes", "Al cuerpo", "Variantes", "Guardia según la distancia",
+           "Altura", "Puño", "En inglés"]
+
+
 def test_mostrar_mas_del_jab_se_abre_con_el_teclado_y_trae_variantes_y_detalles(pagina):
     _ir(pagina, "aprende/jab")
     apartados = pagina.locator(".apartado h2").all_text_contents()
     # «Al cuerpo» sigue a «Cómo se hace» (en el PC, en la misma columna: así no se descompensan).
-    assert apartados == ["Qué es", "Cuándo suele servir", "Cómo se hace", "Al cuerpo", "Errores típicos",
-                         "Ventajas", "Inconvenientes"]
+    assert apartados == ["Qué es", "Cómo se hace", "Errores típicos"]
+    fuera = pagina.locator(".aprende-ficha > :not(.col-ficha), .apartado").all_text_contents()
+    assert not any("En inglés" in t or "Cuándo suele servir" in t for t in fuera)
     assert _plegado(pagina, ".mas-ficha") == {"abierto": False, "visible": False}
     resumen = pagina.locator(".mas-ficha > summary")
     assert resumen.locator(".titulo-plegable").text_content() == "Mostrar más"
-    assert "Variantes · Guardia según la distancia · Altura" in resumen.text_content()
+    assert resumen.locator(".resumen-plegable").text_content() == " · ".join(MAS_JAB)
     resumen.focus()
     pagina.keyboard.press("Enter")
     assert _plegado(pagina, ".mas-ficha") == {"abierto": True, "visible": True}
     assert pagina.evaluate("document.activeElement.parentElement.classList.contains('mas-ficha')")
-    assert pagina.locator(".mas-ficha h3").all_text_contents() == ["Variantes", "Guardia según la distancia", "Altura"]
-    assert pagina.locator(".mas-ficha .nombre-variante").count() == 6
+    assert pagina.locator(".mas-ficha h3").all_text_contents() == MAS_JAB
+    assert pagina.locator(".mas-ficha .nombre-variante").count() == 3
+    assert pagina.locator(".mas-ficha .en-ingles").text_content() == "jab"
     pagina.keyboard.press("Space")
     assert _plegado(pagina, ".mas-ficha")["abierto"] is False
-    # «Mostrar más» va antes que las fuentes, que siguen plegadas aparte.
     plegables = pagina.locator(".col-ficha > details").evaluate_all("ds => ds.map((d) => d.className)")
-    assert plegables == ["tarjeta plegable mas-ficha", "tarjeta plegable fuentes-ficha"]
+    assert plegables == ["tarjeta plegable mas-ficha"]
 
 
 def test_al_cuerpo_comun_se_abre_con_el_teclado_dentro_de_cada_golpe(pagina):
     _ir(pagina, "aprende/gancho_izq")
-    cuerpo = pagina.locator("#a-cuerpo + p").text_content()
+    cuerpo = pagina.locator("#m-cuerpo + p").text_content()
     assert cuerpo.startswith("El golpe clásico al hígado") and "En zurdo" in cuerpo
+    assert _plegado(pagina, ".comun-cuerpo") == {"abierto": False, "visible": False}
+    pagina.click(".mas-ficha > summary")
     assert _plegado(pagina, ".comun-cuerpo") == {"abierto": False, "visible": False}
     pagina.locator(".comun-cuerpo > summary").focus()
     pagina.keyboard.press("Space")
     assert _plegado(pagina, ".comun-cuerpo") == {"abierto": True, "visible": True}
     puntos = pagina.locator(".comun-cuerpo li strong").all_text_contents()
     assert puntos[0] == "Baja con las piernas, no con la cintura ni con el puño." and "Objetivos:" in puntos
-    enlace = pagina.locator(".fuentes-comun a").first
-    assert enlace.text_content().startswith("World Boxing") and enlace.get_attribute("target") == "_blank"
-    # Una defensa no tiene ni «Al cuerpo» ni «Mostrar más».
+    assert len(puntos) <= 4
+    # Una defensa no tiene ni «Al cuerpo» ni variantes.
     _ir(pagina, "aprende/rodar")
-    assert pagina.locator("#a-cuerpo, .mas-ficha").count() == 0
+    assert pagina.locator("#m-cuerpo, #m-variantes").count() == 0
 
 
 # Contraste WCAG entre el color del texto y el primer fondo opaco de sus antepasados.
@@ -204,6 +205,7 @@ CONTRASTE = """(e) => {
 
 def test_a_390_lo_comun_al_cuerpo_se_toca_bien_y_se_lee_con_contraste_aa(pagina):
     _ir(pagina, "aprende/gancho_izq")
+    pagina.click(".mas-ficha > summary")
     resumen = pagina.locator(".comun-cuerpo > summary")
     assert resumen.bounding_box()["height"] >= 48
     assert resumen.evaluate(CONTRASTE) >= 4.5
@@ -228,9 +230,25 @@ def test_a_390_el_resumen_de_mostrar_mas_va_debajo_en_una_linea_sin_desbordar(pa
         "(r) => r.getBoundingClientRect().top < r.parentElement.querySelector('.titulo-plegable').getBoundingClientRect().bottom")
 
 
-def test_el_gancho_de_izquierda_solo_trae_variantes(pagina):
+def test_el_gancho_de_izquierda_no_tiene_detalles(pagina):
     _ir(pagina, "aprende/uppercut_izq")
-    assert pagina.locator(".mas-ficha .resumen-plegable").text_content() == "Variantes"
+    assert pagina.locator(".mas-ficha .resumen-plegable").text_content() ==         "Cuándo suele servir · Ventajas · Inconvenientes · Al cuerpo · Variantes · En inglés"
+
+
+@pytest.mark.parametrize("abierto", (False, True), ids=("cerrado", "abierto"))
+@pytest.mark.parametrize("hash_", ("aprende/jab", "aprende/paso_lateral"))
+def test_a_390_el_final_de_la_ficha_queda_por_encima_de_la_barra(pagina, hash_, abierto):
+    _ir(pagina, hash_)
+    if abierto:
+        pagina.click(".mas-ficha > summary")
+    pagina.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)")
+    pagina.wait_for_timeout(100)
+    huecos = pagina.evaluate("""() => {
+        const barra = document.querySelector('#pestanas').getBoundingClientRect().top;
+        const ultimo = (s) => document.querySelector(s).getBoundingClientRect().bottom;
+        return { pie: barra - ultimo('.pie-aprende'), tarjeta: barra - ultimo('.col-ficha:last-of-type > :last-child') };
+    }""")
+    assert huecos["pie"] >= 8 and huecos["tarjeta"] >= 8, huecos
 
 
 @pytest.mark.parametrize("ancho", (390, 768, 1024, 1440))

@@ -69,39 +69,40 @@ export function iniciarAprende() {
   const apartado = (id, nombre, cuerpo) =>
     `<section class="tarjeta apartado" aria-labelledby="a-${id}"><h2 id="a-${id}">${nombre}</h2>${cuerpo}</section>`;
 
-  function fuente(x) {
-    if (!x.url) return esc(x.titulo);
-    return `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.titulo)}<span class="solo-lectores"> (se abre en otra pestaña)</span></a>`;
-  }
-
-  // «Al cuerpo»: lo propio del golpe a la vista y, plegado, lo común a todos (está una vez, en la categoría).
+  // «Al cuerpo»: lo propio del golpe y, plegado, lo común a todos (está una vez, en la categoría).
   function alCuerpo(f, comun) {
     const plegado = comun ? `
       <details class="avanzados comun-cuerpo">
         <summary>Para todos los golpes al cuerpo</summary>
         ${lista(comun.puntos.map((p) => `<strong>${esc(p.titulo)}</strong> ${esc(p.texto)}`))}
-        ${comun.fuentes?.length ? `<p class="nota fuentes-comun">Fuentes: ${comun.fuentes.map(fuente).join(" · ")}</p>` : ""}
       </details>` : "";
-    return apartado("cuerpo", "Al cuerpo", `<p>${esc(f.al_cuerpo)}</p>${plegado}`);
+    return `<p>${esc(f.al_cuerpo)}</p>${plegado}`;
   }
 
-  // «Mostrar más»: variantes y detalles, plegados. Solo sale si la ficha tiene alguno.
-  function mostrarMas(f) {
+  // «Mostrar más», plegado: lo que no hace falta para empezar (cuándo, ventajas, inconvenientes,
+  // al cuerpo, variantes, notas, detalles y el nombre en inglés). A la vista solo quedan qué es, cómo se
+  // hace y los errores.
+  function mostrarMas(f, categoria) {
     const variantes = f.variantes ?? [];
-    const detalles = f.detalles ?? [];
-    if (!variantes.length && !detalles.length) return "";
-    const resumen = [...(variantes.length ? ["Variantes"] : []), ...detalles.map((d) => d.titulo)];
+    const partes = [
+      f.cuando && ["cuando", "Cuándo suele servir", `<p>${esc(f.cuando)}</p>`],
+      f.ventajas && ["ventajas", "Ventajas", `<p>${esc(f.ventajas)}</p>`],
+      f.inconvenientes && ["inconvenientes", "Inconvenientes", `<p>${esc(f.inconvenientes)}</p>`],
+      f.al_cuerpo && ["cuerpo", "Al cuerpo", alCuerpo(f, categoria?.al_cuerpo)],
+      variantes.length && ["variantes", "Variantes",
+        lista(variantes.map((v) => `<span class="nombre-variante">${esc(v.nombre)}</span> ${esc(v.texto)}`))],
+      ...(f.notas ?? []).map((n, i) => [`nota-${i}`, n.titulo, `<p>${esc(n.texto)}</p>`]),
+      ...(f.detalles ?? []).map((d, i) => [`detalle-${i}`, d.titulo, `<p>${esc(d.texto)}</p>`]),
+      f.en_ingles && ["ingles", "En inglés", `<p class="en-ingles" lang="en">${esc(f.en_ingles)}</p>`],
+    ].filter(Boolean);
+    if (!partes.length) return "";
     return `
       <details class="tarjeta plegable mas-ficha">
         <summary><span class="titulo-plegable">Mostrar más</span>
-          <span class="resumen-plegable">${resumen.map(esc).join(" · ")}</span></summary>
+          <span class="resumen-plegable">${partes.map(([, t]) => esc(t)).join(" · ")}</span></summary>
         <div class="cuerpo-plegable">
-          ${variantes.length ? `<section class="mas-apartado" aria-labelledby="m-variantes">
-            <h3 id="m-variantes">Variantes</h3>
-            ${lista(variantes.map((v) => `<span class="nombre-variante">${esc(v.nombre)}</span> ${esc(v.texto)}`))}
-          </section>` : ""}
-          ${detalles.map((d, i) => `<section class="mas-apartado" aria-labelledby="m-detalle-${i}">
-            <h3 id="m-detalle-${i}">${esc(d.titulo)}</h3><p>${esc(d.texto)}</p>
+          ${partes.map(([id, t, cuerpo]) => `<section class="mas-apartado" aria-labelledby="m-${id}">
+            <h3 id="m-${id}">${esc(t)}</h3>${cuerpo}
           </section>`).join("")}
         </div>
       </details>`;
@@ -116,26 +117,14 @@ export function iniciarAprende() {
     raiz.className = "aprende-ficha";
     raiz.innerHTML = `
       <p class="volver-ficha"><a href="#aprende" class="volver">← Aprende</a></p>
-      <div class="cabeza-ficha">
-        ${f.revisar ? `<p class="aviso-pendiente">${PENDIENTE}</p>` : ""}
-        ${f.en_ingles ? `<p class="nota en-ingles">En inglés: <span lang="en">${esc(f.en_ingles)}</span></p>` : ""}
-      </div>
+      ${f.revisar ? `<div class="cabeza-ficha"><p class="aviso-pendiente">${PENDIENTE}</p></div>` : ""}
       <div class="col-ficha">
         ${apartado("que", "Qué es", `<p>${esc(f.que_es ?? f.frase)}</p>`)}
-        ${apartado("cuando", "Cuándo suele servir", `<p>${esc(f.cuando)}</p>`)}
         ${apartado("como", "Cómo se hace", `<ol class="pasos-ficha">${f.pasos.map((p) => `<li>${esc(p.texto)}</li>`).join("")}</ol>`)}
-        ${f.al_cuerpo ? alCuerpo(f, categoria?.al_cuerpo) : ""}
       </div>
       <div class="col-ficha">
         ${apartado("errores", "Errores típicos", lista(errores))}
-        ${f.ventajas ? apartado("ventajas", "Ventajas", `<p>${esc(f.ventajas)}</p>`) : ""}
-        ${f.inconvenientes ? apartado("inconvenientes", "Inconvenientes", `<p>${esc(f.inconvenientes)}</p>`) : ""}
-        ${(f.notas ?? []).map((n, i) => apartado(`nota-${i}`, esc(n.titulo), `<p>${esc(n.texto)}</p>`)).join("")}
-        ${mostrarMas(f)}
-        <details class="tarjeta plegable fuentes-ficha">
-          <summary><span class="titulo-plegable">Fuentes</span></summary>
-          <div class="cuerpo-plegable">${lista(f.fuentes.map(fuente))}</div>
-        </details>
+        ${mostrarMas(f, categoria)}
       </div>
       <p class="nota pie-aprende">${NOTA_ZURDO}</p>`;
   }

@@ -1054,7 +1054,7 @@ dialog.hoja { padding: 0; }
 
 /* ---------- Aprende ---------- */
 /* Lista de fichas agrupada por categoría y, en #aprende/<id>, la ficha: sus apartados en tarjetas
-   (en el PC, dos columnas) y las fuentes plegadas, como las secciones del Perfil. */
+   (en el PC, dos columnas) y lo secundario plegado en «Mostrar más», como las secciones del Perfil. */
 #vista-aprende { --alto-foto: 250px; --arriba-titular: 110px; --posicion-foto: 50% 30%; }
 #vista-aprende h1 { font-size: clamp(2.5rem, 11.8vw, 3.6rem); overflow-wrap: anywhere; }
 #vista-aprende .marca-agua { top: 6px; right: -10px; font-size: 140px; opacity: 0.04; }
@@ -1089,11 +1089,11 @@ dialog.hoja { padding: 0; }
 .apartado :is(ul, ol) { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
 .pasos-ficha li::marker { color: var(--acento); font-weight: 600; }
 .correccion { display: block; margin-top: 2px; color: var(--suave); font-size: 0.875rem; }
-/* «Al cuerpo»: lo común, plegado dentro de la tarjeta; «Mostrar más»: variantes y detalles. */
+/* «Mostrar más»: cuándo, ventajas, inconvenientes, al cuerpo (con lo común plegado), variantes y detalles. */
 .comun-cuerpo > summary { margin: 0; min-height: 48px; }
 .comun-cuerpo[open] > summary { margin-bottom: 4px; }
-#aprende-contenido .fuentes-comun { margin-top: 10px; font-size: 0.8125rem; overflow-wrap: anywhere; }
 .mas-ficha .titulo-plegable { white-space: nowrap; }
+.mas-ficha .resumen-plegable { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* En pantallas estrechas el resumen va debajo del título (alineado con él), en una línea y cortado con «…». */
 @media (max-width: 719px) {
   .mas-ficha > summary { flex-wrap: wrap; row-gap: 4px; padding: 10px 0; }
@@ -1107,8 +1107,6 @@ dialog.hoja { padding: 0; }
 .mas-apartado h3 { margin: 0; font-size: 1rem; }
 .mas-apartado ul { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
 .nombre-variante { display: block; font-weight: 600; }
-.fuentes-ficha .cuerpo-plegable { gap: 0; }
-.fuentes-ficha li { overflow-wrap: anywhere; }
 .pie-aprende { font-size: 0.75rem; }
 @media (min-width: 720px) {
   .lista-fichas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1318,8 +1316,8 @@ dialog::backdrop { background: var(--velo); }
   #perfil-contenido { max-width: 760px; gap: 20px; }
   .plegable { padding: 0 24px; }
 
-  /* Aprende: fichas en tres columnas; la ficha, en dos (qué es, cuándo y cómo a la izquierda;
-     errores, ventajas, inconvenientes, notas y fuentes a la derecha). */
+  /* Aprende: fichas en tres columnas; la ficha, en dos (qué es y cómo a la izquierda;
+     errores y «Mostrar más» a la derecha). */
   #vista-aprende h1 { font-size: 4.5rem; }
   .lista-fichas { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
   .aprende-ficha { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 32px; }

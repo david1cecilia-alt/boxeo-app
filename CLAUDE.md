@@ -16,7 +16,8 @@
 - Historial: SQLite vía FastAPI si hay servidor; si no, el almacén (`static/historial.js`).
 - Perfil, valoraciones y combinaciones propias (las del creador): SIEMPRE en el almacén del navegador
   (`static/almacen.js`), nunca en el repo ni en `data/`. El sorteo las mezcla con la biblioteca
-  (`SorteoMezcla`); con «Ninguna» sale exactamente lo de antes (`tests/test_igual_que_antes.py`). Nada de datos personales en `data/`: se publica tal cual con la web.
+  (`SorteoMezcla`); con el interruptor «Mis combinaciones» de Entrenar apagado (mezcla «ninguna») sale
+  exactamente lo de antes (`tests/test_igual_que_antes.py`). Cuánto aparecen se elige en Ajustes (v9 del almacén). Nada de datos personales en `data/`: se publica tal cual con la web.
 - El almacén tiene esquema versionado: si cambia, sube `VERSION` y añade una migración en `MIGRACIONES`
   con su test. Las sesiones locales usan `crypto.randomUUID()`.
 - `static/vistas/` solo presenta; `reproductor.js` lleva el tiempo de sesión; `ajustes.js` une perfil y motor.

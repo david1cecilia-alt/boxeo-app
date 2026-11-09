@@ -105,3 +105,17 @@ arreglado: a 1024 los porcentajes a 32 px tocaban el borde de su botón. En escr
 Queda como estaba: los desactivados del selector usan `disabled` nativo (los radios desactivados no reciben el
 foco), no `aria-disabled` como los botones de C2. Así las flechas del grupo funcionan como siempre, y el motivo
 está escrito y en `aria-describedby` del grupo.
+
+## Cambio posterior: interruptor en Entrenar y «Cuánto aparecen» en Ajustes (almacén v9)
+
+El selector de cinco opciones de Entrenar se ha sustituido:
+
+- **Entrenar**: un interruptor «Mis combinaciones» (sí/no), en `perfil.sesion.usarMisCombinaciones`. Se
+  recuerda como el resto. Sin propias se ve desactivado con «Crea tus combinaciones en Ajustes»
+  (enlace a `#ajustes/mis-combinaciones`), pero lo guardado no se toca: al crear alguna, vuelve como estaba.
+- **Ajustes → Mis combinaciones**: «Cuánto aparecen» (Poco · Bastante · Mucho · Solo las mías, sin
+  porcentajes), en `perfil.misCombinaciones.cuanto`. Por defecto, Bastante.
+- **Migración v8 → v9**: «Ninguna» → apagado y Bastante; las demás → encendido con esa cantidad (se sortea
+  igual). Las copias v8 se importan.
+- El motor no cambia: Entrenar le pide `mezclaPedida(interruptor, cuanto)` («ninguna» si está apagado).
+- Capturas: `python herramientas/capturas_mezcla.py` (ya no saca las del editor, que no han cambiado).

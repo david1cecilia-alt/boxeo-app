@@ -108,7 +108,7 @@ def test_rpe_cambia_la_grafica_y_se_recuerda(pagina):
     assert _titulo(pagina) == "RPE medio por semana"
     assert pagina.locator(".unidad-grafico").inner_text() == "RPE (0–10)"
     assert _guardado(pagina)["perfil"]["historial"] == {"agrupar": "semana", "grafica": "rpe"}
-    assert _guardado(pagina)["version"] == 8
+    assert _guardado(pagina)["version"] == 9
     # Se recuerda al volver al Historial desde otra pestaña y al recargar.
     pagina.evaluate("location.hash = '#entrenar'")
     pagina.wait_for_selector("#vista-entrenar h1", state="visible")

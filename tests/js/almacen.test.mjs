@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { VERSION, claveSesion, crearAlmacen, crearUuid, historialPorDefecto, migrar, sesionPorDefecto, vacio, vozPorDefecto } from "../../static/almacen.js";
+import { CUANTOS, VERSION, claveSesion, crearAlmacen, crearUuid, historialPorDefecto, migrar, misCombinacionesPorDefecto, sesionPorDefecto, vacio, vozPorDefecto } from "../../static/almacen.js";
 
 // localStorage falso. `roto: true` simula un navegador que no deja guardar.
 function almacenamiento(inicial = {}, { roto = false } = {}) {
@@ -105,7 +105,7 @@ test("v3 → v4: nivel y zurdo salen de «Tus datos» y se conserva todo lo dem�
   assert.equal(migrado, true);
   assert.equal(datos.version, VERSION);
   assert.deepEqual(datos.perfil.sesion, {
-    voz: "ambos", ritmo: 5, asalto: "amateur", nivel: 2, zurdo: true, reaccion: false, mezcla: "ninguna",
+    voz: "ambos", ritmo: 5, asalto: "amateur", nivel: 2, zurdo: true, reaccion: false, usarMisCombinaciones: false,
     personalizada: { asaltos: 3, duracion_asalto: 180, descanso: 60 },
   });
   // Historial, valoraciones y el resto del perfil, intactos; las notas y revisiones del entrenador,
@@ -114,7 +114,7 @@ test("v3 → v4: nivel y zurdo salen de «Tus datos» y se conserva todo lo dem�
   assert.deepEqual(datos.valoraciones, v3.valoraciones);
   assert.equal("notas_entrenador" in datos, false);
   assert.equal("revisiones" in datos, false);
-  const { sesion, voz, historial, practicar, ...resto } = datos.perfil;
+  const { sesion, voz, historial, practicar, misCombinaciones, ...resto } = datos.perfil;
   const { sesion: _, focos, pesos, ...restoV3 } = v3.perfil;
   const { guardia, nivel, ...basicosV3 } = restoV3.basicos;
   assert.deepEqual(resto, { ...restoV3, basicos: basicosV3 });
@@ -390,7 +390,7 @@ test("la gráfica del Historial (asaltos o RPE) se guarda y se relee sin cambiar
   const releido = crearAlmacen({ storage }).datos;
   assert.deepEqual(releido.perfil.historial, { agrupar: "semana", grafica: "rpe" });
   assert.equal(releido.version, VERSION);
-  assert.equal(VERSION, 8);
+  assert.equal(VERSION, 9);
 });
 
 test("completa la sesión personalizada a medias con los valores por defecto", () => {
@@ -405,7 +405,7 @@ test("guardar y releer la sesión: cada elección y la personalizada persisten",
   const storage = almacenamiento();
   const almacen = crearAlmacen({ storage });
   const sesion = {
-    voz: "numeros", ritmo: 4, asalto: "personalizado", nivel: 3, zurdo: true, reaccion: true, mezcla: "bastante",
+    voz: "numeros", ritmo: 4, asalto: "personalizado", nivel: 3, zurdo: true, reaccion: true, usarMisCombinaciones: true,
     personalizada: { asaltos: 4, duracion_asalto: 120, descanso: 45 },
   };
   almacen.guardarPerfil({ ...almacen.datos.perfil, sesion });
@@ -521,77 +521,160 @@ test("importar rechaza ficheros que no son copias de Boxeo", () => {
 // Entrenar, sin combinaciones propias ni mezcla.
 function almacenV7() {
   const { combinacionesPropias, ...datos } = migrar(almacenV6()).datos;
-  const { mezcla, ...sesion } = datos.perfil.sesion;
-  return { ...datos, version: 7, perfil: { ...datos.perfil, sesion: { ...sesion, ritmo: 2, nivel: 2 } } };
+  const { usarMisCombinaciones, ...sesion } = datos.perfil.sesion;
+  const { misCombinaciones, ...perfil } = datos.perfil;
+  return { ...datos, version: 7, perfil: { ...perfil, sesion: { ...sesion, ritmo: 2, nivel: 2 } } };
+}
+
+// Almacén v8, como lo dejó la app publicada el 2026-11-05: con propias y la mezcla en Entrenar.
+function almacenV8(mezcla = "ninguna", propias = []) {
+  const v7 = almacenV7();
+  return { ...v7, version: 8, combinacionesPropias: propias, perfil: { ...v7.perfil, sesion: { ...v7.perfil.sesion, mezcla } } };
+}
+
+// El perfil sin lo que cambia de la v7 a la v9 (interruptor y «Cuánto aparecen»).
+function sinMisCombinaciones(perfil) {
+  const { misCombinaciones, ...resto } = perfil;
+  const { usarMisCombinaciones, mezcla, ...sesion } = perfil.sesion;
+  return { ...resto, sesion };
 }
 
 const PROPIA = { id: "p-uno", ids: ["jab", "directo", "rodar_izq"], creada: "2026-11-04T10:00:00Z" };
 
-test("v7 → v8: sin combinaciones propias, Entrenar con «Ninguna», y se conserva todo lo demás", () => {
+test("v7 → v9: sin combinaciones propias, interruptor apagado y «Bastante», y se conserva todo lo demás", () => {
   const v7 = almacenV7();
   const { datos, migrado } = migrar(structuredClone(v7));
   assert.equal(migrado, true);
-  assert.equal(datos.version, 8);
+  assert.equal(datos.version, 9);
   assert.deepEqual(datos.combinacionesPropias, []);
-  assert.equal(datos.perfil.sesion.mezcla, "ninguna");
-  const { mezcla, ...sesion } = datos.perfil.sesion;
-  assert.deepEqual(sesion, v7.perfil.sesion);
-  assert.deepEqual({ ...datos.perfil, sesion: v7.perfil.sesion }, v7.perfil);
+  assert.equal(datos.perfil.sesion.usarMisCombinaciones, false);
+  assert.deepEqual(datos.perfil.misCombinaciones, { cuanto: "bastante" });
+  assert.equal("mezcla" in datos.perfil.sesion, false);
+  assert.deepEqual(sinMisCombinaciones(datos.perfil), sinMisCombinaciones(v7.perfil));
   assert.deepEqual(datos.sesiones, v7.sesiones);
   assert.deepEqual(datos.valoraciones, v7.valoraciones);
   assert.deepEqual(migrar({ version: 7, sesiones: [] }).datos, vacio());
 });
 
-test("al abrir un almacén v7 se guarda en v8 sin perder perfil ni historial", () => {
+test("al abrir un almacén v7 se guarda en v9 sin perder perfil ni historial", () => {
   const v7 = almacenV7();
   const storage = almacenamiento({ boxeo: JSON.stringify(v7) });
   const almacen = crearAlmacen({ storage });
   const guardado = JSON.parse(storage.mapa.get("boxeo"));
-  assert.equal(guardado.version, 8);
+  assert.equal(guardado.version, 9);
   assert.deepEqual(guardado, almacen.datos);
   assert.deepEqual(guardado.sesiones, v7.sesiones);
   assert.deepEqual(guardado.valoraciones, v7.valoraciones);
-  assert.deepEqual({ ...guardado.perfil, sesion: { ...guardado.perfil.sesion, mezcla: undefined } },
-    { ...v7.perfil, sesion: { ...v7.perfil.sesion, mezcla: undefined } });
+  assert.deepEqual(sinMisCombinaciones(guardado.perfil), sinMisCombinaciones(v7.perfil));
 });
 
-test("importar copias v5, v6 y v7 deja la lista vacía y «Ninguna», con el resto migrado", () => {
+test("importar copias v5, v6 y v7 deja la lista vacía, el interruptor apagado y «Bastante», con el resto migrado", () => {
   for (const [version, datos] of [[5, almacenV5()], [6, almacenV6()], [7, almacenV7()]]) {
     const copia = JSON.parse(JSON.stringify({ app: "boxeo", version, exportado: "2026-11-01T10:00:00Z", datos }));
     const otro = crearAlmacen({ storage: almacenamiento() });
     assert.equal(otro.importar(copia), true, `v${version}`);
-    assert.equal(otro.datos.version, 8);
+    assert.equal(otro.datos.version, 9);
     assert.deepEqual(otro.datos.combinacionesPropias, [], `v${version}`);
-    assert.equal(otro.datos.perfil.sesion.mezcla, "ninguna");
+    assert.equal(otro.datos.perfil.sesion.usarMisCombinaciones, false);
+    assert.deepEqual(otro.datos.perfil.misCombinaciones, { cuanto: "bastante" });
     assert.deepEqual(otro.datos.sesiones, datos.sesiones, `v${version}`);
     assert.deepEqual(otro.datos, migrar(structuredClone(datos)).datos);
   }
 });
 
-test("exportar lleva las combinaciones propias y la mezcla; importar las recupera", () => {
+test("exportar lleva las combinaciones propias, el interruptor y «Cuánto aparecen»; importar los recupera", () => {
   const almacen = crearAlmacen({ storage: almacenamiento(), crearId: ids() });
   almacen.anadirPropia(["jab", "directo"]);
   almacen.anadirPropia(["esquiva_der", "gancho_izq", "directo"]);
-  almacen.guardarPerfil({ ...almacen.datos.perfil, sesion: { ...almacen.datos.perfil.sesion, mezcla: "mucho" } });
+  const perfil = almacen.datos.perfil;
+  almacen.guardarPerfil({ ...perfil, sesion: { ...perfil.sesion, usarMisCombinaciones: true }, misCombinaciones: { cuanto: "mucho" } });
   const copia = JSON.parse(JSON.stringify(almacen.exportar()));
-  assert.equal(copia.version, 8);
+  assert.equal(copia.version, 9);
   assert.deepEqual(copia.datos.combinacionesPropias.map((p) => p.ids), [["jab", "directo"], ["esquiva_der", "gancho_izq", "directo"]]);
   const otro = crearAlmacen({ storage: almacenamiento() });
   otro.importar(copia);
   assert.deepEqual(otro.datos.combinacionesPropias, almacen.datos.combinacionesPropias);
-  assert.equal(otro.datos.perfil.sesion.mezcla, "mucho");
+  assert.equal(otro.datos.perfil.sesion.usarMisCombinaciones, true);
+  assert.deepEqual(otro.datos.perfil.misCombinaciones, { cuanto: "mucho" });
 });
 
-test("una copia v8 rara se sanea: fuera las propias mal formadas, como mucho 20, mezcla desconocida a «Ninguna»", () => {
+test("una copia v9 rara se sanea: fuera las propias mal formadas, como mucho 20, interruptor y cantidad raros a los de por defecto", () => {
   const malas = [{ ids: ["jab", "jab"] }, { id: "p-x", ids: ["jab"] }, { id: "p-y", ids: Array(11).fill("jab") },
     { id: "p-z", ids: "jab" }, null, { id: "p-w", ids: ["jab", 3] }];
   const muchas = Array.from({ length: 25 }, (_, i) => ({ ...PROPIA, id: `p-${i}` }));
   const datos = { ...vacio(), combinacionesPropias: [...malas, ...muchas] };
-  datos.perfil.sesion.mezcla = "todas";
+  datos.perfil.sesion.usarMisCombinaciones = "sí";
+  datos.perfil.misCombinaciones = { cuanto: "ninguna" };
   const { datos: saneados } = migrar(datos);
   assert.deepEqual(saneados.combinacionesPropias, muchas.slice(0, 20));
-  assert.equal(saneados.perfil.sesion.mezcla, "ninguna");
+  assert.equal(saneados.perfil.sesion.usarMisCombinaciones, false);
+  assert.deepEqual(saneados.perfil.misCombinaciones, { cuanto: "bastante" });
   assert.deepEqual(migrar({ ...vacio(), combinacionesPropias: "no" }).datos.combinacionesPropias, []);
+  const { misCombinaciones, ...sinCantidad } = vacio().perfil;
+  assert.deepEqual(migrar({ ...vacio(), perfil: sinCantidad }).datos.perfil.misCombinaciones, misCombinacionesPorDefecto());
+});
+
+// ---------- v9: interruptor en Entrenar y «Cuánto aparecen» en Ajustes ----------
+
+test("v8 → v9: «Ninguna» pasa a interruptor apagado y «Bastante»; las demás, a encendido con esa cantidad", () => {
+  assert.deepEqual(CUANTOS, ["poco", "bastante", "mucho", "solo"]);
+  const casos = { ninguna: [false, "bastante"], poco: [true, "poco"], bastante: [true, "bastante"], mucho: [true, "mucho"], solo: [true, "solo"] };
+  for (const [mezcla, [usar, cuanto]] of Object.entries(casos)) {
+    const v8 = almacenV8(mezcla, [PROPIA]);
+    const { datos, migrado } = migrar(structuredClone(v8));
+    assert.equal(migrado, true, mezcla);
+    assert.equal(datos.version, 9);
+    assert.equal(datos.perfil.sesion.usarMisCombinaciones, usar, mezcla);
+    assert.deepEqual(datos.perfil.misCombinaciones, { cuanto }, mezcla);
+    assert.equal("mezcla" in datos.perfil.sesion, false, mezcla);
+    assert.deepEqual(datos.combinacionesPropias, [PROPIA]);
+    assert.deepEqual(datos.sesiones, v8.sesiones);
+    assert.deepEqual(datos.valoraciones, v8.valoraciones);
+    assert.deepEqual(sinMisCombinaciones(datos.perfil), sinMisCombinaciones(v8.perfil));
+  }
+  // Una mezcla v8 desconocida (escrita a mano) se queda como «Ninguna».
+  const { datos } = migrar(almacenV8("todas"));
+  assert.equal(datos.perfil.sesion.usarMisCombinaciones, false);
+  assert.deepEqual(datos.perfil.misCombinaciones, { cuanto: "bastante" });
+});
+
+test("al abrir un almacén v8 se guarda en v9 con sus propias, su perfil y su historial", () => {
+  const v8 = almacenV8("mucho", [PROPIA]);
+  const storage = almacenamiento({ boxeo: JSON.stringify(v8) });
+  const almacen = crearAlmacen({ storage });
+  const guardado = JSON.parse(storage.mapa.get("boxeo"));
+  assert.equal(guardado.version, 9);
+  assert.deepEqual(guardado, almacen.datos);
+  assert.deepEqual(guardado.combinacionesPropias, [PROPIA]);
+  assert.equal(guardado.perfil.sesion.usarMisCombinaciones, true);
+  assert.deepEqual(guardado.perfil.misCombinaciones, { cuanto: "mucho" });
+  assert.deepEqual(guardado.sesiones, v8.sesiones);
+});
+
+test("importar copias v8 (cada mezcla) las deja en v9 con sus propias", () => {
+  for (const mezcla of ["ninguna", "poco", "bastante", "mucho", "solo"]) {
+    const datos = almacenV8(mezcla, [PROPIA]);
+    const copia = JSON.parse(JSON.stringify({ app: "boxeo", version: 8, exportado: "2026-11-06T10:00:00Z", datos }));
+    const otro = crearAlmacen({ storage: almacenamiento() });
+    assert.equal(otro.importar(copia), true, mezcla);
+    assert.equal(otro.datos.version, 9);
+    assert.deepEqual(otro.datos.combinacionesPropias, [PROPIA]);
+    assert.equal(otro.datos.perfil.sesion.usarMisCombinaciones, mezcla !== "ninguna", mezcla);
+    assert.deepEqual(otro.datos.perfil.misCombinaciones, { cuanto: mezcla === "ninguna" ? "bastante" : mezcla });
+    assert.deepEqual(otro.datos, migrar(structuredClone(datos)).datos);
+  }
+});
+
+test("el interruptor y «Cuánto aparecen» se guardan y se releen por separado", () => {
+  const storage = almacenamiento();
+  const almacen = crearAlmacen({ storage });
+  assert.equal(almacen.datos.perfil.sesion.usarMisCombinaciones, false);
+  assert.deepEqual(almacen.datos.perfil.misCombinaciones, { cuanto: "bastante" });
+  almacen.guardarPerfil({ ...almacen.datos.perfil, misCombinaciones: { cuanto: "solo" } });
+  almacen.guardarPerfil({ ...almacen.datos.perfil, sesion: { ...almacen.datos.perfil.sesion, usarMisCombinaciones: true } });
+  const releido = crearAlmacen({ storage }).datos.perfil;
+  assert.equal(releido.sesion.usarMisCombinaciones, true);
+  assert.deepEqual(releido.misCombinaciones, { cuanto: "solo" });
 });
 
 test("añadir, cambiar y borrar propias: id p-<uuid>, fecha y persisten al recargar", () => {

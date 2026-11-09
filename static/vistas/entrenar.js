@@ -2,9 +2,11 @@
 // guantes a 1–2 m del móvil). No contiene reglas de boxeo: el guion lo genera el motor y
 // el reproductor lo lanza en tiempo de sesión (con pausa).
 import {
-  NOMBRE_RITMO, OPCIONES_MEZCLA, PERSONALIZADO, estadoMezcla, nuevoGuion, opcionesVoz, personalizadaValida, preferencias,
-  recordarSesion, repetirColetillas, resumenElecciones,
+  NOMBRE_RITMO, NOTA_NIVEL_SOLO, PERSONALIZADO, estadoMezcla, mezclaPedida, nuevoGuion, opcionesVoz, personalizadaValida,
+  preferencias, recordarSesion, repetirColetillas, resumenElecciones,
 } from "../ajustes.js";
+import { propiasValidas } from "../motor/sorteo.js";
+import { RUTA as RUTA_MIS_COMBINACIONES } from "./creador.js";
 import { crearAzar, semillaAleatoria } from "../motor/azar.js";
 import { datos } from "../motor/datos.js";
 import { PAUSA_POR_RITMO } from "../motor/ritmo.js";
@@ -37,10 +39,6 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     `<label class="chip-opcion"><input type="radio" name="preset" value="${id}"><span>${esc(nombre)}</span></label>`;
   $("#presets").insertAdjacentHTML("beforeend",
     presets.map((p) => chip(p.id, p.nombre)).join("") + chip(PERSONALIZADO, "Personalizado"));
-  // «Tus combinaciones»: Ninguna · Poco · Bastante · Mucho en una fila y «Solo las mías» debajo.
-  $("#mezclas").insertAdjacentHTML("beforeend", OPCIONES_MEZCLA.map(({ id, nombre, porcentaje }) =>
-    `<label${id === "solo" ? ' class="mezcla-solo"' : ""}><input type="radio" name="mezcla" value="${id}">`
-    + `<span><b>${porcentaje} %</b>${esc(nombre)}</span></label>`).join(""));
   aplicarPreferencias();
 
   // Marca el asalto y rellena sus valores: los del preset o los de la personalizada guardada.
@@ -73,10 +71,9 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   function aplicarPreferencias() {
     if (perfilAplicado === almacen.datos.perfil) return;
     perfilAplicado = almacen.datos.perfil;
-    const { asalto, nivel, zurdo, voz, ritmo, reaccion, mezcla, personalizada } = preferencias(perfilAplicado);
+    const { asalto, nivel, zurdo, voz, ritmo, reaccion, personalizada } = preferencias(perfilAplicado);
     elegirAsalto(asalto, personalizada);
     $(`input[name="nivel"][value="${nivel}"]`).checked = true;
-    $(`input[name="mezcla"][value="${mezcla}"]`).checked = true;
     $(`input[name="voz"][value="${voz}"]`).checked = true;
     $("#ritmo").value = ritmo;
     $("#zurdo").checked = zurdo;
@@ -101,12 +98,14 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       pausa: null, // la del ritmo
       ritmo: Number($("#ritmo").value),
       voz: $('input[name="voz"]:checked')?.value ?? "nombres",
-      mezcla: $('input[name="mezcla"]:checked')?.value ?? "ninguna",
+      // Interruptor apagado (o desactivado, sin propias): solo biblioteca. Encendido: lo de Ajustes.
+      mezcla: mezclaPedida($("#mis-combinaciones").checked, preferencias(almacen.datos.perfil).cuanto),
       velocidad: opcionesVoz(almacen.datos.perfil).velocidad, // la de Ajustes
     };
   }
 
   function resumir() {
+    pintarInterruptor();
     const c = leerConfigSegura();
     if (!c) return;
     // Hueco desde que la voz termina hasta la siguiente (se golpea mientras se oye).
@@ -120,20 +119,27 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     $("#resumen-elecciones").textContent = resumenElecciones({ ...c, mezcla: pintarMezcla(c) });
   }
 
-  // Estados de «Tus combinaciones» (y del nivel) con las propias de ahora. Devuelve la mezcla con
-  // la que se sorteará de verdad. Los desactivados lo están de verdad (disabled): el motivo va
-  // escrito debajo y en aria-describedby del grupo.
+  // El interruptor «Mis combinaciones», como se guardó. Sin propias se desactiva y se ve apagado,
+  // pero lo guardado no se toca: al crear alguna, vuelve como estaba.
+  function pintarInterruptor() {
+    const sinPropias = propiasValidas(almacen.datos.combinacionesPropias).length === 0;
+    const interruptor = $("#mis-combinaciones");
+    interruptor.disabled = sinPropias;
+    interruptor.checked = !sinPropias && preferencias(almacen.datos.perfil).usarMisCombinaciones;
+  }
+
+  // Notas de «Mis combinaciones» (y el nivel) con las propias de ahora. Devuelve la mezcla con la que
+  // se sorteará de verdad. Los desactivados lo están de verdad (disabled): el motivo va escrito
+  // debajo y en su aria-describedby.
   function pintarMezcla(c) {
     const { total, efectiva, motivoSolo, aviso, nivelCuenta } = estadoMezcla(c.mezcla, almacen.datos.combinacionesPropias, c.nivel);
-    $("#mezclas").disabled = total === 0;
-    $('input[name="mezcla"][value="solo"]').disabled = total > 0 && Boolean(motivoSolo);
     $("#niveles").disabled = !nivelCuenta;
     const notaNivel = $("#nota-nivel");
     notaNivel.hidden = nivelCuenta;
-    notaNivel.textContent = nivelCuenta ? "" : "Con «Solo las mías» no cuenta el nivel: salen todas las tuyas.";
+    notaNivel.textContent = nivelCuenta ? "" : NOTA_NIVEL_SOLO;
     const nota = $("#nota-mezcla");
     if (total === 0) {
-      nota.innerHTML = 'Aún no tienes combinaciones propias. <a href="#ajustes/mis-combinaciones/nueva">Crea la primera</a> y mézclala con la biblioteca.';
+      nota.innerHTML = `<a href="${RUTA_MIS_COMBINACIONES}">Crea tus combinaciones en Ajustes</a>`;
     } else {
       nota.textContent = [motivoSolo, aviso].filter(Boolean).join(" ");
     }
@@ -160,9 +166,11 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     });
   }
   form.addEventListener("change", (e) => {
-    const { nivel, zurdo, modo_reaccion, ritmo, voz, mezcla } = leerConfig();
-    const cambio = { nivel: { nivel }, voz: { voz }, mezcla: { mezcla } }[e.target.name]
-      ?? { ritmo: { ritmo }, zurdo: { zurdo }, reaccion: { reaccion: modo_reaccion } }[e.target.id];
+    const { nivel, zurdo, modo_reaccion, ritmo, voz } = leerConfig();
+    const usarMisCombinaciones = $("#mis-combinaciones").checked;
+    const cambio = { nivel: { nivel }, voz: { voz } }[e.target.name]
+      ?? { ritmo: { ritmo }, zurdo: { zurdo }, reaccion: { reaccion: modo_reaccion },
+        "mis-combinaciones": { usarMisCombinaciones } }[e.target.id];
     if (cambio) recordar(cambio);
     resumir();
   });
@@ -412,7 +420,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     mostrar() {
       if (estado) return;
       aplicarPreferencias();
-      resumir(); // las propias pueden haber cambiado en Ajustes
+      resumir(); // las propias y «Cuánto aparecen» pueden haber cambiado en Ajustes
       document.fonts.ready.then(verChipElegido); // el ancho de los chips depende de la fuente
     },
     get entrenando() { return estado !== null; },

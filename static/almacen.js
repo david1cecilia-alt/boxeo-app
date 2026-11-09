@@ -1,6 +1,6 @@
 // Almacén de los datos del usuario en el navegador (localStorage): sesiones sin servidor,
-// valoraciones, combinaciones propias (las del creador) y perfil (con lo elegido en Entrenar, la voz
-// y «Practicar más» de Ajustes y cómo se agrupa el Historial). Nunca va al repo ni a data/.
+// valoraciones, combinaciones propias (las del creador) y perfil (con lo elegido en Entrenar, la voz,
+// «Practicar más» y «Cuánto aparecen» de Ajustes y cómo se agrupa el Historial). Nunca va al repo ni a data/.
 //
 // Esquema versionado: si cambia, se sube VERSION y se añade una migración en MIGRACIONES.
 // Si el almacenamiento falla, todo sigue funcionando en memoria y `persistente` pasa a false.
@@ -8,11 +8,16 @@
 import { MAX_ACCIONES, MAX_PROPIAS } from "./motor/reglas.js";
 import { MEZCLAS, MIN_ACCIONES_PROPIA } from "./motor/sorteo.js";
 
-export const VERSION = 8;
+export const VERSION = 9;
 const CLAVE = "boxeo";
 const CLAVE_V0 = "boxeo.historial"; // versión 0: un array de sesiones, antes del almacén
 
 export const NO_SE = "no_se";
+
+// «Cuánto aparecen» (Ajustes → Mis combinaciones): las mezclas de motor/sorteo.js menos "ninguna",
+// que es el interruptor de Entrenar apagado.
+export const CUANTOS = MEZCLAS.filter((m) => m !== "ninguna");
+export const CUANTO_POR_DEFECTO = "bastante";
 
 // Un UUID v4 para los ids locales. crypto.randomUUID solo existe en contextos seguros (https o
 // localhost); abriendo la app por http desde otra máquina de la red local (el móvil contra el PC) no
@@ -33,7 +38,7 @@ export const PERSONALIZADA_POR_DEFECTO = Object.freeze({ asaltos: 3, duracion_as
 export function sesionPorDefecto() {
   return {
     voz: "nombres", ritmo: 3, asalto: "amateur", nivel: null, zurdo: null, reaccion: false,
-    mezcla: "ninguna", // «Tus combinaciones»: una de MEZCLAS de motor/sorteo.js
+    usarMisCombinaciones: false, // interruptor «Mis combinaciones»: encendido, lo de «Cuánto aparecen»
     personalizada: { ...PERSONALIZADA_POR_DEFECTO },
   };
 }
@@ -59,6 +64,11 @@ export function historialPorDefecto() {
   return { agrupar: "semana" };
 }
 
+// «Cuánto aparecen» las propias en Entrenar con el interruptor encendido: uno de CUANTOS.
+export function misCombinacionesPorDefecto() {
+  return { cuanto: CUANTO_POR_DEFECTO };
+}
+
 export function perfilPorDefecto() {
   return {
     basicos: { inicio: null, altura_cm: null, peso_kg: null, alcance_cm: null },
@@ -71,6 +81,7 @@ export function perfilPorDefecto() {
     sesion: sesionPorDefecto(),
     voz: vozPorDefecto(),
     historial: historialPorDefecto(),
+    misCombinaciones: misCombinacionesPorDefecto(),
   };
 }
 
@@ -149,6 +160,21 @@ const MIGRACIONES = {
     combinacionesPropias: [],
     perfil: { ...v7.perfil, sesion: { ...v7.perfil?.sesion, mezcla: "ninguna" } },
   }),
+  // v8 → v9: la mezcla de Entrenar se parte en el interruptor (Entrenar) y «Cuánto aparecen»
+  // (Ajustes). «Ninguna» → apagado y «Bastante»; las demás → encendido y esa cantidad: se sortea igual.
+  8: (v8) => {
+    const { mezcla, ...sesion } = v8.perfil?.sesion ?? {};
+    const usar = CUANTOS.includes(mezcla);
+    return {
+      ...v8,
+      version: 9,
+      perfil: {
+        ...v8.perfil,
+        sesion: { ...sesion, usarMisCombinaciones: usar },
+        misCombinaciones: { cuanto: usar ? mezcla : CUANTO_POR_DEFECTO },
+      },
+    };
+  },
 };
 
 // Una combinación propia bien formada: id de texto e ids de 2 a 10 (los que el catálogo no conozca
@@ -162,7 +188,8 @@ function propiaValida(p) {
 function completar(datos) {
   const base = vacio();
   const perfil = datos.perfil ?? {};
-  const sesion = { ...base.perfil.sesion, ...perfil.sesion };
+  const { mezcla, ...sesion } = { ...base.perfil.sesion, ...perfil.sesion }; // `mezcla`: la de la v8, ya no va
+  const cuanto = perfil.misCombinaciones?.cuanto;
   return {
     ...base,
     ...datos,
@@ -176,11 +203,12 @@ function completar(datos) {
       estilo: { ...base.perfil.estilo, ...perfil.estilo },
       sesion: {
         ...sesion,
-        mezcla: MEZCLAS.includes(sesion.mezcla) ? sesion.mezcla : base.perfil.sesion.mezcla,
+        usarMisCombinaciones: sesion.usarMisCombinaciones === true,
         personalizada: { ...base.perfil.sesion.personalizada, ...perfil.sesion?.personalizada },
       },
       voz: { ...base.perfil.voz, ...perfil.voz },
       historial: { ...base.perfil.historial, ...perfil.historial },
+      misCombinaciones: { cuanto: CUANTOS.includes(cuanto) ? cuanto : CUANTO_POR_DEFECTO },
       practicar: Array.isArray(perfil.practicar) ? perfil.practicar : base.perfil.practicar,
     },
   };

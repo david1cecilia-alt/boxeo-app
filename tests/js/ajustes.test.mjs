@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { crearAlmacen, perfilPorDefecto } from "../../static/almacen.js";
 import {
-  MAX_PRACTICAR, OPCIONES_MEZCLA, cambiarPracticar, estadoMezcla, nuevoGuion, opcionesVoz, perfilSorteo, personalizadaValida, preferencias, recordarSesion, resumenElecciones,
+  MAX_PRACTICAR, NOTA_NIVEL_SOLO, OPCIONES_CUANTO, cambiarPracticar, cuantoGuardado, estadoMezcla, guardarCuanto, mezclaPedida, motivoSolo, nuevoGuion, opcionesVoz, perfilSorteo, personalizadaValida, preferencias, recordarSesion, resumenElecciones,
 } from "../../static/ajustes.js";
 import { crearAzar } from "../../static/motor/azar.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
@@ -58,7 +58,7 @@ test("sin nada elegido en Entrenar: Amateur, nivel y guardia de data/perfil.json
   const p = perfilPorDefecto();
   assert.deepEqual(preferencias(p), {
     asalto: "amateur", nivel: datos.perfil.nivel, zurdo: datos.perfil.guardia === "zurda", voz: "nombres", ritmo: 3,
-    reaccion: false, mezcla: "ninguna", personalizada: { asaltos: 3, duracion_asalto: 180, descanso: 60 },
+    reaccion: false, usarMisCombinaciones: false, cuanto: "bastante", personalizada: { asaltos: 3, duracion_asalto: 180, descanso: 60 },
   });
   // Lo que quede de «Tus datos» (datos escritos a mano) ya no cuenta: solo Entrenar.
   p.basicos = { ...p.basicos, nivel: "3", guardia: "zurda" };
@@ -69,7 +69,7 @@ test("sin nada elegido en Entrenar: Amateur, nivel y guardia de data/perfil.json
 });
 
 test("cada elección de Entrenar se guarda y se lee igual al recargar", () => {
-  const eleccion = { asalto: "prueba", nivel: 3, ritmo: 4, voz: "numeros", zurdo: true, reaccion: true, mezcla: "mucho" };
+  const eleccion = { asalto: "prueba", nivel: 3, ritmo: 4, voz: "numeros", zurdo: true, reaccion: true, usarMisCombinaciones: true };
   for (const [campo, valor] of Object.entries(eleccion)) {
     const storage = almacenamiento();
     recordarSesion(crearAlmacen({ storage }), { [campo]: valor });
@@ -78,7 +78,7 @@ test("cada elección de Entrenar se guarda y se lee igual al recargar", () => {
   const storage = almacenamiento();
   const almacen = crearAlmacen({ storage });
   for (const [campo, valor] of Object.entries(eleccion)) recordarSesion(almacen, { [campo]: valor });
-  const { personalizada, ...leidas } = preferencias(crearAlmacen({ storage }).datos.perfil);
+  const { personalizada, cuanto, ...leidas } = preferencias(crearAlmacen({ storage }).datos.perfil);
   assert.deepEqual(leidas, eleccion);
 });
 
@@ -170,18 +170,50 @@ const CONFIG = { asaltos: 2, duracion_asalto: 90, descanso: 30, nivel: 2, ritmo:
 const dichas = (eventos) => eventos.filter((e) => e.tipo === "combo" || e.tipo === "coletilla");
 const esPropia = (ids) => PROPIAS.some((p) => p.ids.join() === ids.join());
 
-test("una mezcla que no se recuerda vale «Ninguna»", () => {
+test("«Cuánto aparecen»: lo guardado en Ajustes; lo que no se conoce, «Bastante»", () => {
   const p = perfilPorDefecto();
-  for (const mezcla of ["ninguna", "poco", "bastante", "mucho", "solo"]) {
-    assert.equal(preferencias({ ...p, sesion: { ...p.sesion, mezcla } }).mezcla, mezcla);
+  assert.equal(cuantoGuardado(p), "bastante");
+  for (const cuanto of ["poco", "bastante", "mucho", "solo"]) {
+    assert.equal(preferencias({ ...p, misCombinaciones: { cuanto } }).cuanto, cuanto);
   }
-  assert.equal(preferencias({ ...p, sesion: { ...p.sesion, mezcla: "todo" } }).mezcla, "ninguna");
+  assert.equal(cuantoGuardado({ ...p, misCombinaciones: { cuanto: "ninguna" } }), "bastante");
+  assert.equal(cuantoGuardado({}), "bastante");
 });
 
-test("el guion de Entrenar usa la mezcla: «Ninguna» sale igual que sin propias", () => {
+test("Ajustes guarda «Cuánto aparecen» y se relee al recargar; lo que no es una opción no se guarda", () => {
+  const storage = almacenamiento();
+  const almacen = crearAlmacen({ storage });
+  guardarCuanto(almacen, "mucho");
+  assert.equal(preferencias(crearAlmacen({ storage }).datos.perfil).cuanto, "mucho");
+  guardarCuanto(almacen, "todas");
+  assert.equal(preferencias(crearAlmacen({ storage }).datos.perfil).cuanto, "mucho");
+  // Cambiarlo en Ajustes no toca el interruptor de Entrenar.
+  recordarSesion(almacen, { usarMisCombinaciones: true });
+  guardarCuanto(almacen, "solo");
+  assert.deepEqual(preferencias(crearAlmacen({ storage }).datos.perfil).usarMisCombinaciones, true);
+});
+
+test("el interruptor guardado se conserva aunque no haya propias", () => {
+  const storage = almacenamiento();
+  const almacen = crearAlmacen({ storage });
+  almacen.anadirPropia(["jab", "directo"]);
+  recordarSesion(almacen, { usarMisCombinaciones: true });
+  almacen.borrarPropia(almacen.datos.combinacionesPropias[0].id);
+  assert.equal(preferencias(crearAlmacen({ storage }).datos.perfil).usarMisCombinaciones, true);
+  // Sin propias, la sesión sale de la biblioteca aunque esté encendido.
+  const mezcla = mezclaPedida(true, "mucho");
+  assert.equal(estadoMezcla(mezcla, [], 2).efectiva, "ninguna");
+});
+
+test("interruptor apagado = solo biblioteca: el guion sale igual que sin propias, con cualquier cantidad", () => {
   const p = perfilPorDefecto();
   const sin = nuevoGuion(CONFIG, p, crearAzar(3));
-  assert.deepEqual(nuevoGuion({ ...CONFIG, mezcla: "ninguna" }, p, crearAzar(3), PROPIAS), sin);
+  for (const cuanto of ["poco", "bastante", "mucho", "solo"]) {
+    assert.equal(mezclaPedida(false, cuanto), "ninguna");
+    assert.equal(mezclaPedida(true, cuanto), cuanto);
+    assert.deepEqual(nuevoGuion({ ...CONFIG, mezcla: mezclaPedida(false, cuanto) }, p, crearAzar(3), PROPIAS), sin);
+  }
+  assert.notDeepEqual(nuevoGuion({ ...CONFIG, mezcla: mezclaPedida(true, "solo") }, p, crearAzar(3), PROPIAS), sin);
 });
 
 test("«Solo las mías»: todas las combinaciones son propias, de cualquier nivel, y nunca se nombran", () => {
@@ -202,9 +234,12 @@ test("«Mucho» mezcla propias del nivel y biblioteca; en zurdo, las propias sal
   assert.ok(zurdo.some((e) => e.ids.includes("esquiva_der") && e.ids.includes("gancho_der")), "esquiva y crochet cambian de lado");
 });
 
-test("«Tus combinaciones»: cinco opciones con el porcentaje de motor/sorteo.js", () => {
-  assert.deepEqual(OPCIONES_MEZCLA.map((o) => `${o.nombre} ${o.porcentaje}`),
-    ["Ninguna 0", "Poco 20", "Bastante 35", "Mucho 50", "Solo las mías 100"]);
+test("«Cuánto aparecen»: cuatro opciones, sin porcentajes", () => {
+  assert.deepEqual(OPCIONES_CUANTO, [
+    { id: "poco", nombre: "Poco" }, { id: "bastante", nombre: "Bastante" }, { id: "mucho", nombre: "Mucho" },
+    { id: "solo", nombre: "Solo las mías" },
+  ]);
+  assert.equal(NOTA_NIVEL_SOLO, "Con «Solo las mías» no se usa el nivel.");
 });
 
 test("estadoMezcla: sin propias, con menos de 3 y con «Solo las mías»", () => {
@@ -214,7 +249,11 @@ test("estadoMezcla: sin propias, con menos de 3 y con «Solo las mías»", () =>
   assert.equal(estadoMezcla("mucho", [{ id: "p-x", ids: ["jab", "patada"] }], 1).total, 0);
 
   const dos = PROPIAS.slice(0, 2);
-  assert.equal(estadoMezcla("ninguna", dos, 1).motivoSolo, "«Solo las mías» necesita al menos 3 combinaciones (tienes 2).");
+  // Solo se explica en Entrenar si es lo pedido; Ajustes lo dice siempre (motivoSolo).
+  assert.equal(estadoMezcla("ninguna", dos, 1).motivoSolo, null);
+  assert.equal(motivoSolo(2, false), "«Solo las mías» necesita al menos 3 combinaciones (tienes 2).");
+  assert.equal(motivoSolo(0, true), null);
+  assert.equal(motivoSolo(3, true), null);
   const soloConDos = estadoMezcla("solo", dos, 1);
   assert.equal(soloConDos.efectiva, "ninguna");
   assert.match(soloConDos.motivoSolo, /tienes 2\): de momento salen las de la biblioteca\.$/);

@@ -112,8 +112,8 @@ def test_un_v8_con_personalizado_conserva_sus_valores(pagina):
 
 def test_practicar_mas_de_un_v8_sale_sin_el_cuanto(pagina):
     ir(pagina, v8(practicar=[{"movimiento": "6", "cuanto": "bastante"}, {"movimiento": "rodar", "cuanto": "poco"}]),
-       ruta="#ajustes")
-    pagina.wait_for_selector("#t-practicar")
+       ruta="#entrenar/menu/personalizar")
+    pagina.wait_for_selector("#t-practicar", state="visible")
     assert pagina.locator(".hueco.lleno h3").all_inner_texts() == ["6 gancho de derecha", "rueda"]
     assert pagina.locator("#f-practicar .segmentado, [data-cuanto]").count() == 0
     assert guardado(pagina)["perfil"]["practicar"] == [{"movimiento": "6"}, {"movimiento": "rodar"}]

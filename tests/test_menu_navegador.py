@@ -188,13 +188,16 @@ def test_tocar_el_asa_abre_y_el_asa_del_panel_o_la_x_cierran(abrir_pagina, ancho
     assert pagina.evaluate(FOCO) == "asa"
 
 
-def test_el_menu_trae_sus_tres_secciones_vacias_con_personalizar_abierta(abrir_pagina):
+def test_el_menu_trae_sus_tres_secciones_con_personalizar_abierta(abrir_pagina):
     pagina = abrir_pagina()
     abrir_con_el_asa(pagina)
     secciones = pagina.locator("#menu details").evaluate_all(
         "(ds) => ds.map((d) => [d.dataset.seccion, d.querySelector('summary').textContent.trim(), d.open])")
     assert secciones == [["personalizar", "Personalizar sesión", True], ["combinaciones", "Mis combinaciones", False],
                          ["ajustes", "Ajustes", False]]
+    # Cada una con lo suyo dentro.
+    for seccion, control in (("personalizar", "#f-practicar"), ("combinaciones", "#ir-creador"), ("ajustes", "#voz-id")):
+        assert pagina.locator(f"#menu details[data-seccion='{seccion}'] {control}").count() == 1, seccion
     assert pagina.get_attribute("#asa", "aria-controls") == "menu"
     assert pagina.get_attribute("#menu", "aria-labelledby") == "t-menu"
 
@@ -482,33 +485,8 @@ def test_la_marca_menu_hace_que_cerrar_sea_atras_y_no_sustituir(abrir_pagina):
     pagina.wait_for_selector("#t-creador")
 
 
-def test_menu_mis_combinaciones_editor_con_cambios_y_atras_tres_veces(abrir_pagina):
-    # Riesgo 1 del plan: el «atrás» del menú y el del creador no chocan (en la R4, por el enlace del menú).
-    pagina = abrir_pagina()
-    abrir_con_el_asa(pagina)
-    pagina.evaluate("location.hash = '#entrenar/mis-combinaciones'")
-    pagina.wait_for_selector(".vacio-propias")
-    pagina.click("#anadir-propia")
-    pagina.wait_for_selector("#caja-combo")
-    largo_antes = largo(pagina)
-    pagina.click('[data-grupo="golpe"]')
-    pagina.click('[data-anadir="jab"]')
-    pagina.click('[data-anadir="directo"]')
-    # 1.º atrás: pregunta; «Descartar» lleva al listado.
-    pagina.go_back()
-    pagina.wait_for_selector("#d-descartar[open]")
-    pagina.click('#d-descartar button[value="descartar"]')
-    pagina.wait_for_selector(".vacio-propias")
-    pagina.wait_for_function("location.hash === '#entrenar/mis-combinaciones'")
-    # 2.º atrás: el menú, abierto.
-    pagina.go_back()
-    pagina.wait_for_function(ESTA_ABIERTO)
-    assert pagina.locator("#entrenar-sub *").count() == 0
-    # 3.º atrás: Entrenar, con el menú cerrado.
-    pagina.go_back()
-    esperar_cerrado(pagina)
-    assert pagina.locator("dialog[open]").count() == 0
-    assert largo(pagina) == largo_antes
+# Riesgo 1 (menú → Mis combinaciones → editor con cambios → atrás), con el enlace real del menú: en
+# tests/test_creador_navegador.py (test_menu_mis_combinaciones_editor_con_cambios_y_atras).
 
 
 # ---------- Velo y scroll ----------

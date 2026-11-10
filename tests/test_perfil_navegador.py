@@ -56,7 +56,8 @@ def _abrir_perfil(pagina, estilo=None, ancho=390):
     """Abre el Perfil con `estilo` (respuestas y «Mi estilo») guardado en el localStorage de prueba."""
     pagina.set_viewport_size({"width": ancho, "height": 900})
     pagina.goto(f"{ORIGEN}/index.html#entrenar")
-    pagina.wait_for_selector("#zurdo")
+    pagina.wait_for_selector("#empezar")
+    pagina.wait_for_function("localStorage.getItem('boxeo') !== null")  # migrada y guardada al arrancar
     pagina.evaluate("""async (estilo) => {
         const datos = JSON.parse(localStorage.getItem("boxeo"));
         datos.perfil.estilo = { ...datos.perfil.estilo, mi_estilo: "no_se", distancia: "no_se", presion: "no_se",
@@ -71,7 +72,7 @@ def _abrir_perfil(pagina, estilo=None, ancho=390):
       return r !== null && r.textContent.trim() !== '' && !r.textContent.includes('Cargando'); }""")
 
 
-def test_el_almacen_v6_se_migra_sin_notas_ni_revisiones_y_la_guardia_pasa_a_entrenar(pagina):
+def test_el_almacen_v6_se_migra_sin_notas_ni_revisiones_y_la_guardia_pasa_a_ajustes(pagina):
     _abrir_perfil(pagina)
     datos = _guardado(pagina)
     assert datos["version"] == 9  # la actual: pasa por la 7, la 8 (combinaciones propias) y la 9
@@ -87,9 +88,10 @@ def test_el_almacen_v6_se_migra_sin_notas_ni_revisiones_y_la_guardia_pasa_a_entr
     pagina.fill('[data-campo="altura_cm"]', "180")
     pagina.locator('[data-campo="altura_cm"]').dispatch_event("change")
     assert _guardado(pagina)["perfil"]["basicos"]["altura_cm"] == 180
-    # El zurdo de Entrenar sigue igual: el interruptor sale marcado.
-    pagina.goto(f"{ORIGEN}/index.html#entrenar")
-    assert pagina.locator("#zurdo").is_checked()
+    # La guardia sigue igual: en Ajustes (menú de Entrenar) sale marcado Zurdo.
+    pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/ajustes")
+    pagina.wait_for_selector("#voz-id", state="visible")
+    assert pagina.is_checked('#menu-ajustes input[name="guardia"][value="zurdo"]')
 
 
 def test_orden_rectangulo_sobre_ti_y_mi_estilo_con_las_preguntas_en_su_orden(pagina):

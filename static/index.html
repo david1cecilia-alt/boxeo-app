@@ -20,10 +20,6 @@
   <p id="aviso-almacen" class="aviso fijo" role="alert" hidden></p>
 
   <main>
-    <!-- Ajustes en el móvil: engranaje arriba a la derecha (en el PC va en el menú). -->
-    <a id="ir-ajustes" href="#ajustes" aria-label="Ajustes">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></a>
-
     <!-- ============ Entrenar ============ -->
     <section id="vista-entrenar" class="vista con-foto" aria-labelledby="t-entrenar">
       <div class="foto-cabecera" aria-hidden="true">
@@ -66,16 +62,7 @@
               <div class="marcas-ritmo" aria-hidden="true"><span>Calmado</span><span>Intenso</span></div>
             </div>
             <hr>
-            <fieldset class="niveles modos-voz">
-              <legend><span>Nombrar combinaciones</span></legend>
-              <label><input type="radio" name="voz" value="numeros"><span><b>1 · 2</b>Números</span></label>
-              <label><input type="radio" name="voz" value="nombres"><span><b>Jab</b>Nombres</span></label>
-              <label><input type="radio" name="voz" value="ambos"><span><b>1 jab</b>Ambos</span></label>
-            </fieldset>
-            <hr>
             <div class="interruptores">
-              <label class="interruptor"><span>Zurdo<small class="solo-lectores">: todo en espejo, derecha delante</small></span>
-                <input type="checkbox" role="switch" id="zurdo"></label>
               <label class="interruptor"><span>Reacción<small class="solo-lectores">: señales al azar, esquiva, contra, sal…</small></span>
                 <input type="checkbox" role="switch" id="reaccion"></label>
             </div>
@@ -144,21 +131,25 @@
               <h2 id="t-menu" tabindex="-1" autofocus>Menú</h2>
               <button class="menu-cerrar" type="button" aria-label="Cerrar el menú">✕</button>
             </header>
+            <!-- Las pintan vistas/personalizar.js, vistas/entrenar.js y vistas/ajustes.js. -->
             <details data-seccion="personalizar" open>
               <summary>Personalizar sesión</summary>
-              <p class="nota">Llega en la siguiente fase.</p>
+              <div id="menu-personalizar" class="menu-seccion"></div>
             </details>
             <details data-seccion="combinaciones">
               <summary>Mis combinaciones</summary>
-              <p class="nota">Llega en la siguiente fase.</p>
+              <div id="menu-combinaciones" class="menu-seccion"></div>
             </details>
             <details data-seccion="ajustes">
               <summary>Ajustes</summary>
-              <p class="nota">Llega en la siguiente fase.</p>
+              <div id="menu-ajustes" class="menu-seccion"></div>
             </details>
           </div>
         </div>
       </dialog>
+      <!-- «Practicar más» (Personalizar sesión): la hoja para elegir. Fuera de #menu a propósito: es otro
+           modal encima del menú, y dentro sus teclas subirían hasta el atraparFoco del menú. -->
+      <dialog id="elegir-practicar" class="hoja" aria-labelledby="t-elegir"></dialog>
     </section>
 
     <!-- ============ Aprende ============ -->
@@ -200,16 +191,6 @@
       <div id="perfil-contenido"></div>
     </section>
 
-    <!-- ============ Ajustes ============ -->
-    <section id="vista-ajustes" class="vista" aria-labelledby="t-ajustes" hidden>
-      <p class="volver-movil"><a href="#entrenar" class="volver" id="volver-ajustes">← Volver</a></p>
-      <header class="cabecera">
-        <span class="marca-agua" aria-hidden="true">Voz</span>
-        <p class="antetitulo">Lo que cambia tu entreno</p>
-        <h1 id="t-ajustes" tabindex="-1">Tus<br><span class="acento">ajustes</span></h1>
-      </header>
-      <div id="ajustes-contenido"></div>
-    </section>
   </main>
 
   <nav id="pestanas" aria-label="Secciones">
@@ -229,10 +210,6 @@
     <a href="#perfil">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
       <span>Perfil</span>
-    </a>
-    <a href="#ajustes" class="solo-escritorio">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-      <span>Ajustes</span>
     </a>
   </nav>
 

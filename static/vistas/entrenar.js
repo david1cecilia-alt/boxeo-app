@@ -2,7 +2,7 @@
 // guantes a 1–2 m del móvil). No contiene reglas de boxeo: el guion lo genera el motor y
 // el reproductor lo lanza en tiempo de sesión (con pausa).
 import {
-  NOMBRE_RITMO, OPCIONES_MEZCLA, PRESET_DE_TIPO, conPrueba, configGeneral, configSesion, estadoMezcla, nuevoGuion, opcionesVoz, personalizadaValida, preferencias,
+  NOMBRE_RITMO, OPCIONES_MEZCLA, PRESET_DE_TIPO, conPrueba, configGeneral, configSesion, estadoMezcla, nuevoGuion, personalizadaValida, preferencias,
   recordarSesion, repetirColetillas, resumenElecciones,
 } from "../ajustes.js";
 import { crearAzar, semillaAleatoria } from "../motor/azar.js";
@@ -13,9 +13,12 @@ import { PARA_REACCIONAR, crearDictado } from "../dictado.js";
 import { crearPantallaEncendida } from "../pantalla.js";
 import { crearReproductor } from "../reproductor.js";
 import { activarSonido, campana, dejarDormir, mantenerDespierto, pitido, tablillas } from "../sonido.js";
+import { MAX_PROPIAS } from "../motor/reglas.js";
+import { iniciarAjustes } from "./ajustes.js";
 import { RUTA as RUTA_CREADOR, iniciarCreador } from "./creador.js";
 import { $, anunciar, esc, minutos } from "./dom.js";
 import { iniciarMenu } from "./menu.js";
+import { iniciarPersonalizar } from "./personalizar.js";
 import { combinacionesParaVer, pasosCombo } from "./pasos.js";
 
 const SEGUNDOS_FINAL = 10;
@@ -79,13 +82,13 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   function aplicarPreferencias() {
     if (perfilAplicado === almacen.datos.perfil) return;
     perfilAplicado = almacen.datos.perfil;
-    const { tipo, nivel, zurdo, voz, ritmo, reaccion, mezcla, personalizada } = preferencias(perfilAplicado);
-    elegirTipo(tipo, personalizada);
+    const { tipo, nivel, ritmo, reaccion, mezcla, personalizada } = preferencias(perfilAplicado);
+    // Prueba no se guarda: si estaba elegida, se queda mientras no se elija otra cosa.
+    const prueba = $('input[name="preset"][value="prueba"]:checked') && tipo !== "personalizada";
+    elegirTipo(prueba ? "prueba" : tipo, personalizada);
     $(`input[name="nivel"][value="${nivel}"]`).checked = true;
     $(`input[name="mezcla"][value="${mezcla}"]`).checked = true;
-    $(`input[name="voz"][value="${voz}"]`).checked = true;
     $("#ritmo").value = ritmo;
-    $("#zurdo").checked = zurdo;
     $("#reaccion").checked = reaccion;
     resumir();
   }
@@ -103,13 +106,9 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       duracion_asalto: Number($("#duracion").value),
       descanso: Number($("#descanso").value),
       nivel: Number($('input[name="nivel"]:checked').value),
-      zurdo: $("#zurdo").checked,
       modo_reaccion: $("#reaccion").checked,
-      pausa: null, // la del ritmo
       ritmo: Number($("#ritmo").value),
-      voz: $('input[name="voz"]:checked')?.value ?? "nombres",
       mezcla: $('input[name="mezcla"]:checked')?.value ?? "ninguna",
-      velocidad: opcionesVoz(almacen.datos.perfil).velocidad, // la de Ajustes
     };
   }
 
@@ -175,9 +174,9 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     });
   }
   form.addEventListener("change", (e) => {
-    const { nivel, zurdo, modo_reaccion, ritmo, voz, mezcla } = leerControles();
-    const cambio = { nivel: { nivel }, voz: { voz }, mezcla: { mezcla } }[e.target.name]
-      ?? { ritmo: { ritmo }, zurdo: { zurdo }, reaccion: { reaccion: modo_reaccion } }[e.target.id];
+    const { nivel, modo_reaccion, ritmo, mezcla } = leerControles();
+    const cambio = { nivel: { nivel }, mezcla: { mezcla } }[e.target.name]
+      ?? { ritmo: { ritmo }, reaccion: { reaccion: modo_reaccion } }[e.target.id];
     if (cambio) recordar(cambio);
     resumir();
   });
@@ -449,14 +448,47 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   }
 
   // ---------- El asa y el menú lateral (#entrenar/menu[/<seccion>]) ----------
-  // Lo abre y cierra la ruta: mostrar() le dice qué hacer en cada cambio.
+  // Lo abre y cierra la ruta: mostrar() le dice qué hacer en cada cambio. Sus secciones: Personalizar
+  // sesión (personalizar.js), Mis combinaciones (aquí) y Ajustes (ajustes.js). Lo que se guarda en ellas
+  // se refleja al momento aquí debajo (el selector y «Tu sesión»).
   const menu = iniciarMenu();
+  const alCambiarMenu = () => {
+    aplicarPreferencias();
+    resumir();
+  };
+  const personalizar = iniciarPersonalizar({ almacen, alCambiar: alCambiarMenu });
+  const ajustes = iniciarAjustes({
+    almacen, voz,
+    alCambiar() {
+      alCambiarMenu();
+      personalizar.pintar(); // los nombres de «Practicar más» llevan la mano de la guardia
+    },
+  });
+
+  function pintarCombinaciones() {
+    $("#menu-combinaciones").innerHTML = `
+      <p class="nota">Crea las tuyas y mézclalas con la biblioteca en tu Personalizada.</p>
+      <a href="${RUTA_CREADOR}" class="tarjeta tarjeta-enlace" id="ir-creador">
+        <span class="tarjeta-enlace-texto">
+          <span class="titular">Mis combinaciones
+            <span class="acento">${almacen.datos.combinacionesPropias.length}/${MAX_PROPIAS}</span></span>
+        </span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </a>`;
+  }
+  pintarCombinaciones();
+
+  // Cerrar el menú cierra también la hoja de «Practicar más», que va encima de él.
+  function cerrarMenu(opciones) {
+    personalizar.cerrar();
+    menu.cerrarPorRuta(opciones);
+  }
 
   return {
     mostrar(parametro = "") {
       const [primera, ...resto] = parametro.split("/");
       if (primera === "mis-combinaciones") {
-        menu.cerrarPorRuta({ animar: false, foco: false }); // el foco lo pone el creador
+        cerrarMenu({ animar: false, foco: false }); // el foco lo pone el creador
         // Con una sesión en marcha no se abre: la sesión sigue y la ruta vuelve a #entrenar.
         if (estado) return location.replace("#entrenar");
         return mostrarCreador(resto.join("/"));
@@ -470,14 +502,24 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       }
       aplicarPreferencias();
       resumir(); // las propias pueden haber cambiado en el creador
-      if (enMenu) menu.abrirPorRuta(resto[0]);
-      else menu.cerrarPorRuta();
+      if (enMenu) {
+        // Al volver de Mis combinaciones, su sección abierta y el foco en su enlace (de donde se salió).
+        if (!menu.abierto) {
+          pintarCombinaciones();
+          personalizar.pintar();
+          ajustes.pintar();
+        }
+        menu.abrirPorRuta(veniaDelCreador ? "combinaciones" : resto[0]);
+        if (veniaDelCreador) $("#ir-creador").focus({ preventScroll: true });
+      } else {
+        cerrarMenu();
+      }
       // Del creador a Entrenar sin cambiar de vista (atrás, un enlace): el router no mueve el foco.
       if (veniaDelCreador && !enMenu) $("#t-entrenar").focus({ preventScroll: true });
       document.fonts.ready.then(verChipElegido); // el ancho de los chips depende de la fuente
     },
     // Al dejar Entrenar, el menú se cierra al momento (sin tocar el historial ni el foco).
-    ocultar() { menu.cerrarPorRuta({ animar: false, foco: false }); },
+    ocultar() { cerrarMenu({ animar: false, foco: false }); },
     get entrenando() { return estado !== null; },
   };
 }

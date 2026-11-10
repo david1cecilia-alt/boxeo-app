@@ -515,34 +515,10 @@ body.entrenando main { padding: 0; max-width: none; }
 }
 #pestanas a:focus-visible { outline-offset: -4px; }
 .marca { display: none; }
-#pestanas .solo-escritorio { display: none; } /* en el móvil, Ajustes va en el engranaje */
 
-/* Engranaje de Ajustes (móvil): arriba a la derecha en las tres pestañas, sobre la foto o el
-   negro. En Ajustes, mientras se entrena y en el PC no se ve. */
 main { position: relative; }
-#ir-ajustes {
-  position: absolute; z-index: 5; top: calc(14px + env(safe-area-inset-top)); right: var(--hueco);
-  display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
-  color: var(--texto); background: var(--barra); border: 1px solid var(--borde-cristal);
-}
-#ir-ajustes:hover { background: var(--superficie-hover); }
-#ir-ajustes svg {
-  width: 22px; height: 22px; fill: none; stroke: currentColor;
-  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
-}
-body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes,
-body:has(#vista-entrenar[data-sub]:not([hidden])) #ir-ajustes { display: none; }
 
-/* ---------- Ajustes ---------- */
-/* «Volver», fijo arriba al bajar (en el móvil; en el PC la barra lateral ya está siempre a la vista). */
-#vista-ajustes .volver-movil {
-  position: sticky; top: 0; z-index: 5; margin: 0 calc(-1 * var(--hueco)) -24px;
-  padding: calc(8px + env(safe-area-inset-top, 0px)) var(--hueco) 8px; background: var(--fondo);
-}
-#vista-ajustes .volver-movil .volver { display: inline-flex; align-items: center; min-height: 44px; }
-#vista-ajustes h1 { font-size: clamp(2.5rem, 11.8vw, 3.6rem); }
-#vista-ajustes .marca-agua { top: 6px; right: -10px; font-size: 140px; opacity: 0.04; }
-#ajustes-contenido { display: grid; gap: 16px; align-content: start; min-width: 0; }
+/* ---------- Ajustes (sección del menú de Entrenar) ---------- */
 .voz-eleccion, .voz-velocidad { display: grid; gap: 14px; align-content: start; min-width: 0; }
 
 /* ---------- El asa y el menú lateral de Entrenar (vistas/menu.js) ---------- */
@@ -559,7 +535,7 @@ body:has(#vista-entrenar[data-sub]:not([hidden])) #ir-ajustes { display: none; }
   position: fixed; z-index: 5; top: 42%;
   right: calc(28px + env(safe-area-inset-right, 0px));
 }
-.vista > #asa, .vista > #menu { animation: none; } /* la entrada de la vista le pisaría el transform */
+.vista > :is(#asa, #menu, #elegir-practicar) { animation: none; } /* la entrada de la vista le pisaría el transform */
 /* Con barra clásica, el hueco que reserva scrollbar-gutter queda fuera del <dialog> (ni 100vw ni una sombra
    llegan): solo se ve el fondo del lienzo, que con el menú abierto toma el color del panel. El body sigue
    pintando el suyo. Con barras superpuestas (móvil) no hay hueco. */
@@ -606,6 +582,9 @@ html.menu-abierto #asa { visibility: hidden; }
 .menu-cabecera {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   min-height: 56px; margin-bottom: 8px; touch-action: none; cursor: grab;
+  /* Fija arriba al desplazar el panel: «✕» y el arrastre de cierre siempre a mano. */
+  position: sticky; top: calc(-1 * max(16px, env(safe-area-inset-top, 0px))); z-index: 1;
+  background: var(--superficie);
 }
 .menu-cabecera h2 { font-size: 2rem; }
 .menu-cerrar {
@@ -615,6 +594,22 @@ html.menu-abierto #asa { visibility: hidden; }
 .menu-cerrar:hover { background: var(--secundario-hover); }
 .menu-contenido details { border-top: 1px solid var(--linea); padding: 4px 0; }
 .menu-contenido details > .nota { margin: 0 0 12px; }
+.menu-contenido summary { min-height: 48px; display: flex; align-items: center; font-weight: 600; cursor: pointer; }
+/* Cada sección: sus campos uno debajo de otro, al ancho del panel (min(88vw, 420px) menos la franja). */
+.menu-seccion { display: grid; gap: 20px; padding: 4px 0 20px; min-width: 0; }
+.menu-seccion > .formulario { display: grid; gap: 16px; min-width: 0; }
+.menu-seccion .nota { margin: 0; font-size: 0.8125rem; }
+.titulo-campo {
+  margin: 0; font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--suave); font-family: inherit;
+}
+.guardias { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.guardias label span { min-height: 56px; }
+/* «Practicar más» en el panel: un hueco por fila, bajos (el panel es estrecho a cualquier ancho). */
+.menu-seccion .huecos-practicar { grid-template-columns: minmax(0, 1fr); grid-auto-rows: 60px; gap: 8px; }
+.menu-seccion .hueco.lleno { align-content: center; padding: 4px 4px 4px 14px; }
+.menu-seccion .hueco-cabecera { align-items: center; }
+.menu-seccion .hueco-cabecera h3 { margin: 0; }
 
 /* ---------- Mis combinaciones (el creador, #entrenar/mis-combinaciones) ---------- */
 /* Dentro de Entrenar, en #entrenar-sub: mientras se ve, nada más de Entrenar (foto, cabecera, configuración).
@@ -1268,8 +1263,6 @@ dialog::backdrop { background: var(--velo); }
     height: 52px; padding: 0 18px; border-radius: 26px; font-size: 0.9375rem;
   }
   #pestanas a:hover:not([aria-current]) { background: var(--superficie-hover); }
-  #pestanas .solo-escritorio { display: flex; }
-  #ir-ajustes { display: none; }
   /* La línea del menú, también en el fondo de la página: el borde de la barra fija solo mide lo
      que la ventana y se cortaba a media página (al pintar la página entera o si algo la tapaba). */
   html { min-height: 100%; }
@@ -1372,12 +1365,6 @@ dialog::backdrop { background: var(--velo); }
     .resumen-historial > .cifras div { padding-inline: 14px; } /* columna estrecha: sitio para «sesiones / mes» */
   }
 
-  /* Ajustes: Voz a todo el ancho, con la voz a la izquierda y la velocidad y «Probar voz» a la
-     derecha; «Practicar más» debajo, del mismo ancho, con sus tres huecos en fila (a 1024 y a 1440). */
-  #vista-ajustes h1 { font-size: 4.5rem; }
-  #ajustes-contenido { gap: 24px; }
-  #f-voz { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 32px; }
-  .voz-cabeza { grid-column: 1 / -1; }
 
   /* Mis combinaciones: el listado, del ancho de una lectura cómoda; el editor, en dos columnas
      (paleta a la izquierda, golpes en tres columnas; la caja y Guardar a la derecha, fijas al bajar). */

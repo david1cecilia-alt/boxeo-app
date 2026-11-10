@@ -1,6 +1,7 @@
 // «Mis combinaciones» (#entrenar/mis-combinaciones, /nueva y /editar/<id>): las combinaciones propias,
 // en el almacén de este navegador. Listado con editar y borrar (con confirmación). Se pinta dentro de
-// Entrenar (#entrenar-sub; lo monta vistas/entrenar.js). Las rutas viejas (#ajustes/mis-combinaciones…)
+// Entrenar (#entrenar-sub; lo monta vistas/entrenar.js); se llega desde el menú (#entrenar/menu/combinaciones) y
+// «← Volver» lleva allí. Las rutas viejas (#ajustes/mis-combinaciones…)
 // las redirige rutas.js antes de que este módulo las vea. Solo presenta: qué se enseña y cómo se dice
 // está en ../creador.js; guardar, en el almacén.
 import {
@@ -9,8 +10,10 @@ import {
 } from "../creador.js";
 import { ACCIONES_POR_NIVEL, MAX_ACCIONES, MAX_PROPIAS, NOMBRE_NIVEL } from "../motor/reglas.js";
 import { $, anunciar, atraparFoco, esc } from "./dom.js";
+import { enRutaMenu } from "./menu.js";
 
 export const RUTA = "#entrenar/mis-combinaciones";
+export const RUTA_VOLVER = "#entrenar/menu/combinaciones";
 
 const ICONO_EDITAR = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4"/></svg>`;
 const ICONO_BORRAR = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>`;
@@ -73,7 +76,7 @@ export function iniciarCreador({ almacen, raiz, voz }) {
     const lista = combinacionesParaListar(propias());
     const crear = puedeCrear(propias());
     raiz.innerHTML = `
-      <p class="volver-sub"><a href="#ajustes" class="volver">← Volver</a></p>
+      <p class="volver-sub"><a href="${RUTA_VOLVER}" class="volver" id="volver-listado">← Volver</a></p>
       <header class="cabecera-sub">
         <h1 id="t-creador" tabindex="-1">Mis <span class="acento">combinaciones</span></h1>
         <p class="nota">${lista.length} de ${MAX_PROPIAS}. ${NOTA_ORTODOXA}</p>
@@ -405,6 +408,14 @@ export function iniciarCreador({ almacen, raiz, voz }) {
     }
   });
 
+  // «← Volver» del listado: si a esta entrada del historial se llegó desde el menú (marca `desdeMenu`, que
+  // sobrevive a ir al editor y volver), atrás, sin apilar; si no (enlace, recarga), el enlace al menú.
+  raiz.addEventListener("click", (e) => {
+    if (editor || !e.target.closest("#volver-listado") || !history.state?.desdeMenu) return;
+    e.preventDefault();
+    history.back();
+  });
+
   function aListado() {
     history.replaceState(history.state, "", RUTA);
     return mostrar("");
@@ -424,6 +435,7 @@ export function iniciarCreador({ almacen, raiz, voz }) {
     } else if (ruta !== "") {
       return aListado();
     } else {
+      if (enRutaMenu(ultimaRuta ?? "")) history.replaceState({ ...history.state, desdeMenu: true }, "");
       pintarListado();
     }
     window.scrollTo(0, 0);

@@ -50,8 +50,13 @@ export function anunciar(texto) {
 // del navegador: del último se vuelve al primero (y al revés con Mayús+Tab). Para su `keydown`.
 export function atraparFoco(e) {
   if (e.key !== "Tab") return;
-  const enfocables = $$("button, input, a[href], summary", e.currentTarget)
-    .filter((el) => el.tabIndex >= 0 && el.getClientRects().length && !el.closest("[hidden]"));
+  // Solo los que Tab alcanza de verdad: ni lo de dentro de un <details> cerrado (checkVisibility) ni, de un
+  // grupo de radios con uno marcado, los demás (Tab solo para en el marcado).
+  const raiz = e.currentTarget;
+  const marcado = (nombre) => $$(`input[type="radio"]`, raiz).some((r) => r.name === nombre && r.checked);
+  const enfocables = $$("button, input, select, textarea, a[href], summary", raiz)
+    .filter((el) => el.tabIndex >= 0 && el.getClientRects().length && !el.closest("[hidden]")
+      && (el.checkVisibility?.() ?? true) && (el.type !== "radio" || el.checked || !marcado(el.name)));
   const [primero, ultimo] = [enfocables[0], enfocables.at(-1)];
   if (!primero) return;
   // El foco puede estar fuera de la lista (un título con tabindex="-1"): cuenta si va antes del primero

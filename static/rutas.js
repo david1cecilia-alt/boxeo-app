@@ -1,15 +1,16 @@
 // Rutas por hash (#entrenar, #entrenar/menu[/<seccion>], #entrenar/mis-combinaciones[/nueva|/editar/<id>], #aprende, #aprende/<id>,
-// #historial, #historial/<clave>, #perfil, #ajustes): funcionan en GitHub Pages y sin conexión porque nunca
+// #historial, #historial/<clave>, #perfil): funcionan en GitHub Pages y sin conexión porque nunca
 // piden otra página al servidor.
 // `vistas`: { nombre: { mostrar(parametro, { mismaVista }), ocultar?() } }. Cada vista vive en <section id="vista-<nombre>">.
-// <body data-vista="<nombre>"> dice cuál se ve (el CSS esconde el engranaje en Ajustes).
+// <body data-vista="<nombre>"> dice cuál se ve.
 // Dentro de la misma vista (#historial/... → #historial/...) la vista se encarga del foco y del scroll.
 // Al cambiar de vista, el foco va a su h1, salvo que la vista ya lo haya puesto dentro de ella (el creador
-// en su título; Ajustes, al volver del creador, en su tarjeta).
+// en su título; el menú, al volver del creador, en su enlace).
 
 // ---------- Rutas viejas ----------
 // «Mis combinaciones» vivía en #ajustes/mis-combinaciones[/nueva|/editar/<id>]: marcadores y enlaces viejos
-// llevan a #entrenar/mis-combinaciones con el resto de la ruta. #ajustes a secas sigue siendo Ajustes.
+// llevan a #entrenar/mis-combinaciones con el resto de la ruta. Ajustes (#ajustes y lo demás de #ajustes/…) es
+// ahora una sección del menú de Entrenar: #entrenar/menu/ajustes.
 // Se hace antes que nadie, al cargar este módulo (app.js lo importa el primero), para que ni el creador
 // ni el router vean nunca la ruta vieja y sin dejarla en el historial (history.length no crece):
 // - al arrancar, con replaceState: no salta otro hashchange y el router pinta una sola vez;
@@ -17,9 +18,13 @@
 const VIEJA_CREADOR = "#ajustes/mis-combinaciones";
 const NUEVA_CREADOR = "#entrenar/mis-combinaciones";
 
+const VIEJA_AJUSTES = "#ajustes";
+const NUEVA_AJUSTES = "#entrenar/menu/ajustes";
+
 export function rutaNueva(hash) {
-  if (hash !== VIEJA_CREADOR && !hash.startsWith(`${VIEJA_CREADOR}/`)) return null;
-  return NUEVA_CREADOR + hash.slice(VIEJA_CREADOR.length);
+  if (hash === VIEJA_CREADOR || hash.startsWith(`${VIEJA_CREADOR}/`)) return NUEVA_CREADOR + hash.slice(VIEJA_CREADOR.length);
+  if (hash === VIEJA_AJUSTES || hash.startsWith(`${VIEJA_AJUSTES}/`)) return NUEVA_AJUSTES;
+  return null;
 }
 
 const alArrancar = rutaNueva(location.hash);

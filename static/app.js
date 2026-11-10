@@ -20,8 +20,9 @@ function avisar(texto) {
 }
 
 async function arrancar() {
-  const almacen = crearAlmacen({ alFallar: avisar });
+  // Primero los datos: migrar un almacén v8 necesita el nivel de la General (data/perfil.json).
   await cargarDatos();
+  const almacen = crearAlmacen({ alFallar: avisar, alAvisar: avisar });
   const historial = await crearHistorial(almacen);
   const voz = crearVoz(opcionesVoz(almacen.datos.perfil));
   const valoracion = crearValoracion({ almacen });

@@ -435,6 +435,8 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
       const guardado = almacen.importar(copia);
       anunciar(guardado ? "Copia importada" : "Copia importada solo en memoria");
       pintar();
+      // Lo que se ha quitado de la copia por estar mal formado (una foto que no es JPEG o WebP).
+      if (almacen.avisos.length) alert(almacen.avisos.join("\n"));
     } catch (error) {
       alert(error instanceof ErrorAlmacen ? error.message : `No se pudo importar: ${error.message}`);
     }

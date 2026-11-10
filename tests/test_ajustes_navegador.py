@@ -99,28 +99,6 @@ def _elegir(pagina, movimiento, pestana="golpe"):
     _cerrar(pagina, lambda: pagina.click(f'[data-elegir="{movimiento}"]'))
 
 
-def _en_una_linea(pagina):
-    """Cada botón del selector «Un poco más | Bastante más», en una sola línea y sin salirse."""
-    return pagina.evaluate("""() => [...document.querySelectorAll('.segmentado span')].every((s) => {
-      const r = document.createRange();
-      r.selectNodeContents(s);
-      return r.getClientRects().length === 1 && s.scrollWidth <= s.clientWidth;
-    })""")
-
-
-def _selector_holgado(pagina):
-    """Cada texto del selector, entero y sin tocar el borde de su botón; botones dentro de la tarjeta."""
-    return pagina.evaluate("""() => [...document.querySelectorAll('.segmentado span')].map((s) => {
-      const r = document.createRange();
-      r.selectNodeContents(s);
-      const texto = r.getBoundingClientRect(), caja = s.getBoundingClientRect();
-      const tarjeta = s.closest('.hueco').getBoundingClientRect();
-      return { texto: s.textContent, lineas: r.getClientRects().length, cabe: s.scrollWidth <= s.clientWidth,
-        holgura: Math.min(texto.left - caja.left, caja.right - texto.right),
-        dentro: caja.left >= tarjeta.left && caja.right <= tarjeta.right };
-    })""")
-
-
 def _hoja(pagina):
     """Caja de la hoja y hueco que queda bajo la última ficha de la pestaña visible."""
     return pagina.evaluate("""() => { const d = document.querySelector('#elegir-practicar');
@@ -188,7 +166,7 @@ def test_elegir_cambiar_y_quitar_desde_los_huecos(ajustes):
     _elegir(pagina, "6")
     foco = _foco(pagina)
     assert foco["hueco"] == "0" and "lleno" in foco["clase"]  # el foco, en la tarjeta recién llenada
-    assert _guardado(pagina) == [{"movimiento": "6", "cuanto": "poco"}]
+    assert _guardado(pagina) == [{"movimiento": "6"}]
     # Lo ya elegido sale marcado y no se puede volver a elegir.
     _abrir_panel(pagina)
     ficha = pagina.locator('[data-elegir="6"]')
@@ -196,7 +174,7 @@ def test_elegir_cambiar_y_quitar_desde_los_huecos(ajustes):
     assert "(ya elegido)" in ficha.text_content() and "✓" in ficha.inner_text()
     ficha.click(force=True)  # Playwright no pulsa lo aria-disabled; una persona sí puede
     assert pagina.locator("#elegir-practicar[open]").count() == 1
-    assert _guardado(pagina) == [{"movimiento": "6", "cuanto": "poco"}]
+    assert _guardado(pagina) == [{"movimiento": "6"}]
     _cerrar(pagina, lambda: pagina.click('[data-elegir="cuerpo"]'))
     _elegir(pagina, "rodar", "defensa")
     assert pagina.locator(".hueco.vacio").count() == 0
@@ -204,18 +182,16 @@ def test_elegir_cambiar_y_quitar_desde_los_huecos(ajustes):
                                                                   "rueda"]
     assert len(set(_altos(pagina))) == 1
     assert pagina.locator("#practicar-estado").inner_text() == "3 de 3 elegidos."
-    # Cuánto más: «Un poco más | Bastante más», sin el factor del sorteo.
-    assert pagina.locator('[data-hueco="2"] .segmentado span').all_inner_texts() == ["Un poco más", "Bastante más"]
-    pagina.locator('[data-movimiento="rodar"][data-cuanto="bastante"]').check()
-    assert _guardado(pagina) == [{"movimiento": "6", "cuanto": "poco"}, {"movimiento": "cuerpo", "cuanto": "poco"},
-                                 {"movimiento": "rodar", "cuanto": "bastante"}]
+    # Un solo nivel: sin «Un poco más | Bastante más».
+    assert pagina.locator("#f-practicar .segmentado, [data-cuanto]").count() == 0
+    assert _guardado(pagina) == [{"movimiento": "6"}, {"movimiento": "cuerpo"}, {"movimiento": "rodar"}]
     # Quitar: el botón mide 48 px como mínimo; los demás suben y el foco va al hueco que queda vacío.
     quitar = pagina.locator('[data-quitar="cuerpo"]')
     assert quitar.get_attribute("aria-label") == "Quitar golpes al cuerpo"
     caja = quitar.bounding_box()
     assert caja["width"] >= 48 and caja["height"] >= 48
     quitar.click()
-    assert _guardado(pagina) == [{"movimiento": "6", "cuanto": "poco"}, {"movimiento": "rodar", "cuanto": "bastante"}]
+    assert _guardado(pagina) == [{"movimiento": "6"}, {"movimiento": "rodar"}]
     assert pagina.locator(".hueco.lleno h3").all_inner_texts() == ["6 gancho de derecha", "rueda"]
     foco = _foco(pagina)
     assert foco["hueco"] == "2" and "vacio" in foco["clase"]
@@ -240,7 +216,7 @@ def test_pestanas_con_teclado_y_el_foco_no_sale_del_panel(ajustes):
     # Al pulsar Enter en una ficha se elige.
     pagina.focus('[data-elegir="pivote"]')
     _cerrar(pagina, lambda: pagina.keyboard.press("Enter"))
-    assert _guardado(pagina) == [{"movimiento": "pivote", "cuanto": "poco"}]
+    assert _guardado(pagina) == [{"movimiento": "pivote"}]
     # «Cerrar» también devuelve el foco al hueco.
     _abrir_panel(pagina)
     _cerrar(pagina, lambda: pagina.click("#elegir-practicar [data-cerrar]"))
@@ -253,7 +229,7 @@ def test_al_pasar_a_zurdo_el_hueco_cambia_de_mano_pero_lo_guardado_no(ajustes):
     assert pagina.locator('[data-elegir="4"]').inner_text().strip() == "4 crochet de derecha"
     _cerrar(pagina, lambda: pagina.click('[data-elegir="4"]'))
     antes = _guardado(pagina)
-    assert antes == [{"movimiento": "4", "cuanto": "poco"}]  # la clave del movimiento: ni el texto ni la mano
+    assert antes == [{"movimiento": "4"}]  # la clave del movimiento: ni el texto ni la mano
     assert pagina.locator(".hueco.lleno h3").all_inner_texts() == ["4 crochet de derecha"]
     pagina.goto(f"{ORIGEN}/index.html#entrenar")
     pagina.locator("#zurdo").check()
@@ -282,9 +258,6 @@ def test_nada_se_sale_de_la_pantalla_a_390(ajustes):
     derecha = pagina.evaluate("""() => Math.max(...[...document.querySelectorAll('#f-practicar .hueco *')]
       .map((e) => e.getBoundingClientRect().right))""")
     assert derecha <= ancho
-    # El selector de cada hueco, en una línea por botón.
-    assert _en_una_linea(pagina)
-    assert all(b["holgura"] >= 6 and b["dentro"] for b in _selector_holgado(pagina))
 
 
 def _pestanas_quietas(pagina):
@@ -335,15 +308,6 @@ def test_a_1024_tres_huecos_en_fila_y_el_panel_centrado(ajustes):
           .map((li) => li.getBoundingClientRect().toJSON())""")
         assert len({round(c["top"]) for c in cajas}) == 1
         assert len({(round(c["width"]), round(c["height"])) for c in cajas}) == 1
-        assert _en_una_linea(pagina)
-        # Selector con la letra y el relleno de Velocidad; ningún texto cortado ni pegado al borde.
-        estilo = """(s) => { const c = getComputedStyle(document.querySelector(s));
-          return [c.fontSize, c.paddingTop, c.paddingRight, c.paddingBottom, c.paddingLeft]; }"""
-        assert pagina.evaluate(f"({estilo})('.segmentado span')") == pagina.evaluate(
-            f"({estilo})('.velocidades .chip-opcion span')")
-        for boton in _selector_holgado(pagina):
-            assert boton["lineas"] == 1 and boton["cabe"] and boton["dentro"], boton
-            assert boton["holgura"] >= 6, boton
         _abrir_panel(pagina)
         assert _filas(pagina) == [[3, 3], [1], [1] * 7, [1] * 3]
         assert _pestanas_quietas(pagina)["defensa"]["bajo"] <= 24

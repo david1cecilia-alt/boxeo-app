@@ -1,6 +1,6 @@
 // Une los datos del usuario (almacén) con el motor: qué perfil usa el sorteo y
 // qué se propone al entrenar (lo último elegido). Sin reglas de boxeo.
-import { PERSONALIZADA_POR_DEFECTO } from "./almacen.js";
+import { PERSONALIZADA_POR_DEFECTO, TIPOS } from "./almacen.js";
 import { datos } from "./motor/datos.js";
 import { VELOCIDADES, VELOCIDAD_POR_DEFECTO } from "./motor/ritmo.js";
 import {
@@ -8,8 +8,6 @@ import {
   propiasValidas,
 } from "./motor/sorteo.js";
 import { construirGuion, validarConfig } from "./motor/temporizador.js";
-
-export const PERSONALIZADO = "personalizado"; // el asalto que no es un preset de data/presets.json
 
 export const NOMBRE_NIVEL = { 1: "Básico", 2: "Medio", 3: "Avanzado" };
 export const NOMBRE_RITMO = { 1: "Calmado", 2: "Tranquilo", 3: "Constante", 4: "Vivo", 5: "Intenso" };
@@ -73,15 +71,12 @@ export function perfilSorteo(perfilUsuario) {
   return practicar.length ? { ...base, practicar: practicar.map((p) => ({ ...p })) } : base;
 }
 
-// Elige (cuanto "poco" o "bastante"), cambia o quita (cuanto null) un movimiento de «Practicar
-// más». Devuelve la lista nueva; uno nuevo no entra si ya hay MAX_PRACTICAR.
-export function cambiarPracticar(practicar, movimiento, cuanto) {
-  const resto = practicar.filter((p) => p.movimiento !== movimiento);
-  if (cuanto === null) return resto;
-  if (resto.length === practicar.length && practicar.length >= MAX_PRACTICAR) return practicar;
-  return practicar.some((p) => p.movimiento === movimiento)
-    ? practicar.map((p) => (p.movimiento === movimiento ? { movimiento, cuanto } : p))
-    : [...practicar, { movimiento, cuanto }];
+// Elige (`elegir` true) o quita (false) un movimiento de «Practicar más», con un solo nivel. Devuelve
+// la lista nueva; uno nuevo no entra si ya hay MAX_PRACTICAR, y elegir uno ya elegido no cambia nada.
+export function cambiarPracticar(practicar, movimiento, elegir) {
+  if (!elegir) return practicar.filter((p) => p.movimiento !== movimiento);
+  if (practicar.some((p) => p.movimiento === movimiento) || practicar.length >= MAX_PRACTICAR) return practicar;
+  return [...practicar, { movimiento }];
 }
 
 // El guion de la sesión: la biblioteca del nivel con «Practicar más» y, según `config.mezcla` («Tus
@@ -100,14 +95,14 @@ export function repetirColetillas(config, propias = []) {
   return coletillasRepetibles(mezclaEfectiva(config.mezcla ?? "ninguna", validas, config.nivel), validas);
 }
 
-// Lo que se propone al entrenar: lo último que se eligió en Entrenar. Nivel y guardia, si no se
-// han elegido nunca, son los de data/perfil.json.
+// Lo que se propone al entrenar: lo último que se eligió en Entrenar. `tipo`: "general" o
+// "personalizada" (uno desconocido, la General). Nivel y guardia, si no se han elegido nunca, son los
+// de data/perfil.json.
 export function preferencias(perfilUsuario) {
   const base = datos().perfil;
   const s = perfilUsuario.sesion;
-  const asaltos = [...datos().presets.presets.map((p) => p.id), PERSONALIZADO];
   return {
-    asalto: asaltos.includes(s.asalto) ? s.asalto : asaltos[0],
+    tipo: TIPOS.includes(s.tipo) ? s.tipo : TIPOS[0],
     nivel: s.nivel ?? base.nivel,
     zurdo: s.zurdo ?? base.guardia === "zurda",
     voz: s.voz,

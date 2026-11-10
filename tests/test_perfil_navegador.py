@@ -71,7 +71,11 @@ def _abrir_perfil(pagina, estilo=None, ancho=390):
 def test_el_almacen_v6_se_migra_sin_notas_ni_revisiones_y_la_guardia_pasa_a_entrenar(pagina):
     _abrir_perfil(pagina)
     datos = _guardado(pagina)
-    assert datos["version"] == 8  # la actual: pasa por la 7 y la 8 (combinaciones propias)
+    assert datos["version"] == 9  # la actual: pasa por la 7, la 8 (combinaciones propias) y la 9
+    # Amateur con nivel 3 no es la General: Personalizada 3×3, para que la sesión no cambie.
+    assert datos["perfil"]["sesion"]["tipo"] == "personalizada" and "asalto" not in datos["perfil"]["sesion"]
+    assert datos["perfil"]["sesion"]["personalizada"] == {"asaltos": 3, "duracion_asalto": 180, "descanso": 60}
+    assert datos["perfil"]["identidad"] == {"nombre": "", "avatar": None} and datos["perfil"]["pistas"] == {"asa": False}
     assert datos["combinacionesPropias"] == [] and datos["perfil"]["sesion"]["mezcla"] == "ninguna"
     assert "notas_entrenador" not in datos and "revisiones" not in datos
     assert datos["perfil"]["basicos"] == {"inicio": None, "altura_cm": 178, "peso_kg": None, "alcance_cm": None}

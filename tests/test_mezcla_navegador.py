@@ -55,7 +55,7 @@ def pagina(sitio):
 def ir(pagina, propias=(), sesion=None, ruta="#entrenar"):
     pagina.goto(f"{ORIGEN}/__pagina__.html")
     pagina.wait_for_function("window.listo === true")
-    datos = {"version": 8, "combinacionesPropias": [
+    datos = {"version": 9, "combinacionesPropias": [
         {"id": f"p-{i}", "ids": ids, "creada": "2026-11-04T10:00:00"} for i, ids in enumerate(propias)]}
     if sesion:
         datos["perfil"] = {"sesion": sesion}
@@ -184,7 +184,9 @@ ESPERADO = """async ({ propias, voz }) => {
 def test_sesion_con_solo_las_mias_en_zurdo_dice_solo_propias_y_las_guarda_como_el_resto(pagina):
     tres = CINCO[:3]
     pagina.clock.install()
-    ir(pagina, tres, {"mezcla": "solo", "asalto": "prueba", "zurdo": True, "voz": "ambos", "nivel": 3})
+    # Una Personalizada de 2 × 30 s (lo que era Prueba), para que la sesión sea corta.
+    ir(pagina, tres, {"mezcla": "solo", "tipo": "personalizada", "zurdo": True, "voz": "ambos", "nivel": 3,
+                      "personalizada": {"asaltos": 2, "duracion_asalto": 30, "descanso": 10}})
     esperado = pagina.evaluate(ESPERADO, {"propias": tres, "voz": "ambos"})
     textos = {e["texto"] for e in esperado}
     pagina.click("#empezar")
@@ -232,7 +234,7 @@ def abrir_editor(pagina, sesion=None, voz=None):
     if voz:
         perfil["voz"] = voz
     pagina.evaluate("(d) => localStorage.setItem('boxeo', d)",
-                    json.dumps({"version": 8, "combinacionesPropias": [], "perfil": perfil}))
+                    json.dumps({"version": 9, "combinacionesPropias": [], "perfil": perfil}))
     pagina.goto(f"{ORIGEN}/index.html#ajustes/mis-combinaciones/nueva")
     pagina.wait_for_selector("#caja-combo #escuchar")
 

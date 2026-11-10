@@ -16,7 +16,7 @@ test("sin nada en «Practicar más» el sorteo usa data/perfil.json, que ya no l
 });
 
 test("lo elegido en «Practicar más» pasa al sorteo sin tocar el resto de data/perfil.json", () => {
-  const practicar = [{ movimiento: "6", cuanto: "bastante" }];
+  const practicar = [{ movimiento: "6" }];
   const perfil = perfilSorteo({ ...perfilPorDefecto(), practicar });
   assert.deepEqual(perfil.practicar, practicar);
   assert.notEqual(perfil.practicar, practicar); // una copia: el sorteo no cambia el perfil
@@ -24,21 +24,21 @@ test("lo elegido en «Practicar más» pasa al sorteo sin tocar el resto de data
   assert.equal("practicar" in datos.perfil, false);
 });
 
-test("cambiarPracticar elige con «un poco», cambia el cuánto en su sitio y quita", () => {
-  let p = cambiarPracticar([], "3", "poco");
-  p = cambiarPracticar(p, "rodar", "poco");
-  assert.deepEqual(cambiarPracticar(p, "3", "bastante"),
-    [{ movimiento: "3", cuanto: "bastante" }, { movimiento: "rodar", cuanto: "poco" }]);
-  assert.deepEqual(cambiarPracticar(p, "3", null), [{ movimiento: "rodar", cuanto: "poco" }]);
-  assert.deepEqual(cambiarPracticar(p, "pivote", null), p);
+test("cambiarPracticar elige (sin cuánto: un solo nivel), no repite y quita", () => {
+  let p = cambiarPracticar([], "3", true);
+  p = cambiarPracticar(p, "rodar", true);
+  assert.deepEqual(p, [{ movimiento: "3" }, { movimiento: "rodar" }]);
+  assert.equal(cambiarPracticar(p, "3", true), p); // ya elegido: nada cambia
+  assert.deepEqual(cambiarPracticar(p, "3", false), [{ movimiento: "rodar" }]);
+  assert.deepEqual(cambiarPracticar(p, "pivote", false), p);
 });
 
 test(`cambiarPracticar no deja elegir más de ${MAX_PRACTICAR}, pero sí cambiar o quitar los elegidos`, () => {
-  const llenos = ["1", "cuerpo", "bloqueo"].map((movimiento) => ({ movimiento, cuanto: "poco" }));
+  const llenos = ["1", "cuerpo", "bloqueo"].map((movimiento) => ({ movimiento }));
   assert.equal(llenos.length, MAX_PRACTICAR);
-  assert.deepEqual(cambiarPracticar(llenos, "6", "poco"), llenos);
-  assert.equal(cambiarPracticar(llenos, "bloqueo", "bastante")[2].cuanto, "bastante");
-  assert.equal(cambiarPracticar(llenos, "1", null).length, MAX_PRACTICAR - 1);
+  assert.deepEqual(cambiarPracticar(llenos, "6", true), llenos);
+  assert.deepEqual(cambiarPracticar(llenos, "bloqueo", true), llenos);
+  assert.equal(cambiarPracticar(llenos, "1", false).length, MAX_PRACTICAR - 1);
 });
 
 // localStorage falso, para guardar y releer como al recargar la página.
@@ -54,10 +54,10 @@ function cambiarEnPerfil(almacen, grupo, campo, valor) {
   almacen.guardarPerfil(p);
 }
 
-test("sin nada elegido en Entrenar: Amateur, nivel y guardia de data/perfil.json, voz y ritmo de siempre", () => {
+test("sin nada elegido en Entrenar: General, nivel y guardia de data/perfil.json, voz y ritmo de siempre", () => {
   const p = perfilPorDefecto();
   assert.deepEqual(preferencias(p), {
-    asalto: "amateur", nivel: datos.perfil.nivel, zurdo: datos.perfil.guardia === "zurda", voz: "nombres", ritmo: 3,
+    tipo: "general", nivel: datos.perfil.nivel, zurdo: datos.perfil.guardia === "zurda", voz: "nombres", ritmo: 3,
     reaccion: false, mezcla: "ninguna", personalizada: { asaltos: 3, duracion_asalto: 180, descanso: 60 },
   });
   // Lo que quede de «Tus datos» (datos escritos a mano) ya no cuenta: solo Entrenar.
@@ -69,7 +69,7 @@ test("sin nada elegido en Entrenar: Amateur, nivel y guardia de data/perfil.json
 });
 
 test("cada elección de Entrenar se guarda y se lee igual al recargar", () => {
-  const eleccion = { asalto: "prueba", nivel: 3, ritmo: 4, voz: "numeros", zurdo: true, reaccion: true, mezcla: "mucho" };
+  const eleccion = { tipo: "personalizada", nivel: 3, ritmo: 4, voz: "numeros", zurdo: true, reaccion: true, mezcla: "mucho" };
   for (const [campo, valor] of Object.entries(eleccion)) {
     const storage = almacenamiento();
     recordarSesion(crearAlmacen({ storage }), { [campo]: valor });
@@ -82,14 +82,13 @@ test("cada elección de Entrenar se guarda y se lee igual al recargar", () => {
   assert.deepEqual(leidas, eleccion);
 });
 
-test("la personalizada se guarda y no se pierde al elegir Amateur o Prueba", () => {
+test("la personalizada se guarda y no se pierde al elegir la General", () => {
   const storage = almacenamiento();
   const almacen = crearAlmacen({ storage });
-  recordarSesion(almacen, { asalto: "personalizado", personalizada: { asaltos: 4, duracion_asalto: 120, descanso: 45 } });
-  recordarSesion(almacen, { asalto: "prueba" });
-  recordarSesion(almacen, { asalto: "amateur" });
+  recordarSesion(almacen, { tipo: "personalizada", personalizada: { asaltos: 4, duracion_asalto: 120, descanso: 45 } });
+  recordarSesion(almacen, { tipo: "general" });
   const leidas = preferencias(crearAlmacen({ storage }).datos.perfil);
-  assert.equal(leidas.asalto, "amateur");
+  assert.equal(leidas.tipo, "general");
   assert.deepEqual(leidas.personalizada, { asaltos: 4, duracion_asalto: 120, descanso: 45 });
 });
 
@@ -104,15 +103,18 @@ test("una personalizada que no pasa validarConfig vuelve a 3 × 180 s con 60 s d
   assert.equal(personalizadaValida({ asaltos: 4, duracion_asalto: 120, descanso: 45 }), true);
 });
 
-test("un asalto desconocido vuelve al primero (Amateur)", () => {
+test("un tipo desconocido (o «prueba», que nunca se guarda) vale la General", () => {
   const p = perfilPorDefecto();
-  p.sesion = { ...p.sesion, asalto: "olimpico" };
-  assert.equal(preferencias(p).asalto, "amateur");
+  for (const tipo of ["olimpico", "prueba", undefined]) {
+    p.sesion = { ...p.sesion, tipo };
+    assert.equal(preferencias(p).tipo, "general", String(tipo));
+  }
+  assert.equal("asalto" in preferencias(p), false);
 });
 
 test("recordarSesion guarda solo lo que llega y conserva el resto del perfil", () => {
   const guardados = [];
-  const perfil = { ...perfilPorDefecto(), practicar: [{ movimiento: "2", cuanto: "poco" }] };
+  const perfil = { ...perfilPorDefecto(), practicar: [{ movimiento: "2" }] };
   const almacen = { datos: { perfil }, guardarPerfil: (p) => guardados.push(p) };
   recordarSesion(almacen, { voz: "numeros", ritmo: 1 });
   assert.deepEqual(guardados, [{ ...perfil, sesion: { ...perfil.sesion, voz: "numeros", ritmo: 1 } }]);
@@ -124,7 +126,7 @@ test("tocar otras cosas del Perfil («Practicar más», estilo, medidas) no pisa
   cambiarEnPerfil(almacen, "basicos", "altura_cm", 180);
   cambiarEnPerfil(almacen, "estilo", "cardio", "bueno");
   const p = structuredClone(almacen.datos.perfil);
-  p.practicar = [{ movimiento: "flexion", cuanto: "bastante" }];
+  p.practicar = [{ movimiento: "flexion" }];
   almacen.guardarPerfil(p);
   assert.equal(preferencias(almacen.datos.perfil).nivel, 3);
   assert.equal(preferencias(almacen.datos.perfil).zurdo, true);

@@ -2,7 +2,7 @@
 // guantes a 1–2 m del móvil). No contiene reglas de boxeo: el guion lo genera el motor y
 // el reproductor lo lanza en tiempo de sesión (con pausa).
 import {
-  NOMBRE_RITMO, OPCIONES_MEZCLA, PERSONALIZADO, estadoMezcla, nuevoGuion, opcionesVoz, personalizadaValida, preferencias,
+  NOMBRE_RITMO, OPCIONES_MEZCLA, estadoMezcla, nuevoGuion, opcionesVoz, personalizadaValida, preferencias,
   recordarSesion, repetirColetillas, resumenElecciones,
 } from "../ajustes.js";
 import { crearAzar, semillaAleatoria } from "../motor/azar.js";
@@ -32,24 +32,26 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
 
   // ---------- Configuración ----------
 
-  // Presets como chips (radios); los ajustes avanzados solo se ven con "Personalizado".
-  const chip = (id, nombre) =>
-    `<label class="chip-opcion"><input type="radio" name="preset" value="${id}"><span>${esc(nombre)}</span></label>`;
-  $("#presets").insertAdjacentHTML("beforeend",
-    presets.map((p) => chip(p.id, p.nombre)).join("") + chip(PERSONALIZADO, "Personalizado"));
+  // El tipo de sesión como chips (radios): la General (el preset «amateur»), Prueba (no se guarda) y
+  // Personalizado. Los ajustes avanzados solo se ven con "Personalizado".
+  const PRESET_DE_TIPO = { general: "amateur", prueba: "prueba" };
+  const chip = (tipo, nombre) =>
+    `<label class="chip-opcion"><input type="radio" name="preset" value="${tipo}"><span>${esc(nombre)}</span></label>`;
+  $("#presets").insertAdjacentHTML("beforeend", Object.entries(PRESET_DE_TIPO)
+    .map(([tipo, id]) => chip(tipo, presets.find((p) => p.id === id).nombre)).join("") + chip("personalizada", "Personalizado"));
   // «Tus combinaciones»: Ninguna · Poco · Bastante · Mucho en una fila y «Solo las mías» debajo.
   $("#mezclas").insertAdjacentHTML("beforeend", OPCIONES_MEZCLA.map(({ id, nombre, porcentaje }) =>
     `<label${id === "solo" ? ' class="mezcla-solo"' : ""}><input type="radio" name="mezcla" value="${id}">`
     + `<span><b>${porcentaje} %</b>${esc(nombre)}</span></label>`).join(""));
   aplicarPreferencias();
 
-  // Marca el asalto y rellena sus valores: los del preset o los de la personalizada guardada.
-  function elegirAsalto(id, personalizada) {
-    $(`input[name="preset"][value="${id}"]`).checked = true;
-    const personalizado = id === PERSONALIZADO;
+  // Marca el tipo y rellena sus valores: los del preset o los de la personalizada guardada.
+  function elegirTipo(tipo, personalizada) {
+    $(`input[name="preset"][value="${tipo}"]`).checked = true;
+    const personalizado = tipo === "personalizada";
     $("#avanzados").hidden = !personalizado;
     if (personalizado) $("#avanzados").open = true;
-    const p = personalizado ? personalizada : presets.find((x) => x.id === id);
+    const p = personalizado ? personalizada : presets.find((x) => x.id === PRESET_DE_TIPO[tipo]);
     $("#asaltos").value = p.asaltos;
     $("#duracion").value = p.duracion_asalto;
     $("#descanso").value = p.descanso;
@@ -73,8 +75,8 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   function aplicarPreferencias() {
     if (perfilAplicado === almacen.datos.perfil) return;
     perfilAplicado = almacen.datos.perfil;
-    const { asalto, nivel, zurdo, voz, ritmo, reaccion, mezcla, personalizada } = preferencias(perfilAplicado);
-    elegirAsalto(asalto, personalizada);
+    const { tipo, nivel, zurdo, voz, ritmo, reaccion, mezcla, personalizada } = preferencias(perfilAplicado);
+    elegirTipo(tipo, personalizada);
     $(`input[name="nivel"][value="${nivel}"]`).checked = true;
     $(`input[name="mezcla"][value="${mezcla}"]`).checked = true;
     $(`input[name="voz"][value="${voz}"]`).checked = true;
@@ -145,10 +147,11 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     return $('input[name="nivel"]:checked') ? leerConfig() : null;
   }
 
-  // Elegir Amateur o Prueba no borra la personalizada: sigue guardada para cuando se vuelva.
+  // Elegir la General o Prueba no borra la personalizada: sigue guardada para cuando se vuelva.
+  // Prueba no se recuerda: es solo para probar.
   $("#presets").addEventListener("change", (e) => {
-    elegirAsalto(e.target.value, preferencias(almacen.datos.perfil).personalizada);
-    recordar({ asalto: e.target.value });
+    elegirTipo(e.target.value, preferencias(almacen.datos.perfil).personalizada);
+    if (e.target.value !== "prueba") recordar({ tipo: e.target.value });
   });
   // La personalizada se guarda en cuanto es válida (a medio escribir, no).
   for (const id of ["asaltos", "duracion", "descanso"]) {

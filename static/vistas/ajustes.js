@@ -13,8 +13,6 @@ import { RUTA as RUTA_CREADOR, iniciarCreador } from "./creador.js";
 import { $, $$, anunciar, atraparFoco, esc } from "./dom.js";
 
 const GRUPOS_PRACTICAR = { golpe: "Golpes", defensa: "Defensas", movimiento: "Salidas" };
-// Cuánto más, sin el factor del sorteo (×2, ×4): la frecuencia exacta no se enseña.
-const CUANTO = { poco: "Un poco más", bastante: "Bastante más" };
 const ICONO_CERRAR = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
 
 // Los movimientos de «Practicar más» con su nombre y su grupo. Los golpes llevan su número y la
@@ -30,7 +28,7 @@ function movimientosPracticar(zurdo) {
   });
 }
 
-// Hueco lleno: el movimiento, cuánto más (dos botones) y quitarlo.
+// Hueco lleno: el movimiento y quitarlo (un solo nivel: no hay «cuánto más»).
 function huecoLleno(elegido, i, nombre) {
   return `<div class="hueco lleno" data-hueco="${i}" role="group" aria-labelledby="hueco-${i}" tabindex="-1">
     <div class="hueco-cabecera">
@@ -38,11 +36,6 @@ function huecoLleno(elegido, i, nombre) {
       <button type="button" class="quitar-practicar" data-quitar="${esc(elegido.movimiento)}"
         aria-label="Quitar ${esc(nombre)}">${ICONO_CERRAR}</button>
     </div>
-    <fieldset class="segmentado"><legend class="solo-lectores">Cuánto más</legend>
-      ${Object.entries(CUANTO).map(([clave, texto]) => `<label>
-        <input type="radio" name="cuanto-${i}" data-cuanto="${clave}" data-movimiento="${esc(elegido.movimiento)}"
-          ${elegido.cuanto === clave ? "checked" : ""}><span>${texto}</span></label>`).join("")}
-    </fieldset>
   </div>`;
 }
 
@@ -194,8 +187,8 @@ export function iniciarAjustes({ almacen, voz }) {
     $("#elegir-practicar").innerHTML = panelPracticar(lista, elegidos);
   }
 
-  function guardarPracticar(movimiento_, cuanto) {
-    guardar((p) => (p.practicar = cambiarPracticar(p.practicar, movimiento_, cuanto)));
+  function guardarPracticar(movimiento_, elegir) {
+    guardar((p) => (p.practicar = cambiarPracticar(p.practicar, movimiento_, elegir)));
   }
 
   // Se conecta una vez por pintar(): el formulario y el panel se rehacen por dentro, no ellos.
@@ -215,17 +208,10 @@ export function iniciarAjustes({ almacen, voz }) {
       }
       const quitar = e.target.closest("[data-quitar]");
       if (!quitar) return;
-      guardarPracticar(quitar.dataset.quitar, null);
+      guardarPracticar(quitar.dataset.quitar, false);
       pintarPracticar();
       // El hueco que queda vacío es el primero sin elegir: los demás suben.
       $(`[data-hueco="${almacen.datos.perfil.practicar.length}"]`).focus();
-    });
-    formulario.addEventListener("change", (e) => {
-      const r = e.target.closest("[data-cuanto]");
-      if (!r) return;
-      guardarPracticar(r.dataset.movimiento, r.dataset.cuanto);
-      pintarPracticar();
-      $(`[data-movimiento="${r.dataset.movimiento}"][data-cuanto="${r.dataset.cuanto}"]`).focus();
     });
 
     panel.addEventListener("click", (e) => {
@@ -235,7 +221,7 @@ export function iniciarAjustes({ almacen, voz }) {
       if (pestana) return elegirPestana(pestana);
       const ficha = e.target.closest("[data-elegir]");
       if (!ficha || ficha.getAttribute("aria-disabled") === "true") return;
-      guardarPracticar(ficha.dataset.elegir, "poco");
+      guardarPracticar(ficha.dataset.elegir, true);
       panel.close("elegido");
     });
     panel.addEventListener("keydown", teclasPestanas);

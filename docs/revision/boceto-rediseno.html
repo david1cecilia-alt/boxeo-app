@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boceto · Estructura de Entrenar</title>
+<!-- Boceto suelto, FUERA de la app (no va al precache ni al sitio). SOLO estructura: todo en gris
+     neutro y con la fuente del sistema, a propósito; los colores y la tipografía van en otra fase.
+     Estado por la URL: ?estado=cerrado (por defecto), ?estado=abierto (menú abierto) o
+     ?estado=pista (la primera vez: el asa asoma). Capturas: docs/revision/boceto-rediseno-*.png. -->
+<style>
+  :root {
+    color-scheme: light;
+    --fondo: #f2f2f2; --superficie: #ffffff; --hundido: #e6e6e6; --linea: #c8c8c8; --linea-fuerte: #8a8a8a;
+    --texto: #1f1f1f; --suave: #5c5c5c; --relleno: #3d3d3d; --sobre-relleno: #ffffff; --velo: rgba(0,0,0,.35);
+    --hueco: 16px; --alto-barra: 64px; --radio: 16px;
+    font: 16px/1.4 system-ui, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fondo); color: var(--texto); min-height: 100vh; }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--texto); outline-offset: 2px; }
+  .nota-boceto { font-size: 12px; color: var(--suave); border: 1px dashed var(--linea-fuerte); border-radius: 8px; padding: 2px 8px; display: inline-block; }
+
+  /* ---------- Marco de la app ---------- */
+  .app { min-height: 100vh; padding: 16px var(--hueco) calc(var(--alto-barra) + 32px); max-width: 560px; margin: 0 auto; position: relative; }
+
+  /* Cabecera: avatar · nombre · estilo. Es UN botón que abre el perfil. */
+  .cabecera-perfil { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 8px 12px 8px 8px;
+    border: 1px solid var(--linea); border-radius: 999px; background: var(--superficie); text-align: left; cursor: pointer; }
+  .avatar { flex: none; width: 48px; height: 48px; border-radius: 50%; background: var(--hundido); border: 2px dashed var(--linea-fuerte);
+    display: grid; place-items: center; font-size: 10px; color: var(--suave); text-align: center; line-height: 1.1; }
+  .cabecera-perfil .quien { flex: 1; display: grid; }
+  .cabecera-perfil b { font-size: 1.05rem; }
+  .cabecera-perfil small { color: var(--suave); }
+  .cabecera-perfil .flecha { color: var(--suave); font-size: 1.4rem; }
+
+  /* Selector General | Personalizada */
+  .selector { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin: 20px 0 16px; border-radius: 999px; background: var(--hundido); border: 0; }
+  .selector legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .selector label { display: grid; place-items: center; min-height: 48px; border-radius: 999px; font-weight: 600; cursor: pointer; }
+  .selector input { position: absolute; opacity: 0; }
+  .selector input:checked + span { background: var(--superficie); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .selector span { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 999px; }
+
+  /* Resumen de la sesión elegida y Empezar */
+  .resumen { background: var(--superficie); border: 1px solid var(--linea); border-radius: var(--radio); padding: 20px; }
+  .resumen h2 { margin: 0 0 4px; font-size: 1rem; color: var(--suave); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+  .resumen .grande { font-size: 1.9rem; font-weight: 800; margin: 0; }
+  .resumen ul { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .resumen li { padding: 4px 10px; border-radius: 999px; background: var(--hundido); font-size: .85rem; }
+  .resumen .fija { margin: 12px 0 0; color: var(--suave); font-size: .85rem; }
+  .empezar { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 64px; margin-top: 16px;
+    border: 0; border-radius: 999px; background: var(--relleno); color: var(--sobre-relleno); font-size: 1.25rem; font-weight: 800; cursor: pointer; }
+  .voz-linea { text-align: center; color: var(--suave); font-size: .8rem; margin: 8px 0 0; }
+
+  /* Barra inferior: Entrenar · Aprende · Historial (Perfil sale de la barra). */
+  .barra { position: fixed; left: var(--hueco); right: var(--hueco); bottom: 12px; height: var(--alto-barra); max-width: 528px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(3, 1fr); padding: 6px; border-radius: 999px; background: var(--superficie); border: 1px solid var(--linea); z-index: 5; }
+  .barra a { display: grid; place-items: center; align-content: center; gap: 2px; border-radius: 999px; color: var(--suave); text-decoration: none; font-size: .78rem; font-weight: 600; }
+  .barra a i { width: 20px; height: 20px; border: 2px solid currentColor; border-radius: 6px; }
+  .barra a[aria-current="page"] { background: var(--relleno); color: var(--sobre-relleno); }
+
+  /* ---------- Asa del menú lateral ----------
+     A la DERECHA y separada del borde (right: 28px): los gestos «Atrás» de Android nacen en los dos
+     bordes (~20-24 dp) y el de iOS en el izquierdo. Área táctil 48×72 px; lo que se ve, la pastilla
+     de puntitos. Es un <button aria-expanded aria-controls="menu"> (WCAG 2.5.7: arrastrar nunca es
+     la única forma; tocar, Intro o Espacio también abren). */
+  .asa { position: fixed; right: 28px; top: 42%; width: 48px; height: 72px; display: grid; place-items: center; border: 0; background: none; cursor: grab; z-index: 6; padding: 0; }
+  .asa .pastilla { width: 22px; height: 60px; border-radius: 999px; background: var(--superficie); border: 1px solid var(--linea-fuerte);
+    display: grid; grid-template-columns: 4px 4px; gap: 5px 4px; align-content: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
+  .asa .pastilla i { width: 4px; height: 4px; border-radius: 50%; background: var(--suave); }
+  .zona-gesto { position: fixed; top: 0; bottom: 0; width: 24px; background: repeating-linear-gradient(45deg, transparent 0 6px, rgba(0,0,0,.06) 6px 12px); pointer-events: none; z-index: 4; }
+  .zona-gesto.der { right: 0; } .zona-gesto.izq { left: 0; }
+  .zona-gesto span { position: absolute; top: 50%; writing-mode: vertical-rl; font-size: 10px; color: var(--suave); left: 6px; }
+
+  /* Pista de la primera vez: el asa asoma desde dentro del menú cerrado (el borde del panel se ve). */
+  body.pista .asoma { position: fixed; right: 0; top: 30%; bottom: 30%; width: 64px; border-radius: var(--radio) 0 0 var(--radio);
+    background: var(--superficie); border: 1px solid var(--linea); border-right: 0; box-shadow: -4px 0 12px rgba(0,0,0,.12); z-index: 5; }
+  body.pista .asa { right: 70px; }
+  .globo { display: none; }
+  body.pista .globo { display: block; position: fixed; right: 128px; top: calc(42% + 12px); background: var(--relleno); color: var(--sobre-relleno);
+    padding: 8px 12px; border-radius: 12px; font-size: .85rem; max-width: 190px; z-index: 6; }
+
+  /* ---------- Menú lateral (abierto) ----------
+     <dialog> modal: velo, foco atrapado, Esc cierra y el foco vuelve al asa. */
+  .velo { display: none; position: fixed; inset: 0; background: var(--velo); z-index: 7; }
+  .menu { display: none; position: fixed; top: 0; right: 0; bottom: 0; width: min(88vw, 420px); background: var(--superficie); z-index: 8;
+    border-radius: var(--radio) 0 0 var(--radio); overflow: auto; padding: 16px 16px 32px; box-shadow: -8px 0 24px rgba(0,0,0,.2); }
+  body.abierto .velo, body.abierto .menu { display: block; }
+  body.abierto .asa { right: min(88vw, 420px); }
+  .menu-cabeza { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .menu-cabeza h2 { margin: 0; font-size: 1.2rem; }
+  .cerrar { width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--linea); background: var(--superficie); cursor: pointer; font-size: 1.2rem; }
+  details.grupo { border-top: 1px solid var(--linea); }
+  details.grupo > summary { list-style: none; display: flex; justify-content: space-between; align-items: center; min-height: 56px; font-weight: 700; cursor: pointer; }
+  details.grupo > summary::after { content: "+"; font-size: 1.3rem; color: var(--suave); }
+  details.grupo[open] > summary::after { content: "–"; }
+  .campo { margin: 0 0 14px; }
+  .campo > span, .campo legend { display: block; font-size: .8rem; font-weight: 600; color: var(--suave); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; padding: 0; }
+  fieldset.campo { border: 0; padding: 0; }
+  .fila { display: flex; flex-wrap: wrap; gap: 6px; }
+  .fila b { padding: 8px 12px; border-radius: 999px; border: 1px solid var(--linea); font-weight: 600; font-size: .9rem; min-height: 40px; display: inline-flex; align-items: center; }
+  .fila b.si { background: var(--relleno); color: var(--sobre-relleno); border-color: transparent; }
+  .tres { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .tres b { padding: 8px; border-radius: 10px; border: 1px solid var(--linea); text-align: center; font-size: .9rem; min-height: 40px; }
+  .barra-rango { height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--relleno) 50%, var(--hundido) 50%); margin: 12px 0 4px; }
+  .enlace { display: flex; justify-content: space-between; align-items: center; min-height: 56px; padding: 0 14px; border: 1px solid var(--linea); border-radius: 12px; font-weight: 600; margin-bottom: 14px; }
+  .enlace small { color: var(--suave); font-weight: 400; }
+  .avatares { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .avatares .avatar { width: 100%; height: auto; aspect-ratio: 1; }
+  .interruptor { display: flex; justify-content: space-between; align-items: center; min-height: 48px; }
+  .interruptor i { width: 44px; height: 26px; border-radius: 999px; background: var(--hundido); border: 1px solid var(--linea-fuerte); position: relative; }
+  .interruptor i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--superficie); border: 1px solid var(--linea-fuerte); }
+
+  /* ---------- Escritorio (≥ 1024 px) ----------
+     Menú de secciones a la izquierda (sin Perfil ni Ajustes) y, como en el diseño del 27-10, dos
+     columnas: selector y resumen a la izquierda; «Tu sesión» + Empezar a la derecha. El asa sigue
+     (mismo componente); el panel se abre sobre la columna derecha. */
+  @media (min-width: 1024px) {
+    :root { --hueco: 32px; }
+    .barra { left: 0; top: 0; bottom: 0; right: auto; width: 220px; height: auto; max-width: none; margin: 0; border-radius: 0; border-width: 0 1px 0 0;
+      grid-template-columns: 1fr; grid-auto-rows: 56px; align-content: start; padding: 88px 16px 16px; gap: 6px; }
+    .barra::before { content: "BOXEO"; position: absolute; top: 28px; left: 28px; font-weight: 800; letter-spacing: .08em; }
+    .barra a { grid-auto-flow: column; justify-content: start; gap: 12px; padding: 0 16px; font-size: .95rem; }
+    .app { max-width: none; margin: 0 0 0 220px; padding: 40px 112px 40px 48px; /* a la derecha, sitio para el asa sin tapar nada */ display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr);
+      gap: 32px; align-items: start; align-content: start; }
+    .cabecera-perfil { grid-column: 1 / -1; max-width: 520px; }
+    .columna-sesion { position: sticky; top: 40px; }
+    .selector { margin-top: 0; }
+    .asa { right: 28px; }
+    .zona-gesto { display: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="zona-gesto izq" aria-hidden="true"><span>gesto «Atrás»</span></div>
+  <div class="zona-gesto der" aria-hidden="true"><span>gesto «Atrás» (Android)</span></div>
+
+  <main class="app" aria-labelledby="t-entrenar">
+    <h1 id="t-entrenar" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Entrenar</h1>
+
+    <!-- Cabecera: abre el perfil (#perfil, fuera de la barra). -->
+    <button type="button" class="cabecera-perfil" aria-label="Tu perfil: David, Boxer-puncher">
+      <span class="avatar" aria-hidden="true">avatar<br>o foto</span>
+      <span class="quien"><b>David</b><small>Boxer-puncher · Ortodoxo</small></span>
+      <span class="flecha" aria-hidden="true">›</span>
+    </button>
+
+    <div class="columna-config">
+      <fieldset class="selector">
+        <legend>Tipo de sesión</legend>
+        <label><input type="radio" name="tipo" value="general" checked><span>General</span></label>
+        <label><input type="radio" name="tipo" value="personalizada"><span>Personalizada</span></label>
+      </fieldset>
+      <p class="nota-boceto">General = 3×3:00 · descanso 1:00, no editable. Personalizada = lo del menú (a).</p>
+      <p class="nota-boceto">«Prueba 2×30 s» ya no se ve: solo con <code>?prueba</code> en la URL aparece como 3.ª opción.</p>
+    </div>
+
+    <div class="columna-sesion">
+      <section class="resumen" aria-labelledby="t-sesion">
+        <h2 id="t-sesion">Tu sesión</h2>
+        <p class="grande">3 × 3:00</p>
+        <p style="margin:0;color:var(--suave)">descanso 1:00 · unos 11 min</p>
+        <ul aria-label="Lo que se aplica">
+          <li>Nivel medio</li><li>Constante</li><li>Nombres</li>
+        </ul>
+        <p class="fija">General: ritmo, nivel y combinaciones fijos. Voz y guardia, las de Ajustes.</p>
+      </section>
+      <button type="button" class="empezar"><span aria-hidden="true">▶</span> Empezar</button>
+      <p class="voz-linea">Voz: Microsoft Helena (es-ES)</p>
+    </div>
+  </main>
+
+  <!-- Barra inferior / menú lateral de secciones en escritorio -->
+  <nav class="barra" aria-label="Secciones">
+    <a href="#entrenar" aria-current="page"><i aria-hidden="true"></i>Entrenar</a>
+    <a href="#aprende"><i aria-hidden="true"></i>Aprende</a>
+    <a href="#historial"><i aria-hidden="true"></i>Historial</a>
+  </nav>
+
+  <!-- Asa: botón real; además se puede arrastrar hacia la izquierda. -->
+  <div class="asoma" aria-hidden="true"></div>
+  <button type="button" class="asa" aria-controls="menu" aria-expanded="false" aria-label="Menú: personalizar, mis combinaciones y ajustes">
+    <span class="pastilla" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+  </button>
+  <p class="globo" role="note">Desliza o toca para personalizar tu sesión</p>
+
+  <div class="velo" aria-hidden="true"></div>
+  <section class="menu" id="menu" role="dialog" aria-modal="true" aria-labelledby="t-menu">
+    <div class="menu-cabeza">
+      <h2 id="t-menu" tabindex="-1">Menú</h2>
+      <button type="button" class="cerrar" aria-label="Cerrar menú">✕</button>
+    </div>
+
+    <details class="grupo" open>
+      <summary>a) Personalizar sesión</summary>
+      <p class="nota-boceto" style="margin-bottom:12px">Al tocar algo aquí, el selector pasa a «Personalizada».</p>
+      <div class="campo"><span>Asaltos · duración · descanso</span><div class="tres"><b>3</b><b>3:00</b><b>1:00</b></div></div>
+      <fieldset class="campo"><legend>Nivel</legend><div class="tres"><b>1 Básico</b><b style="background:var(--relleno);color:#fff">2 Medio</b><b>3 Avanzado</b></div></fieldset>
+      <div class="campo"><span>Ritmo · Constante</span><div class="barra-rango"></div></div>
+      <div class="campo"><span>Practicar más (hasta 3)</span><div class="fila"><b class="si">3 crochet ✕</b><b>+ Añadir</b></div></div>
+      <fieldset class="campo"><legend>Tus combinaciones</legend><div class="fila"><b>Ninguna</b><b class="si">Poco</b><b>Bastante</b><b>Mucho</b><b>Solo las mías</b></div></fieldset>
+      <label class="interruptor">Reacción <i aria-hidden="true"></i></label>
+    </details>
+
+    <details class="grupo" open>
+      <summary>b) Mis combinaciones</summary>
+      <a class="enlace" href="#entrenar/mis-combinaciones">2 de 20 <small>Crear y editar ›</small></a>
+    </details>
+
+    <details class="grupo" open>
+      <summary>c) Ajustes</summary>
+      <div class="campo"><span>Voz</span><div class="enlace" style="margin:0">Automática <small>▾</small></div></div>
+      <fieldset class="campo"><legend>Velocidad</legend><div class="tres"><b>Lenta</b><b style="background:var(--relleno);color:#fff">Normal</b><b>Rápida</b></div></fieldset>
+      <fieldset class="campo"><legend>Nombrar combinaciones</legend><div class="tres"><b>Números</b><b style="background:var(--relleno);color:#fff">Nombres</b><b>Ambos</b></div></fieldset>
+      <fieldset class="campo"><legend>Guardia (también en la General)</legend><div class="fila"><b class="si">Diestro (ortodoxa)</b><b>Zurdo</b></div></fieldset>
+      <div class="campo"><span>Nombre</span><div class="enlace" style="margin:0">David</div></div>
+      <fieldset class="campo"><legend>Avatar o foto</legend>
+        <div class="avatares"><span class="avatar">foto</span><span class="avatar">hueco</span><span class="avatar">hueco</span><span class="avatar">hueco</span><span class="avatar">hueco</span></div>
+        <p class="nota-boceto" style="margin-top:8px">Avatares: los pasará David (sin inventar). Foto: recorte cuadrado, ~256 px, JPEG.</p>
+      </fieldset>
+    </details>
+  </section>
+
+<script>
+  const estado = new URLSearchParams(location.search).get("estado") ?? "cerrado";
+  document.body.classList.add(estado);
+  if (estado === "abierto") document.querySelector(".asa").setAttribute("aria-expanded", "true");
+</script>
+</body>
+</html>

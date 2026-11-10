@@ -52,7 +52,7 @@ def pagina(sitio):
         assert not errores
 
 
-def ir(pagina, propias=(), sesion=None, ruta="#entrenar"):
+def ir(pagina, propias=(), sesion=None, ruta="#entrenar/menu/personalizar"):
     pagina.goto(f"{ORIGEN}/__pagina__.html")
     pagina.wait_for_function("window.listo === true")
     datos = {"version": 9, "combinacionesPropias": [
@@ -61,7 +61,7 @@ def ir(pagina, propias=(), sesion=None, ruta="#entrenar"):
     datos["perfil"] = {"sesion": {"tipo": "personalizada", **(sesion or {})}}
     pagina.evaluate("(d) => localStorage.setItem('boxeo', d)", json.dumps(datos))
     pagina.goto(f"{ORIGEN}/index.html{ruta}")
-    pagina.wait_for_selector("#mezclas label")
+    pagina.wait_for_selector("#mezclas label", state="attached")
 
 
 def desactivada(pagina, valor):
@@ -105,7 +105,7 @@ def test_con_dos_solo_las_mias_esta_desactivada_con_su_motivo_y_lo_demas_se_recu
     assert guardado(pagina)["perfil"]["sesion"]["mezcla"] == "mucho"
     assert "Mucho de las tuyas" in pagina.text_content("#resumen-elecciones")
     pagina.reload()
-    pagina.wait_for_selector("#mezclas label")
+    pagina.wait_for_selector("#mezclas label", state="visible")
     assert pagina.is_checked('input[name="mezcla"][value="mucho"]')
 
 
@@ -151,8 +151,8 @@ def test_crear_una_en_el_creador_activa_el_selector_al_volver(pagina):
     pagina.click("#guardar")
     pagina.click('dialog[open] button[value="guardar"]')  # es igual que una de la biblioteca: «Guardar igual»
     pagina.wait_for_selector("#anadir-propia")
-    pagina.goto(f"{ORIGEN}/index.html#entrenar")
-    pagina.wait_for_selector("#vista-entrenar:not([hidden])")
+    pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/personalizar")
+    pagina.wait_for_selector("#mezclas label", state="visible")
     assert not pagina.eval_on_selector("#mezclas", "(f) => f.disabled")
     assert desactivada(pagina, "solo")
     assert "tienes 1" in pagina.inner_text("#nota-mezcla")
@@ -160,6 +160,7 @@ def test_crear_una_en_el_creador_activa_el_selector_al_volver(pagina):
 
 def test_a_390_el_selector_cabe_y_cada_opcion_se_toca_con_48_px(pagina):
     ir(pagina, CINCO)
+    pagina.wait_for_function("getComputedStyle(document.querySelector('.menu-panel')).transform === 'none'")
     medidas = pagina.eval_on_selector_all("#mezclas label span", """(spans) => spans.map((s) => {
       const r = s.getBoundingClientRect();
       return [s.textContent, r.width, r.height, s.scrollWidth - s.clientWidth, r.right];
@@ -186,7 +187,7 @@ def test_sesion_con_solo_las_mias_en_zurdo_dice_solo_propias_y_las_guarda_como_e
     pagina.clock.install()
     # Una Personalizada de 2 × 30 s (lo que era Prueba), para que la sesión sea corta.
     ir(pagina, tres, {"mezcla": "solo", "tipo": "personalizada", "zurdo": True, "voz": "ambos", "nivel": 3,
-                      "personalizada": {"asaltos": 2, "duracion_asalto": 30, "descanso": 10}})
+                      "personalizada": {"asaltos": 2, "duracion_asalto": 30, "descanso": 10}}, ruta="#entrenar")
     esperado = pagina.evaluate(ESPERADO, {"propias": tres, "voz": "ambos"})
     textos = {e["texto"] for e in esperado}
     pagina.click("#empezar")

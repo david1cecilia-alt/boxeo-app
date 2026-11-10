@@ -2,12 +2,11 @@
 // guantes a 1–2 m del móvil). No contiene reglas de boxeo: el guion lo genera el motor y
 // el reproductor lo lanza en tiempo de sesión (con pausa).
 import {
-  NOMBRE_RITMO, OPCIONES_MEZCLA, PRESET_DE_TIPO, conPrueba, configGeneral, configSesion, estadoMezcla, nuevoGuion, personalizadaValida, preferencias,
-  recordarSesion, repetirColetillas, resumenElecciones,
+  PRESET_DE_TIPO, conPrueba, configSesion, estadoMezcla, nuevoGuion, preferencias, recordarSesion, repetirColetillas,
+  resumenElecciones,
 } from "../ajustes.js";
 import { crearAzar, semillaAleatoria } from "../motor/azar.js";
 import { datos } from "../motor/datos.js";
-import { PAUSA_POR_RITMO } from "../motor/ritmo.js";
 import { COMBINACIONES, PREPARACION, validarConfig } from "../motor/temporizador.js";
 import { PARA_REACCIONAR, crearDictado } from "../dictado.js";
 import { crearPantallaEncendida } from "../pantalla.js";
@@ -22,7 +21,6 @@ import { iniciarPersonalizar } from "./personalizar.js";
 import { combinacionesParaVer, pasosCombo } from "./pasos.js";
 
 const SEGUNDOS_FINAL = 10;
-const decimal = (x) => String(x).replace(".", ",");
 const TEXTO_FASE = {
   asalto: "En asalto", final: "Últimos 10 s", descanso: "Descanso", reaccion: "¡Reacción!", pausa: "En pausa",
 };
@@ -36,33 +34,18 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   let perfilAplicado = null;
 
   // ---------- Configuración ----------
+  // Aquí solo se elige el tipo de sesión y se ve su resumen; la Personalizada se cambia en el menú
+  // (vistas/personalizar.js) y voz, Nombrar y guardia, en su sección Ajustes (vistas/ajustes.js).
 
-  // El tipo de sesión como chips (radios): la General (con el nombre del preset «amateur»), Prueba
-  // (solo con ?prueba, y no se guarda) y Personalizado. Los ajustes avanzados solo se ven con
-  // "Personalizado".
+  // El tipo de sesión como chips (radios): la General, Prueba (solo con ?prueba, y no se guarda) y la
+  // Personalizada.
   const nombrePreset = (tipo) => presets.find((p) => p.id === PRESET_DE_TIPO[tipo]).nombre;
   const chip = (tipo, nombre) =>
     `<label class="chip-opcion"><input type="radio" name="preset" value="${tipo}"><span>${esc(nombre)}</span></label>`;
-  $("#presets").insertAdjacentHTML("beforeend", chip("general", nombrePreset("general"))
-    + (conPrueba() ? chip("prueba", nombrePreset("prueba")) : "") + chip("personalizada", "Personalizado"));
-  // «Tus combinaciones»: Ninguna · Poco · Bastante · Mucho en una fila y «Solo las mías» debajo.
-  $("#mezclas").insertAdjacentHTML("beforeend", OPCIONES_MEZCLA.map(({ id, nombre, porcentaje }) =>
-    `<label${id === "solo" ? ' class="mezcla-solo"' : ""}><input type="radio" name="mezcla" value="${id}">`
-    + `<span><b>${porcentaje} %</b>${esc(nombre)}</span></label>`).join(""));
+  $("#presets").insertAdjacentHTML("beforeend", chip("general", "General")
+    + (conPrueba() ? chip("prueba", nombrePreset("prueba")) : "") + chip("personalizada", "Personalizada"));
+  const tipoElegido = () => $('input[name="preset"]:checked')?.value ?? "general";
   aplicarPreferencias();
-
-  // Marca el tipo y rellena sus valores: los del preset o los de la personalizada guardada.
-  function elegirTipo(tipo, personalizada) {
-    $(`input[name="preset"][value="${tipo}"]`).checked = true;
-    const personalizado = tipo === "personalizada";
-    $("#avanzados").hidden = !personalizado;
-    if (personalizado) $("#avanzados").open = true;
-    const p = personalizado ? personalizada
-      : tipo === "general" ? configGeneral() : presets.find((x) => x.id === PRESET_DE_TIPO[tipo]);
-    $("#asaltos").value = p.asaltos;
-    $("#duracion").value = p.duracion_asalto;
-    $("#descanso").value = p.descanso;
-  }
 
   // En el móvil la fila de chips se desplaza en horizontal: si el elegido no se ve entero, se mueve
   // lo justo para mostrarlo (sin animación y sin tocar el scroll vertical de la página).
@@ -77,110 +60,46 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     else if (c.left < f.left + relleno) fila.scrollLeft -= f.left + relleno - c.left;
   }
 
-  // Lo último que se eligió aquí (o lo que se cambió en Guardia/Nivel del perfil). Se aplica solo
-  // si el perfil ha cambiado: lo de aquí ya está guardado, así que aplicarlo de nuevo no pisa nada.
+  // Lo último que se eligió (o lo que se cambió en el menú). Se aplica solo si el perfil ha cambiado: lo de
+  // aquí ya está guardado, así que aplicarlo de nuevo no pisa nada.
   function aplicarPreferencias() {
     if (perfilAplicado === almacen.datos.perfil) return;
     perfilAplicado = almacen.datos.perfil;
-    const { tipo, nivel, ritmo, reaccion, mezcla, personalizada } = preferencias(perfilAplicado);
-    // Prueba no se guarda: si estaba elegida, se queda mientras no se elija otra cosa.
-    const prueba = $('input[name="preset"][value="prueba"]:checked') && tipo !== "personalizada";
-    elegirTipo(prueba ? "prueba" : tipo, personalizada);
-    $(`input[name="nivel"][value="${nivel}"]`).checked = true;
-    $(`input[name="mezcla"][value="${mezcla}"]`).checked = true;
-    $("#ritmo").value = ritmo;
-    $("#reaccion").checked = reaccion;
+    // El tipo guardado. Prueba no se guarda: con ?prueba se arranca en ella y se queda mientras no se elija
+    // otro tipo o se toque algo de la Personalizada (personalizar.js).
+    const { tipo } = preferencias(perfilAplicado, { prueba: false });
+    const marcado = $('input[name="preset"]:checked')?.value;
+    const prueba = marcado ? marcado === "prueba" : conPrueba();
+    $(`input[name="preset"][value="${prueba ? "prueba" : tipo}"]`).checked = true;
     resumir();
-  }
-
-  // Cada cambio se guarda al momento para la próxima sesión.
-  function recordar(cambios) {
-    recordarSesion(almacen, cambios);
-    perfilAplicado = almacen.datos.perfil;
-  }
-
-  // Lo que marcan los controles ahora mismo (para guardarlo al cambiar).
-  function leerControles() {
-    return {
-      asaltos: Number($("#asaltos").value),
-      duracion_asalto: Number($("#duracion").value),
-      descanso: Number($("#descanso").value),
-      nivel: Number($('input[name="nivel"]:checked').value),
-      modo_reaccion: $("#reaccion").checked,
-      ritmo: Number($("#ritmo").value),
-      mezcla: $('input[name="mezcla"]:checked')?.value ?? "ninguna",
-    };
   }
 
   // La sesión que sale al pulsar Empezar: la del tipo marcado, con lo guardado (configSesion). La General
   // nunca lee lo de la Personalizada.
   function leerConfig() {
-    return configSesion(almacen.datos.perfil, { tipo: $('input[name="preset"]:checked')?.value });
+    return configSesion(almacen.datos.perfil, { tipo: tipoElegido() });
   }
 
   function resumir() {
-    const controles = leerConfigSegura();
-    if (!controles) return;
-    // Hueco desde que la voz termina hasta la siguiente (se golpea mientras se oye).
-    const [min, max] = PAUSA_POR_RITMO[controles.ritmo];
-    const hueco = min === max ? decimal(min) : `${decimal(min)}–${decimal(max)}`;
-    $("#resumen-ritmo").textContent = `${NOMBRE_RITMO[controles.ritmo]} · ${hueco} s entre combinaciones`;
-    $("#ritmo").style.setProperty("--lleno", `${(controles.ritmo - 1) * 25}%`);
     const c = leerConfig();
     const resumen = `${c.asaltos} × ${minutos(c.duracion_asalto)} · descanso ${minutos(c.descanso)}`;
     $("#resumen-config").textContent = resumen;
     $("#resumen-grande").textContent = resumen;
-    $("#resumen-elecciones").textContent = resumenElecciones({ ...c, mezcla: pintarMezcla(c) });
+    // La mezcla con la que se sorteará de verdad (con «Solo las mías», el nivel no cuenta).
+    const { efectiva } = estadoMezcla(c.mezcla, almacen.datos.combinacionesPropias, c.nivel);
+    $("#resumen-elecciones").textContent = resumenElecciones({ ...c, mezcla: efectiva });
   }
 
-  // Estados de «Tus combinaciones» (y del nivel) con las propias de ahora. Devuelve la mezcla con
-  // la que se sorteará de verdad. Los desactivados lo están de verdad (disabled): el motivo va
-  // escrito debajo y en aria-describedby del grupo.
-  function pintarMezcla(c) {
-    const { total, efectiva, motivoSolo, aviso, nivelCuenta } = estadoMezcla(c.mezcla, almacen.datos.combinacionesPropias, c.nivel);
-    $("#mezclas").disabled = total === 0;
-    $('input[name="mezcla"][value="solo"]').disabled = total > 0 && Boolean(motivoSolo);
-    $("#niveles").disabled = !nivelCuenta;
-    const notaNivel = $("#nota-nivel");
-    notaNivel.hidden = nivelCuenta;
-    notaNivel.textContent = nivelCuenta ? "" : "Con «Solo las mías» no cuenta el nivel: salen todas las tuyas.";
-    const nota = $("#nota-mezcla");
-    if (total === 0) {
-      nota.innerHTML = `Aún no tienes combinaciones propias. <a href="${RUTA_CREADOR}/nueva">Crea la primera</a> y mézclala con la biblioteca.`;
-    } else {
-      nota.textContent = [motivoSolo, aviso].filter(Boolean).join(" ");
-    }
-    nota.hidden = !nota.textContent;
-    return efectiva;
-  }
-
-  function leerConfigSegura() {
-    return $('input[name="nivel"]:checked') ? leerControles() : null;
-  }
-
-  // Elegir la General o Prueba no borra la personalizada: sigue guardada para cuando se vuelva.
-  // Prueba no se recuerda: es solo para probar.
+  // Elegir la General o Prueba no borra la Personalizada: sigue guardada para cuando se vuelva. Prueba no se
+  // recuerda: es solo para probar.
   $("#presets").addEventListener("change", (e) => {
-    elegirTipo(e.target.value, preferencias(almacen.datos.perfil).personalizada);
-    if (e.target.value !== "prueba") recordar({ tipo: e.target.value });
-  });
-  // La personalizada se guarda en cuanto es válida (a medio escribir, no).
-  for (const id of ["asaltos", "duracion", "descanso"]) {
-    $(`#${id}`).addEventListener("input", () => {
-      const { asaltos, duracion_asalto, descanso } = leerControles();
-      const personalizada = { asaltos, duracion_asalto, descanso };
-      if (personalizadaValida(personalizada)) recordar({ personalizada });
-      resumir();
-    });
-  }
-  form.addEventListener("change", (e) => {
-    const { nivel, modo_reaccion, ritmo, mezcla } = leerControles();
-    const cambio = { nivel: { nivel }, mezcla: { mezcla } }[e.target.name]
-      ?? { ritmo: { ritmo }, reaccion: { reaccion: modo_reaccion } }[e.target.id];
-    if (cambio) recordar(cambio);
+    if (e.target.value !== "prueba") {
+      recordarSesion(almacen, { tipo: e.target.value });
+      perfilAplicado = almacen.datos.perfil;
+    }
     resumir();
+    personalizar.actualizar(); // el aviso del menú
   });
-  $("#ritmo").addEventListener("input", resumir);
   form.addEventListener("submit", (e) => { e.preventDefault(); empezar(); });
 
   // ---------- Sesión ----------
@@ -456,7 +375,13 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     aplicarPreferencias();
     resumir();
   };
-  const personalizar = iniciarPersonalizar({ almacen, alCambiar: alCambiarMenu });
+  const personalizar = iniciarPersonalizar({
+    almacen, tipoElegido,
+    alCambiar() {
+      $('input[name="preset"][value="personalizada"]').checked = true; // también desde Prueba (D3)
+      alCambiarMenu();
+    },
+  });
   const ajustes = iniciarAjustes({
     almacen, voz,
     alCambiar() {
@@ -509,8 +434,10 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
           personalizar.pintar();
           ajustes.pintar();
         }
-        menu.abrirPorRuta(veniaDelCreador ? "combinaciones" : resto[0]);
-        if (veniaDelCreador) $("#ir-creador").focus({ preventScroll: true });
+        // La sección de la ruta manda; sin ella (atrás desde el listado), la de Mis combinaciones.
+        const seccion = resto[0] || (veniaDelCreador ? "combinaciones" : undefined);
+        menu.abrirPorRuta(seccion);
+        if (veniaDelCreador && seccion === "combinaciones") $("#ir-creador").focus({ preventScroll: true });
       } else {
         cerrarMenu();
       }

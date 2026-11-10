@@ -237,8 +237,9 @@ def test_mientras_se_arrastra_el_panel_sigue_al_dedo(abrir_pagina, ancho):
     dedo = Dedo(pagina, "mouse")
     dedo.bajar(*centro(pagina, "#asa"))
     dedo.mover(-160, pasos=8)
+    # Cuánto asoma desde el borde derecho del <dialog> (su contenedor; con scrollbar-gutter, clientWidth no lo es).
     asoma = pagina.evaluate("""() => { const p = document.querySelector('.menu-panel').getBoundingClientRect();
-      return Math.round(document.documentElement.clientWidth - p.left); }""")
+      return Math.round(document.getElementById('menu').getBoundingClientRect().right - p.left); }""")
     assert 155 <= asoma <= 165  # pasa del 30 % también a 1440 (126 px de 420)
     assert pagina.evaluate("document.getElementById('menu').classList.contains('arrastrando')")
     pagina.wait_for_timeout(150)
@@ -301,6 +302,37 @@ def test_un_arrastre_que_acaba_en_pointercancel_vuelve_sin_tocar_el_historial(ab
     assert pagina.evaluate("location.hash") == "#entrenar/menu"
 
 
+# ---------- Los controles de dentro no se pelean con el arrastre ----------
+
+@pytest.mark.parametrize("puntero", ["mouse", "touch"])
+def test_arrastrar_el_deslizador_del_ritmo_no_mueve_ni_cierra_el_panel(abrir_pagina, puntero):
+    pagina = abrir_pagina(390)
+    abrir_con_el_asa(pagina)
+    pagina.locator("#ritmo").scroll_into_view_if_needed()
+    antes = pagina.input_value("#ritmo")
+    caja = pagina.locator("#ritmo").bounding_box()
+    dedo = Dedo(pagina, puntero)
+    dedo.bajar(caja["x"] + caja["width"] / 2, caja["y"] + caja["height"] / 2)
+    dedo.mover(caja["width"] / 2 - 4, pasos=8, pausa=16)  # hacia la derecha: el gesto que cerraría el panel
+    dedo.subir()
+    pagina.wait_for_timeout(DURACION * 1000 + 50)
+    assert pagina.evaluate(ABIERTO) and pagina.evaluate("location.hash") == "#entrenar/menu"
+    assert pagina.evaluate("getComputedStyle(document.querySelector('.menu-panel')).transform") == "none"
+    assert pagina.input_value("#ritmo") != antes
+
+
+def test_desplazar_el_panel_en_vertical_no_lo_cierra(abrir_pagina):
+    pagina = abrir_pagina(390)
+    abrir_con_el_asa(pagina)
+    pagina.mouse.move(*centro(pagina, "#f-practicar"))
+    pagina.mouse.wheel(0, 600)
+    pagina.wait_for_function("document.querySelector('.menu-contenido').scrollTop > 0")
+    assert pagina.evaluate("window.scrollY") == 0  # la página de detrás, quieta
+    assert pagina.evaluate(ABIERTO) and pagina.evaluate("location.hash") == "#entrenar/menu"
+    # La cabecera sigue a la vista (fija arriba): se puede cerrar o arrastrar desde ella.
+    assert pagina.locator(".menu-cerrar").bounding_box()["y"] >= 0
+
+
 # ---------- Teclado y foco ----------
 
 @pytest.mark.parametrize("ancho", ANCHOS)
@@ -315,7 +347,7 @@ def test_teclado_tab_hasta_el_asa_intro_abre_tab_no_sale_y_esc_cierra(abrir_pagi
     pagina.wait_for_function(ESTA_ABIERTO)
     assert pagina.evaluate(FOCO) == "t-menu"
     vistos = set()
-    for _ in range(12):
+    for _ in range(60):  # Personalizar sesión, abierta, trae unos 20 controles
         pagina.keyboard.press("Tab")
         assert pagina.evaluate("document.getElementById('menu').contains(document.activeElement)")
         vistos.add(pagina.evaluate(FOCO))

@@ -105,7 +105,8 @@ def test_un_v8_con_personalizado_conserva_sus_valores(pagina):
     ir(pagina, v8({"asalto": "personalizado"}))
     assert elegido(pagina) == "personalizada"
     assert pagina.inner_text("#resumen-config") == "4 × 2:00 · descanso 0:45"
-    # Cambiar la personalizada se sigue guardando.
+    # Cambiar la personalizada (en el menú) se sigue guardando.
+    pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/personalizar")
     pagina.fill("#asaltos", "5")
     assert guardado(pagina)["perfil"]["sesion"]["personalizada"] == {"asaltos": 5, "duracion_asalto": 120, "descanso": 45}
 
@@ -176,6 +177,8 @@ def test_importar_una_copia_v8_la_deja_en_v9(pagina, tmp_path):
     pagina.wait_for_selector('#presets input[name="preset"]:checked', state="attached")
     assert elegido(pagina) == "personalizada"
     assert pagina.inner_text("#resumen-config") == "3 × 3:00 · descanso 1:00"
+    pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/personalizar")
+    pagina.wait_for_selector("#niveles", state="visible")
     assert pagina.is_checked('input[name="nivel"][value="3"]')
 
 

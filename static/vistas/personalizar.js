@@ -1,10 +1,21 @@
-// Sección «Personalizar sesión» del menú de Entrenar. Siempre enseña lo guardado de la Personalizada,
-// también con la General (o Prueba) elegida; tocar algo pasa a la Personalizada con ese cambio (D3).
-// «Practicar más» pasa al sorteo lo elegido (ajustes.js). Solo presenta y guarda en el perfil.
-import { MAX_PRACTICAR, cambiarPracticar, preferencias } from "../ajustes.js";
+// Sección «Personalizar sesión» del menú de Entrenar: asaltos, duración, descanso, nivel, ritmo, «Practicar
+// más», «Tus combinaciones» y Reacción. Siempre enseña lo guardado de la Personalizada, también con la General
+// (o Prueba) elegida: entonces lleva arriba el aviso, y tocar algo pasa a la Personalizada con lo guardado más
+// ese cambio (D3); nunca se copian encima los valores de la General. Solo presenta y guarda en el perfil.
+import {
+  MAX_PRACTICAR, NOMBRE_RITMO, OPCIONES_MEZCLA, cambiarPracticar, estadoMezcla, personalizadaValida, preferencias,
+} from "../ajustes.js";
 import { catalogo, espejo, nombreHablado } from "../motor/acciones.js";
+import { PAUSA_POR_RITMO } from "../motor/ritmo.js";
 import { movimiento, movimientos } from "../motor/sorteo.js";
+import { RUTA as RUTA_CREADOR } from "./creador.js";
 import { $, $$, anunciar, atraparFoco, esc } from "./dom.js";
+
+const NOMBRE_TIPO = { general: "General", prueba: "Prueba" };
+// El aviso de arriba con la General o Prueba elegida (con la Personalizada, ninguno).
+export const avisoPersonalizar = (tipo) => (NOMBRE_TIPO[tipo]
+  ? `Estás en ${NOMBRE_TIPO[tipo]}. Estos son los ajustes de tu Personalizada; si cambias algo, pasarás a ella.` : "");
+const decimal = (x) => String(x).replace(".", ",");
 
 const GRUPOS_PRACTICAR = { golpe: "Golpes", defensa: "Defensas", movimiento: "Salidas" };
 const ICONO_CERRAR = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
@@ -88,27 +99,120 @@ function teclasPestanas(e) {
   nueva.focus();
 }
 
+// `tipoElegido()`: lo que marca el selector de Entrenar ("general", "personalizada" o "prueba").
 // `alCambiar()`: tras guardar algo (Entrenar repinta el selector y «Tu sesión»).
-export function iniciarPersonalizar({ almacen, alCambiar }) {
+export function iniciarPersonalizar({ almacen, tipoElegido, alCambiar }) {
   const raiz = $("#menu-personalizar");
   const panel = $("#elegir-practicar");
 
-  // Guarda un cambio de la Personalizada. Con la General o Prueba elegida, pasa a la Personalizada: lo
-  // guardado + este cambio (D3); nunca se copian encima los valores de la General.
+  // Guarda un cambio de la Personalizada en una sola escritura: el cambio y el tipo. Con la General o Prueba
+  // elegida, pasa a la Personalizada con lo guardado + este cambio (D3).
   function guardar(cambio) {
+    const pasa = tipoElegido() !== "personalizada";
     const p = structuredClone(almacen.datos.perfil);
     cambio(p);
-    const pasa = p.sesion.tipo !== "personalizada" || $('input[name="preset"]:checked')?.value === "prueba";
     p.sesion.tipo = "personalizada";
     almacen.guardarPerfil(p);
     anunciar(pasa ? "Guardado. Pasas a Personalizada." : "Guardado");
     alCambiar();
+    actualizar();
   }
 
   function pintar() {
-    raiz.innerHTML = `<form class="formulario" id="f-practicar" aria-labelledby="t-practicar"></form>`;
+    const { nivel, ritmo, reaccion, mezcla, personalizada } = preferencias(almacen.datos.perfil);
+    raiz.innerHTML = `
+      <p id="aviso-personalizar" class="aviso-personalizar" role="status"></p>
+      <form class="formulario" id="f-personalizar" aria-label="Tu Personalizada">
+        <div class="rejilla rejilla-asaltos">
+          <label class="campo">Asaltos <input id="asaltos" type="number" inputmode="numeric" min="1" max="20" value="${personalizada.asaltos}"></label>
+          <label class="campo">Duración (s) <input id="duracion" type="number" inputmode="numeric" min="20" max="600" step="10" value="${personalizada.duracion_asalto}"></label>
+          <label class="campo">Descanso (s) <input id="descanso" type="number" inputmode="numeric" min="0" max="300" step="5" value="${personalizada.descanso}"></label>
+        </div>
+        <fieldset class="niveles" id="niveles" aria-describedby="nota-nivel">
+          <legend><span>Nivel</span></legend>
+          ${[[1, "Básico"], [2, "Medio"], [3, "Avanzado"]].map(([n, nombre]) => `<label><input type="radio" name="nivel"
+            value="${n}" ${n === nivel ? "checked" : ""}><span><b>${n}</b>${nombre}</span></label>`).join("")}
+        </fieldset>
+        <p id="nota-nivel" class="nota nota-campo" hidden></p>
+        <div class="ritmo">
+          <label for="ritmo" class="cabeza-campo"><span>Ritmo</span><span id="resumen-ritmo" class="resumen-config"></span></label>
+          <input type="range" id="ritmo" min="1" max="5" step="1" value="${ritmo}" aria-describedby="resumen-ritmo">
+          <div class="marcas-ritmo" aria-hidden="true"><span>Calmado</span><span>Intenso</span></div>
+        </div>
+        <div id="f-practicar" class="practicar" role="group" aria-labelledby="t-practicar"></div>
+        <div class="mezcla">
+          <fieldset class="niveles mezclas" id="mezclas" aria-describedby="nota-mezcla">
+            <legend><span>Tus combinaciones</span></legend>
+            ${OPCIONES_MEZCLA.map(({ id, nombre, porcentaje }) =>
+              `<label${id === "solo" ? ' class="mezcla-solo"' : ""}><input type="radio" name="mezcla" value="${id}"
+                ${id === mezcla ? "checked" : ""}><span><b>${porcentaje} %</b>${esc(nombre)}</span></label>`).join("")}
+          </fieldset>
+          <p id="nota-mezcla" class="nota nota-campo" hidden></p>
+        </div>
+        <label class="interruptor"><span>Reacción<small class="solo-lectores">: señales al azar, esquiva, contra, sal…</small></span>
+          <input type="checkbox" role="switch" id="reaccion" ${reaccion ? "checked" : ""}></label>
+      </form>`;
     pintarPracticar();
+    actualizar();
   }
+
+  // Lo que depende de lo guardado y de lo elegido sin rehacer los campos (el foco y lo que se escribe se
+  // quedan): el aviso, el ritmo en palabras y los estados de «Tus combinaciones» y del nivel.
+  function actualizar() {
+    if (!$("#f-personalizar", raiz)) return;
+    const aviso = avisoPersonalizar(tipoElegido());
+    const caja = $("#aviso-personalizar", raiz);
+    if (caja.textContent !== aviso) caja.textContent = aviso;
+    pintarRitmo(Number($("#ritmo", raiz).value));
+    pintarMezcla();
+  }
+
+  // Hueco desde que la voz termina hasta la siguiente (se golpea mientras se oye).
+  function pintarRitmo(ritmo) {
+    const [min, max] = PAUSA_POR_RITMO[ritmo];
+    const hueco = min === max ? decimal(min) : `${decimal(min)}–${decimal(max)}`;
+    $("#resumen-ritmo", raiz).textContent = `${NOMBRE_RITMO[ritmo]} · ${hueco} s entre combinaciones`;
+    $("#ritmo", raiz).style.setProperty("--lleno", `${(ritmo - 1) * 25}%`);
+  }
+
+  // Estados de «Tus combinaciones» (y del nivel) con las propias de ahora y lo guardado. Los desactivados
+  // lo están de verdad (disabled): el motivo va escrito debajo y en aria-describedby del grupo.
+  function pintarMezcla() {
+    const { mezcla, nivel } = preferencias(almacen.datos.perfil);
+    const { total, motivoSolo, aviso, nivelCuenta } = estadoMezcla(mezcla, almacen.datos.combinacionesPropias, nivel);
+    $("#mezclas", raiz).disabled = total === 0;
+    $('input[name="mezcla"][value="solo"]', raiz).disabled = total > 0 && Boolean(motivoSolo);
+    $("#niveles", raiz).disabled = !nivelCuenta;
+    const notaNivel = $("#nota-nivel", raiz);
+    notaNivel.hidden = nivelCuenta;
+    notaNivel.textContent = nivelCuenta ? "" : "Con «Solo las mías» no cuenta el nivel: salen todas las tuyas.";
+    const nota = $("#nota-mezcla", raiz);
+    if (total === 0) {
+      nota.innerHTML = `Aún no tienes combinaciones propias. <a href="${RUTA_CREADOR}/nueva">Crea la primera</a> y mézclala con la biblioteca.`;
+    } else {
+      nota.textContent = [motivoSolo, aviso].filter(Boolean).join(" ");
+    }
+    nota.hidden = !nota.textContent;
+  }
+
+  // Asaltos, duración y descanso: se guardan en cuanto son válidos (a medio escribir, no; tampoco pasa a la
+  // Personalizada).
+  raiz.addEventListener("input", (e) => {
+    if (e.target.id === "ritmo") return pintarRitmo(Number(e.target.value));
+    if (!["asaltos", "duracion", "descanso"].includes(e.target.id)) return;
+    const personalizada = {
+      asaltos: Number($("#asaltos", raiz).value), duracion_asalto: Number($("#duracion", raiz).value),
+      descanso: Number($("#descanso", raiz).value),
+    };
+    if (personalizadaValida(personalizada)) guardar((p) => (p.sesion.personalizada = personalizada));
+  });
+  raiz.addEventListener("change", (e) => {
+    const t = e.target;
+    if (t.name === "nivel") guardar((p) => (p.sesion.nivel = Number(t.value)));
+    else if (t.name === "mezcla") guardar((p) => (p.sesion.mezcla = t.value));
+    else if (t.id === "ritmo") guardar((p) => (p.sesion.ritmo = Number(t.value)));
+    else if (t.id === "reaccion") guardar((p) => (p.sesion.reaccion = t.checked));
+  });
 
   // «Practicar más»: siempre MAX_PRACTICAR huecos del mismo tamaño, llenos por orden de elección. Uno
   // vacío abre el panel para elegir; uno lleno dice el movimiento y se puede quitar.
@@ -117,7 +221,7 @@ export function iniciarPersonalizar({ almacen, alCambiar }) {
     const lista = movimientosPracticar(preferencias(almacen.datos.perfil).zurdo);
     const nombre = new Map(lista.map((m) => [m.movimiento, m.nombre]));
     const huecos = Array.from({ length: MAX_PRACTICAR }, (_, i) => elegidos[i]);
-    $("#f-practicar").innerHTML = `
+    $("#f-practicar", raiz).innerHTML = `
       <div>
         <h3 id="t-practicar" class="titulo-campo" tabindex="-1">Practicar más</h3>
         <p class="nota">Elige hasta ${MAX_PRACTICAR} movimientos: las combinaciones que los llevan saldrán más a menudo.
@@ -181,6 +285,7 @@ export function iniciarPersonalizar({ almacen, alCambiar }) {
   pintar();
   return {
     pintar,
+    actualizar,
     // Al cerrar el menú (atrás, cambiar de vista): la hoja de elegir, encima de él, se cierra también.
     cerrar() { if (panel.open) panel.close(); },
   };

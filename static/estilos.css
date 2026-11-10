@@ -592,7 +592,7 @@ html.menu-abierto #asa { visibility: hidden; }
   background: var(--secundario); color: var(--texto); font-size: 1.25rem; cursor: pointer;
 }
 .menu-cerrar:hover { background: var(--secundario-hover); }
-.menu-contenido details { border-top: 1px solid var(--linea); padding: 4px 0; }
+.menu-contenido details { border-top: 1px solid var(--linea); padding: 4px 0; scroll-margin-top: 64px; } /* bajo la cabecera fija */
 .menu-contenido details > .nota { margin: 0 0 12px; }
 .menu-contenido summary { min-height: 48px; display: flex; align-items: center; font-weight: 600; cursor: pointer; }
 /* Cada sección: sus campos uno debajo de otro, al ancho del panel (min(88vw, 420px) menos la franja). */
@@ -603,6 +603,18 @@ html.menu-abierto #asa { visibility: hidden; }
   margin: 0; font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--suave); font-family: inherit;
 }
+/* Con la General o Prueba elegida: «Estás en General…» arriba de Personalizar sesión (D3). Vacío, no ocupa. */
+.aviso-personalizar {
+  margin: 0; padding: 12px 14px; border-left: 3px solid var(--acento); border-radius: 0 12px 12px 0;
+  background: var(--secundario); font-size: 0.875rem; line-height: 1.4;
+}
+.aviso-personalizar:empty { display: none; }
+.rejilla-asaltos { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+/* «Tus combinaciones» en el panel estrecho: de dos en dos y «Solo las mías» a todo el ancho. */
+.menu-seccion .mezclas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.menu-seccion .mezclas b { font-size: 18px; }
+.rejilla-asaltos .campo { font-size: 0.8125rem; }
+.menu-seccion .interruptor { justify-content: space-between; }
 .guardias { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .guardias label span { min-height: 56px; }
 /* «Practicar más» en el panel: un hueco por fila, bajos (el panel es estrecho a cualquier ancho). */

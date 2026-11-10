@@ -21,34 +21,37 @@
 
   <main>
     <!-- ============ Entrenar ============ -->
-    <section id="vista-entrenar" class="vista con-foto" aria-labelledby="t-entrenar">
-      <div class="foto-cabecera" aria-hidden="true">
-        <img src="imagenes/entrenar-cabecera.webp" alt="" width="587" height="887" fetchpriority="high">
-      </div>
-      <span class="marca-agua vertical" aria-hidden="true">Asalto</span>
-      <p class="marca-movil" aria-hidden="true">Boxeo</p>
-      <header class="cabecera">
-        <p class="antetitulo">Sesión de hoy</p>
-        <h1 id="t-entrenar" tabindex="-1">Listo para<br><span class="acento">el asalto</span></h1>
-      </header>
+    <section id="vista-entrenar" class="vista" aria-labelledby="t-entrenar">
+      <h1 id="t-entrenar" class="solo-lectores" tabindex="-1">Entrenar</h1>
       <form id="config" class="formulario">
-        <div class="config-opciones">
-          <div class="presets">
-            <fieldset class="fila-chips" id="presets" aria-describedby="resumen-config">
-              <legend class="solo-lectores">Tipo de sesión</legend>
-            </fieldset>
-            <p id="resumen-config" class="resumen-presets"></p>
-          </div>
+        <!-- Un solo botón (un enlace) a #perfil. Sin nombre ni avatar todavía (R5): un icono genérico. -->
+        <a href="#perfil" class="cabecera-perfil" id="ir-perfil">
+          <span class="avatar-generico" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
+          <span class="cabecera-perfil-texto">
+            <span class="cabecera-perfil-nombre">Tu perfil</span>
+            <span class="cabecera-perfil-estilo" id="cabecera-estilo"></span>
+          </span>
+          <svg class="flecha" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        </a>
 
-        </div>
+        <fieldset class="segmentado-tipo" id="tipo-sesion">
+          <legend class="solo-lectores">Tipo de sesión</legend>
+        </fieldset>
 
-        <div class="config-sesion">
-          <p class="titular config-titulo" aria-hidden="true">Tu <span class="acento">sesión</span></p>
-          <p class="resumen-grande" id="resumen-grande" aria-hidden="true"></p>
-          <p class="resumen-elecciones" id="resumen-elecciones" aria-hidden="true"></p>
+        <div class="derecha-entrenar">
+        <section class="config-sesion tu-sesion" aria-labelledby="t-tu-sesion">
+          <h2 id="t-tu-sesion" class="titulo-campo">Tu sesión</h2>
+          <p class="resumen-grande" id="resumen-grande"></p>
+          <p class="resumen-detalle" id="resumen-detalle"></p>
+          <ul class="chips-sesion" id="resumen-elecciones" aria-label="Lo elegido"></ul>
+          <p class="nota nota-sesion" id="nota-sesion"></p>
+        </section>
+        <div class="empezar-caja">
           <button id="empezar" type="submit" class="boton principal empezar">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>Empezar</button>
           <p id="info-voz" class="nota"></p>
+        </div>
         </div>
       </form>
 
@@ -171,10 +174,6 @@
     <a href="#historial">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
       <span>Historial</span>
-    </a>
-    <a href="#perfil">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
-      <span>Perfil</span>
     </a>
   </nav>
 

@@ -68,6 +68,11 @@ def desactivada(pagina, valor):
     return pagina.eval_on_selector(f'input[name="mezcla"][value="{valor}"]', "(i) => i.matches(':disabled')")
 
 
+def elecciones(pagina):
+    """Las pastillas de «Tu sesión», unidas con « · »."""
+    return " · ".join(pagina.locator("#resumen-elecciones li").all_inner_texts())
+
+
 def guardado(pagina):
     return json.loads(pagina.evaluate("localStorage.getItem('boxeo')"))
 
@@ -103,7 +108,7 @@ def test_con_dos_solo_las_mias_esta_desactivada_con_su_motivo_y_lo_demas_se_recu
     assert pagina.is_checked('input[name="mezcla"][value="ninguna"]'), "de Mucho vuelve a Ninguna, sin pasar por Solo"
     pagina.click('input[name="mezcla"][value="mucho"]', force=True)
     assert guardado(pagina)["perfil"]["sesion"]["mezcla"] == "mucho"
-    assert "Mucho de las tuyas" in pagina.text_content("#resumen-elecciones")
+    assert "Mucho de las tuyas" in elecciones(pagina)
     pagina.reload()
     pagina.wait_for_selector("#mezclas label", state="visible")
     assert pagina.is_checked('input[name="mezcla"][value="mucho"]')
@@ -114,7 +119,7 @@ def test_solo_las_mias_guardada_con_menos_de_tres_se_respeta_y_se_explica(pagina
     assert pagina.is_checked('input[name="mezcla"][value="solo"]') and desactivada(pagina, "solo")
     assert pagina.inner_text("#nota-mezcla").endswith("de momento salen las de la biblioteca.")
     assert not pagina.eval_on_selector("#niveles", "(f) => f.disabled"), "sortea como «Ninguna»: el nivel cuenta"
-    assert pagina.text_content("#resumen-elecciones").startswith("Medio · Constante")
+    assert elecciones(pagina).startswith("Nivel medio · Constante")
 
 
 def test_con_cinco_solo_las_mias_desactiva_el_nivel_y_el_aviso_del_nivel_sin_propias(pagina):
@@ -125,7 +130,7 @@ def test_con_cinco_solo_las_mias_desactiva_el_nivel_y_el_aviso_del_nivel_sin_pro
     assert pagina.eval_on_selector("#niveles", "(f) => f.disabled")
     assert pagina.inner_text("#nota-nivel") == "Con «Solo las mías» no cuenta el nivel: salen todas las tuyas."
     assert pagina.get_attribute("#niveles", "aria-describedby") == "nota-nivel"
-    assert pagina.text_content("#resumen-elecciones").startswith("Solo las tuyas · ")
+    assert elecciones(pagina).startswith("Solo las tuyas · ")
     assert pagina.is_checked('input[name="nivel"][value="2"]'), "el nivel guardado no se pierde"
     # «Mucho» en medio: ninguna propia es de medio.
     pagina.click('input[name="mezcla"][value="mucho"]', force=True)
@@ -134,7 +139,7 @@ def test_con_cinco_solo_las_mias_desactiva_el_nivel_y_el_aviso_del_nivel_sin_pro
     assert pagina.inner_text("#nota-mezcla") == "No tienes combinaciones de nivel medio: solo saldrán las de la biblioteca."
     pagina.click('input[name="nivel"][value="1"]', force=True)
     assert pagina.locator("#nota-mezcla").is_hidden()
-    assert pagina.text_content("#resumen-elecciones").startswith("Básico · Mucho de las tuyas")
+    assert elecciones(pagina).startswith("Nivel básico · Mucho de las tuyas")
 
 
 def test_solo_las_mias_sin_ninguna_corta_avisa_del_final_del_asalto(pagina):

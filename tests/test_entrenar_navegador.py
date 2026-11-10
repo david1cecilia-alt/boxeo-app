@@ -47,7 +47,12 @@ def preparar(pagina, datos, ruta="#entrenar", consulta=""):
     pagina.wait_for_function("window.listo === true")
     pagina.evaluate("(d) => localStorage.setItem('boxeo', d)", json.dumps({"version": 9, **datos}))
     pagina.goto(f"{ORIGEN}/index.html{consulta}{ruta}")
-    pagina.wait_for_selector("#empezar")
+    pagina.wait_for_selector("#tipo-sesion input:checked", state="attached")  # la app ya ha arrancado
+
+
+def elecciones(pagina):
+    """Las pastillas de «Tu sesión», unidas con « · »."""
+    return " · ".join(pagina.locator("#resumen-elecciones li").all_inner_texts())
 
 
 def guardado(pagina):
@@ -67,7 +72,7 @@ def entrenar_un_poco(pagina):
 
 
 def elegir_tipo(pagina, tipo):
-    pagina.click(f'#presets label:has(input[value="{tipo}"])')
+    pagina.click(f'#tipo-sesion label:has(input[value="{tipo}"])')
 
 
 # ---------- El tipo de cada sesión (General, Personalizada o Prueba) ----------
@@ -86,7 +91,7 @@ def test_cada_sesion_guarda_su_tipo_y_el_historial_la_nombra_por_el(pagina):
     elegir_tipo(pagina, "personalizada")
     entrenar_un_poco(pagina)                      # Personalizada 3×3 de nivel 3
     pagina.goto(f"{ORIGEN}/index.html?prueba#entrenar")
-    pagina.wait_for_selector("#empezar")
+    pagina.wait_for_selector("#tipo-sesion input:checked", state="attached")
     entrenar_un_poco(pagina)                      # Prueba
     sesiones = guardado(pagina)["sesiones"]
     assert [s.get("tipo") for s in sesiones] == ["prueba", "personalizada", "general", None]
@@ -108,7 +113,7 @@ AVISO_PRUEBA = "Estás en Prueba. Estos son los ajustes de tu Personalizada; si 
 
 
 def tipo_marcado(pagina):
-    return pagina.eval_on_selector('#presets input[name="preset"]:checked', "e => e.value")
+    return pagina.eval_on_selector('#tipo-sesion input[name="tipo"]:checked', "e => e.value")
 
 
 def abrir_personalizar(pagina):
@@ -147,7 +152,7 @@ def test_d3_con_la_general_el_menu_ensena_la_personalizada_y_tocar_algo_pasa_a_e
     assert tipo_marcado(pagina) == "personalizada"
     assert pagina.locator("#aviso-personalizar").is_hidden()
     assert pagina.inner_text("#resumen-grande").startswith("4 × 2:00")
-    assert "Avanzado" in pagina.text_content("#resumen-elecciones")
+    assert "Nivel avanzado" in elecciones(pagina)
     # Volver a General no borra nada: al reabrir, la Personalizada sigue con el nivel 3 (y vuelve el aviso).
     cerrar_menu(pagina)
     elegir_tipo(pagina, "general")
@@ -193,12 +198,12 @@ def test_a_medio_escribir_no_se_guarda_ni_pasa_a_la_personalizada_e_intro_no_emp
 def test_el_resumen_de_la_general_dice_su_nivel_y_no_el_de_la_personalizada(pagina):
     preparar(pagina, {"combinacionesPropias": PROPIAS, "perfil": {"sesion": {"tipo": "general", **PERSONALIZADA}}})
     assert pagina.inner_text("#resumen-grande").startswith("3 × 3:00")
-    resumen = pagina.text_content("#resumen-elecciones")
-    assert resumen.startswith("Básico · Constante"), resumen
-    assert "Medio" not in resumen and "tuyas" not in resumen
+    resumen = elecciones(pagina)
+    assert resumen.startswith("Nivel básico · Constante"), resumen
+    assert "Nivel medio" not in resumen and "tuyas" not in resumen
     elegir_tipo(pagina, "personalizada")
     # La Personalizada: nivel medio; «Poco» de las tuyas no cuenta porque la única propia es de básico.
-    assert pagina.text_content("#resumen-elecciones").startswith("Medio · Vivo")
+    assert elecciones(pagina).startswith("Nivel medio · Vivo")
 
 
 def test_con_prueba_cambiar_la_guardia_no_la_quita_y_prueba_no_se_guarda(pagina):
@@ -213,3 +218,126 @@ def test_con_prueba_cambiar_la_guardia_no_la_quita_y_prueba_no_se_guarda(pagina)
     pagina.goto(f"{ORIGEN}/index.html#entrenar")
     pagina.wait_for_selector("#empezar")
     assert tipo_marcado(pagina) == "personalizada"
+
+
+# ---------- La página: cabecera, selector, «Tu sesión», barra ----------
+
+def test_la_cabecera_es_un_solo_enlace_que_lleva_al_perfil(pagina):
+    preparar(pagina, {"perfil": {"sesion": {"zurdo": True}, "estilo": {"mi_estilo": "fajador"}}})
+    cabecera = pagina.locator(".cabecera-perfil")
+    assert cabecera.count() == 1 and cabecera.get_attribute("href") == "#perfil"
+    # Un solo elemento enfocable: nada dentro se enfoca aparte.
+    assert cabecera.locator("a, button, input, [tabindex]").count() == 0
+    assert " ".join(cabecera.inner_text().split()) == "Tu perfil Fajador · Zurdo"
+    assert cabecera.locator("img").count() == 0  # sin nombre ni avatar todavía (R5): un icono genérico
+    cabecera.click()
+    pagina.wait_for_selector("#vista-perfil:not([hidden])")
+    assert pagina.evaluate("location.hash") == "#perfil"
+
+
+def test_el_selector_tiene_general_y_personalizada_y_prueba_solo_con_el_parametro(pagina):
+    preparar(pagina, {})
+    assert pagina.locator("#tipo-sesion label").all_inner_texts() == ["General", "Personalizada"]
+    pagina.goto(f"{ORIGEN}/index.html?prueba#entrenar")
+    pagina.wait_for_selector("#tipo-sesion input:checked", state="attached")
+    assert pagina.locator("#tipo-sesion label").all_inner_texts() == ["General", "Personalizada", "Prueba 2×30 s"]
+
+
+def test_la_barra_trae_entrenar_aprende_e_historial_y_entrenar_ya_no_tiene_foto(pagina):
+    preparar(pagina, {})
+    assert pagina.locator("#pestanas a").evaluate_all("(as) => as.map((a) => a.getAttribute('href'))") == [
+        "#entrenar", "#aprende", "#historial"]
+    assert pagina.locator("#vista-entrenar :is(.foto-cabecera, .marca-agua.vertical, .marca-movil, #presets, #avanzados)").count() == 0
+    assert pagina.locator("#vista-entrenar .cabecera").count() == 0  # ni el titular
+    assert pagina.locator("#vista-entrenar h1").count() == 1  # el de los lectores (destino del foco)
+    # Las fotos de Aprende e Historial se quedan (D9).
+    assert pagina.locator("#vista-aprende .foto-cabecera, #vista-historial .foto-cabecera").count() == 2
+
+
+def test_la_guardia_de_ajustes_cambia_la_general_y_su_sesion_sale_con_lo_de_d1(pagina):
+    pagina.clock.install()
+    preparar(pagina, {"perfil": {"sesion": {"tipo": "general", **PERSONALIZADA}, "practicar": [{"movimiento": "3"}]}})
+    pagina.evaluate("location.hash = '#entrenar/menu/ajustes'")
+    pagina.wait_for_selector("#voz-id", state="visible")
+    pagina.click('#menu-ajustes label:has(input[name="guardia"][value="zurdo"])')
+    cerrar_menu(pagina)
+    assert tipo_marcado(pagina) == "general"
+    assert "Zurdo" in elecciones(pagina)
+    entrenar_un_poco(pagina)
+    s = guardado(pagina)["sesiones"][0]
+    # La General zurda: 3:00 con 1:00 de descanso, nivel de data/perfil.json, sin Reacción (D1).
+    assert (s["tipo"], s["zurdo"], s["duracion_asalto"], s["descanso"], s["nivel"], s["modo_reaccion"], s["ritmo"]) == (
+        "general", True, 180, 60, 1, False, 3)
+
+
+def test_a_1440_dos_columnas_tu_sesion_fija_y_el_margen_del_asa(pagina):
+    pagina.set_viewport_size({"width": 1440, "height": 900})
+    preparar(pagina, {})
+    caja = lambda s: pagina.locator(s).bounding_box()  # noqa: E731
+    cabecera, selector, sesion, empezar = caja(".cabecera-perfil"), caja("#tipo-sesion"), caja(".tu-sesion"), caja("#empezar")
+    assert sesion["x"] > selector["x"] + selector["width"]  # «Tu sesión» a la derecha del selector
+    assert abs(sesion["y"] - selector["y"]) <= 1 and cabecera["y"] < selector["y"]
+    assert empezar["y"] > sesion["y"] + sesion["height"] and abs(empezar["x"] - sesion["x"]) <= 1
+    assert pagina.eval_on_selector(".derecha-entrenar", "(e) => getComputedStyle(e).position") == "sticky"
+    # Margen de 112 px a la derecha de la columna (desde el borde de la zona visible, la del asa fija).
+    borde = pagina.evaluate("document.documentElement.clientWidth")
+    assert borde - (sesion["x"] + sesion["width"]) >= 112
+    asa = caja("#asa .asa-puntos")
+    assert asa["x"] - (empezar["x"] + empezar["width"]) >= 36  # 36 px libres hasta Empezar (2.1)
+
+
+# ---------- El asa no tapa nada (geometría) ----------
+
+# Cajas que no deben cruzarse con la visible del asa. `visible` recorta Empezar a lo que no tapa el panel
+# (con el menú abierto el panel opaco lo cubre; así se comprobó en el boceto, 2.1).
+CAJAS = """({ abierto }) => {
+  const rect = (e) => e.getBoundingClientRect();
+  const asa = rect(document.querySelector(abierto ? '#menu .asa-panel .asa-puntos' : '#asa .asa-puntos'));
+  const panel = rect(document.querySelector('.menu-panel'));
+  const empezar = rect(document.querySelector('#empezar'));
+  const visible = abierto ? { ...empezar.toJSON(), right: Math.min(empezar.right, panel.left) } : empezar.toJSON();
+  const controles = abierto ? [...document.querySelectorAll(
+      '#menu :is(input, select, button:not(.asa-panel), summary, a, label, .hueco)')]
+    .filter((e) => e.getClientRects().length && e.checkVisibility()).map((e) => [e.id || e.className || e.tagName, rect(e).toJSON()]) : [];
+  // El texto de «Tu sesión», línea a línea (Range: solo donde hay letras, no la caja entera).
+  const textos = [];
+  const andar = document.createTreeWalker(document.querySelector('.tu-sesion'), NodeFilter.SHOW_TEXT);
+  while (andar.nextNode()) {
+    if (!andar.currentNode.textContent.trim()) continue;
+    const r = document.createRange(); r.selectNodeContents(andar.currentNode);
+    for (const l of r.getClientRects()) textos.push([andar.currentNode.textContent.trim(), l.toJSON()]);
+  }
+  return { asa: asa.toJSON(), empezar: visible, sesion: rect(document.querySelector('.tu-sesion')).toJSON(), controles, textos };
+}"""
+
+
+def cruzan(a, b):
+    return a["left"] < b["right"] and b["left"] < a["right"] and a["top"] < b["bottom"] and b["top"] < a["bottom"]
+
+
+@pytest.mark.parametrize("ancho, alto", [(390, 844), (1440, 900)])
+@pytest.mark.parametrize("tipo", ["general", "personalizada"])
+def test_el_asa_no_tapa_empezar_ni_los_controles_ni_el_texto(pagina, ancho, alto, tipo):
+    pagina.set_viewport_size({"width": ancho, "height": alto})
+    preparar(pagina, {"perfil": {"sesion": {"tipo": tipo, "zurdo": True, "reaccion": True, **PERSONALIZADA},
+                                 "practicar": [{"movimiento": "3"}]}})
+    pagina.evaluate("document.fonts.ready")
+    # Cerrado: ni Empezar ni el texto de «Tu sesión»; a 1440, ni siquiera la caja de «Tu sesión».
+    c = pagina.evaluate(CAJAS, {"abierto": False})
+    assert not cruzan(c["asa"], c["empezar"])
+    for texto, caja in c["textos"]:
+        assert not cruzan(c["asa"], caja), texto
+    if ancho >= 1024:
+        assert not cruzan(c["asa"], c["sesion"])
+    # Abierto: el asa de la franja del panel, ni con Empezar ni con ningún control del panel, en cada sección.
+    pagina.evaluate("location.hash = '#entrenar/menu/personalizar'")
+    pagina.wait_for_function("getComputedStyle(document.querySelector('.menu-panel')).transform === 'none'")
+    assert pagina.locator("#asa").evaluate("(e) => getComputedStyle(e).visibility") == "hidden"
+    for seccion in ("personalizar", "combinaciones", "ajustes"):
+        pagina.evaluate(f"document.querySelector(\"[data-seccion='{seccion}']\").open = true")
+        for y in (0, 400, 800, 100000):  # el panel, desplazado de arriba abajo
+            pagina.evaluate(f"document.querySelector('.menu-contenido').scrollTop = {y}")
+            c = pagina.evaluate(CAJAS, {"abierto": True})
+            assert not cruzan(c["asa"], c["empezar"]), (seccion, y)
+            for nombre, caja in c["controles"]:
+                assert not cruzan(c["asa"], caja), (seccion, y, nombre)

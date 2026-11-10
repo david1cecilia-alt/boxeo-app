@@ -13,13 +13,18 @@ export const NOMBRE_NIVEL = { 1: "Básico", 2: "Medio", 3: "Avanzado" };
 export const NOMBRE_RITMO = { 1: "Calmado", 2: "Tranquilo", 3: "Constante", 4: "Vivo", 5: "Intenso" };
 export const NOMBRE_VOZ = { numeros: "Números", nombres: "Nombres", ambos: "Ambos" };
 
-// Lo elegido en una línea para «Tu sesión»: «Medio · Vivo · Números · Reacción». Zurdo y
-// Reacción solo si están activados. `mezcla`, la efectiva (estadoMezcla): con «Solo las mías» el
-// nivel no cuenta y no se dice; con «Ninguna», nada.
-export function resumenElecciones({ nivel, ritmo, voz, zurdo, modo_reaccion, mezcla = "ninguna" }) {
-  const nivelOMezcla = mezcla === "solo" ? [RESUMEN_MEZCLA.solo] : [NOMBRE_NIVEL[nivel], RESUMEN_MEZCLA[mezcla]];
-  return [...nivelOMezcla, NOMBRE_RITMO[ritmo], NOMBRE_VOZ[voz], zurdo && "Zurdo", modo_reaccion && "Reacción"]
-    .filter(Boolean).join(" · ");
+// Las pastillas de «Tu sesión»: «Nivel básico», la mezcla (si hay), el ritmo, el modo de voz y, si están,
+// Zurdo, Reacción y cuántos de «Practicar más». Con «Solo las mías» el nivel no cuenta y no se dice.
+export function eleccionesSesion({ nivel, ritmo, voz, zurdo, modo_reaccion, mezcla = "ninguna", practicar = [] }) {
+  const nivelOMezcla = mezcla === "solo" ? [RESUMEN_MEZCLA.solo] : [`Nivel ${NOMBRE_NIVEL[nivel].toLowerCase()}`, RESUMEN_MEZCLA[mezcla]];
+  return [...nivelOMezcla, NOMBRE_RITMO[ritmo], NOMBRE_VOZ[voz], zurdo && "Zurdo", modo_reaccion && "Reacción",
+    practicar.length > 0 && `Practicar más: ${practicar.length}`].filter(Boolean);
+}
+
+// Cuánto dura la sesión entera, en palabras: «unos 11 min» (3 × 3:00 con 1:00 de descanso).
+export function duracionAproximada({ asaltos, duracion_asalto, descanso }) {
+  const minutos = Math.round((asaltos * duracion_asalto + (asaltos - 1) * descanso) / 60);
+  return minutos <= 1 ? "1 min" : `unos ${minutos} min`;
 }
 
 // «Tus combinaciones» en Entrenar: cada opción con el porcentaje de propias que sale (de

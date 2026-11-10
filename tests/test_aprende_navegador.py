@@ -263,7 +263,7 @@ def test_a_390_la_barra_con_aprende_cabe_sin_apretar_y_con_48_px_para_el_dedo(pa
                  una_linea: t.height < 1.5 * parseFloat(getComputedStyle(s).fontSize) * 1.45,
                  holgura: Math.min(t.left - c.left, c.right - t.right) };
     })""")
-    assert [p["texto"] for p in pestanas] == ["Entrenar", "Aprende", "Historial", "Perfil"]
+    assert [p["texto"] for p in pestanas] == ["Entrenar", "Aprende", "Historial"]  # Perfil, desde la cabecera de Entrenar
     for p in pestanas:
         assert p["ancho"] >= 48 and p["alto"] >= 48, p
         assert p["letra"] == "12px" and p["una_linea"] and p["holgura"] >= 8, p

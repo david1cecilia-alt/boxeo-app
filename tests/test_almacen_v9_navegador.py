@@ -55,7 +55,12 @@ def ir(pagina, datos=None, ruta="#entrenar"):
         pagina.evaluate("(d) => localStorage.setItem('boxeo', d)", json.dumps(datos))
     pagina.goto(f"{ORIGEN}/index.html{ruta}")
     if "entrenar" in ruta:
-        pagina.wait_for_selector('#presets input[name="preset"]:checked', state="attached")
+        pagina.wait_for_selector('#tipo-sesion input[name="tipo"]:checked', state="attached")
+
+
+def resumen(pagina):
+    """«Tu sesión» en una línea: «3 × 3:00 · descanso 1:00»."""
+    return f'{pagina.inner_text("#resumen-grande")} · {pagina.inner_text("#resumen-detalle").split(" · ")[0]}'
 
 
 def guardado(pagina):
@@ -63,18 +68,18 @@ def guardado(pagina):
 
 
 def elegido(pagina):
-    return pagina.eval_on_selector('input[name="preset"]:checked', "e => e.value")
+    return pagina.eval_on_selector('#tipo-sesion input:checked', "e => e.value")
 
 
 def chips(pagina):
-    return pagina.eval_on_selector_all('#presets input[name="preset"]', "es => es.map((e) => e.value)")
+    return pagina.eval_on_selector_all('#tipo-sesion input[name="tipo"]', "es => es.map((e) => e.value)")
 
 
 def test_un_v8_con_lo_de_la_general_abre_con_amateur_y_se_guarda_en_v9(pagina):
     ir(pagina, v8())
     assert elegido(pagina) == "general"
-    assert pagina.inner_text("#resumen-config") == "3 × 3:00 · descanso 1:00"
-    assert pagina.locator("#avanzados").is_hidden()
+    assert resumen(pagina) == "3 × 3:00 · descanso 1:00"
+    assert pagina.locator("#config input[type=number]").count() == 0  # la General no se edita
     datos = guardado(pagina)
     assert datos["version"] == 9
     assert datos["perfil"]["sesion"]["tipo"] == "general" and "asalto" not in datos["perfil"]["sesion"]
@@ -87,24 +92,24 @@ def test_un_v8_con_amateur_y_elecciones_propias_abre_con_la_misma_sesion_en_pers
     ir(pagina, v8({"nivel": 2, "mezcla": "poco", "ritmo": 4}))
     # La migración lo deja en Personalizada 3×3: lo que se ve y lo que se va a hacer, igual que antes.
     assert elegido(pagina) == "personalizada"
-    assert pagina.inner_text("#resumen-config") == "3 × 3:00 · descanso 1:00"
+    assert resumen(pagina) == "3 × 3:00 · descanso 1:00"
     assert [pagina.input_value(f"#{c}") for c in ("asaltos", "duracion", "descanso")] == ["3", "180", "60"]
     assert pagina.is_checked('input[name="nivel"][value="2"]')
     assert pagina.is_checked('input[name="mezcla"][value="poco"]')
     assert pagina.input_value("#ritmo") == "4"
     # Elegir Amateur guarda la General; la Personalizada no se pierde.
-    pagina.click('#presets label:has(input[value="general"])')
+    pagina.click('#tipo-sesion label:has(input[value="general"])')
     sesion = guardado(pagina)["perfil"]["sesion"]
     assert sesion["tipo"] == "general"
     assert sesion["personalizada"] == {"asaltos": 3, "duracion_asalto": 180, "descanso": 60}
-    pagina.click('#presets label:has(input[value="personalizada"])')
+    pagina.click('#tipo-sesion label:has(input[value="personalizada"])')
     assert guardado(pagina)["perfil"]["sesion"]["tipo"] == "personalizada"
 
 
 def test_un_v8_con_personalizado_conserva_sus_valores(pagina):
     ir(pagina, v8({"asalto": "personalizado"}))
     assert elegido(pagina) == "personalizada"
-    assert pagina.inner_text("#resumen-config") == "4 × 2:00 · descanso 0:45"
+    assert resumen(pagina) == "4 × 2:00 · descanso 0:45"
     # Cambiar la personalizada (en el menú) se sigue guardando.
     pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/personalizar")
     pagina.fill("#asaltos", "5")
@@ -123,21 +128,21 @@ def test_practicar_mas_de_un_v8_sale_sin_el_cuanto(pagina):
 def test_prueba_solo_con_el_parametro_y_nunca_se_guarda(pagina):
     ir(pagina, v8({"asalto": "personalizado"}))
     assert chips(pagina) == ["general", "personalizada"]
-    assert pagina.locator("#presets").inner_text().count("Prueba") == 0
+    assert pagina.locator("#tipo-sesion").inner_text().count("Prueba") == 0
     # Con ?prueba aparece, sale elegida y la sesión es de 2 × 30 s; lo guardado no cambia.
     pagina.goto(f"{ORIGEN}/index.html?prueba#entrenar")
-    pagina.wait_for_selector('#presets input[name="preset"]:checked', state="attached")
-    assert chips(pagina) == ["general", "prueba", "personalizada"]
+    pagina.wait_for_selector('#tipo-sesion input[name="tipo"]:checked', state="attached")
+    assert chips(pagina) == ["general", "personalizada", "prueba"]  # Prueba, la tercera
     assert elegido(pagina) == "prueba"
-    assert pagina.inner_text("#resumen-config") == "2 × 0:30 · descanso 0:10"
+    assert resumen(pagina) == "2 × 0:30 · descanso 0:10"
     assert guardado(pagina)["perfil"]["sesion"]["tipo"] == "personalizada"
-    pagina.click('#presets label:has(input[value="general"])')
-    pagina.click('#presets label:has(input[value="prueba"])')
+    pagina.click('#tipo-sesion label:has(input[value="general"])')
+    pagina.click('#tipo-sesion label:has(input[value="prueba"])')
     assert guardado(pagina)["perfil"]["sesion"]["tipo"] == "general"
     # Sin ?prueba vuelve lo de siempre.
     pagina.goto(f"{ORIGEN}/index.html#entrenar")
     pagina.reload()
-    pagina.wait_for_selector('#presets input[name="preset"]:checked', state="attached")
+    pagina.wait_for_selector('#tipo-sesion input[name="tipo"]:checked', state="attached")
     assert chips(pagina) == ["general", "personalizada"]
     assert elegido(pagina) == "general"
 
@@ -174,9 +179,9 @@ def test_importar_una_copia_v8_la_deja_en_v9(pagina, tmp_path):
     assert nuevo["combinacionesPropias"] == [PROPIA]
     # Entrenar lo enseña con la sesión de siempre.
     pagina.goto(f"{ORIGEN}/index.html#entrenar")
-    pagina.wait_for_selector('#presets input[name="preset"]:checked', state="attached")
+    pagina.wait_for_selector('#tipo-sesion input[name="tipo"]:checked', state="attached")
     assert elegido(pagina) == "personalizada"
-    assert pagina.inner_text("#resumen-config") == "3 × 3:00 · descanso 1:00"
+    assert resumen(pagina) == "3 × 3:00 · descanso 1:00"
     pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/personalizar")
     pagina.wait_for_selector("#niveles", state="visible")
     assert pagina.is_checked('input[name="nivel"][value="3"]')

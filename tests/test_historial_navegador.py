@@ -144,7 +144,7 @@ def test_al_pulsar_cada_pestana_el_foco_va_al_titulo_de_su_vista(pagina):
     pagina.set_viewport_size({"width": 1440, "height": 900})
     pagina.goto(f"{ORIGEN}/index.html#entrenar")
     pagina.wait_for_selector("#vista-entrenar h1", state="visible")
-    for vista in ("aprende", "historial", "perfil", "entrenar"):
+    for vista in ("aprende", "historial", "entrenar"):  # Perfil ya no está en la barra
         pagina.click(f'#pestanas a[href="#{vista}"]')
         pagina.wait_for_function(f"document.activeElement?.matches('#t-{vista}')")
 

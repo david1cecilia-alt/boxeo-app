@@ -203,7 +203,7 @@ def test_volver_del_listado_al_que_se_llego_directo_abre_el_menu_y_cerrarlo_no_s
 
 
 # Lo de Entrenar que no debe verse mientras se ve el creador (ni el asa).
-DE_ENTRENAR = ["#t-entrenar", "#config", ".foto-cabecera", "#vista-entrenar .marca-agua", "#asa"]
+DE_ENTRENAR = ["#config", ".cabecera-perfil", "#tipo-sesion", ".tu-sesion", "#empezar", "#asa"]
 
 
 def _nada_de_entrenar(pagina):
@@ -631,3 +631,14 @@ def test_nada_se_sale_y_los_toques_miden_48(pagina, ancho):
         assert caja["x"] > paleta["x"] + paleta["width"] - 1 and abs(caja["y"] - paleta["y"]) < 2
     else:  # una: la combinación encima
         assert caja["y"] + caja["height"] <= paleta["y"]
+
+
+def test_a_390_con_el_scroll_abajo_anadir_combinacion_queda_por_encima_de_la_barra(pagina):
+    pagina.set_viewport_size({"width": 390, "height": 844})
+    ir(pagina, RUTA, EJEMPLOS * 3)  # 9: el listado no cabe y hay que bajar
+    pagina.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)")
+    pagina.wait_for_function("Math.ceil(scrollY + innerHeight) >= document.documentElement.scrollHeight - 1")
+    boton = pagina.locator("#anadir-propia").bounding_box()
+    barra = pagina.locator("#pestanas").bounding_box()
+    assert boton["y"] + boton["height"] <= barra["y"], (boton, barra)
+    assert boton["y"] >= 0

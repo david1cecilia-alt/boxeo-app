@@ -333,11 +333,11 @@ def test_a_1024_huecos_uno_debajo_de_otro_en_el_panel_y_la_hoja_centrada(ajustes
 
 def test_elegir_con_la_general_pasa_a_personalizada_y_al_cerrar_el_menu_se_ve(ajustes):
     pagina = ajustes
-    assert pagina.is_checked('#presets input[value="general"]')
+    assert pagina.is_checked('#tipo-sesion input[value="general"]')
     _elegir(pagina, "3")
     datos = json.loads(pagina.evaluate("localStorage.getItem('boxeo')"))
     assert datos["perfil"]["sesion"]["tipo"] == "personalizada"
-    assert pagina.is_checked('#presets input[value="personalizada"]')
+    assert pagina.is_checked('#tipo-sesion input[value="personalizada"]')
 
 
 def test_atras_con_la_hoja_abierta_cierra_la_hoja_y_el_menu(ajustes):

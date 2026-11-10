@@ -3,10 +3,13 @@ import { test } from "node:test";
 
 import { crearAlmacen, perfilPorDefecto } from "../../static/almacen.js";
 import {
-  MAX_PRACTICAR, OPCIONES_MEZCLA, PRESET_DE_TIPO, aPersonalizada, cambiarPracticar, configSesion, conPrueba, configGeneral, estadoMezcla, nuevoGuion, opcionesVoz, perfilSorteo, personalizadaValida, preferencias, recordarSesion, resumenElecciones,
+  MAX_PRACTICAR, OPCIONES_MEZCLA, PRESET_DE_TIPO, aPersonalizada, cambiarPracticar, configSesion, duracionAproximada, eleccionesSesion, conPrueba, configGeneral, estadoMezcla, nuevoGuion, opcionesVoz, perfilSorteo, personalizadaValida, preferencias, recordarSesion,
 } from "../../static/ajustes.js";
 import { crearAzar } from "../../static/motor/azar.js";
 import { validarConfig } from "../../static/motor/temporizador.js";
+
+// Las pastillas de «Tu sesión» en una línea, para compararlas de un vistazo.
+const unaLinea = (c) => eleccionesSesion(c).join(" · ");
 import { cargarDatosDeDisco } from "./datos.mjs";
 
 const datos = cargarDatosDeDisco();
@@ -179,12 +182,12 @@ test("tocar otras cosas del Perfil («Practicar más», estilo, medidas) no pisa
 
 test("la línea de elecciones de «Tu sesión»: nivel · ritmo · voz, y Zurdo y Reacción solo si están", () => {
   const base = { nivel: 2, ritmo: 4, voz: "numeros", zurdo: false, modo_reaccion: false };
-  assert.equal(resumenElecciones(base), "Medio · Vivo · Números");
-  assert.equal(resumenElecciones({ ...base, modo_reaccion: true }), "Medio · Vivo · Números · Reacción");
-  assert.equal(resumenElecciones({ ...base, zurdo: true }), "Medio · Vivo · Números · Zurdo");
-  assert.equal(resumenElecciones({ nivel: 1, ritmo: 1, voz: "nombres", zurdo: true, modo_reaccion: true }),
-    "Básico · Calmado · Nombres · Zurdo · Reacción");
-  assert.equal(resumenElecciones({ ...base, nivel: 3, ritmo: 5, voz: "ambos" }), "Avanzado · Intenso · Ambos");
+  assert.equal(unaLinea(base), "Nivel medio · Vivo · Números");
+  assert.equal(unaLinea({ ...base, modo_reaccion: true }), "Nivel medio · Vivo · Números · Reacción");
+  assert.equal(unaLinea({ ...base, zurdo: true }), "Nivel medio · Vivo · Números · Zurdo");
+  assert.equal(unaLinea({ nivel: 1, ritmo: 1, voz: "nombres", zurdo: true, modo_reaccion: true }),
+    "Nivel básico · Calmado · Nombres · Zurdo · Reacción");
+  assert.equal(unaLinea({ ...base, nivel: 3, ritmo: 5, voz: "ambos" }), "Nivel avanzado · Intenso · Ambos");
 });
 
 test("la voz de Ajustes: automática a velocidad normal (1,1) por defecto", () => {
@@ -284,9 +287,9 @@ test("estadoMezcla: avisa sin propias del nivel y con «Solo las mías» sin nin
 
 test("el resumen de «Tu sesión» dice la mezcla efectiva y, con «Solo las mías», no el nivel", () => {
   const base = { nivel: 2, ritmo: 4, voz: "numeros", zurdo: false, modo_reaccion: false };
-  assert.equal(resumenElecciones({ ...base, mezcla: "ninguna" }), "Medio · Vivo · Números");
-  assert.equal(resumenElecciones({ ...base, mezcla: "mucho" }), "Medio · Mucho de las tuyas · Vivo · Números");
-  assert.equal(resumenElecciones({ ...base, mezcla: "solo", zurdo: true }), "Solo las tuyas · Vivo · Números · Zurdo");
+  assert.equal(unaLinea({ ...base, mezcla: "ninguna" }), "Nivel medio · Vivo · Números");
+  assert.equal(unaLinea({ ...base, mezcla: "mucho" }), "Nivel medio · Mucho de las tuyas · Vivo · Números");
+  assert.equal(unaLinea({ ...base, mezcla: "solo", zurdo: true }), "Solo las tuyas · Vivo · Números · Zurdo");
 });
 
 // ---------- La sesión elegida (configSesion) y el paso a la Personalizada (D3) ----------
@@ -336,7 +339,7 @@ test("las tres configs pasan validarConfig y el resumen de la General dice su ni
     assert.deepEqual(validarConfig(c), [], `${c.tipo}`);
   }
   const general = configSesion(conPersonalizada("general"), { prueba: false });
-  assert.ok(resumenElecciones(general).startsWith("Básico · Constante"), resumenElecciones(general));
+  assert.ok(unaLinea(general).startsWith("Nivel básico · Constante"), unaLinea(general));
 });
 
 test("la General no usa el «Practicar más» guardado: su guion es el de un perfil sin él", () => {
@@ -362,4 +365,18 @@ test("D3: tocar algo con la General elegida guarda la Personalizada guardada + e
   const c = configSesion(almacen.datos.perfil, { prueba: false, tipo: "personalizada" });
   assert.deepEqual([c.asaltos, c.duracion_asalto, c.descanso, c.nivel], [4, 120, 45, 3]);
   assert.equal(configSesion(almacen.datos.perfil, { prueba: false }).nivel, datos.perfil.nivel);
+});
+
+test("las pastillas de «Tu sesión»: nivel en palabras, mezcla, ritmo, voz y lo que esté activado", () => {
+  const general = configSesion(conPersonalizada("general"), { prueba: false });
+  assert.deepEqual(eleccionesSesion(general), ["Nivel básico", "Constante", "Ambos", "Zurdo"]);
+  const p = configSesion(conPersonalizada("personalizada"), { prueba: false });
+  assert.deepEqual(eleccionesSesion(p), ["Nivel medio", "Poco de las tuyas", "Vivo", "Ambos", "Zurdo", "Reacción", "Practicar más: 1"]);
+  assert.deepEqual(eleccionesSesion({ ...p, mezcla: "solo" }).slice(0, 2), ["Solo las tuyas", "Vivo"]);
+});
+
+test("duracionAproximada: la General son unos 11 min y Prueba, 1 min", () => {
+  assert.equal(duracionAproximada(configGeneral()), "unos 11 min");
+  assert.equal(duracionAproximada({ asaltos: 2, duracion_asalto: 30, descanso: 10 }), "1 min");
+  assert.equal(duracionAproximada({ asaltos: 4, duracion_asalto: 120, descanso: 45 }), "unos 10 min");
 });

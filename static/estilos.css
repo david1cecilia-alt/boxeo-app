@@ -386,15 +386,64 @@ label.boton { color: var(--sobre-acento); }
 input[type="file"].solo-lectores:focus-visible + *, label.boton:focus-within { outline: 3px solid var(--foco); }
 
 /* ---------- Entrenar ---------- */
-.config-opciones, .config-sesion { display: grid; gap: 14px; min-width: 0; }
-.config-tarjeta { display: grid; gap: 14px; padding: 16px; }
-.config-titulo, .resumen-grande, .resumen-elecciones { display: none; margin: 0; }
+/* De arriba abajo: la cabecera de perfil (un solo enlace a #perfil), el selector General | Personalizada,
+   «Tu sesión» y Empezar. En el PC (abajo), dos columnas con «Tu sesión» fija a la derecha. Gris neutro: los
+   colores van en la fase visual. */
+#vista-entrenar { padding-top: calc(16px + env(safe-area-inset-top, 0px)); }
+#config { gap: 16px; }
+.cabecera-perfil {
+  display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 8px 12px 8px 8px;
+  color: var(--texto); text-decoration: none;
+  background: var(--superficie); border: 1px solid var(--linea); border-radius: 32px;
+}
+.cabecera-perfil:hover { background: var(--superficie-hover); }
+.avatar-generico {
+  display: grid; place-items: center; flex: none; width: 48px; height: 48px; border-radius: 50%;
+  background: var(--secundario); color: var(--suave);
+}
+.avatar-generico svg, .cabecera-perfil .flecha {
+  width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+.cabecera-perfil .flecha { flex: none; width: 20px; height: 20px; color: var(--suave); }
+.cabecera-perfil-texto { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.cabecera-perfil-nombre { font-weight: 600; }
+.cabecera-perfil-estilo { font-size: 0.8125rem; color: var(--suave); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* General | Personalizada (| Prueba): segmentado a todo el ancho; el elegido, en claro. */
+.segmentado-tipo {
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px;
+  margin: 0; padding: 4px; border: 0; border-radius: 28px; background: var(--secundario);
+}
+.segmentado-tipo label { position: relative; display: grid; }
+.segmentado-tipo input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.segmentado-tipo span {
+  display: grid; place-items: center; min-height: 48px; padding: 4px 8px; border-radius: 24px;
+  font-weight: 600; font-size: 0.9375rem; line-height: 1.2; text-align: center; color: var(--suave);
+}
+.segmentado-tipo input:checked + span { background: var(--chip-activo); color: var(--sobre-chip-activo); }
+.segmentado-tipo input:focus-visible + span { outline: 3px solid var(--foco); outline-offset: 1px; }
+/* «Tu sesión»: los asaltos en grande, el descanso y la duración, las pastillas y qué es. */
+.tu-sesion {
+  display: grid; gap: 8px; padding: 20px; min-width: 0;
+  background: var(--superficie); border: 1px solid var(--linea); border-radius: 22px;
+}
+.resumen-grande { margin: 0; font-family: var(--letra-titular); font-size: 2.5rem; line-height: 1; letter-spacing: 0.02em; }
+.resumen-detalle { margin: 0; color: var(--suave); }
+.chips-sesion { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 0; padding: 0; list-style: none; }
+.chips-sesion li {
+  padding: 4px 10px; border-radius: 999px; background: var(--secundario); font-size: 0.8125rem; color: var(--texto);
+}
+.nota-sesion { margin: 4px 0 0; font-size: 0.8125rem; }
+/* En el móvil el asa (fija, a 28 px del borde) puede caer sobre el borde derecho de «Tu sesión» (D5): el
+   texto nunca llega a esa franja (riesgo 3 del plan). En el PC tiene su margen propio. */
+@media (max-width: 1023.98px) { .tu-sesion { padding-right: 56px; } }
+.nota-sesion a { color: var(--texto); font-weight: 600; }
+.empezar-caja { display: grid; gap: 12px; }
+.empezar-caja .nota { margin: -4px 0 0; text-align: center; font-size: 0.75rem; }
 .empezar {
   min-height: 64px; width: 100%; gap: 12px;
   font-family: var(--letra-titular); font-weight: 400; font-size: 26px; letter-spacing: 0.08em; text-transform: uppercase;
 }
 .empezar svg { width: 22px; height: 22px; }
-.config-sesion .nota { margin: -4px 0 0; text-align: center; font-size: 0.75rem; }
 .voz-corta { display: none; }
 
 /* ---------- Sesión en curso ---------- */
@@ -1303,32 +1352,28 @@ dialog::backdrop { background: var(--velo); }
       linear-gradient(180deg, rgba(10, 10, 10, 0.3) 0%, rgba(10, 10, 10, 0) 30%, rgba(10, 10, 10, 0.2) 60%, var(--fondo) 100%);
   }
   .con-foto .cabecera { padding-top: calc(var(--arriba-titular, 150px) + 30px); min-height: calc(var(--alto-foto, 360px) - 20px); }
-  #vista-entrenar { --arriba-titular: 120px; }
   :is(#vista-historial, #vista-perfil) h1 { font-size: 4.5rem; }
   .marca-agua.vertical { writing-mode: horizontal-tb; top: 36px; right: auto; left: -12px; font-size: 13rem; }
 
-  /* Entrenar: presets arriba; debajo, opciones a la izquierda y sesión a la derecha, alineadas
-     arriba. La sesión se queda a la vista (sticky) mientras se baja por las opciones. */
-  #config { grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr); gap: 14px 32px; align-items: start; }
-  .config-opciones { display: contents; }
-  .presets { grid-column: 1 / -1; grid-row: 1; } /* a todo el ancho: a 1024 px no caben en la columna */
-  .config-tarjeta { grid-column: 1; grid-row: 2; }
-  .config-sesion { grid-column: 2; grid-row: 2; }
-  .fila-chips { margin: 0; padding: 2px 0; flex-wrap: wrap; overflow: visible; }
-  .config-tarjeta { padding: 24px; gap: 18px; }
-  .presets { display: flex; align-items: center; gap: 16px; }
-  .presets .fila-chips { flex: none; flex-wrap: nowrap; } /* siempre en una fila */
-  .resumen-presets { display: none; } /* ya sale en «Tu sesión» (los lectores lo siguen oyendo en los chips) */
+  /* Entrenar: a la izquierda la cabecera de perfil y el selector; a la derecha «Tu sesión» y Empezar, fijos
+     al bajar (sticky). A la derecha de todo queda el margen de 112 px del asa (2.1): main llega al borde de
+     la ventana hasta ~1450 px y lleva 48 de relleno; #config deja otros 64. Más ancho, main se centra y el
+     margen crece solo. */
+  #vista-entrenar { padding-top: 40px; }
+  #config {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 428px); grid-template-rows: auto auto 1fr;
+    gap: 32px 32px; align-items: start; margin-right: 64px;
+  }
+  .cabecera-perfil { grid-column: 1; grid-row: 1; max-width: 520px; }
+  #tipo-sesion { grid-column: 1; grid-row: 2; }
+  .tu-sesion, .empezar-caja { grid-column: 2; }
+  .derecha-entrenar { grid-column: 2; grid-row: 2 / 4; position: sticky; top: 24px; display: grid; gap: 16px; }
+  .tu-sesion { padding: 24px; }
+  .resumen-grande { font-size: 3rem; }
   .niveles label span { min-height: 84px; font-size: 0.875rem; }
   .niveles b { font-size: 32px; }
-  .mezclas b { font-size: 24px; } /* cuatro por fila: «35 %» no cabe a 32 px en la columna de 1024 */
-  .config-sesion {
-    position: sticky; top: 24px; gap: 16px; padding: 28px;
-    background: var(--superficie); border: 1px solid var(--linea); border-radius: 22px;
-  }
-  .config-titulo { display: block; font-size: 2.25rem; }
-  .resumen-grande { display: block; margin-top: -6px; color: var(--suave); font-size: 1.05rem; }
-  .resumen-elecciones { display: block; margin-top: -10px; color: var(--suave); font-size: 0.875rem; }
+  .menu-seccion .niveles label span { min-height: 56px; }
+  .menu-seccion .niveles b { font-size: 24px; }
   .voz-larga { display: none; }
   .voz-corta { display: inline; }
   #info-voz { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* solo si una voz no cabe ni corta */

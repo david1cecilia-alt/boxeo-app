@@ -57,8 +57,8 @@ def ir(pagina, propias=(), sesion=None, ruta="#entrenar"):
     pagina.wait_for_function("window.listo === true")
     datos = {"version": 9, "combinacionesPropias": [
         {"id": f"p-{i}", "ids": ids, "creada": "2026-11-04T10:00:00"} for i, ids in enumerate(propias)]}
-    if sesion:
-        datos["perfil"] = {"sesion": sesion}
+    # «Tus combinaciones» es de la Personalizada: con la General no se mezcla nada (D1).
+    datos["perfil"] = {"sesion": {"tipo": "personalizada", **(sesion or {})}}
     pagina.evaluate("(d) => localStorage.setItem('boxeo', d)", json.dumps(datos))
     pagina.goto(f"{ORIGEN}/index.html{ruta}")
     pagina.wait_for_selector("#mezclas label")

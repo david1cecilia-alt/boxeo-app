@@ -2,7 +2,7 @@
 // guantes a 1–2 m del móvil). No contiene reglas de boxeo: el guion lo genera el motor y
 // el reproductor lo lanza en tiempo de sesión (con pausa).
 import {
-  NOMBRE_RITMO, OPCIONES_MEZCLA, PRESET_DE_TIPO, conPrueba, configGeneral, estadoMezcla, nuevoGuion, opcionesVoz, personalizadaValida, preferencias,
+  NOMBRE_RITMO, OPCIONES_MEZCLA, PRESET_DE_TIPO, conPrueba, configGeneral, configSesion, estadoMezcla, nuevoGuion, opcionesVoz, personalizadaValida, preferencias,
   recordarSesion, repetirColetillas, resumenElecciones,
 } from "../ajustes.js";
 import { crearAzar, semillaAleatoria } from "../motor/azar.js";
@@ -96,7 +96,8 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     perfilAplicado = almacen.datos.perfil;
   }
 
-  function leerConfig() {
+  // Lo que marcan los controles ahora mismo (para guardarlo al cambiar).
+  function leerControles() {
     return {
       asaltos: Number($("#asaltos").value),
       duracion_asalto: Number($("#duracion").value),
@@ -112,14 +113,21 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     };
   }
 
+  // La sesión que sale al pulsar Empezar: la del tipo marcado, con lo guardado (configSesion). La General
+  // nunca lee lo de la Personalizada.
+  function leerConfig() {
+    return configSesion(almacen.datos.perfil, { tipo: $('input[name="preset"]:checked')?.value });
+  }
+
   function resumir() {
-    const c = leerConfigSegura();
-    if (!c) return;
+    const controles = leerConfigSegura();
+    if (!controles) return;
     // Hueco desde que la voz termina hasta la siguiente (se golpea mientras se oye).
-    const [min, max] = PAUSA_POR_RITMO[c.ritmo];
+    const [min, max] = PAUSA_POR_RITMO[controles.ritmo];
     const hueco = min === max ? decimal(min) : `${decimal(min)}–${decimal(max)}`;
-    $("#resumen-ritmo").textContent = `${NOMBRE_RITMO[c.ritmo]} · ${hueco} s entre combinaciones`;
-    $("#ritmo").style.setProperty("--lleno", `${(c.ritmo - 1) * 25}%`);
+    $("#resumen-ritmo").textContent = `${NOMBRE_RITMO[controles.ritmo]} · ${hueco} s entre combinaciones`;
+    $("#ritmo").style.setProperty("--lleno", `${(controles.ritmo - 1) * 25}%`);
+    const c = leerConfig();
     const resumen = `${c.asaltos} × ${minutos(c.duracion_asalto)} · descanso ${minutos(c.descanso)}`;
     $("#resumen-config").textContent = resumen;
     $("#resumen-grande").textContent = resumen;
@@ -148,7 +156,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   }
 
   function leerConfigSegura() {
-    return $('input[name="nivel"]:checked') ? leerConfig() : null;
+    return $('input[name="nivel"]:checked') ? leerControles() : null;
   }
 
   // Elegir la General o Prueba no borra la personalizada: sigue guardada para cuando se vuelva.
@@ -160,14 +168,14 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   // La personalizada se guarda en cuanto es válida (a medio escribir, no).
   for (const id of ["asaltos", "duracion", "descanso"]) {
     $(`#${id}`).addEventListener("input", () => {
-      const { asaltos, duracion_asalto, descanso } = leerConfig();
+      const { asaltos, duracion_asalto, descanso } = leerControles();
       const personalizada = { asaltos, duracion_asalto, descanso };
       if (personalizadaValida(personalizada)) recordar({ personalizada });
       resumir();
     });
   }
   form.addEventListener("change", (e) => {
-    const { nivel, zurdo, modo_reaccion, ritmo, voz, mezcla } = leerConfig();
+    const { nivel, zurdo, modo_reaccion, ritmo, voz, mezcla } = leerControles();
     const cambio = { nivel: { nivel }, voz: { voz }, mezcla: { mezcla } }[e.target.name]
       ?? { ritmo: { ritmo }, zurdo: { zurdo }, reaccion: { reaccion: modo_reaccion } }[e.target.id];
     if (cambio) recordar(cambio);

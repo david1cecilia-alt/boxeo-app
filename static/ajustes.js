@@ -82,9 +82,11 @@ export function cambiarPracticar(practicar, movimiento, elegir) {
 // El guion de la sesión: la biblioteca del nivel con «Practicar más» y, según `config.mezcla` («Tus
 // combinaciones»), las propias del almacén (`propias`, en ortodoxo; el zurdo, como la biblioteca).
 // Con «Ninguna», o una mezcla que no se puede cumplir, sale lo mismo que sin propias.
+// `config.practicar`, si llega (configSesion), manda sobre el del perfil: la General no lleva ninguno.
 export function nuevoGuion(config, perfilUsuario, azar, propias = []) {
+  const practicar = config.practicar ?? perfilUsuario?.practicar;
   const sorteo = new SorteoMezcla(config.nivel, {
-    perfil: perfilSorteo(perfilUsuario), zurdo: config.zurdo, azar, propias, mezcla: config.mezcla ?? "ninguna",
+    perfil: perfilSorteo({ practicar }), zurdo: config.zurdo, azar, propias, mezcla: config.mezcla ?? "ninguna",
   });
   return construirGuion(config, azar, sorteo);
 }
@@ -134,6 +136,36 @@ export function preferencias(perfilUsuario, { prueba = conPrueba() } = {}) {
     personalizada: { ...(personalizadaValida(s.personalizada) ? s.personalizada : PERSONALIZADA_POR_DEFECTO) },
   };
 }
+
+// La sesión que sale al pulsar Empezar con lo elegido (`tipo` de preferencias()):
+// - General: configGeneral() (D1). Nunca lee lo guardado de la Personalizada.
+// - Personalizada: lo guardado (asaltos, duración y descanso; nivel, ritmo, mezcla, Reacción y «Practicar más»).
+// - Prueba (solo con ?prueba): 2 × 0:30 del preset «prueba» con las elecciones de la Personalizada.
+// Voz, «Nombrar combinaciones» y guardia son los de Ajustes en las tres. Devuelve la config del motor más
+// `tipo` y `practicar` (los usa nuevoGuion).
+export function configSesion(perfilUsuario, { prueba = conPrueba(), tipo } = {}) {
+  const p = preferencias(perfilUsuario, { prueba });
+  const elegido = tipo ?? p.tipo;
+  const comun = { tipo: elegido, zurdo: p.zurdo, voz: p.voz, pausa: null, velocidad: opcionesVoz(perfilUsuario).velocidad };
+  if (elegido === "general") {
+    const g = configGeneral();
+    return {
+      ...comun, asaltos: g.asaltos, duracion_asalto: g.duracion_asalto, descanso: g.descanso, nivel: g.nivel,
+      ritmo: g.ritmo, mezcla: g.mezcla, modo_reaccion: g.reaccion, practicar: [],
+    };
+  }
+  const asaltos = elegido === "prueba"
+    ? datos().presets.presets.find((x) => x.id === PRESET_DE_TIPO.prueba) : p.personalizada;
+  return {
+    ...comun, asaltos: asaltos.asaltos, duracion_asalto: asaltos.duracion_asalto, descanso: asaltos.descanso,
+    nivel: p.nivel, ritmo: p.ritmo, mezcla: p.mezcla, modo_reaccion: p.reaccion,
+    practicar: (perfilUsuario.practicar ?? []).map((x) => ({ ...x })),
+  };
+}
+
+// Tocar algo de «Personalizar sesión» con la General (o Prueba) elegida pasa a la Personalizada: se guarda
+// solo ese cambio más el tipo (D3); lo demás de la Personalizada sigue como estaba guardado.
+export const aPersonalizada = (cambio) => ({ ...cambio, tipo: "personalizada" });
 
 // Asaltos, duración y descanso dentro de los límites del motor (lo demás no cuenta aquí).
 export function personalizadaValida(p) {

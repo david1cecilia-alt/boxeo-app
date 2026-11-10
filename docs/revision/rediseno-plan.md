@@ -157,9 +157,9 @@ sola en ≤ 1 s, y si se toca para saltarla, ese toque no puede llegar a «Empez
 | [static/almacen.js](../../static/almacen.js) | `VERSION = 9`, la migración 8 → 9 (sección 4) y `completar()` con `identidad` y `pistas`. Valida la foto al leer y al importar. |
 | [motor/sorteo.py](../../motor/sorteo.py) → [static/motor/sorteo.js](../../static/motor/sorteo.js) | **Python primero**: `FACTOR_PRACTICAR` pasa a un solo número (sección 5) y `peso_practicar` ignora `cuanto` (lo de antes sigue sirviendo). `TOPE_PRACTICAR` se recalcula para 3 elegidos. Después, el port a JS y la equivalencia. |
 | [data/presets.json](../../data/presets.json) | `amateur` se queda (id estable) con `"nombre": "General"`; `prueba` se queda (la usan los tests y `?prueba`). El Historial dirá «General · nivel 2» donde decía «Amateur 3×3 · nivel 2». |
-| **Nuevo** `data/avatares.json` + `static/imagenes/avatares/` | **Hueco**: lista vacía hasta que David pase las imágenes (WebP cuadrados de 256 px; autoría en `CREDITOS.md`). Al precache de `sw.js` en cuanto haya ficheros. |
+| `data/avatares.json` + `static/imagenes/avatares/` | **Ya están** (10-11-2026, antes de R0): 7 WebP de 256 px (`chico-oro`, `chico-barba`, `chico-peso-pesado`, `chico-ciborg`, `chica-trenzas`, `chica-gorra`, `chica-robot`) con `id`, `archivo` y `alt`; en el precache de `sw.js`, en `CREDITOS.md` (Pippit AI, de CapCut) y comprobados por `tests/test_avatares.py`. |
 | [static/estilos.css](../../static/estilos.css) | Estilos de la cabecera de perfil, el selector, «Tu sesión», el asa, el panel, la pista y la intro. Fuera lo que deja de usarse (`#ir-ajustes`, `.presets`, `.config-tarjeta`, la foto de Entrenar). **Todo en gris neutro** (D6): los tokens de `:root` pasan a una escala de grises; no hay que reescribir componentes. |
-| [static/sw.js](../../static/sw.js) | Al precache: `vistas/menu.js`, `vistas/personalizar.js`, `vistas/avatar.js`, `foto.js`, `intro.js`, `data/avatares.json` (lo comprueba `tests/test_pwa.py`). |
+| [static/sw.js](../../static/sw.js) | Al precache: `vistas/menu.js`, `vistas/personalizar.js`, `vistas/avatar.js`, `foto.js`, `intro.js` (`data/avatares.json` y los avatares ya están; lo comprueba `tests/test_pwa.py`). |
 | [CLAUDE.md](../../CLAUDE.md) | Actualizar: `ajustes.js` une perfil y motor (igual); `vistas/ajustes.js` es una sección del menú; las rutas de Mis combinaciones; Practicar más con un nivel. |
 | `herramientas/capturas_practicar.py`, `capturas_creador.py`, `capturas_mezcla.py`, `capturas_perfil_historial.py` | Usan `#ajustes` y los controles de Entrenar: se actualizan cuando se muevan (no son tests, pero se rompen). |
 
@@ -231,8 +231,8 @@ muestra. Una vez por arranque en frío: `sessionStorage`, con try/catch; si fall
 
 ### 3.7 Avatar y foto
 
-- **Predefinidos**: los pasa David. Hasta entonces la lista de `data/avatares.json` está vacía y la interfaz
-  solo ofrece «Foto propia» y la inicial.
+- **Predefinidos**: los 7 de `data/avatares.json` (WebP de 256 px), pintados con `img.src` y su `alt`. Sin
+  avatar elegido ni foto, la inicial del nombre.
 - **Foto propia**: `<input type="file" accept="image/*">` (en el móvil ofrece cámara o galería), recorte
   cuadrado centrado, 256 × 256, JPEG 0,85 → `data:image/jpeg;base64,…`. Nunca sale del navegador. Rechazo
   claro si no es una imagen o no se puede leer (HEIC en algunos navegadores de escritorio).
@@ -491,7 +491,7 @@ Las propuestas de la tabla se revisaron con David. Lo que se decidió:
 | D7 | Nombre y avatar: ¿solo en Ajustes o también en Perfil? | **Solo en Ajustes**; Perfil los enseña con «Cambiar», que abre el menú en Ajustes. |
 | D8 | Fecha de inicio y medidas: ¿siguen en Perfil? | **Sí.** |
 | D9 | Fotos de cabecera de Aprende e Historial. | **Se conservan** hasta la fase visual. |
-| D10 | Avatares predefinidos. | **Cuando David pase los avatares.** Hasta entonces, solo foto propia o inicial. |
+| D10 | Avatares predefinidos. | **Hecho**: David pasó 7 (WebP de 256 px, generados con Pippit AI), ya en `static/imagenes/avatares/` y `data/avatares.json`. |
 | D11 | Practicar más: ¿3 movimientos como máximo? | **Pendiente**: según la simulación de 5.3, que David tiene que ver antes de cerrarla. Propuesta: 3. |
 | D12 | ¿El asa también en el PC? | **La misma asa.** |
 | D13 | ¿La intro en cada arranque o una vez por sesión del navegador? | **Sí a la propuesta**: una vez por arranque en frío (`sessionStorage`). |

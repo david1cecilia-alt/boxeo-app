@@ -1,0 +1,12 @@
+{
+  "_nota": "Avatares predefinidos de la cabecera de Entrenar y del Perfil (static/vistas/avatar.js). WebP cuadrados de 256 px en static/imagenes/avatares/; autoría en CREDITOS.md. El id es estable: se guarda en perfil.identidad.avatar.",
+  "avatares": [
+    {"id": "chico-oro",         "archivo": "imagenes/avatares/chico-oro.webp",         "alt": "Avatar: boxeador sonriente con fondo dorado"},
+    {"id": "chico-barba",       "archivo": "imagenes/avatares/chico-barba.webp",       "alt": "Avatar: boxeador con barba"},
+    {"id": "chico-peso-pesado", "archivo": "imagenes/avatares/chico-peso-pesado.webp", "alt": "Avatar: boxeador corpulento con una tirita en la nariz"},
+    {"id": "chico-ciborg",      "archivo": "imagenes/avatares/chico-ciborg.webp",      "alt": "Avatar: boxeador ciborg con visor luminoso"},
+    {"id": "chica-trenzas",     "archivo": "imagenes/avatares/chica-trenzas.webp",     "alt": "Avatar: boxeadora con trenzas"},
+    {"id": "chica-gorra",       "archivo": "imagenes/avatares/chica-gorra.webp",       "alt": "Avatar: boxeadora con gorra y guantes rojos"},
+    {"id": "chica-robot",       "archivo": "imagenes/avatares/chica-robot.webp",       "alt": "Avatar: robot con casco de boxeo"}
+  ]
+}

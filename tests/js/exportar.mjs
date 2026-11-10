@@ -33,12 +33,14 @@ for (const nivel of NIVELES) {
   sorteos[nivel] = { ortodoxo: sortear(nivel, false, 300 + nivel), zurdo: sortear(nivel, true, 300 + nivel) };
 }
 
-// "Practicar más": sorteos de medio con varias elecciones y el peso de cada combinación.
+// "Practicar más": sorteos de medio con varias elecciones y el peso de cada combinación. El último
+// trae el `cuanto` de los datos viejos (se ignora) y un movimiento repetido (cuenta una vez).
 const PRACTICAR = [
-  [{ movimiento: "6", cuanto: "poco" }],
-  [{ movimiento: "bloqueo", cuanto: "bastante" }],
-  [{ movimiento: "cuerpo", cuanto: "poco" }, { movimiento: "esquiva", cuanto: "bastante" }],
-  [{ movimiento: "1", cuanto: "bastante" }, { movimiento: "rodar", cuanto: "bastante" }, { movimiento: "pivote", cuanto: "poco" }],
+  [{ movimiento: "6" }],
+  [{ movimiento: "bloqueo" }],
+  [{ movimiento: "cuerpo" }, { movimiento: "esquiva" }],
+  [{ movimiento: "1" }, { movimiento: "rodar" }, { movimiento: "pivote" }],
+  [{ movimiento: "2", cuanto: "poco" }, { movimiento: "parada", cuanto: "bastante" }, { movimiento: "2", cuanto: "bastante" }],
 ];
 const practicar = PRACTICAR.map((elegidos) => ({
   elegidos,
@@ -124,7 +126,7 @@ const guionesMezcla = [];
 // Guiones de Entrenar tal cual (nuevoGuion, con «Practicar más»): «Mucho» y «Solo las mías» (también
 // sin ninguna corta), con y sin Reacción, en ortodoxo y zurdo. Asaltos de 3 min en medio, velocidad
 // normal: los del test de silencio final.
-const PRACTICAR_ENTRENAR = [{ movimiento: "esquiva", cuanto: "bastante" }];
+const PRACTICAR_ENTRENAR = [{ movimiento: "esquiva" }];
 const guionesEntrenar = [];
 [
   ["mucho", PROPIAS, {}],

@@ -12,6 +12,11 @@
       "texto": "el ×2 para que salgan los golpes al cuerpo que falten"
     },
     {
+      "id": "sorteo-81ac1a60",
+      "origen": "motor/sorteo.py",
+      "texto": "si ×3 en «Practicar más» (la mitad de las combinaciones con el golpe) es buena dosis o demasiado repetitivo para un principiante"
+    },
+    {
       "id": "temporizador-eea2cb1e",
       "origen": "motor/temporizador.py",
       "texto": "el aviso dice «Últimos diez segundos» para no confundirlo con el 10 (crochet de derecha al cuerpo)"

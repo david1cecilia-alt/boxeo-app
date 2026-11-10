@@ -2,16 +2,38 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { biblioteca, espejoCombo, numero, textoHablado } from "../../static/motor/acciones.js";
+import { accionesPorIds, biblioteca, espejoCombo, numero, textoHablado } from "../../static/motor/acciones.js";
 import { crearAzar } from "../../static/motor/azar.js";
 import {
-  MEZCLAS, MIN_SOLO_PROPIAS, PESO_CUERPO, PROBABILIDAD_PROPIAS, SIN_REPETIR, SorteoBiblioteca, SorteoMezcla, cargarPerfil,
-  identidad, mezclaEfectiva, numeros as numerosDe, propiasValidas,
+  FACTOR_PRACTICAR, MEZCLAS, MIN_SOLO_PROPIAS, PESO_CUERPO, PROBABILIDAD_PROPIAS, SIN_REPETIR, SorteoBiblioteca, SorteoMezcla,
+  TOPE_PRACTICAR, cargarPerfil, identidad, mezclaEfectiva, numeros as numerosDe, pesoPracticar, propiasValidas,
 } from "../../static/motor/sorteo.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
 import { FIJOS, casos } from "./igual_que_antes.mjs";
 
 cargarDatosDeDisco();
+
+const peso = (ids, ...elegidos) => pesoPracticar(accionesPorIds(ids), elegidos.map((m) => ({ movimiento: m })));
+
+test("«Practicar más» tiene un solo factor (×3) y el tope de siempre (×8), como en Python", () => {
+  assert.equal(FACTOR_PRACTICAR, 3.0);
+  assert.equal(TOPE_PRACTICAR, 8.0);
+  assert.equal(peso(["jab", "directo"]), 1);
+  assert.equal(peso(["jab", "directo"], "2"), 3);
+  assert.equal(peso(["jab", "directo"], "1", "2"), 8); // 9, con tope
+  assert.equal(peso(["jab", "directo", "bloqueo"], "1", "2", "bloqueo"), 8); // 27, con tope
+  assert.equal(peso(["esquiva_der", "jab", "esquiva_izq"], "esquiva"), 3); // dos veces cuenta una
+  assert.equal(peso(["jab", "jab", "directo"], "1", "1"), 3); // elegido dos veces, también
+  assert.equal(peso(["gancho_izq_cuerpo"], "3"), 1); // el 3 es solo a la cara
+});
+
+test("«Practicar más» ignora el `cuanto` de los datos viejos", () => {
+  const acciones = accionesPorIds(["jab", "directo", "bloqueo"]);
+  for (const cuanto of ["poco", "bastante", "mucho", undefined]) {
+    assert.equal(pesoPracticar(acciones, [{ movimiento: "2", cuanto }]), 3, String(cuanto));
+  }
+  assert.equal(pesoPracticar(acciones, [{ cuanto: "bastante" }]), 1); // sin movimiento no cuenta
+});
 
 // La biblioteca con cada combinación dos veces: la copia, con otro número.
 const duplicada = (combos) => [...combos, ...combos.map((c) => ({ ...c, n: c.n + 1000 }))];

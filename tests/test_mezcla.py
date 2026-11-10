@@ -131,7 +131,7 @@ def test_la_ventana_de_la_biblioteca_no_cuenta_las_propias():
 
 def test_practicar_mas_pesa_dentro_de_las_propias_sin_excluir():
     # Con 6 propias y ventana de 5 salen en rueda: hacen falta más para que el peso se note.
-    perfil = {"practicar": [{"movimiento": "salir", "cuanto": "bastante"}]}
+    perfil = {"practicar": [{"movimiento": "salir"}]}
     otras = [propia(30 + i, ["directo", segunda]) for i, segunda in enumerate(
         ["jab", "directo", "gancho_der", "uppercut_izq", "uppercut_der", "jab_cuerpo", "bloqueo", "parada",
          "flexion", "ballesteo", "pivote", "paso_atras", "rodar_der", "esquiva_izq"])]
@@ -139,7 +139,7 @@ def test_practicar_mas_pesa_dentro_de_las_propias_sin_excluir():
     veces = Counter(ids(c) for c in sacadas)
     con_salir = veces[tuple(BASICAS[2]["ids"])]
     sin_salir = [veces[k] for k in de_propias(TODAS + otras) if "salir" not in k]
-    # Pesa ×4, pero tras salir la ventana la aparta 5 sorteos: sale ~2 veces más que cada otra.
+    # Pesa ×3, pero tras salir la ventana la aparta 5 sorteos: sale ~2 veces más que cada otra.
     assert con_salir > 1.8 * max(sin_salir) and min(sin_salir) > 0, veces
 
 

@@ -14,7 +14,7 @@ import { CONFIG_POR_DEFECTO, construirGuion } from "../../static/motor/temporiza
 import { RAIZ, cargarDatosDeDisco } from "./datos.mjs";
 
 export const FIJOS = join(RAIZ, "tests", "fijos", "igual_que_antes.json");
-const PRACTICAR = [[], [{ movimiento: "6", cuanto: "bastante" }, { movimiento: "esquiva", cuanto: "poco" }]];
+const PRACTICAR = [[], [{ movimiento: "6" }, { movimiento: "esquiva" }]];
 const CONFIGS = [
   { nivel: 1 },
   { nivel: 2, modo_reaccion: true, ritmo: 5, voz: "ambos" },

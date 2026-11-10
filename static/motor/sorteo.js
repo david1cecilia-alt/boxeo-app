@@ -25,9 +25,11 @@ export const NUMEROS_CUERPO = [7, 8, 9, 10, 11, 12]; // paso 2: los golpes al cu
 export const PESO_CUERPO = 2.0;
 export const NIVEL_COLETILLA = 1;
 export const ACCIONES_COLETILLA = [2, 3]; // mínimo y máximo
-// "Practicar más": cuánto multiplica cada movimiento elegido ("Un poco más", "Bastante más"). Si
-// una combinación lleva varios elegidos se multiplican, como mucho TOPE_PRACTICAR.
-export const FACTOR_PRACTICAR = { poco: 2.0, bastante: 4.0 };
+// "Practicar más" (como mucho 3 movimientos, lo limita la interfaz): cada movimiento elegido
+// multiplica por FACTOR_PRACTICAR las combinaciones que lo llevan. Si una lleva varios elegidos se
+// multiplican, como mucho TOPE_PRACTICAR: con ×3, dos dan ×9 y tres ×27, y se quedan en ×8, así que
+// ninguna combinación pesa más de 8 veces otra. Cifras en docs/revision/rediseno-plan.md (sección 5).
+export const FACTOR_PRACTICAR = 3.0;
 export const TOPE_PRACTICAR = 8.0;
 // Mezcla con las propias («Tus combinaciones» en Entrenar): probabilidad de que cada sorteo saque
 // una propia del nivel. "ninguna" no tira moneda (sale lo mismo que sin propias); "solo", solo propias.
@@ -51,14 +53,13 @@ export function movimiento(accion) {
 // Los que se pueden elegir en "Practicar más", en el orden del catálogo.
 export const movimientos = () => [...new Set([...catalogo().values()].map(movimiento))];
 
-// Cuánto pesa una combinación (ortodoxa) con "Practicar más": [{ movimiento, cuanto }]. Cada
-// movimiento elegido cuenta una vez aunque salga varias; lo desconocido no cuenta.
+// Cuánto pesa una combinación (ortodoxa) con "Practicar más": [{ movimiento }]. El `cuanto` de los
+// datos viejos ("poco"/"bastante") se ignora: todos pesan FACTOR_PRACTICAR. Cada movimiento elegido
+// cuenta una vez aunque salga varias veces; lo desconocido no cuenta.
 export function pesoPracticar(acciones, practicar) {
-  const factores = new Map(practicar.filter((p) => Object.hasOwn(FACTOR_PRACTICAR, p.cuanto))
-    .map((p) => [p.movimiento, FACTOR_PRACTICAR[p.cuanto]]));
-  let peso = 1.0;
-  for (const m of new Set(acciones.map(movimiento))) if (factores.has(m)) peso *= factores.get(m);
-  return Math.min(TOPE_PRACTICAR, peso);
+  const elegidos = new Set(practicar.map((p) => p.movimiento));
+  const lleva = [...new Set(acciones.map(movimiento))].filter((m) => elegidos.has(m)).length;
+  return Math.min(TOPE_PRACTICAR, FACTOR_PRACTICAR ** lleva);
 }
 
 export const numeros = (combo) => new Set(combo.acciones.map((a) => a.numero).filter(Boolean));

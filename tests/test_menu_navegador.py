@@ -584,9 +584,11 @@ def test_salir_de_entrenar_con_el_menu_abierto_lo_cierra_y_la_pagina_responde(ab
 def test_sin_movimiento_el_panel_abre_y_cierra_al_momento(abrir_pagina, ancho):
     pagina = abrir_pagina(ancho, sin_movimiento=True)
     pagina.click("#asa")
+    # Contra el borde del <dialog> y no innerWidth: con barra clásica, el hueco de scrollbar-gutter queda fuera.
     estado = pagina.evaluate("""() => { const p = document.querySelector('.menu-panel');
+      const borde = document.getElementById('menu').getBoundingClientRect().right;
       return [getComputedStyle(p).transitionDuration, getComputedStyle(p).transform,
-              Math.round(innerWidth - p.getBoundingClientRect().left) === p.offsetWidth]; }""")
+              Math.round(borde - p.getBoundingClientRect().left) === p.offsetWidth]; }""")
     assert estado == ["0s", "none", True]
     pagina.click(".menu-cerrar")
     assert not pagina.evaluate(ABIERTO)  # sin esperar a ninguna transición

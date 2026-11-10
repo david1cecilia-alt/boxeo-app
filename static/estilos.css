@@ -89,7 +89,9 @@
 
 * { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; overflow-x: hidden; }
+/* scrollbar-gutter: el hueco de la barra se reserva siempre, así html.menu-abierto (overflow: hidden)
+   no hace saltar la página al quitarla. Con barras superpuestas (móvil) no ocupa nada. */
+html { -webkit-text-size-adjust: 100%; overflow-x: hidden; scrollbar-gutter: stable; }
 
 body {
   margin: 0;
@@ -558,7 +560,10 @@ body:has(#vista-entrenar[data-sub]:not([hidden])) #ir-ajustes { display: none; }
   right: calc(28px + env(safe-area-inset-right, 0px));
 }
 .vista > #asa, .vista > #menu { animation: none; } /* la entrada de la vista le pisaría el transform */
-html.menu-abierto { overflow: hidden; }
+/* Con barra clásica, el hueco que reserva scrollbar-gutter queda fuera del <dialog> (ni 100vw ni una sombra
+   llegan): solo se ve el fondo del lienzo, que con el menú abierto toma el color del panel. El body sigue
+   pintando el suyo. Con barras superpuestas (móvil) no hay hueco. */
+html.menu-abierto { overflow: hidden; background: var(--superficie); }
 html.menu-abierto #asa { visibility: hidden; }
 .asa-puntos {
   display: grid; place-items: center; flex: none; pointer-events: none;

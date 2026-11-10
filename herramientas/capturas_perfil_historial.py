@@ -1,10 +1,11 @@
-"""Capturas del Perfil y de Ajustes (390, 1024 y 1440) y del Historial (igual, con Asaltos y con RPE).
+"""Capturas del Perfil y de Ajustes (sección del menú de Entrenar) a 390, 1024 y 1440, y del Historial (igual,
+con Asaltos y con RPE).
 
 Monta la web en una carpeta temporal (sin fotos del maniquí) y la abre en Chromium headless con datos
 de prueba solo en su localStorage: unas respuestas de estilo y sesiones de las últimas semanas, con una semana sin sesiones y otra sin valorar. Guarda en
 .playwright-mcp/capturas/ (no se versiona):
 - perfil-plegado-<ancho>.png y perfil-desplegado-<ancho>.png (página entera)
-- ajustes-arriba-<ancho>.png y ajustes-scroll-<ancho>.png (la ventana, al bajar del todo: «Volver» fijo en el móvil)
+- ajustes-arriba-<ancho>.png y ajustes-scroll-<ancho>.png (el menú abierto en Ajustes, arriba y abajo del todo)
 - historial-asaltos-<ancho>.png y historial-rpe-<ancho>.png
 Uso: python herramientas/capturas_perfil_historial.py
 """
@@ -81,12 +82,13 @@ def capturar(sitio: Path) -> list[Path]:
             else:
                 pagina.screenshot(path=rutas[-1], full_page=True)
 
+            # Ajustes: sección del menú de Entrenar (#ajustes lleva allí); arriba y con el panel abajo del todo.
             pagina.goto(f"{ORIGEN}/index.html#ajustes")
-            pagina.wait_for_selector("#t-practicar")
+            pagina.wait_for_selector("#voz-id", state="visible")
             pagina.wait_for_timeout(400)
             rutas.append(SALIDA / f"ajustes-arriba-{ancho}.png")
             pagina.screenshot(path=rutas[-1])
-            pagina.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)")
+            pagina.evaluate("document.querySelector('.menu-contenido').scrollTop = 1e6")
             pagina.wait_for_timeout(200)
             rutas.append(SALIDA / f"ajustes-scroll-{ancho}.png")
             pagina.screenshot(path=rutas[-1])

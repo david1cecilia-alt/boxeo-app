@@ -73,9 +73,11 @@ def capturar(sitio: Path) -> list[Path]:
         with abrir(sitio, VACIA, ancho, ALTO[ancho]) as (pagina, errores):
             pagina.add_init_script(SEMILLA)
             preparar(pagina)
+            # Nivel y «Nombrar combinaciones» viven ahora en el menú: se dejan guardados (Personalizada de nivel 2).
+            pagina.evaluate("""() => localStorage.setItem('boxeo', JSON.stringify({ version: 9,
+              perfil: { sesion: { tipo: 'personalizada', nivel: 2, voz: 'numeros' } } }))""")
             pagina.goto(f"{ORIGEN}/index.html#entrenar")
-            pagina.click('label:has(input[name="nivel"][value="2"])')
-            pagina.click('label:has(input[name="voz"][value="numeros"])')
+            pagina.wait_for_selector("#tipo-sesion input:checked", state="attached")
             pagina.click("#empezar")
             pagina.wait_for_function(CON_CUERPO, timeout=180_000, polling=100)
             pagina.click("#pausa")

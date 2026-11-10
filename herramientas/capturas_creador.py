@@ -3,7 +3,7 @@
 Monta la web en una carpeta temporal (sin fotos del maniquí) y la abre en Chromium headless. Las
 combinaciones de ejemplo solo viven en el localStorage de ese Chromium. Guarda en .playwright-mcp/capturas/
 (no se versiona), con el ancho al final del nombre:
-- creador-ajustes: la tarjeta «Mis combinaciones 3/20» en Ajustes.
+- creador-menu: «Mis combinaciones 3/20», sección del menú de Entrenar.
 - creador-listado-vacio, creador-listado-3, creador-listado-20: el listado.
 - creador-editor-vacio, creador-editor-cuerpo («Al cuerpo» activo, con 3 acciones), creador-editor-10.
 - creador-avisos: el diálogo «Antes de guardar» con dos avisos.
@@ -62,8 +62,9 @@ def capturar(sitio: Path) -> list[Path]:
 
     for ancho in ANCHOS:
         with abrir(sitio, VACIA, ancho, ALTO[ancho], barras=True) as (pagina, errores):
-            ir(pagina, "#ajustes", EJEMPLOS)
-            entera(pagina, guardar("ajustes", ancho))
+            # Mis combinaciones, sección del menú de Entrenar (antes, una tarjeta de Ajustes).
+            ir(pagina, "#entrenar/menu/combinaciones", EJEMPLOS)
+            pagina.screenshot(path=guardar("menu", ancho))
             ir(pagina, RUTA)
             entera(pagina, guardar("listado-vacio", ancho))
             ir(pagina, RUTA, EJEMPLOS)

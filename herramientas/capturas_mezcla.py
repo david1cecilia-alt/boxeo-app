@@ -1,4 +1,5 @@
-"""Capturas de C3 («Tus combinaciones» en Entrenar y «Escuchar» en el editor) a 390, 1024 y 1440.
+"""Capturas de C3 («Tus combinaciones», en Personalizar sesión del menú de Entrenar, y «Escuchar» en el
+editor) a 390, 1024 y 1440.
 
 Monta la web en una carpeta temporal (sin fotos del maniquí) y la abre en Chromium headless. Las
 combinaciones de ejemplo solo viven en el localStorage de ese Chromium. Guarda en .playwright-mcp/capturas/
@@ -51,7 +52,7 @@ def ir(pagina, ruta, propias=(), sesion=None):
         datos["perfil"] = {"sesion": sesion}
     pagina.evaluate("(d) => localStorage.setItem('boxeo', d)", json.dumps(datos))
     pagina.goto(f"{ORIGEN}/index.html{ruta}")
-    pagina.wait_for_selector("#t-creador" if "/mis-combinaciones" in ruta else "#mezclas label")
+    pagina.wait_for_selector("#t-creador" if "/mis-combinaciones" in ruta else "#mezclas label", state="visible")
     pagina.wait_for_timeout(450)  # la entrada de la vista
     pagina.evaluate("document.activeElement.blur()")
 
@@ -66,14 +67,14 @@ def capturar(sitio: Path) -> list[Path]:
 
     for ancho in ANCHOS:
         with abrir(sitio, VACIA, ancho, ALTO[ancho], barras=True) as (pagina, errores):
-            ir(pagina, "#entrenar")
-            entera(pagina, guardar("sin-propias", ancho))
-            ir(pagina, "#entrenar", CINCO[:2], {"mezcla": "bastante", "nivel": 1})
-            entera(pagina, guardar("2", ancho))
-            ir(pagina, "#entrenar", CINCO, {"mezcla": "solo", "nivel": 2})
-            entera(pagina, guardar("5-solo", ancho))
-            ir(pagina, "#entrenar", CINCO, {"mezcla": "mucho", "nivel": 2})
-            entera(pagina, guardar("5-mucho-medio", ancho))
+            # «Tus combinaciones» está en Personalizar sesión, en el menú de Entrenar: se baja hasta ella.
+            menu = "#entrenar/menu/personalizar"
+            for nombre, propias, sesion in (("sin-propias", (), None), ("2", CINCO[:2], {"mezcla": "bastante", "nivel": 1}),
+                                            ("5-solo", CINCO, {"mezcla": "solo", "nivel": 2}),
+                                            ("5-mucho-medio", CINCO, {"mezcla": "mucho", "nivel": 2})):
+                ir(pagina, menu, propias, sesion)
+                pagina.locator("#mezclas").scroll_into_view_if_needed()
+                pagina.screenshot(path=guardar(nombre, ancho))
             ir(pagina, "#entrenar/mis-combinaciones/nueva")
             entera(pagina, guardar("editor-vacio", ancho))
             for id_ in ("jab", "directo", "gancho_izq"):

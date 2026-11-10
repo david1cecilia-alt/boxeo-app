@@ -49,7 +49,8 @@ function nombrePreset(s) {
   return p?.nombre ?? "Personalizado";
 }
 
-export function iniciarHistorial({ almacen, historial, valoracion }) {
+// `avisar(texto)`: el aviso de arriba de la app (#aviso-almacen, el de app.js).
+export function iniciarHistorial({ almacen, historial, valoracion, avisar }) {
   const raiz = $("#historial-contenido");
   const mesActual = mesYAno(new Date());
   $("#antetitulo-historial").textContent = mesActual;
@@ -435,8 +436,9 @@ export function iniciarHistorial({ almacen, historial, valoracion }) {
       const guardado = almacen.importar(copia);
       anunciar(guardado ? "Copia importada" : "Copia importada solo en memoria");
       pintar();
-      // Lo que se ha quitado de la copia por estar mal formado (una foto que no es JPEG o WebP).
-      if (almacen.avisos.length) alert(almacen.avisos.join("\n"));
+      // Lo que se ha quitado de la copia por estar mal formado (una foto que no es JPEG o WebP): en el
+      // aviso de arriba, sin alert() que bloquee la página.
+      if (almacen.avisos.length) avisar(almacen.avisos.join(" "));
     } catch (error) {
       alert(error instanceof ErrorAlmacen ? error.message : `No se pudo importar: ${error.message}`);
     }

@@ -165,6 +165,7 @@ def test_importar_una_copia_v8_la_deja_en_v9(pagina, tmp_path):
                           "duracion_asalto": 180, "descanso": 60, "num_combinaciones": 0, "combinaciones": []}]
     dialogos = _importar(pagina, tmp_path, {"app": "boxeo", "version": 8, "exportado": "2026-11-09", "datos": datos})
     assert [t for t, _ in dialogos] == ["confirm"]  # sin avisos: no había nada mal formado
+    assert pagina.is_hidden("#aviso-almacen")
     nuevo = guardado(pagina)
     assert nuevo["perfil"]["sesion"]["tipo"] == "personalizada"
     assert nuevo["perfil"]["practicar"] == [{"movimiento": "cuerpo"}]
@@ -188,8 +189,12 @@ def test_importar_una_copia_con_una_foto_mala_la_quita_y_avisa(pagina, tmp_path)
     datos["sesiones"] = [{"id": "s-1", "fecha": "2026-11-08T18:00:00", "asaltos": 1, "nivel": 1, "zurdo": False,
                           "duracion_asalto": 180, "descanso": 60, "num_combinaciones": 0, "combinaciones": []}]
     dialogos = _importar(pagina, tmp_path, {"app": "boxeo", "version": 9, "exportado": "2026-11-10", "datos": datos})
-    pagina.wait_for_function("() => true")  # una vuelta más a la página: el alert ya se ha respondido
-    assert ("alert", "La foto de tu avatar no era válida y se ha quitado.") in dialogos
+    # El aviso sale arriba (#aviso-almacen, role="alert"), sin alert() que bloquee la página.
+    aviso = pagina.locator("#aviso-almacen")
+    aviso.wait_for(state="visible")
+    assert aviso.inner_text() == "La foto de tu avatar no era válida y se ha quitado."
+    assert aviso.get_attribute("role") == "alert"
+    assert [t for t, _ in dialogos] == ["confirm"]  # solo «¿Seguir?»: ningún alert
     assert guardado(pagina)["perfil"]["identidad"] == {"nombre": "Alex", "avatar": None}
 
 

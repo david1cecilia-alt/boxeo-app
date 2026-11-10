@@ -42,7 +42,7 @@ async function arrancar() {
   iniciarRutas({
     entrenar,
     aprende: iniciarAprende(),
-    historial: iniciarHistorial({ almacen, historial, valoracion }),
+    historial: iniciarHistorial({ almacen, historial, valoracion, avisar }),
     perfil: iniciarPerfil({ almacen }),
     ajustes: iniciarAjustes({ almacen, voz }),
   }, "entrenar");

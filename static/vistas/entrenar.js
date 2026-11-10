@@ -15,6 +15,7 @@ import { crearReproductor } from "../reproductor.js";
 import { activarSonido, campana, dejarDormir, mantenerDespierto, pitido, tablillas } from "../sonido.js";
 import { RUTA as RUTA_CREADOR, iniciarCreador } from "./creador.js";
 import { $, anunciar, esc, minutos } from "./dom.js";
+import { iniciarMenu } from "./menu.js";
 import { combinacionesParaVer, pasosCombo } from "./pasos.js";
 
 const SEGUNDOS_FINAL = 10;
@@ -438,30 +439,46 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     return true;
   }
 
+  // ---------- El asa y el menú lateral (#entrenar/menu[/<seccion>]) ----------
+  // Lo abre y cierra la ruta: mostrar() le dice qué hacer en cada cambio.
+  const menu = iniciarMenu();
+
   return {
     mostrar(parametro = "") {
       const [primera, ...resto] = parametro.split("/");
       if (primera === "mis-combinaciones") {
+        menu.cerrarPorRuta({ animar: false, foco: false }); // el foco lo pone el creador
         // Con una sesión en marcha no se abre: la sesión sigue y la ruta vuelve a #entrenar.
         if (estado) return location.replace("#entrenar");
         return mostrarCreador(resto.join("/"));
       }
+      const enMenu = primera === "menu";
       const veniaDelCreador = cerrarCreador();
-      if (estado) return;
+      if (estado) {
+        // Con una sesión en marcha tampoco se abre el menú.
+        if (enMenu) location.replace("#entrenar");
+        return;
+      }
       aplicarPreferencias();
       resumir(); // las propias pueden haber cambiado en el creador
+      if (enMenu) menu.abrirPorRuta(resto[0]);
+      else menu.cerrarPorRuta();
       // Del creador a Entrenar sin cambiar de vista (atrás, un enlace): el router no mueve el foco.
-      if (veniaDelCreador) $("#t-entrenar").focus({ preventScroll: true });
+      if (veniaDelCreador && !enMenu) $("#t-entrenar").focus({ preventScroll: true });
       document.fonts.ready.then(verChipElegido); // el ancho de los chips depende de la fuente
     },
+    // Al dejar Entrenar, el menú se cierra al momento (sin tocar el historial ni el foco).
+    ocultar() { menu.cerrarPorRuta({ animar: false, foco: false }); },
     get entrenando() { return estado !== null; },
   };
 }
 
-// Atajos de teclado en el PC durante la sesión: espacio = pausa, Esc = parar.
+// Atajos de teclado en el PC durante la sesión: espacio = pausa, Esc = parar. Nunca con el menú abierto:
+// un oyente de document sigue recibiendo teclas aunque el <dialog> modal deje la página inerte.
 export function atajosEntrenar() {
   document.addEventListener("keydown", (e) => {
     if (!document.body.classList.contains("entrenando") || e.target.closest("dialog")) return;
+    if ($("#menu")?.open) return;
     if (e.key === " " && e.target === document.body) { e.preventDefault(); $("#pausa").click(); }
     if (e.key === "Escape") $("#parar").click();
   });

@@ -50,10 +50,17 @@ export function anunciar(texto) {
 // del navegador: del último se vuelve al primero (y al revés con Mayús+Tab). Para su `keydown`.
 export function atraparFoco(e) {
   if (e.key !== "Tab") return;
-  const enfocables = $$("button, input, a[href]", e.currentTarget)
+  const enfocables = $$("button, input, a[href], summary", e.currentTarget)
     .filter((el) => el.tabIndex >= 0 && el.getClientRects().length && !el.closest("[hidden]"));
   const [primero, ultimo] = [enfocables[0], enfocables.at(-1)];
-  if (e.shiftKey ? document.activeElement === primero : document.activeElement === ultimo) {
+  if (!primero) return;
+  // El foco puede estar fuera de la lista (un título con tabindex="-1"): cuenta si va antes del primero
+  // o después del último.
+  const actual = document.activeElement;
+  const fuera = !enfocables.includes(actual);
+  const antes = fuera && actual.compareDocumentPosition(primero) & Node.DOCUMENT_POSITION_FOLLOWING;
+  const despues = fuera && actual.compareDocumentPosition(ultimo) & Node.DOCUMENT_POSITION_PRECEDING;
+  if (e.shiftKey ? actual === primero || antes : actual === ultimo || despues) {
     e.preventDefault();
     (e.shiftKey ? ultimo : primero).focus();
   }

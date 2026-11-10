@@ -1,7 +1,7 @@
-// Rutas por hash (#entrenar, #entrenar/mis-combinaciones[/nueva|/editar/<id>], #aprende, #aprende/<id>,
+// Rutas por hash (#entrenar, #entrenar/menu[/<seccion>], #entrenar/mis-combinaciones[/nueva|/editar/<id>], #aprende, #aprende/<id>,
 // #historial, #historial/<clave>, #perfil, #ajustes): funcionan en GitHub Pages y sin conexión porque nunca
 // piden otra página al servidor.
-// `vistas`: { nombre: { mostrar(parametro, { mismaVista }) } }. Cada vista vive en <section id="vista-<nombre>">.
+// `vistas`: { nombre: { mostrar(parametro, { mismaVista }), ocultar?() } }. Cada vista vive en <section id="vista-<nombre>">.
 // <body data-vista="<nombre>"> dice cuál se ve (el CSS esconde el engranaje en Ajustes).
 // Dentro de la misma vista (#historial/... → #historial/...) la vista se encarga del foco y del scroll.
 // Al cambiar de vista, el foco va a su h1, salvo que la vista ya lo haya puesto dentro de ella (el creador
@@ -39,6 +39,9 @@ export function iniciarRutas(vistas, porDefecto) {
     const [nombre, ...resto] = location.hash.slice(1).split("/");
     const actual = nombre in vistas ? nombre : porDefecto;
     const mismaVista = actual === anterior;
+    // La vista que se deja recoge lo suyo (Entrenar cierra el menú: un <dialog> modal dentro de una
+    // sección oculta no se ve, pero deja inerte toda la página).
+    if (anterior && !mismaVista) vistas[anterior].ocultar?.();
     for (const n of Object.keys(vistas)) {
       document.getElementById(`vista-${n}`).hidden = n !== actual;
       const enlace = document.querySelector(`#pestanas a[href="#${n}"]`);

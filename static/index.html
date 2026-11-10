@@ -132,6 +132,33 @@
 
       <!-- «Mis combinaciones» (#entrenar/mis-combinaciones/…): lo pinta vistas/creador.js. -->
       <div id="entrenar-sub" hidden></div>
+
+      <!-- El asa y el menú lateral (#entrenar/menu[/<seccion>]): lo mueve vistas/menu.js. -->
+      <button id="asa" type="button" aria-controls="menu" aria-expanded="false"
+              aria-label="Menú: personalizar, mis combinaciones y ajustes"><span class="asa-puntos" aria-hidden="true"></span></button>
+      <dialog id="menu" aria-labelledby="t-menu">
+        <div class="menu-panel">
+          <button class="asa-panel" type="button" tabindex="-1" aria-label="Cerrar el menú"><span class="asa-puntos" aria-hidden="true"></span></button>
+          <div class="menu-contenido">
+            <header class="menu-cabecera">
+              <h2 id="t-menu" tabindex="-1" autofocus>Menú</h2>
+              <button class="menu-cerrar" type="button" aria-label="Cerrar el menú">✕</button>
+            </header>
+            <details data-seccion="personalizar" open>
+              <summary>Personalizar sesión</summary>
+              <p class="nota">Llega en la siguiente fase.</p>
+            </details>
+            <details data-seccion="combinaciones">
+              <summary>Mis combinaciones</summary>
+              <p class="nota">Llega en la siguiente fase.</p>
+            </details>
+            <details data-seccion="ajustes">
+              <summary>Ajustes</summary>
+              <p class="nota">Llega en la siguiente fase.</p>
+            </details>
+          </div>
+        </div>
+      </dialog>
     </section>
 
     <!-- ============ Aprende ============ -->

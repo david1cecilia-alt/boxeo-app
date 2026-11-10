@@ -47,7 +47,7 @@ Criterios de redacción:
 ## 3. Ballesteo
 - **id esperado:** `ballesteo`
 - **En inglés:** pull back, lean back
-- **Qué es:** echar el tronco y la cabeza hacia atrás para que el golpe se quede corto, sin mover los pies (o con un paso muy corto).
+- **Qué es:** echar el tronco y la cabeza hacia atrás para que el golpe se quede corto, sin mover los pies. Si hay paso, es «paso atrás».
 - **Cuándo suele servir:** contra el jab o golpes rectos a la cara, sobre todo cuando quieres quedarte a distancia para devolver con un recto.
 - **Cómo se hace:**
   1. Desde la guardia, pasa algo de peso a la pierna de atrás.
@@ -57,7 +57,8 @@ Criterios de redacción:
 - **Errores típicos:** echarte demasiado atrás (pierdes el equilibrio y no puedes devolver), levantar la barbilla, hacerlo contra golpes largos que te siguen alcanzando.
 - **Ventajas:** rápido y sencillo; te deja a la distancia justa para contraatacar.
 - **Inconvenientes:** si el rival da un paso adelante o encadena golpes, te alcanza. Con mal equilibrio es peligroso.
-- **REVISAR CON ENTRENADOR:** si Iván lo llama así, si va con paso o solo con el cuerpo, y si es adecuado para un principiante.
+- **REVISAR CON ENTRENADOR:** si es adecuado para un principiante.
+- Confirmado con Iván (04-11): se llama ballesteo y es echar el cuerpo hacia atrás, sin paso.
 
 ## 4. Flexión
 - **id esperado:** `flexion`

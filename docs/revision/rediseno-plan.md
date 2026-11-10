@@ -116,8 +116,8 @@ sola en ≤ 1 s, y si se toca para saltarla, ese toque no puede llegar a «Empez
   El engranaje `#ir-ajustes` desaparece.
 - **Entrenar**: cabecera (avatar o foto · nombre · estilo), que es **un solo botón** que abre `#perfil`; selector
   **General | Personalizada**; resumen de la sesión elegida; Empezar.
-- **Menú lateral, solo en Entrenar**, con asa de puntitos: a) Personalizar sesión, b) Mis combinaciones,
-  c) Ajustes.
+- **Menú lateral, solo en Entrenar**, con asa de puntitos y tres secciones: Personalizar sesión, Mis
+  combinaciones y Ajustes.
 - **Copia de seguridad**: se queda en Historial, sin cambios.
 - **Perfil** (`#perfil`, fuera de la barra): resultado del estilo; el cuestionario, detrás de «Repetir».
 
@@ -128,8 +128,10 @@ sola en ≤ 1 s, y si se toca para saltarla, ese toque no puede llegar a «Empez
    2×30 s» (ver 3.3).
 2. **Columna derecha «Tu sesión» + Empezar a 1440 px**: a la izquierda la cabecera de perfil y el selector;
    a la derecha, fijo al hacer scroll (`position: sticky`), «Tu sesión» con el resumen y Empezar. Es lo que
-   dibuja el boceto. A la derecha de la columna queda un margen para el asa (112 px), para que no tape
-   Empezar.
+   dibuja el boceto. A la derecha de la columna queda un margen de 112 px donde vive el asa con el menú
+   cerrado (36 px libres hasta «Empezar»). Con el menú abierto, el asa pasa a una franja propia del panel
+   (ver 3.5), así que tampoco tapa «Empezar» ni el contenido del panel. Comprobado por geometría en el boceto
+   a 390 y 1440 px.
 
 ---
 
@@ -139,19 +141,19 @@ sola en ≤ 1 s, y si se toca para saltarla, ese toque no puede llegar a «Empez
 
 | Archivo | Cambio |
 |---|---|
-| [static/index.html](../../static/index.html) | **Quita**: `#ir-ajustes`, `section#vista-ajustes`, los enlaces Perfil y Ajustes de `#pestanas`, la foto de cabecera, la marca de agua y el titular de Entrenar, `#presets`, `#avanzados` y la `config-tarjeta`. **Crea** en Entrenar: `button.cabecera-perfil` (avatar, nombre, estilo), `fieldset#tipo-sesion` (General / Personalizada), «Tu sesión», `button#asa` (`aria-controls="menu"`, `aria-expanded`), `dialog#menu` con tres secciones y `div#intro` (hueco de la animación). `#pantalla` y `#postsesion` no cambian. |
+| [static/index.html](../../static/index.html) | **Quita**: `#ir-ajustes`, `section#vista-ajustes`, los enlaces Perfil y Ajustes de `#pestanas`, la foto de cabecera, la marca de agua y el titular de Entrenar, `#presets`, `#avanzados` y la `config-tarjeta`. **Crea** en Entrenar: `button.cabecera-perfil` (avatar, nombre, estilo), `fieldset#tipo-sesion` (General / Personalizada), «Tu sesión», `button#asa` (`aria-controls="menu"`, `aria-expanded`), `dialog#menu` con su propia asa (`button.asa-panel`, en la franja izquierda del panel) y tres secciones y `div#intro` (hueco de la animación). `#pantalla` y `#postsesion` no cambian. |
 | [static/rutas.js](../../static/rutas.js) | **Crea** las redirecciones con `location.replace` (no dejan entrada en el historial): `#ajustes/mis-combinaciones[/…]` → `#entrenar/mis-combinaciones[/…]` y `#ajustes` → `#entrenar/menu/ajustes`. `#perfil` sigue siendo una ruta, aunque no tenga enlace en la barra (el `aria-current` no marca ninguna pestaña). |
 | [static/app.js](../../static/app.js) | Ya no llama a `iniciarAjustes` como vista; monta el menú (`iniciarMenu`) dentro de Entrenar y arranca la intro. |
 | [static/vistas/entrenar.js](../../static/vistas/entrenar.js) | Se queda con: cabecera, selector, resumen, Empezar y la sesión. **Salen** a `personalizar.js` el nivel, la mezcla, el ritmo, la reacción, asaltos/duración/descanso y su guardado; **salen** a la sección Ajustes los modos de voz y la guardia. `mostrar(parametro)` atiende `menu`, `menu/<seccion>` y `mis-combinaciones/…`. |
 | **Nuevo** `static/vistas/menu.js` | El asa y el panel: toque, arrastre, teclado, foco, Esc, «Atrás», la pista de la primera vez y `prefers-reduced-motion` (ver 3.5). Solo presenta y abre o cierra; el contenido lo pintan las secciones. |
-| **Nuevo** `static/vistas/personalizar.js` | Sección a): asaltos, duración, descanso, nivel, ritmo, Practicar más (traído de `vistas/ajustes.js`, sin «Un poco / Bastante»), Tus combinaciones y Reacción. Si se cambia algo con General elegida, el selector pasa a Personalizada (duda D3). |
-| [static/vistas/ajustes.js](../../static/vistas/ajustes.js) | Pasa a ser la sección c) del menú: voz, velocidad, **Nombrar combinaciones** (viene de Entrenar), **guardia** diestro/zurdo (viene de Entrenar) y **nombre y avatar/foto**. Salen «Practicar más» (a `personalizar.js`), la tarjeta «Mis combinaciones» (a la sección b) y la lógica de «Volver» y de la subpágina. |
+| **Nuevo** `static/vistas/personalizar.js` | Sección «Personalizar sesión»: asaltos, duración, descanso, nivel, ritmo, Practicar más (traído de `vistas/ajustes.js`, sin «Un poco / Bastante»), Tus combinaciones y Reacción. **Siempre enseña los valores guardados de la Personalizada**, también con General elegida; entonces lleva arriba el aviso «Estás en General. Estos son los ajustes de tu Personalizada; si cambias algo, pasarás a ella.» (`role="status"`). Al tocar algo con General elegida: `tipo` pasa a `personalizada` y se guarda **la Personalizada guardada + ese cambio**; nunca se copian encima los valores de la General (D3). |
+| [static/vistas/ajustes.js](../../static/vistas/ajustes.js) | Pasa a ser la sección «Ajustes» del menú: voz, velocidad, **Nombrar combinaciones** (viene de Entrenar), **guardia** diestro/zurdo (viene de Entrenar) y **nombre y avatar/foto**. Salen «Practicar más» (a `personalizar.js`), la tarjeta «Mis combinaciones» (a su sección del menú) y la lógica de «Volver» y de la subpágina. |
 | [static/vistas/creador.js](../../static/vistas/creador.js) | `RUTA = "#entrenar/mis-combinaciones"`; «← Volver» del listado lleva a `#entrenar/menu/combinaciones`; se pinta en un contenedor de Entrenar (`#entrenar-sub`) en vez de `#ajustes-contenido`. La lógica de descartar cambios con «atrás» se queda igual, con la ruta nueva. |
 | [static/vistas/perfil.js](../../static/vistas/perfil.js) | Arriba, avatar o foto, nombre y estilo (solo se ven: se cambian en el menú, D7). El resultado del estilo, visible; las 7 preguntas, plegadas detrás de **«Repetir el cuestionario»** («Hacer el cuestionario» si no hay respuestas). Fecha y medidas siguen aquí (D8). «← Volver» lleva a `#entrenar`. El antetítulo lee la guardia de su sitio nuevo. |
 | **Nuevo** `static/vistas/avatar.js` | Elegir un avatar predefinido (lista de `data/avatares.json`) o una foto propia; pinta el avatar en la cabecera y en Perfil. Sin avatares ni foto: un círculo con la inicial del nombre, sin inventar imágenes. |
 | **Nuevo** `static/foto.js` | Lógica sin DOM de la foto: recorte cuadrado centrado y reducción a 256 px en JPEG (calidad 0,85) con `createImageBitmap` + `OffscreenCanvas` (o `<canvas>`); comprueba tipo y tamaño. Unos 15-35 KB en base64 por foto. |
 | **Nuevo** `static/intro.js` | El hueco de la animación: overlay de ≤ 1 s, se salta al tocar o con una tecla (y se traga ese toque), no se muestra con `prefers-reduced-motion: reduce`. Sin diseño: un fondo gris. |
-| [static/ajustes.js](../../static/ajustes.js) | `preferencias()` devuelve `tipo` (`general` / `personalizada` / `prueba` solo con `?prueba`) en vez de `asalto`. **Crea** `configGeneral()` (3×3 de `data/presets.json` y lo fijo de D1) y `conPrueba()` (lee `?prueba`). `cambiarPracticar(practicar, movimiento, elegir)` sin `cuanto`. `resumenElecciones` para General. |
+| [static/ajustes.js](../../static/ajustes.js) | `preferencias()` devuelve `tipo` (`general` / `personalizada` / `prueba` solo con `?prueba`) en vez de `asalto`. **Crea** `configGeneral()` (3×3 de `data/presets.json` y lo fijo de D1) y `conPrueba()` (lee `?prueba`). `cambiarPracticar(practicar, movimiento, elegir)` sin `cuanto`. `resumenElecciones` para General: lee los valores de `configGeneral()` (nivel Básico, Constante…), nunca los de la Personalizada guardada. |
 | [static/almacen.js](../../static/almacen.js) | `VERSION = 9`, la migración 8 → 9 (sección 4) y `completar()` con `identidad` y `pistas`. Valida la foto al leer y al importar. |
 | [motor/sorteo.py](../../motor/sorteo.py) → [static/motor/sorteo.js](../../static/motor/sorteo.js) | **Python primero**: `FACTOR_PRACTICAR` pasa a un solo número (sección 5) y `peso_practicar` ignora `cuanto` (lo de antes sigue sirviendo). `TOPE_PRACTICAR` se recalcula para 3 elegidos. Después, el port a JS y la equivalencia. |
 | [data/presets.json](../../data/presets.json) | `amateur` se queda (id estable) con `"nombre": "General"`; `prueba` se queda (la usan los tests y `?prueba`). El Historial dirá «General · nivel 2» donde decía «Amateur 3×3 · nivel 2». |
@@ -198,14 +200,18 @@ de los tests y para el enlace «Crea la primera» si queda alguno.
   con 2 × 3 puntitos.
 - **Dónde**: a la **derecha**, a **28 px** del borde y al 42 % de alto. Así queda fuera de la franja del gesto
   «Atrás»: en Android nace en los dos bordes (unos 20-24 dp) y en iOS en el izquierdo. Ponerlo a la derecha
-  evita además el gesto de iOS. En el PC, en el margen derecho de la columna.
+  evita además el gesto de iOS. En el PC, en el margen derecho de 112 px de la columna.
+- **Con el menú abierto**: el `<dialog>` modal deja inerte todo lo de fuera, así que el asa de fuera se oculta
+  y el panel trae la suya en una **franja propia de 48 px a su izquierda** (el panel lleva `padding-left: 56px`).
+  Va pegada al panel, se arrastra para cerrarlo y no tapa nada: ni lo de debajo del velo (en el boceto viejo, a
+  1440 px quedaba encima de «Empezar») ni el contenido del panel. Tocarla cierra, igual que «✕».
 - **Abrir y cerrar**: tocar alterna. Arrastrar (eventos de puntero con `touch-action: none` en el asa): el
   panel sigue al dedo; al soltar se abre si ha recorrido ≥ 30 % de su ancho o va rápido (> 0,5 px/ms), y
   si no, vuelve. Un movimiento de menos de 8 px cuenta como toque. Se cierra con «✕», Esc, tocando el velo,
   arrastrando el panel hacia la derecha o con «Atrás» (D4).
 - **Panel**: `<dialog>` con `showModal()`, que deja inerte el resto de la página (foco atrapado gratis; además el
   `atraparFoco` que ya existe en `vistas/dom.js`). Ancho `min(88vw, 420px)` desde la derecha. Las tres secciones
-  son `<details>` (a abierta por defecto; `#entrenar/menu/<seccion>` abre esa).
+  son `<details>` (Personalizar sesión, abierta por defecto; `#entrenar/menu/<seccion>` abre esa).
 - **Foco**: al abrir, al título del menú (`h2 tabindex="-1"`), que el lector anuncia; al cerrar, de vuelta al
   asa (lo hace `dialog.close()`, que se comprueba con un test). Al volver de Mis combinaciones, el foco va a su
   enlace del menú.
@@ -270,9 +276,10 @@ hay dos: «Un poco más» = ×2 y «Bastante más» = ×4.
 ### 5.1 Simulación
 
 Sesiones 3×3 a ritmo Constante con el guion real (`construir_guion` + `SorteoBiblioteca`, semilla fija): 400
-sesiones por caso. Se mide **qué parte de las combinaciones dichas lleva el movimiento**. El script está en
-el scratchpad de esta sesión; propuesta: añadirlo en R0 como `herramientas/simular_practicar.py`, para
-repetirlo si cambia la biblioteca.
+sesiones por caso. Se mide **qué parte de las combinaciones dichas lleva el movimiento**. Los scripts
+(`simular_practicar.py` y `simular_cuantos.py`) están hoy fuera del repo, en el scratchpad; en R0 se añaden
+juntos como `herramientas/simular_practicar.py`, para repetirlo si cambia la biblioteca. Son deterministas
+(semillas fijas): repetirlos da las mismas cifras.
 
 Un movimiento elegido (extracto; con ×1 = sin elegir):
 
@@ -316,6 +323,48 @@ deja `TOPE_PRACTICAR = 8` (así ninguna combinación pesa más de 8 veces otra).
 `# REVISAR CON ENTRENADOR`: si ×3 (la mitad de las combinaciones con el golpe elegido) es una buena dosis para
 trabajar un golpe en una sesión, o si es demasiado repetitivo para un principiante.
 
+### 5.3 ¿Cuántos movimientos como máximo? (D11, pendiente de que David vea esto)
+
+Misma simulación, con ×3 y tope ×8, añadiendo elegidos de uno en uno (en el orden de la tabla). «Subida» =
+puntos que gana cada elegido sobre no elegirlo; «mín» = el que menos gana.
+
+**Nivel 1** (base: 3 crochet 28 %, esquiva 18 %, rodar 10 %, 4 crochet 29 %, bloqueo 16 %, parada 9 %;
+jab 46 %, recto 24 %)
+
+| Elegidos | Cuánto sale cada uno | Subida media (mín) | Jab · recto |
+|---|---|---|---|
+| 1 | 3 crochet 50 % | +21,9 pt | 41 · 26 % |
+| 2 | + esquiva 33 % | +16,8 (+14,5) | 35 · 22 % |
+| **3** | + rodar 22 % | **+14,3 (+10,3)** | 38 · 19 % |
+| 4 | + 4 crochet 47 %; el 3 baja a 42 % | +13,7 (+8,3) | 32 · **14 %** |
+| 5 | + bloqueo 23 % | +10,6 (+6,2) | 33 · 14 % |
+| 6 | + parada 11 % | +8,5 (+1,7) | 35 · 14 % |
+
+**Nivel 2** (base: 4 crochet 44 %, 5 uppercut 46 %, rodar 39 %, parada 12 %, esquiva 34 %, 3 crochet 50 %;
+jab 71 %, recto 45 %)
+
+| Elegidos | Cuánto sale cada uno | Subida media (mín) | Jab · recto |
+|---|---|---|---|
+| 1 | 4 crochet 68 % | +23,8 pt | 67 · 37 % |
+| 2 | + 5 uppercut 65 % | +18,7 (+18,4) | 65 · 35 % |
+| **3** | + rodar 57 % | **+15,4 (+12,7)** | 66 · 36 % |
+| 4 | + parada 16 % | +10,8 (**+3,3**) | 68 · 36 % |
+| 5 | + esquiva 40 % | +7,4 (+1,4) | 68 · 39 % |
+| 6 | + 3 crochet 51 % (sin elegir, 50 %) | +3,3 (+0,9) | 69 · 41 % |
+
+Qué dice:
+
+1. **Hasta 3, todos se notan**: el que menos gana sube más de 10 puntos (en una sesión de 35-70
+   combinaciones, 4-7 combinaciones más con ese movimiento).
+2. **Con 4 empieza a no notarse**: en nivel 2 el cuarto solo sube 3 puntos, y en nivel 1 el cuarto
+   (otro golpe frecuente) le quita al primero (3 crochet: 49 % → 42 %) y deja el recto en el 14 %.
+3. **Con 5-6 casi no sirve**: subida media de 3-10 puntos y el último elegido apenas se mueve (+1-2): elegir
+   mucho es como no elegir nada, porque el tope ×8 iguala las combinaciones que llevan varios.
+4. Lo que pierden los no elegidos no se dispara (el jab nunca baja del 32 %), así que el límite no es por
+   seguridad, sino porque **a partir del cuarto el control engaña**: parece que hace algo y no lo hace.
+
+**Propuesta: se queda en 3.** Falta que David lo vea para cerrar D11.
+
 ---
 
 ## 6. Tests
@@ -324,7 +373,7 @@ trabajar un golpe en una sesión, o si es demasiado repetitivo para un principia
 
 | Archivo | Qué se rompe |
 |---|---|
-| `tests/test_ajustes_navegador.py` | Entero: abre `#ajustes`, mira `#ajustes-contenido > form` y «Un poco / Bastante más». Se reescribe como sección c) y Practicar dentro del menú. |
+| `tests/test_ajustes_navegador.py` | Entero: abre `#ajustes`, mira `#ajustes-contenido > form` y «Un poco / Bastante más». Se reescribe como sección «Ajustes» y Practicar dentro del menú. |
 | `tests/test_creador_navegador.py` | Ruta `#ajustes/mis-combinaciones`, `#ajustes-contenido`, `#ir-creador`. Ruta nueva y contenedor nuevo; el comportamiento (descartar con «atrás») se mantiene. |
 | `tests/test_mezcla_navegador.py` | El control de mezcla pasa al menú; el enlace `#ajustes/mis-combinaciones/nueva`; en la línea 187, `asalto: "prueba"` → `tipo` y abrir con `?prueba`. |
 | `tests/test_perfil_navegador.py` | `version == 8` (línea 74); `#zurdo` en Entrenar (líneas 59 y 85) pasa a Ajustes del menú; el cuestionario, detrás de «Repetir». |
@@ -362,7 +411,20 @@ los ficheros nuevos al precache).
 - **Migración v9**: los casos de la sección 4 en `tests/js/almacen.test.mjs`, y en el navegador un almacén v8
   real que abre con lo mismo elegido.
 - **General y Personalizada**: General no se puede editar y da 3×3 con lo fijo; la guardia de Ajustes cambia
-  la General (zurdo = espejo); tocar algo de a) con General pasa a Personalizada (D3).
+  la General (zurdo = espejo).
+- **D3, General → Personalizada** (`tests/js/ajustes.test.mjs` para la lógica y `tests/test_menu_navegador.py`
+  para la interfaz). Datos de partida: Personalizada guardada `{ 4 asaltos, 2:00, 0:45, nivel 2, ritmo 4,
+  mezcla Poco }` y `tipo: "general"`.
+  - Al abrir el menú con General: los controles enseñan 4 · 2:00 · 0:45 · nivel 2 · ritmo 4 · Poco (no 3×3 ni
+    Básico) y se ve el aviso «Estás en General…»; con Personalizada elegida no hay aviso.
+  - Cambiar solo el nivel a 3: `tipo` = `personalizada` y la Personalizada guardada es `{ 4, 2:00, 0:45, nivel 3,
+    ritmo 4, Poco }` (lo guardado + el cambio); ningún campo toma el valor de la General.
+  - El selector marca Personalizada, el aviso desaparece y el resumen dice 4 × 2:00 y «Nivel avanzado».
+  - Volver a General no borra nada: al reabrir el menú sigue la Personalizada con nivel 3.
+- **Resumen de la General**: con General elegida y la Personalizada en nivel 2, el resumen dice «Nivel básico»
+  (el de `configGeneral()`), no «Nivel medio».
+- **El asa no tapa nada**: a 390 y 1440 px, con el menú abierto, la caja del asa visible no se cruza con
+  «Empezar» ni con ningún control del panel; a 1440 px con el menú cerrado, tampoco con «Tu sesión».
 - **`?prueba`**: sin él no hay opción Prueba; con él sí, y elegirla no se guarda.
 - **Foto**: recorte de una imagen 800 × 600 → 256 × 256 JPEG, < 60 KB; va en exportar y vuelve igual al
   importar; una foto mal formada en una copia se descarta.
@@ -381,7 +443,7 @@ los ficheros nuevos al precache).
 | **R1. Almacén v9 y preferencias** | Migración 8 → 9 y `completar` (identidad, pistas, foto validada) con sus tests; `preferencias()` con `tipo`, `configGeneral()`, `?prueba`. La interfaz vieja sigue funcionando sobre la v9. | 2-3 |
 | **R2. Rutas** | `#entrenar/mis-combinaciones` y las redirecciones desde `#ajustes…`; el creador se mueve de contenedor; tests de redirección y del creador. | 2 |
 | **R3. Menú (vacío)** | `menu.js`: asa, panel, toque, arrastre, teclado, foco, Esc, «Atrás», borde; tests de 6.2. Todavía sin contenido. | 2 |
-| **R4. Entrenar nuevo** | Cabecera, selector General / Personalizada, «Tu sesión», Empezar; secciones a), b) y c) dentro del menú; fuera `#vista-ajustes`, el engranaje y Perfil/Ajustes de la barra. Tests de Entrenar, mezcla y Ajustes adaptados. | 3-4 |
+| **R4. Entrenar nuevo** | Cabecera, selector General / Personalizada, «Tu sesión», Empezar; las tres secciones dentro del menú; fuera `#vista-ajustes`, el engranaje y Perfil/Ajustes de la barra. Tests de Entrenar, mezcla y Ajustes adaptados. | 3-4 |
 | **R5. Perfil, nombre y avatar** | Cuestionario detrás de «Repetir»; nombre y avatar/foto (`avatar.js`, `foto.js`) en Ajustes; cabecera y Perfil los enseñan; foto en la copia. | 2-3 |
 | **R6. Intro y pista** | Hueco de la intro y pista del asa, con `prefers-reduced-motion`. | 1-2 |
 | **R7. Gris neutro y cierre** | Tokens en gris + test de contraste; limpieza de CSS sin uso; herramientas de capturas; `CLAUDE.md`; capturas «después» a 390, 768 y 1440 en `.playwright-mcp/capturas/rediseno/despues/`. | 2-3 |
@@ -399,7 +461,8 @@ R0 y R1 no cambian nada visible, así que se pueden revisar y unir antes de toca
 2. **Arrastre en iOS Safari**: `<dialog>` + `transform` + eventos de puntero tienen rarezas, como el scroll del
    cuerpo debajo y `touch-action`. Hay que probarlo en un iPhone real; Playwright solo emula.
 3. **El asa tapa contenido en el móvil**: a 390 px, la pastilla (22 px) cae sobre el borde derecho de la
-   tarjeta «Tu sesión» (se ve en el boceto). No tapa texto, pero es un elemento flotante encima (D5).
+   tarjeta «Tu sesión» (se ve en el boceto). No tapa texto, pero es un elemento flotante encima. Aceptado por
+   ahora (D5); si molesta, margen derecho de 56 px solo en «Tu sesión».
 4. **Cambio de comportamiento en el sorteo**: con un solo factor, quien tenía «Bastante más» verá su
    movimiento algo menos (y quien tenía «Un poco», algo más). Se puede medir (sección 5), pero se notará.
 5. **Foto y cuota**: copias de seguridad algo más grandes (~30 KB). Un navegador con poco espacio podría
@@ -413,20 +476,22 @@ R0 y R1 no cambian nada visible, así que se pueden revisar y unir antes de toca
 
 ---
 
-## 9. Dudas que tiene que decidir David
+## 9. Decisiones de David (10-11-2026)
 
-| # | Duda | Propuesta |
+Las propuestas de la tabla se revisaron con David. Lo que se decidió:
+
+| # | Duda | Decisión |
 |---|---|---|
-| D1 | **¿Qué lleva la General además de 3×3?** «No editable», pero ¿qué nivel, ritmo, mezcla, Practicar y Reacción? | 3×3:00 · descanso 1:00, **nivel el de `data/perfil.json` (hoy Básico)**, ritmo Constante, mezcla Ninguna, sin Practicar, sin Reacción. Voz, Nombrar y guardia, los de Ajustes. Así lo fijo vive en `data/`, no en el código. |
-| D2 | Al migrar, quien tenía «Amateur 3×3» con elecciones propias (nivel 2, mezcla…): ¿Personalizada 3×3 o General? | **Personalizada 3×3**, para que al actualizar no le cambie la sesión. |
-| D3 | Con General elegida, ¿qué pasa al tocar algo de «Personalizar sesión»? | **Pasa sola a Personalizada** y lo anuncia («Personalizada»). La otra opción es desactivar los controles con General, pero esconde por qué. |
-| D4 | ¿Abrir el menú añade una entrada al historial (`#entrenar/menu`) para que el gesto «Atrás» lo cierre en vez de salir de la app? | **Sí**: es lo que se espera en Android. Cuesta un poco más de lógica de rutas (riesgo 1). |
-| D5 | El asa a 390 px pisa ~22 px del borde de «Tu sesión». ¿Margen derecho extra en el móvil o se acepta? | **Se acepta** (no tapa texto). Si molesta, margen derecho de 56 px solo en «Tu sesión». |
-| D6 | **«Todo en gris neutro»**: ¿gris oscuro (como ahora, pero sin rojo) o gris claro (como el boceto)? | **Gris oscuro**: se usa en el gimnasio, a 1-2 m y con poca luz, y `theme-color` y `color-scheme` siguen igual. El boceto es claro solo por ser un boceto. |
-| D7 | Nombre y avatar: ¿se editan solo en Ajustes (menú) o también en Perfil? | **Solo en Ajustes**; Perfil los enseña con «Cambiar», que abre el menú en Ajustes. Una sola forma de editar. |
-| D8 | Fecha de inicio y medidas (altura, peso, alcance): ¿siguen en Perfil? | **Sí**, junto al cuestionario: son de «quién eres», no del entreno. |
-| D9 | Fotos de cabecera (WebP): Entrenar la pierde (la cabecera es el perfil). ¿Aprende e Historial las conservan? | **Conservarlas** hasta la fase visual; con el gris quedan algo raras, pero quitarlas es decisión de estilo. |
-| D10 | Avatares predefinidos: ¿cuántos y en qué formato? | WebP cuadrados de 256 px, 6-8, con su autoría en `CREDITOS.md`. Hasta que lleguen, solo foto o inicial. |
-| D11 | Practicar más: ¿se queda en 3 movimientos como máximo? | **Sí, 3**. Con ×3 y tope ×8, a partir de 3 el efecto de cada uno ya se diluye (sección 5); más no ayudaría. |
-| D12 | ¿El asa también en el PC, o en el PC el menú se abre con un botón «Personalizar» visible? | **El mismo asa** (un solo componente y los mismos tests); en el PC no hay gesto «Atrás» que evitar. |
-| D13 | ¿La intro sale en cada arranque o una vez por sesión del navegador? | **Una vez por arranque en frío** (`sessionStorage`): al volver de otra app no se repite. |
+| D1 | ¿Qué lleva la General además de 3×3? | **Sí a la propuesta**: 3×3:00 · descanso 1:00, nivel el de `data/perfil.json` (Básico), ritmo Constante, mezcla Ninguna, sin Practicar, sin Reacción. Voz, Nombrar y guardia, los de Ajustes. |
+| D2 | Al migrar, «Amateur 3×3» con elecciones propias: ¿Personalizada 3×3 o General? | **Personalizada 3×3**, para que al actualizar no cambie la sesión. |
+| D3 | Con General elegida, ¿qué pasa al tocar algo de «Personalizar sesión»? | **Pasa a Personalizada, con un matiz**: con General elegida, el menú enseña los valores guardados de la Personalizada y arriba pone «Estás en General. Estos son los ajustes de tu Personalizada; si cambias algo, pasarás a ella.». Al tocar algo se pasa a Personalizada con sus valores guardados más el cambio; nunca se copian los de la General encima. Con su test (6.2). |
+| D4 | ¿Abrir el menú añade una entrada al historial para que «Atrás» lo cierre? | **Sí.** |
+| D5 | El asa a 390 px pisa ~22 px del borde de «Tu sesión». | **Se acepta por ahora.** |
+| D6 | Gris oscuro o gris claro. | **Gris oscuro.** |
+| D7 | Nombre y avatar: ¿solo en Ajustes o también en Perfil? | **Solo en Ajustes**; Perfil los enseña con «Cambiar», que abre el menú en Ajustes. |
+| D8 | Fecha de inicio y medidas: ¿siguen en Perfil? | **Sí.** |
+| D9 | Fotos de cabecera de Aprende e Historial. | **Se conservan** hasta la fase visual. |
+| D10 | Avatares predefinidos. | **Cuando David pase los avatares.** Hasta entonces, solo foto propia o inicial. |
+| D11 | Practicar más: ¿3 movimientos como máximo? | **Pendiente**: según la simulación de 5.3, que David tiene que ver antes de cerrarla. Propuesta: 3. |
+| D12 | ¿El asa también en el PC? | **La misma asa.** |
+| D13 | ¿La intro en cada arranque o una vez por sesión del navegador? | **Sí a la propuesta**: una vez por arranque en frío (`sessionStorage`). |

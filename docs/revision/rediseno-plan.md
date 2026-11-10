@@ -276,10 +276,9 @@ copia v8 importada → v9; foto mal formada descartada al importar; `VERSION ===
 ### 5.1 Simulación
 
 Sesiones 3×3 a ritmo Constante con el guion real (`construir_guion` + `SorteoBiblioteca`, semilla fija): 400
-sesiones por caso. Se mide **qué parte de las combinaciones dichas lleva el movimiento**. Los scripts
-(`simular_practicar.py` y `simular_cuantos.py`) están hoy fuera del repo, en el scratchpad; en R0 se añaden
-juntos como `herramientas/simular_practicar.py`, para repetirlo si cambia la biblioteca. Son deterministas
-(semillas fijas): repetirlos da las mismas cifras.
+sesiones por caso. Se mide **qué parte de las combinaciones dichas lleva el movimiento**. Desde R0 está en
+el repo: `python herramientas/simular_practicar.py factores` (tablas de 5.1) y `… cuantos` (tabla de 5.3),
+para repetirlo si cambia la biblioteca. Es determinista (semillas fijas): repetirlo da las mismas cifras.
 
 Un movimiento elegido (extracto; con ×1 = sin elegir):
 

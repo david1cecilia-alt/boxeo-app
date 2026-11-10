@@ -7,6 +7,6 @@
     {"id": "chico-ciborg",      "archivo": "imagenes/avatares/chico-ciborg.webp",      "alt": "Avatar: boxeador ciborg con visor luminoso"},
     {"id": "chica-trenzas",     "archivo": "imagenes/avatares/chica-trenzas.webp",     "alt": "Avatar: boxeadora con trenzas"},
     {"id": "chica-gorra",       "archivo": "imagenes/avatares/chica-gorra.webp",       "alt": "Avatar: boxeadora con gorra y guantes rojos"},
-    {"id": "chica-robot",       "archivo": "imagenes/avatares/chica-robot.webp",       "alt": "Avatar: robot con casco de boxeo"}
+    {"id": "chica-robot",       "archivo": "imagenes/avatares/chica-robot.webp",       "alt": "Avatar: boxeadora robot con casco de boxeo"}
   ]
 }

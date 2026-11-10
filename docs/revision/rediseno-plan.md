@@ -268,10 +268,10 @@ copia v8 importada → v9; foto mal formada descartada al importar; `VERSION ===
 
 ---
 
-## 5. «Practicar más» con un solo nivel
+## 5. «Practicar más» con un solo nivel (cerrada el 10-11-2026)
 
-**Propuesta: un solo factor de ×3** (`FACTOR_PRACTICAR = 3.0`), con `TOPE_PRACTICAR = 8` igual que ahora. Hoy
-hay dos: «Un poco más» = ×2 y «Bastante más» = ×4.
+**Decidido: un solo factor de ×3** (`FACTOR_PRACTICAR = 3.0`), con `TOPE_PRACTICAR = 8` igual que ahora, y
+**como mucho 3 movimientos** (D11). Antes había dos: «Un poco más» = ×2 y «Bastante más» = ×4.
 
 ### 5.1 Simulación
 
@@ -323,7 +323,7 @@ deja `TOPE_PRACTICAR = 8` (así ninguna combinación pesa más de 8 veces otra).
 `# REVISAR CON ENTRENADOR`: si ×3 (la mitad de las combinaciones con el golpe elegido) es una buena dosis para
 trabajar un golpe en una sesión, o si es demasiado repetitivo para un principiante.
 
-### 5.3 ¿Cuántos movimientos como máximo? (D11, pendiente de que David vea esto)
+### 5.3 ¿Cuántos movimientos como máximo? (D11, cerrada: 3)
 
 Misma simulación, con ×3 y tope ×8, añadiendo elegidos de uno en uno (en el orden de la tabla). «Subida» =
 puntos que gana cada elegido sobre no elegirlo; «mín» = el que menos gana.
@@ -363,7 +363,7 @@ Qué dice:
 4. Lo que pierden los no elegidos no se dispara (el jab nunca baja del 32 %), así que el límite no es por
    seguridad, sino porque **a partir del cuarto el control engaña**: parece que hace algo y no lo hace.
 
-**Propuesta: se queda en 3.** Falta que David lo vea para cerrar D11.
+**Decidido: 3 como máximo** (David, 10-11-2026, D11).
 
 ---
 
@@ -492,6 +492,6 @@ Las propuestas de la tabla se revisaron con David. Lo que se decidió:
 | D8 | Fecha de inicio y medidas: ¿siguen en Perfil? | **Sí.** |
 | D9 | Fotos de cabecera de Aprende e Historial. | **Se conservan** hasta la fase visual. |
 | D10 | Avatares predefinidos. | **Hecho**: David pasó 7 (WebP de 256 px, generados con Pippit AI), ya en `static/imagenes/avatares/` y `data/avatares.json`. |
-| D11 | Practicar más: ¿3 movimientos como máximo? | **Pendiente**: según la simulación de 5.3, que David tiene que ver antes de cerrarla. Propuesta: 3. |
+| D11 | Practicar más: ¿3 movimientos como máximo? | **Sí, 3 como máximo**, según la simulación de 5.3. |
 | D12 | ¿El asa también en el PC? | **La misma asa.** |
 | D13 | ¿La intro en cada arranque o una vez por sesión del navegador? | **Sí a la propuesta**: una vez por arranque en frío (`sessionStorage`). |

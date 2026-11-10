@@ -88,7 +88,14 @@
   .menu { display: none; position: fixed; top: 0; right: 0; bottom: 0; width: min(88vw, 420px); background: var(--superficie); z-index: 8;
     border-radius: var(--radio) 0 0 var(--radio); overflow: auto; padding: 16px 16px 32px; box-shadow: -8px 0 24px rgba(0,0,0,.2); }
   body.abierto .velo, body.abierto .menu { display: block; }
-  body.abierto .asa { right: min(88vw, 420px); }
+  /* Con el menú abierto, el asa de fuera se oculta (el <dialog> modal la dejaría inerte) y aparece la
+     del panel, en una franja propia de 48 px a su izquierda: va con el panel, se arrastra para cerrar
+     y no tapa nada, ni lo de debajo del velo ni el contenido del panel. */
+  body.abierto .asa:not(.asa-panel) { display: none; }
+  .menu { padding-left: 56px; }
+  .asa.asa-panel { display: none; right: calc(min(88vw, 420px) - 48px); z-index: 9; }
+  body.abierto .asa.asa-panel { display: grid; }
+  .aviso-general { margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; background: var(--hundido); border-left: 4px solid var(--relleno); font-size: .88rem; }
   .menu-cabeza { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
   .menu-cabeza h2 { margin: 0; font-size: 1.2rem; }
   .cerrar { width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--linea); background: var(--superficie); cursor: pointer; font-size: 1.2rem; }
@@ -153,7 +160,7 @@
         <label><input type="radio" name="tipo" value="general" checked><span>General</span></label>
         <label><input type="radio" name="tipo" value="personalizada"><span>Personalizada</span></label>
       </fieldset>
-      <p class="nota-boceto">General = 3×3:00 · descanso 1:00, no editable. Personalizada = lo del menú (a).</p>
+      <p class="nota-boceto">General = 3×3:00 · descanso 1:00, no editable. Personalizada = lo de «Personalizar sesión» en el menú.</p>
       <p class="nota-boceto">«Prueba 2×30 s» ya no se ve: solo con <code>?prueba</code> en la URL aparece como 3.ª opción.</p>
     </div>
 
@@ -163,7 +170,7 @@
         <p class="grande">3 × 3:00</p>
         <p style="margin:0;color:var(--suave)">descanso 1:00 · unos 11 min</p>
         <ul aria-label="Lo que se aplica">
-          <li>Nivel medio</li><li>Constante</li><li>Nombres</li>
+          <li>Nivel básico</li><li>Constante</li><li>Nombres</li>
         </ul>
         <p class="fija">General: ritmo, nivel y combinaciones fijos. Voz y guardia, las de Ajustes.</p>
       </section>
@@ -188,14 +195,18 @@
 
   <div class="velo" aria-hidden="true"></div>
   <section class="menu" id="menu" role="dialog" aria-modal="true" aria-labelledby="t-menu">
+    <button type="button" class="asa asa-panel" aria-controls="menu" aria-expanded="true" aria-label="Cerrar menú (o arrastra hacia la derecha)">
+      <span class="pastilla" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+    </button>
     <div class="menu-cabeza">
       <h2 id="t-menu" tabindex="-1">Menú</h2>
       <button type="button" class="cerrar" aria-label="Cerrar menú">✕</button>
     </div>
 
     <details class="grupo" open>
-      <summary>a) Personalizar sesión</summary>
-      <p class="nota-boceto" style="margin-bottom:12px">Al tocar algo aquí, el selector pasa a «Personalizada».</p>
+      <summary>Personalizar sesión</summary>
+      <p class="aviso-general" role="status">Estás en General. Estos son los ajustes de tu Personalizada; si cambias algo, pasarás a ella.</p>
+      <p class="nota-boceto" style="margin-bottom:12px">Solo con General elegida. Al tocar algo: Personalizada = sus valores guardados + el cambio (nunca se copia la General encima).</p>
       <div class="campo"><span>Asaltos · duración · descanso</span><div class="tres"><b>3</b><b>3:00</b><b>1:00</b></div></div>
       <fieldset class="campo"><legend>Nivel</legend><div class="tres"><b>1 Básico</b><b style="background:var(--relleno);color:#fff">2 Medio</b><b>3 Avanzado</b></div></fieldset>
       <div class="campo"><span>Ritmo · Constante</span><div class="barra-rango"></div></div>
@@ -205,12 +216,12 @@
     </details>
 
     <details class="grupo" open>
-      <summary>b) Mis combinaciones</summary>
+      <summary>Mis combinaciones</summary>
       <a class="enlace" href="#entrenar/mis-combinaciones">2 de 20 <small>Crear y editar ›</small></a>
     </details>
 
     <details class="grupo" open>
-      <summary>c) Ajustes</summary>
+      <summary>Ajustes</summary>
       <div class="campo"><span>Voz</span><div class="enlace" style="margin:0">Automática <small>▾</small></div></div>
       <fieldset class="campo"><legend>Velocidad</legend><div class="tres"><b>Lenta</b><b style="background:var(--relleno);color:#fff">Normal</b><b>Rápida</b></div></fieldset>
       <fieldset class="campo"><legend>Nombrar combinaciones</legend><div class="tres"><b>Números</b><b style="background:var(--relleno);color:#fff">Nombres</b><b>Ambos</b></div></fieldset>
@@ -226,7 +237,7 @@
 <script>
   const estado = new URLSearchParams(location.search).get("estado") ?? "cerrado";
   document.body.classList.add(estado);
-  if (estado === "abierto") document.querySelector(".asa").setAttribute("aria-expanded", "true");
+  if (estado === "abierto") document.querySelector(".asa:not(.asa-panel)").setAttribute("aria-expanded", "true");
 </script>
 </body>
 </html>

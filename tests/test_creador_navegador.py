@@ -1,6 +1,7 @@
-"""«Mis combinaciones» (el creador, en Ajustes) en un navegador de verdad (Chromium headless con Playwright).
+"""«Mis combinaciones» (el creador, en #entrenar/mis-combinaciones) en un navegador de verdad (Chromium headless
+con Playwright).
 
-Tarjeta en Ajustes, listado (vacío, con combinaciones y 20/20), editor (grupos, «Al cuerpo», fichas, máximo
+Tarjeta en Ajustes, el creador dentro de Entrenar (sin que asome nada de Entrenar), listado (vacío, con combinaciones y 20/20), editor (grupos, «Al cuerpo», fichas, máximo
 10, Guardar con mínimo 2), avisos al guardar, borrar con confirmación y «¿Descartar los cambios?» al salir
 (también con el «atrás» del navegador, sin duplicar entradas del historial). Los datos de prueba solo
 viven en el localStorage de este Chromium. Sin Playwright se salta en local; en CI falla.
@@ -23,24 +24,24 @@ SEMBRAR = """<!doctype html><meta charset="utf-8">
 # Las pruebas sirven la app desde http://boxeo.local, que no es un contexto seguro: ahí Chromium no tiene
 # crypto.randomUUID, como al abrir la app por http desde otra máquina de la red local. El almacén usa
 # entonces getRandomValues (crearUuid), así que se prueba tal cual, sin parches.
-RUTA = "#ajustes/mis-combinaciones"
+RUTA = "#entrenar/mis-combinaciones"
 EJEMPLOS = [["jab", "rodar_der", "uppercut_der"], ["jab", "directo", "esquiva_izq", "gancho_izq", "directo"],
             ["bloqueo", "parada", "paso_atras"]]
 ANIMACIONES_ACABADAS = "() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {})))"
 # Elementos de la subpágina que se salen por la derecha del ancho útil (sin la barra de desplazamiento).
 SE_SALEN = """() => { const ancho = document.documentElement.clientWidth;
-  return [...document.querySelectorAll('#ajustes-contenido *')]
+  return [...document.querySelectorAll('#entrenar-sub *')]
     .filter((e) => e.getClientRects().length && !e.closest('dialog:not([open])') && !e.closest('.solo-lectores'))
     .filter((e) => { const r = e.getBoundingClientRect(); return r.right > ancho + 0.5 || r.left < -0.5; })
     .map((e) => `${e.tagName}.${e.className}`); }"""
 # Botones visibles de la subpágina con menos de 48 px de alto o de ancho.
-PEQUENOS = """() => [...document.querySelectorAll('#ajustes-contenido button')]
+PEQUENOS = """() => [...document.querySelectorAll('#entrenar-sub button')]
   .filter((b) => b.getClientRects().length && !b.closest('dialog:not([open])'))
   .map((b) => ({ b, r: b.getBoundingClientRect() })).filter(({ r }) => r.height < 47.5 || r.width < 47.5)
   .map(({ b, r }) => `${b.className || b.id} ${Math.round(r.width)}x${Math.round(r.height)}`)"""
 
 # Palabras partidas en dos líneas en las baldosas y los botones (cada palabra debe ocupar un solo trozo).
-PARTIDAS = """() => [...document.querySelectorAll('#ajustes-contenido :is(.baldosa span, .boton, dialog[open] .boton)')]
+PARTIDAS = """() => [...document.querySelectorAll('#entrenar-sub :is(.baldosa span, .boton, dialog[open] .boton)')]
   .filter((e) => e.getClientRects().length).flatMap((e) => {
     const nodo = [...e.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
     if (!nodo) return [];
@@ -83,7 +84,12 @@ def ir(pagina, ruta, propias=()):
             {"id": f"p-{i}", "ids": ids, "creada": "2026-11-04T10:00:00"} for i, ids in enumerate(propias)]}
         pagina.evaluate("(d) => localStorage.setItem('boxeo', d)", json.dumps(datos))
     pagina.goto(f"{ORIGEN}/index.html{ruta}")
-    pagina.wait_for_selector("#t-creador" if ruta.startswith(RUTA) else "#t-practicar")
+    if ruta.startswith(RUTA):
+        pagina.wait_for_selector("#t-creador")
+    elif ruta.startswith("#ajustes"):
+        pagina.wait_for_selector("#t-practicar")
+    else:
+        pagina.wait_for_selector(f"#vista-{ruta[1:].split('/')[0]} h1", state="visible")
 
 
 def guardadas(pagina):
@@ -127,8 +133,10 @@ def test_la_tarjeta_de_ajustes_dice_cuantas_y_lleva_al_listado_y_volver_devuelve
         "MIS COMBINACIONES 3/20 Crea las tuyas y mézclalas con la biblioteca en Entrenar.")
     pagina.click("#ir-creador")
     pagina.wait_for_selector(".lista-propias")
+    assert pagina.evaluate("location.hash") == RUTA
     assert foco(pagina) == "t-creador"
     assert pagina.is_hidden("#t-ajustes")
+    assert pagina.is_hidden("#t-entrenar")
     assert pagina.locator(".propia h2").all_inner_texts() == ["COMBINACIÓN 1", "COMBINACIÓN 2", "COMBINACIÓN 3"]
     assert pagina.locator(".pastilla-nivel").all_inner_texts() == ["Básico", "Medio", "Básico"]
     # Fichas con el código de la sesión y, para lectores de pantalla, el texto hablado.
@@ -137,7 +145,84 @@ def test_la_tarjeta_de_ajustes_dice_cuantas_y_lleva_al_listado_y_volver_devuelve
     assert "rueda derecha" in pagina.locator(".propia .solo-lectores").first.inner_text()
     pagina.click(".volver-sub a")
     pagina.wait_for_selector("#t-practicar")
+    assert pagina.evaluate("location.hash") == "#ajustes"
     assert foco(pagina) == "ir-creador"
+
+
+def test_volver_de_ajustes_no_lleva_al_creador_tras_pasar_por_el(pagina):
+    ir(pagina, "#historial")
+    pagina.wait_for_selector("#vista-historial", state="visible")
+    pagina.evaluate("location.hash = '#ajustes'")
+    pagina.wait_for_selector("#ir-creador")
+    pagina.click("#ir-creador")
+    pagina.wait_for_selector("#t-creador")
+    pagina.click(".volver-sub a")
+    pagina.wait_for_selector("#t-practicar")
+    assert pagina.get_attribute("#volver-ajustes", "href") == "#historial"
+
+
+# Lo de Entrenar que no debe verse mientras se ve el creador (ni el engranaje de Ajustes).
+DE_ENTRENAR = ["#t-entrenar", "#config", ".foto-cabecera", "#vista-entrenar .marca-agua", "#ir-ajustes"]
+
+
+def _nada_de_entrenar(pagina):
+    return [s for s in DE_ENTRENAR if pagina.locator(s).first.is_visible()]
+
+
+@pytest.mark.parametrize("ancho", [390, 1440])
+def test_el_creador_no_deja_ver_nada_de_entrenar_y_al_salir_vuelve_todo(pagina, ancho):
+    pagina.set_viewport_size({"width": ancho, "height": 900})
+    ir(pagina, RUTA, EJEMPLOS)
+    assert _nada_de_entrenar(pagina) == []
+    assert pagina.get_attribute("#vista-entrenar", "aria-labelledby") == "t-creador"
+    assert pagina.get_attribute('#pestanas a[href="#entrenar"]', "aria-current") == "page"
+    pagina.evaluate("location.hash = '#entrenar'")
+    pagina.wait_for_selector("#config", state="visible")
+    assert pagina.is_visible("#t-entrenar")
+    assert pagina.locator("#entrenar-sub *").count() == 0  # se vacía al salir
+    assert pagina.get_attribute("#vista-entrenar", "aria-labelledby") == "t-entrenar"
+    assert foco(pagina) == "t-entrenar"
+
+
+def test_entrar_salir_y_volver_a_entrar_en_el_creador_sigue_funcionando(pagina):
+    ir(pagina, RUTA)
+    for _ in range(2):
+        pagina.click("#anadir-propia")
+        pagina.wait_for_selector("#caja-combo")
+        anadir(pagina, "jab", "directo")
+        pagina.click("#salir-editor")
+        pagina.wait_for_selector("#d-descartar[open]")
+        pagina.click('#d-descartar button[value="descartar"]')
+        pagina.wait_for_selector(".vacio-propias")
+        assert pagina.evaluate("location.hash") == RUTA
+        # Fuera (se vacía #entrenar-sub) y otra vez dentro.
+        pagina.click('#pestanas a[href="#entrenar"]')
+        pagina.wait_for_selector("#config", state="visible")
+        assert pagina.locator("#entrenar-sub *").count() == 0
+        pagina.evaluate(f"location.hash = '{RUTA}'")
+        pagina.wait_for_selector(".vacio-propias")
+        assert foco(pagina) == "t-creador"
+    # Y se guarda igual que la primera vez.
+    pagina.click("#anadir-propia")
+    anadir(pagina, "jab", "directo")
+    pagina.click("#guardar")
+    pagina.click('#d-avisos button[value="guardar"]')  # es igual que una de la biblioteca: «Guardar igual»
+    pagina.wait_for_selector(".lista-propias")
+    assert guardadas(pagina) == [["jab", "directo"]]
+
+
+def test_con_una_sesion_en_marcha_el_creador_no_se_abre_y_la_sesion_sigue(pagina):
+    ir(pagina, "#entrenar")
+    pagina.wait_for_selector("#empezar")
+    pagina.click("#empezar")
+    pagina.wait_for_selector("#pantalla", state="visible")
+    pagina.evaluate(f"location.hash = '{RUTA}/nueva'")
+    pagina.wait_for_function("location.hash === '#entrenar'")
+    assert pagina.is_visible("#pantalla")
+    assert pagina.evaluate("document.body.classList.contains('entrenando')")
+    assert pagina.locator("#entrenar-sub *").count() == 0
+    pagina.click("#parar")
+    pagina.wait_for_selector("#pantalla", state="hidden")
 
 
 def test_listado_vacio_explica_para_que_sirve(pagina):

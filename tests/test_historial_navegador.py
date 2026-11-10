@@ -138,6 +138,17 @@ def test_el_titulo_de_cada_vista_se_subraya_sin_recuadro(pagina, vista, desde):
     assert pagina.evaluate(FOCO_DEL_TITULO, f"#t-{vista}") == [True, "none", "underline"]
 
 
+def test_al_pulsar_cada_pestana_el_foco_va_al_titulo_de_su_vista(pagina):
+    # El router deja el foco donde lo ponga la vista solo si lo pone ella (el creador, Ajustes al
+    # volver de él); al pulsar una pestaña, siempre al h1 de la vista.
+    pagina.set_viewport_size({"width": 1440, "height": 900})
+    pagina.goto(f"{ORIGEN}/index.html#entrenar")
+    pagina.wait_for_selector("#vista-entrenar h1", state="visible")
+    for vista in ("aprende", "historial", "perfil", "ajustes", "entrenar"):
+        pagina.click(f'#pestanas a[href="#{vista}"]')
+        pagina.wait_for_function(f"document.activeElement?.matches('#t-{vista}')")
+
+
 @pytest.mark.parametrize("vista, titulo", [("ajustes", "#t-practicar")])
 def test_los_titulos_de_ajustes_se_subrayan_sin_recuadro(pagina, vista, titulo):
     pagina.set_viewport_size({"width": 1440, "height": 900})

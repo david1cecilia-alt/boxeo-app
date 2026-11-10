@@ -85,7 +85,7 @@ def test_sin_propias_el_selector_esta_desactivado_y_lleva_al_creador(pagina):
     enlace.focus()
     pagina.keyboard.press("Enter")
     pagina.wait_for_selector("#t-creador")
-    assert pagina.evaluate("location.hash") == "#ajustes/mis-combinaciones/nueva"
+    assert pagina.evaluate("location.hash") == "#entrenar/mis-combinaciones/nueva"
 
 
 def test_con_dos_solo_las_mias_esta_desactivada_con_su_motivo_y_lo_demas_se_recuerda(pagina):
@@ -142,9 +142,9 @@ def test_solo_las_mias_sin_ninguna_corta_avisa_del_final_del_asalto(pagina):
     assert pagina.inner_text("#nota-mezcla") == "Añade alguna de 2-3 acciones para que el final del asalto sea solo tuyo."
 
 
-def test_crear_una_en_ajustes_activa_el_selector_al_volver(pagina):
+def test_crear_una_en_el_creador_activa_el_selector_al_volver(pagina):
     ir(pagina)
-    pagina.goto(f"{ORIGEN}/index.html#ajustes/mis-combinaciones/nueva")
+    pagina.goto(f"{ORIGEN}/index.html#entrenar/mis-combinaciones/nueva")
     pagina.wait_for_selector("#caja-combo")
     for id_ in ("jab", "directo"):
         pagina.click(f'[data-anadir="{id_}"]')
@@ -235,7 +235,7 @@ def abrir_editor(pagina, sesion=None, voz=None):
         perfil["voz"] = voz
     pagina.evaluate("(d) => localStorage.setItem('boxeo', d)",
                     json.dumps({"version": 9, "combinacionesPropias": [], "perfil": perfil}))
-    pagina.goto(f"{ORIGEN}/index.html#ajustes/mis-combinaciones/nueva")
+    pagina.goto(f"{ORIGEN}/index.html#entrenar/mis-combinaciones/nueva")
     pagina.wait_for_selector("#caja-combo #escuchar")
 
 

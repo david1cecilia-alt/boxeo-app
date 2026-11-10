@@ -1,6 +1,7 @@
 // Pantalla Ajustes (#ajustes): la voz y «Practicar más». Se guarda al cambiar cada campo, solo en
 // este navegador. En el móvil se entra por el engranaje y «Volver» (fijo arriba al bajar) lleva a la
-// pestaña de antes. Guardia y nivel se eligen en Entrenar.
+// pestaña de antes. Guardia y nivel se eligen en Entrenar. La tarjeta «Mis combinaciones» lleva al
+// creador, que vive en Entrenar (#entrenar/mis-combinaciones, vistas/creador.js).
 // «Practicar más» pasa al sorteo lo elegido (ajustes.js). La voz y su velocidad se aplican al
 // momento (también a la línea «Voz: …» de Entrenar).
 import { MAX_PRACTICAR, NOMBRE_VELOCIDAD, cambiarPracticar, opcionesVoz, preferencias } from "../ajustes.js";
@@ -9,7 +10,7 @@ import { VELOCIDADES } from "../motor/ritmo.js";
 import { movimiento, movimientos } from "../motor/sorteo.js";
 import { nombreCortoVoz } from "../voz.js";
 import { MAX_PROPIAS } from "../motor/reglas.js";
-import { RUTA as RUTA_CREADOR, iniciarCreador } from "./creador.js";
+import { RUTA as RUTA_CREADOR } from "./creador.js";
 import { $, $$, anunciar, atraparFoco, esc } from "./dom.js";
 
 const GRUPOS_PRACTICAR = { golpe: "Golpes", defensa: "Defensas", movimiento: "Salidas" };
@@ -99,11 +100,15 @@ const numeroEs = (n) => n.toLocaleString("es-ES", { minimumFractionDigits: 1 });
 // «Microsoft Helena (es-ES)»: el idioma va pegado al nombre y entero (el guion de «es-ES» partía la línea).
 const sinCortarIdioma = (texto) => esc(texto).replace(/ (\([^)]*\))$/, '&nbsp;<span class="sin-cortar">$1</span>');
 
-// La pestaña desde la que se entró en Ajustes (a la que vuelve «Volver»).
+// La pestaña desde la que se entró en Ajustes (a la que vuelve «Volver»). El creador no cuenta: se
+// entra en él desde Ajustes y su «Volver» trae aquí. `desde`: la ruta de antes, para saber si se vuelve
+// del creador (el foco, a su tarjeta).
 let vuelta = "#entrenar";
+let desde = "";
+const esDelCreador = (hash) => hash === RUTA_CREADOR || hash.startsWith(`${RUTA_CREADOR}/`);
 window.addEventListener("hashchange", (e) => {
-  const desde = new URL(e.oldURL).hash;
-  if (!desde.startsWith("#ajustes")) vuelta = desde || "#entrenar";
+  desde = new URL(e.oldURL).hash;
+  if (!desde.startsWith("#ajustes") && !esDelCreador(desde)) vuelta = desde || "#entrenar";
 });
 
 export function iniciarAjustes({ almacen, voz }) {
@@ -263,20 +268,10 @@ export function iniciarAjustes({ almacen, voz }) {
     });
   }
 
-  // Subpágina «Mis combinaciones» (#ajustes/mis-combinaciones/…): sin la cabecera de Ajustes.
-  const creador = iniciarCreador({ almacen, raiz, voz });
-  const vista = $("#vista-ajustes");
-  function mostrar(parametro = "") {
-    const [sub, ...resto] = parametro.split("/");
-    if (sub === "mis-combinaciones") {
-      vista.dataset.sub = "creador";
-      return creador.mostrar(resto.join("/"));
-    }
-    const desdeCreador = vista.dataset.sub === "creador";
-    delete vista.dataset.sub;
+  function mostrar() {
     pintar();
-    // Al volver de «Mis combinaciones», el foco a su tarjeta (de donde se salió).
-    if (desdeCreador) $("#ir-creador").focus();
+    // Al volver de «Mis combinaciones», el foco a su tarjeta (de donde se salió); el router no lo mueve.
+    if (esDelCreador(desde)) $("#ir-creador").focus({ preventScroll: true });
   }
 
   return { mostrar };

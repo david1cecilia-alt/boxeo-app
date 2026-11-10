@@ -528,7 +528,8 @@ main { position: relative; }
   width: 22px; height: 22px; fill: none; stroke: currentColor;
   stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
 }
-body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: none; }
+body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes,
+body:has(#vista-entrenar[data-sub]:not([hidden])) #ir-ajustes { display: none; }
 
 /* ---------- Ajustes ---------- */
 /* «Volver», fijo arriba al bajar (en el móvil; en el PC la barra lateral ya está siempre a la vista). */
@@ -542,10 +543,12 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
 #ajustes-contenido { display: grid; gap: 16px; align-content: start; min-width: 0; }
 .voz-eleccion, .voz-velocidad { display: grid; gap: 14px; align-content: start; min-width: 0; }
 
-/* ---------- Mis combinaciones (el creador, #ajustes/mis-combinaciones) ---------- */
-/* En la subpágina no se ve la cabecera de Ajustes: la subpágina trae su «Volver» y su título. */
-#vista-ajustes[data-sub] > :is(.volver-movil, .cabecera) { display: none; }
-#vista-ajustes[data-sub] #ajustes-contenido { padding-top: 0; }
+/* ---------- Mis combinaciones (el creador, #entrenar/mis-combinaciones) ---------- */
+/* Dentro de Entrenar, en #entrenar-sub: mientras se ve, nada más de Entrenar (foto, cabecera, configuración).
+   La subpágina trae su «Volver» y su título. */
+#vista-entrenar[data-sub] > :not(#entrenar-sub) { display: none; }
+#entrenar-sub { display: grid; gap: 16px; align-content: start; min-width: 0; }
+#entrenar-sub[hidden] { display: none; }
 .volver-sub {
   position: sticky; top: 0; z-index: 5; margin: 0 calc(-1 * var(--hueco)) -8px;
   padding: calc(8px + env(safe-area-inset-top, 0px)) var(--hueco) 8px; background: var(--fondo);
@@ -1307,7 +1310,8 @@ dialog::backdrop { background: var(--velo); }
      (paleta a la izquierda, golpes en tres columnas; la caja y Guardar a la derecha, fijas al bajar). */
   .volver-sub { position: static; margin: 0 0 -8px; padding: 32px 0 0; background: none; }
   .cabecera-sub h1 { font-size: 4.5rem; }
-  #vista-ajustes[data-sub] #ajustes-contenido > :is(.cabecera-sub, .lista-propias, .vacio-propias, .anadir-propia, .motivo) { max-width: 760px; }
+  #entrenar-sub { gap: 24px; }
+  #entrenar-sub > :is(.cabecera-sub, .lista-propias, .vacio-propias, .anadir-propia, .motivo) { max-width: 760px; }
   .editor { grid-template-columns: minmax(0, 1fr) minmax(340px, 0.75fr); gap: 32px; align-items: start; }
   .editor-paleta { grid-column: 1; grid-row: 1; }
   .editor-combo { grid-column: 2; grid-row: 1; position: sticky; top: 24px; }

@@ -13,6 +13,7 @@ import { PARA_REACCIONAR, crearDictado } from "../dictado.js";
 import { crearPantallaEncendida } from "../pantalla.js";
 import { crearReproductor } from "../reproductor.js";
 import { activarSonido, campana, dejarDormir, mantenerDespierto, pitido, tablillas } from "../sonido.js";
+import { RUTA as RUTA_CREADOR, iniciarCreador } from "./creador.js";
 import { $, anunciar, esc, minutos } from "./dom.js";
 import { combinacionesParaVer, pasosCombo } from "./pasos.js";
 
@@ -137,7 +138,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     notaNivel.textContent = nivelCuenta ? "" : "Con «Solo las mías» no cuenta el nivel: salen todas las tuyas.";
     const nota = $("#nota-mezcla");
     if (total === 0) {
-      nota.innerHTML = 'Aún no tienes combinaciones propias. <a href="#ajustes/mis-combinaciones/nueva">Crea la primera</a> y mézclala con la biblioteca.';
+      nota.innerHTML = `Aún no tienes combinaciones propias. <a href="${RUTA_CREADOR}/nueva">Crea la primera</a> y mézclala con la biblioteca.`;
     } else {
       nota.textContent = [motivoSolo, aviso].filter(Boolean).join(" ");
     }
@@ -413,11 +414,44 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   pintarVoz();
   voz.alCambiar?.(pintarVoz);
 
+  // ---------- «Mis combinaciones» (#entrenar/mis-combinaciones/…) ----------
+  // Se pinta en #entrenar-sub y, mientras se ve, el CSS esconde lo demás de Entrenar (#vista-entrenar[data-sub]).
+  // Se crea aquí, antes que el router: su oyente de hashchange tiene que ir antes que el del router.
+  const vista = $("#vista-entrenar");
+  const sub = $("#entrenar-sub");
+  const creador = iniciarCreador({ almacen, raiz: sub, voz });
+
+  function mostrarCreador(ruta) {
+    vista.dataset.sub = "creador";
+    vista.setAttribute("aria-labelledby", "t-creador");
+    sub.hidden = false;
+    creador.mostrar(ruta);
+  }
+
+  // Al salir del creador se vacía (sus diálogos y botones no se quedan en la página) y vuelve Entrenar.
+  function cerrarCreador() {
+    if (!vista.dataset.sub) return false;
+    delete vista.dataset.sub;
+    vista.setAttribute("aria-labelledby", "t-entrenar");
+    sub.hidden = true;
+    sub.replaceChildren();
+    return true;
+  }
+
   return {
-    mostrar() {
+    mostrar(parametro = "") {
+      const [primera, ...resto] = parametro.split("/");
+      if (primera === "mis-combinaciones") {
+        // Con una sesión en marcha no se abre: la sesión sigue y la ruta vuelve a #entrenar.
+        if (estado) return location.replace("#entrenar");
+        return mostrarCreador(resto.join("/"));
+      }
+      const veniaDelCreador = cerrarCreador();
       if (estado) return;
       aplicarPreferencias();
-      resumir(); // las propias pueden haber cambiado en Ajustes
+      resumir(); // las propias pueden haber cambiado en el creador
+      // Del creador a Entrenar sin cambiar de vista (atrás, un enlace): el router no mueve el foco.
+      if (veniaDelCreador) $("#t-entrenar").focus({ preventScroll: true });
       document.fonts.ready.then(verChipElegido); // el ancho de los chips depende de la fuente
     },
     get entrenando() { return estado !== null; },

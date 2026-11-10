@@ -1,4 +1,4 @@
-"""Capturas de «Mis combinaciones» (el creador, en Ajustes) a 390, 1024 y 1440.
+"""Capturas de «Mis combinaciones» (el creador, en #entrenar/mis-combinaciones) a 390, 1024 y 1440.
 
 Monta la web en una carpeta temporal (sin fotos del maniquí) y la abre en Chromium headless. Las
 combinaciones de ejemplo solo viven en el localStorage de ese Chromium. Guarda en .playwright-mcp/capturas/
@@ -25,7 +25,7 @@ RAIZ = Path(__file__).resolve().parent.parent
 SALIDA = RAIZ / ".playwright-mcp" / "capturas"
 ANCHOS = (390, 1024, 1440)
 ALTO = {390: 844, 1024: 768, 1440: 900}
-RUTA = "#ajustes/mis-combinaciones"
+RUTA = "#entrenar/mis-combinaciones"
 VACIA = """<!doctype html><meta charset="utf-8"><script>localStorage.clear(); window.listo = true;</script>"""
 EJEMPLOS = [["jab", "rodar_der", "uppercut_der"], ["jab", "directo", "esquiva_izq", "gancho_izq", "directo"],
             ["bloqueo", "parada", "paso_atras"]]

@@ -1,6 +1,7 @@
-// «Mis combinaciones» (#ajustes/mis-combinaciones): las combinaciones propias, en el almacén de este
-// navegador. Listado con editar y borrar (con confirmación). Solo presenta: qué se enseña y cómo se
-// dice está en ../creador.js; guardar, en el almacén.
+// «Mis combinaciones» (#entrenar/mis-combinaciones, /nueva y /editar/<id>): las combinaciones propias,
+// en el almacén de este navegador. Listado con editar y borrar (con confirmación). Se pinta dentro de
+// Entrenar (#entrenar-sub; lo monta vistas/entrenar.js). Solo presenta: qué se enseña y cómo se dice
+// está en ../creador.js; guardar, en el almacén.
 import {
   GRUPOS, TEXTO_ESCUCHAR_VACIA, anadir, anuncio, baldosas, cambiarCuerpo, combinacionesParaListar, editorNuevo,
   elegirGrupo, escuchar, ficha, hayCambios, puedeCrear, quitar, quitarUltima, resumen, textoBorrar,
@@ -8,7 +9,7 @@ import {
 import { ACCIONES_POR_NIVEL, MAX_ACCIONES, MAX_PROPIAS, NOMBRE_NIVEL } from "../motor/reglas.js";
 import { $, anunciar, atraparFoco, esc } from "./dom.js";
 
-export const RUTA = "#ajustes/mis-combinaciones";
+export const RUTA = "#entrenar/mis-combinaciones";
 
 const ICONO_EDITAR = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4"/></svg>`;
 const ICONO_BORRAR = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>`;
@@ -348,7 +349,7 @@ export function iniciarCreador({ almacen, raiz, voz }) {
   };
   marcarEntrada();
 
-  // Este oyente va antes que el del router (se conecta al iniciar las vistas; el router, después):
+  // Este oyente va antes que el del router (se conecta al iniciar Entrenar; el router, después):
   // si corta el evento, el router no se entera y el editor sigue como estaba.
   window.addEventListener("hashchange", (e) => {
     marcarEntrada();

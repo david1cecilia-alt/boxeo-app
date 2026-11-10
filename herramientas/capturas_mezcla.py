@@ -51,7 +51,7 @@ def ir(pagina, ruta, propias=(), sesion=None):
         datos["perfil"] = {"sesion": sesion}
     pagina.evaluate("(d) => localStorage.setItem('boxeo', d)", json.dumps(datos))
     pagina.goto(f"{ORIGEN}/index.html{ruta}")
-    pagina.wait_for_selector("#t-creador" if ruta.startswith("#ajustes") else "#mezclas label")
+    pagina.wait_for_selector("#t-creador" if "/mis-combinaciones" in ruta else "#mezclas label")
     pagina.wait_for_timeout(450)  # la entrada de la vista
     pagina.evaluate("document.activeElement.blur()")
 
@@ -74,7 +74,7 @@ def capturar(sitio: Path) -> list[Path]:
             entera(pagina, guardar("5-solo", ancho))
             ir(pagina, "#entrenar", CINCO, {"mezcla": "mucho", "nivel": 2})
             entera(pagina, guardar("5-mucho-medio", ancho))
-            ir(pagina, "#ajustes/mis-combinaciones/nueva")
+            ir(pagina, "#entrenar/mis-combinaciones/nueva")
             entera(pagina, guardar("editor-vacio", ancho))
             for id_ in ("jab", "directo", "gancho_izq"):
                 pagina.click(f'[data-anadir="{id_}"]')

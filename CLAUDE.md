@@ -17,8 +17,10 @@
 - Perfil, valoraciones y combinaciones propias (las del creador): SIEMPRE en el almacén del navegador
   (`static/almacen.js`), nunca en el repo ni en `data/`. El sorteo las mezcla con la biblioteca
   (`SorteoMezcla`); con «Ninguna» sale exactamente lo de antes (`tests/test_igual_que_antes.py`). Nada de datos personales en `data/`: se publica tal cual con la web.
-- El almacén tiene esquema versionado: si cambia, sube `VERSION` y añade una migración en `MIGRACIONES`
-  con su test. Las sesiones locales usan `crypto.randomUUID()`.
+- El almacén tiene esquema versionado: sube `VERSION` y añade una migración en `MIGRACIONES` con su test
+  solo cuando los datos guardados hay que transformarlos. Un campo nuevo OPCIONAL que se valida en
+  `completar()` y cuya ausencia es válida no sube la versión (ejemplo: `sesiones[].tipo`, que las sesiones de
+  antes no tienen). Las sesiones locales usan `crypto.randomUUID()`.
 - `static/vistas/` solo presenta; `reproductor.js` lleva el tiempo de sesión; `ajustes.js` une perfil y motor.
   `dictado.js` dicta las combinaciones: la pausa cuenta desde el `onend`/`onerror` real de la voz (la
   estimación del motor + 3 s es solo el tope si no llega); avisos y señales también esperan a su voz.

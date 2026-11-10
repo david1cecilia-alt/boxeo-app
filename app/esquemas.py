@@ -30,4 +30,7 @@ class SesionNueva(BaseModel):
     zurdo: bool = False
     duracion_asalto: int
     descanso: int
+    # General, Personalizada o Prueba (para el nombre en el Historial). Sin él (sesiones de antes), se
+    # deduce por la duración.
+    tipo: Literal["general", "personalizada", "prueba"] | None = None
     combinaciones: list[ComboDictado]

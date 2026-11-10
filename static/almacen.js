@@ -36,6 +36,10 @@ export const TIPOS = Object.freeze(["general", "personalizada"]);
 
 // Lo fijo de la General, salvo los asaltos (los de «amateur» en data/presets.json) y el nivel (el de
 // data/perfil.json). Voz, «Nombrar combinaciones» y guardia no van aquí: son de Ajustes.
+// Qué fue cada sesión guardada (`sesiones[].tipo`, opcional: las de antes no lo tienen y el Historial las
+// deduce por la duración). Un valor que no es de estos se quita al leer o importar, sin tocar la sesión.
+export const TIPOS_SESION = Object.freeze(["general", "personalizada", "prueba"]);
+
 export const FIJO_GENERAL = Object.freeze({ ritmo: 3, mezcla: "ninguna", reaccion: false });
 
 export function sesionPorDefecto() {
@@ -234,6 +238,13 @@ function propiaValida(p) {
     && p.ids.length >= MIN_ACCIONES_PROPIA && p.ids.length <= MAX_ACCIONES && p.ids.every((i) => typeof i === "string");
 }
 
+// Una sesión con un `tipo` que no es de TIPOS_SESION lo pierde (el resto se queda como estaba).
+function sesionValida(s) {
+  if (s == null || typeof s !== "object" || !("tipo" in s) || TIPOS_SESION.includes(s.tipo)) return s;
+  const { tipo, ...resto } = s;
+  return resto;
+}
+
 // Rellena lo que falte con los valores por defecto (datos escritos a mano o a medias) y quita lo mal
 // formado. En `avisos` deja lo quitado que hay que decir al usuario (una foto mala).
 function completar(datos, avisos = []) {
@@ -247,6 +258,7 @@ function completar(datos, avisos = []) {
     ...base,
     ...datos,
     // Escritas a mano o de una copia rara: fuera las mal formadas, como mucho MAX_PROPIAS.
+    sesiones: Array.isArray(datos.sesiones) ? datos.sesiones.map(sesionValida) : base.sesiones,
     combinacionesPropias: (Array.isArray(datos.combinacionesPropias) ? datos.combinacionesPropias : [])
       .filter(propiaValida).slice(0, MAX_PROPIAS),
     perfil: {

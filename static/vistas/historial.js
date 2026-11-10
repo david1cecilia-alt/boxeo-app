@@ -16,7 +16,7 @@ import {
 import { activarGrafico, graficoSemanas } from "./grafico.js";
 import { SENSACION } from "./opciones.js";
 import { combinacionesParaVer } from "./pasos.js";
-import { AGRUPACIONES, graficaElegida, inicioPeriodo, minutosDeAsalto, porPeriodo, textoMinutos, tituloGrupo, totales } from "./resumen.js";
+import { AGRUPACIONES, graficaElegida, inicioPeriodo, minutosDeAsalto, porPeriodo, textoMinutos, tituloGrupo, tituloSesion, totales } from "./resumen.js";
 
 const MES = new Intl.DateTimeFormat("es-ES", { month: "short" });
 const MES_LARGO = new Intl.DateTimeFormat("es-ES", { month: "long" });
@@ -43,11 +43,6 @@ function diaLargo(fecha, hoy = new Date()) {
 const resumenSesiones = (lista) =>
   (lista.length ? `${plural(lista.length, "sesión", "sesiones")} · ${textoMinutos(minutosDeAsalto(lista))}` : "sin sesiones");
 
-// Nombre del preset con el que se hizo la sesión (por su asalto y descanso), o "Personalizado".
-function nombrePreset(s) {
-  const p = datos().presets.presets.find((x) => x.duracion_asalto === s.duracion_asalto && x.descanso === s.descanso);
-  return p?.nombre ?? "Personalizado";
-}
 
 // `avisar(texto)`: el aviso de arriba de la app (#aviso-almacen, el de app.js).
 export function iniciarHistorial({ almacen, historial, valoracion, avisar }) {
@@ -326,7 +321,7 @@ export function iniciarHistorial({ almacen, historial, valoracion, avisar }) {
       <span class="bloque-fecha" aria-hidden="true"><b>${fecha.getDate()}</b>${esc(MES.format(fecha).replace(".", ""))}</span>
       <span class="texto-sesion">
         <span class="solo-lectores">${esc(fechaLarga(s.fecha))}:</span>
-        <span class="titulo-sesion">${esc(nombrePreset(s))} · nivel ${s.nivel}</span>
+        <span class="titulo-sesion">${esc(tituloSesion(s, datos().presets.presets))}</span>
         <span class="detalle">${esc(detalle)}</span>
       </span>
       ${rpe}

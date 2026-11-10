@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
-  AVISO_FOTO, MAX_FOTO, VERSION, claveSesion, crearAlmacen, crearUuid, fotoValida, historialPorDefecto, identidadPorDefecto, migrar,
+  AVISO_FOTO, MAX_FOTO, TIPOS_SESION, VERSION, claveSesion, crearAlmacen, crearUuid, fotoValida, historialPorDefecto, identidadPorDefecto, migrar,
   pistasPorDefecto, sesionPorDefecto, vacio, vozPorDefecto,
 } from "../../static/almacen.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
@@ -907,4 +907,41 @@ test("nombre, avatar y pistas escritos a mano se sanean sin aviso", () => {
 test("VERSION es 9", () => {
   assert.equal(VERSION, 9);
   assert.equal(vacio().version, 9);
+});
+
+// ---------- sesiones[].tipo (opcional, sin subir la versión) ----------
+
+const SESION_LOCAL = { asaltos: 3, nivel: 3, zurdo: false, duracion_asalto: 180, descanso: 60, combinaciones: [] };
+
+test("el tipo de cada sesión va en la copia y vuelve igual al importarla", () => {
+  const origen = crearAlmacen({ storage: almacenamiento() });
+  for (const tipo of TIPOS_SESION) origen.anadirSesion({ ...SESION_LOCAL, tipo });
+  origen.anadirSesion({ ...SESION_LOCAL }); // una de antes, sin tipo
+  const copia = JSON.parse(JSON.stringify(origen.exportar()));
+  assert.deepEqual(copia.datos.sesiones.map((s) => s.tipo), [undefined, "prueba", "personalizada", "general"]);
+  const destino = crearAlmacen({ storage: almacenamiento() });
+  destino.importar(copia);
+  assert.deepEqual(destino.datos.sesiones, origen.datos.sesiones);
+  assert.equal("tipo" in destino.datos.sesiones[0], false);
+  assert.equal(VERSION, 9);
+});
+
+test("un tipo de sesión desconocido se quita al importar y al leer, sin romper la sesión", () => {
+  const origen = crearAlmacen({ storage: almacenamiento() });
+  origen.anadirSesion({ ...SESION_LOCAL, tipo: "general" });
+  const copia = JSON.parse(JSON.stringify(origen.exportar()));
+  copia.datos.sesiones[0].tipo = "amateur";
+  copia.datos.sesiones.push({ ...copia.datos.sesiones[0], id: "otra", tipo: 7 });
+  const storage = almacenamiento();
+  const destino = crearAlmacen({ storage });
+  assert.equal(destino.importar(copia), true);
+  for (const s of destino.datos.sesiones) {
+    assert.equal("tipo" in s, false);
+    assert.equal(s.nivel, 3);
+  }
+  // Escrito a mano en localStorage: igual al leer.
+  const crudo = JSON.parse(storage.getItem("boxeo"));
+  crudo.sesiones[0].tipo = "rara";
+  const storage2 = almacenamiento({ boxeo: JSON.stringify(crudo) });
+  assert.equal("tipo" in crearAlmacen({ storage: storage2 }).datos.sesiones[0], false);
 });

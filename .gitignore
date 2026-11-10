@@ -12,6 +12,7 @@ __pycache__/
 
 # Base de datos local (datos personales, no se versionan)
 *.db
+*.db.antes-*
 
 # Editor / sistema
 .vscode/

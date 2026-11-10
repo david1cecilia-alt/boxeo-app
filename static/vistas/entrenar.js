@@ -398,6 +398,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       ritmo: sesion.config.ritmo,
       voz: sesion.config.voz,
       modo_reaccion: sesion.config.modo_reaccion,
+      tipo: sesion.config.tipo, // General, Personalizada o Prueba: el nombre en el Historial
       combinaciones: dichas,
     };
     try {

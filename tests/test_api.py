@@ -1,3 +1,4 @@
+import sqlite3
 from contextlib import closing
 
 import pytest
@@ -87,3 +88,40 @@ def test_guion_con_velocidad_de_voz(cliente):
     assert r.status_code == 200
     assert r.json()["config"]["velocidad"] == 1.3
     assert cliente.post("/api/sesion/guion", json={"velocidad": 2.0}).status_code == 422
+
+
+SESION = {"asaltos": 3, "nivel": 3, "zurdo": False, "duracion_asalto": 180, "descanso": 60,
+          "combinaciones": [{"asalto": 1, "texto": "jab", "ids": ["jab"]}]}
+
+
+@pytest.mark.parametrize("tipo", ["general", "personalizada", "prueba"])
+def test_guardar_y_listar_el_tipo_de_sesion(cliente, tipo):
+    assert cliente.post("/api/sesiones", json={**SESION, "tipo": tipo}).status_code == 201
+    assert cliente.get("/api/sesiones").json()[0]["tipo"] == tipo
+
+
+def test_sin_tipo_se_guarda_vacio_y_un_tipo_desconocido_se_rechaza(cliente):
+    assert cliente.post("/api/sesiones", json=SESION).status_code == 201
+    assert cliente.get("/api/sesiones").json()[0]["tipo"] is None
+    assert cliente.post("/api/sesiones", json={**SESION, "tipo": "amateur"}).status_code == 422
+    assert len(cliente.get("/api/sesiones").json()) == 1
+
+
+def test_una_base_de_antes_recibe_la_columna_tipo_y_conserva_sus_sesiones(tmp_path):
+    ruta = tmp_path / "vieja.db"
+    with closing(sqlite3.connect(ruta)) as c, c:
+        c.executescript("""
+            CREATE TABLE sesiones (id INTEGER PRIMARY KEY AUTOINCREMENT, fecha TEXT NOT NULL,
+              asaltos INTEGER NOT NULL, nivel INTEGER NOT NULL, zurdo INTEGER NOT NULL DEFAULT 0,
+              duracion_asalto INTEGER NOT NULL, descanso INTEGER NOT NULL);
+            CREATE TABLE combinaciones (id INTEGER PRIMARY KEY AUTOINCREMENT,
+              sesion_id INTEGER NOT NULL REFERENCES sesiones(id) ON DELETE CASCADE, orden INTEGER NOT NULL,
+              asalto INTEGER NOT NULL, texto TEXT NOT NULL, ids TEXT NOT NULL);
+            INSERT INTO sesiones (fecha, asaltos, nivel, zurdo, duracion_asalto, descanso)
+              VALUES ('2026-05-01T10:00:00', 3, 2, 0, 180, 60);""")
+    cliente = TestClient(crear_app(ruta))
+    lista = cliente.get("/api/sesiones").json()
+    assert len(lista) == 1 and lista[0]["tipo"] is None and lista[0]["nivel"] == 2
+    assert cliente.post("/api/sesiones", json={**SESION, "tipo": "general"}).status_code == 201
+    assert [s["tipo"] for s in cliente.get("/api/sesiones").json()] == ["general", None]
+    TestClient(crear_app(ruta))  # arrancar otra vez no vuelve a añadirla

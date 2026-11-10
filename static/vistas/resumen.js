@@ -114,3 +114,14 @@ export function tituloGrupo(inicio, modo, hoy = new Date()) {
   const ano = inicio.getFullYear() === hoy.getFullYear() ? "" : ` ${inicio.getFullYear()}`;
   return `Semana del ${inicio.getDate()} ${MES_CORTO.format(inicio).replace(".", "")}${ano}`;
 }
+
+// Nombre de una sesión en el Historial. Las nuevas guardan qué fueron (`tipo`): «General · nivel 1»,
+// «Personalizada · nivel 3», «Prueba». Las de antes, sin él, se deducen como siempre: el preset con su
+// asalto y descanso (`presets`, los de data/presets.json) o «Personalizado», con el nivel.
+const NOMBRE_TIPO = { general: "General", personalizada: "Personalizada" };
+export function tituloSesion(s, presets) {
+  if (s.tipo === "prueba") return "Prueba";
+  if (NOMBRE_TIPO[s.tipo]) return `${NOMBRE_TIPO[s.tipo]} · nivel ${s.nivel}`;
+  const p = presets.find((x) => x.duracion_asalto === s.duracion_asalto && x.descanso === s.descanso);
+  return `${p?.nombre ?? "Personalizado"} · nivel ${s.nivel}`;
+}

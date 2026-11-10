@@ -65,7 +65,10 @@ def _abrir_perfil(pagina, estilo=None, ancho=390):
     }""", estilo or {})
     pagina.goto(f"{ORIGEN}/index.html#perfil")
     pagina.reload()
-    pagina.wait_for_function("!document.querySelector('#estilo-resumen')?.textContent.includes('Cargando')")
+    # Pintado y con la tabla de estilos cargada. Sin `#estilo-resumen` (la app aún no ha arrancado tras el
+    # reload) no vale: `?.` daría undefined y la espera acabaría antes de pintar nada.
+    pagina.wait_for_function("""() => { const r = document.querySelector('#perfil-contenido #estilo-resumen');
+      return r !== null && r.textContent.trim() !== '' && !r.textContent.includes('Cargando'); }""")
 
 
 def test_el_almacen_v6_se_migra_sin_notas_ni_revisiones_y_la_guardia_pasa_a_entrenar(pagina):

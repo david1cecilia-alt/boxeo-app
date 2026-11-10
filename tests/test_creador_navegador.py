@@ -186,7 +186,7 @@ def test_volver_de_ajustes_no_lleva_al_creador_tras_pasar_por_el(pagina):
 
 
 # Lo de Entrenar que no debe verse mientras se ve el creador (ni el engranaje de Ajustes).
-DE_ENTRENAR = ["#t-entrenar", "#config", ".foto-cabecera", "#vista-entrenar .marca-agua", "#ir-ajustes"]
+DE_ENTRENAR = ["#t-entrenar", "#config", ".foto-cabecera", "#vista-entrenar .marca-agua", "#ir-ajustes", "#asa"]
 
 
 def _nada_de_entrenar(pagina):

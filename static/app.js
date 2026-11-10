@@ -1,10 +1,14 @@
 // Arranque: carga los datos del motor y el almacén, decide de dónde salen las sesiones
 // (servidor o este dispositivo) y monta las tres pestañas y Ajustes. Sin reglas de boxeo.
+
+// rutas.js TIENE QUE SER LA PRIMERA IMPORTACIÓN: al cargarse redirige las rutas viejas de «Mis
+// combinaciones» y registra su oyente de hashchange, que debe ir antes que el de vistas/ajustes.js
+// (se registra al importarse) y el del creador (al iniciar Entrenar). Si no, verían la ruta vieja.
+import { iniciarRutas } from "./rutas.js";
 import { opcionesVoz } from "./ajustes.js";
 import { claveSesion, crearAlmacen } from "./almacen.js";
 import { crearHistorial } from "./historial.js";
 import { cargarDatos } from "./motor/datos.js";
-import { iniciarRutas } from "./rutas.js";
 import { iniciarAjustes } from "./vistas/ajustes.js";
 import { iniciarAprende } from "./vistas/aprende.js";
 import { atajosEntrenar, iniciarEntrenar } from "./vistas/entrenar.js";

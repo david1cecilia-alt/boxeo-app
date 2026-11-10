@@ -1,6 +1,7 @@
 // «Mis combinaciones» (#entrenar/mis-combinaciones, /nueva y /editar/<id>): las combinaciones propias,
 // en el almacén de este navegador. Listado con editar y borrar (con confirmación). Se pinta dentro de
-// Entrenar (#entrenar-sub; lo monta vistas/entrenar.js). Solo presenta: qué se enseña y cómo se dice
+// Entrenar (#entrenar-sub; lo monta vistas/entrenar.js). Las rutas viejas (#ajustes/mis-combinaciones…)
+// las redirige rutas.js antes de que este módulo las vea. Solo presenta: qué se enseña y cómo se dice
 // está en ../creador.js; guardar, en el almacén.
 import {
   GRUPOS, TEXTO_ESCUCHAR_VACIA, anadir, anuncio, baldosas, cambiarCuerpo, combinacionesParaListar, editorNuevo,
@@ -350,7 +351,8 @@ export function iniciarCreador({ almacen, raiz, voz }) {
   marcarEntrada();
 
   // Este oyente va antes que el del router (se conecta al iniciar Entrenar; el router, después):
-  // si corta el evento, el router no se entera y el editor sigue como estaba.
+  // si corta el evento, el router no se entera y el editor sigue como estaba. El de las rutas viejas
+  // (rutas.js) va antes que este.
   window.addEventListener("hashchange", (e) => {
     marcarEntrada();
     if (volviendo) {

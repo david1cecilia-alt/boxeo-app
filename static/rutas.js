@@ -7,6 +7,31 @@
 // Al cambiar de vista, el foco va a su h1, salvo que la vista ya lo haya puesto dentro de ella (el creador
 // en su título; Ajustes, al volver del creador, en su tarjeta).
 
+// ---------- Rutas viejas ----------
+// «Mis combinaciones» vivía en #ajustes/mis-combinaciones[/nueva|/editar/<id>]: marcadores y enlaces viejos
+// llevan a #entrenar/mis-combinaciones con el resto de la ruta. #ajustes a secas sigue siendo Ajustes.
+// Se hace antes que nadie, al cargar este módulo (app.js lo importa el primero), para que ni el creador
+// ni el router vean nunca la ruta vieja y sin dejarla en el historial (history.length no crece):
+// - al arrancar, con replaceState: no salta otro hashchange y el router pinta una sola vez;
+// - después, cortando el hashchange de la vieja y sustituyéndola (location.replace): llega otro con la nueva.
+const VIEJA_CREADOR = "#ajustes/mis-combinaciones";
+const NUEVA_CREADOR = "#entrenar/mis-combinaciones";
+
+export function rutaNueva(hash) {
+  if (hash !== VIEJA_CREADOR && !hash.startsWith(`${VIEJA_CREADOR}/`)) return null;
+  return NUEVA_CREADOR + hash.slice(VIEJA_CREADOR.length);
+}
+
+const alArrancar = rutaNueva(location.hash);
+if (alArrancar) history.replaceState(history.state, "", alArrancar);
+
+window.addEventListener("hashchange", (e) => {
+  const nueva = rutaNueva(location.hash);
+  if (!nueva) return;
+  e.stopImmediatePropagation();
+  location.replace(nueva);
+});
+
 export function iniciarRutas(vistas, porDefecto) {
   let anterior = null;
 

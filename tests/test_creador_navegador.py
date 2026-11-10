@@ -8,6 +8,7 @@ viven en el localStorage de este Chromium. Sin Playwright se salta en local; en 
 """
 import importlib.util
 import json
+import mimetypes
 import os
 
 import pytest
@@ -73,6 +74,29 @@ def navegador(sitio):
 def pagina(navegador):
     navegador.set_viewport_size({"width": 390, "height": 844})
     return navegador
+
+
+# Una página nueva, con su historial vacío, para las pruebas que cuentan entradas del historial: Chromium
+# no pasa de 50 (history.length se queda en 50) y la página del módulo llega con las demás pruebas.
+@pytest.fixture
+def limpia(sitio, navegador):
+    def servir(ruta):
+        relativa = ruta.request.url.removeprefix(ORIGEN + "/").split("?")[0]
+        if relativa == "__pagina__.html":
+            return ruta.fulfill(body=SEMBRAR, content_type="text/html; charset=utf-8")
+        fichero = sitio / relativa
+        if not fichero.is_file():
+            return ruta.fulfill(status=404)
+        tipo = "text/javascript" if fichero.suffix == ".js" else mimetypes.guess_type(fichero.name)[0]
+        ruta.fulfill(body=fichero.read_bytes(), content_type=tipo or "application/octet-stream")
+
+    pagina = navegador.context.browser.new_page(viewport={"width": 390, "height": 844}, device_scale_factor=1)
+    errores = []
+    pagina.on("pageerror", lambda e: errores.append(str(e)))
+    pagina.route(f"{ORIGEN}/**", servir)
+    yield pagina
+    pagina.context.close()
+    assert not errores
 
 
 def ir(pagina, ruta, propias=()):
@@ -223,6 +247,91 @@ def test_con_una_sesion_en_marcha_el_creador_no_se_abre_y_la_sesion_sigue(pagina
     assert pagina.locator("#entrenar-sub *").count() == 0
     pagina.click("#parar")
     pagina.wait_for_selector("#pantalla", state="hidden")
+
+
+# ---------- Rutas viejas (#ajustes/mis-combinaciones…) ----------
+
+VIEJA = "#ajustes/mis-combinaciones"
+# Cuenta cuántas veces se pinta el título del creador (listado o editor) desde que carga la página, y los
+# hashchange (al arrancar no debe saltar ninguno: la ruta vieja se cambia con replaceState).
+CONTAR_PINTADAS = """window.__pintadas = 0; window.__cambios = 0;
+addEventListener('hashchange', () => window.__cambios++);
+new MutationObserver((ms) => { for (const m of ms) for (const n of m.addedNodes)
+  if (n.nodeType === 1 && (n.id === 't-creador' || n.querySelector?.('#t-creador'))) window.__pintadas++; })
+  .observe(document, { childList: true, subtree: true });"""
+
+
+@pytest.mark.parametrize("sufijo", ["", "/nueva", "/editar/p-0"])
+def test_la_ruta_vieja_al_arrancar_lleva_a_la_nueva_sin_crecer_el_historial_y_pinta_una_vez(limpia, sufijo):
+    limpia.add_init_script(CONTAR_PINTADAS)
+    limpia.goto(f"{ORIGEN}/__pagina__.html")
+    limpia.wait_for_function("window.listo === true")
+    limpia.evaluate("(d) => localStorage.setItem('boxeo', d)", json.dumps({"version": 8, "combinacionesPropias": [
+        {"id": "p-0", "ids": EJEMPLOS[0], "creada": "2026-11-04T10:00:00"}]}))
+    largo = _largo_historial(limpia)
+    limpia.goto(f"{ORIGEN}/index.html{VIEJA}{sufijo}")
+    limpia.wait_for_selector("#t-creador")
+    assert limpia.evaluate("location.hash") == f"{RUTA}{sufijo}"
+    assert _largo_historial(limpia) == largo + 1  # solo la página nueva: la ruta vieja no queda
+    limpia.wait_for_timeout(300)  # por si llegara un hashchange de más
+    assert limpia.evaluate("window.__pintadas") == 1
+    assert limpia.evaluate("window.__cambios") == 0
+    assert limpia.is_visible(".lista-propias" if sufijo == "" else "#caja-combo")
+
+
+@pytest.mark.parametrize("sufijo", ["", "/nueva", "/editar/p-0"])
+def test_la_ruta_vieja_desde_la_app_lleva_a_la_nueva_y_atras_no_pasa_por_la_vieja(limpia, sufijo):
+    ir(limpia, "#ajustes", EJEMPLOS)
+    largo = _largo_historial(limpia)
+    limpia.evaluate(f"location.hash = '{VIEJA}{sufijo}'")
+    limpia.wait_for_function(f"location.hash === '{RUTA}{sufijo}'")
+    limpia.wait_for_selector(".lista-propias" if sufijo == "" else "#caja-combo")
+    assert _largo_historial(limpia) == largo + 1  # como un enlace a la ruta nueva: la vieja se sustituye
+    assert foco(limpia) == "t-creador"
+    limpia.go_back()
+    limpia.wait_for_function("location.hash === '#ajustes'")
+    limpia.wait_for_selector("#t-practicar", state="visible")
+
+
+def test_ajustes_a_secas_no_se_redirige(pagina):
+    ir(pagina, "#ajustes", EJEMPLOS)
+    pagina.wait_for_timeout(200)
+    assert pagina.evaluate("location.hash") == "#ajustes"
+    assert pagina.is_visible("#t-ajustes") and pagina.is_visible("#ir-creador")
+    assert pagina.get_attribute("#ir-creador", "href") == RUTA
+    assert pagina.locator("#t-creador").count() == 0
+
+
+def test_ajustes_mis_combinaciones_editor_con_cambios_y_atras_tres_veces(limpia):
+    # Riesgo 1 del plan: la redirección y el «atrás» del creador no chocan.
+    ir(limpia, "#ajustes")
+    limpia.click("#ir-creador")
+    limpia.wait_for_selector(".vacio-propias")
+    limpia.click("#anadir-propia")
+    limpia.wait_for_selector("#caja-combo")
+    largo = _largo_historial(limpia)
+    anadir(limpia, "jab", "bloqueo")
+    # 1.º atrás: pregunta, y «Seguir editando» deja el editor como estaba.
+    limpia.go_back()
+    limpia.wait_for_selector("#d-descartar[open]")
+    limpia.wait_for_function(f"location.hash === '{RUTA}/nueva'")
+    limpia.click('#d-descartar button[value=""]')
+    assert fichas(limpia) == ["0", "1"]
+    assert _largo_historial(limpia) == largo
+    # 2.º atrás: pregunta, y «Descartar» lleva al listado.
+    limpia.go_back()
+    limpia.wait_for_selector("#d-descartar[open]")
+    limpia.click('#d-descartar button[value="descartar"]')
+    limpia.wait_for_selector(".vacio-propias")
+    limpia.wait_for_function(f"location.hash === '{RUTA}'")
+    assert limpia.locator("dialog[open]").count() == 0
+    # 3.º atrás: a Ajustes, sin preguntar, con el foco en la tarjeta.
+    limpia.go_back()
+    limpia.wait_for_function("location.hash === '#ajustes'")
+    limpia.wait_for_selector("#t-practicar", state="visible")
+    assert foco(limpia) == "ir-creador"
+    assert _largo_historial(limpia) == largo
+    assert guardadas(limpia) == []
 
 
 def test_listado_vacio_explica_para_que_sirve(pagina):
@@ -409,53 +518,53 @@ def _largo_historial(pagina):
     return pagina.evaluate("history.length")
 
 
-def test_volver_con_cambios_pregunta_y_descartar_vuelve_al_listado_sin_apilar(pagina):
-    ir(pagina, RUTA)
-    largo = _largo_historial(pagina)
-    pagina.click("#anadir-propia")
-    pagina.wait_for_selector("#caja-combo")
+def test_volver_con_cambios_pregunta_y_descartar_vuelve_al_listado_sin_apilar(limpia):
+    ir(limpia, RUTA)
+    largo = _largo_historial(limpia)
+    limpia.click("#anadir-propia")
+    limpia.wait_for_selector("#caja-combo")
     # Sin cambios, «← Mis combinaciones» vuelve atrás sin preguntar.
-    pagina.click("#salir-editor")
-    pagina.wait_for_selector(".vacio-propias")
-    pagina.click("#anadir-propia")
-    pagina.wait_for_selector("#caja-combo")
-    pagina.click('[data-anadir="jab"]')
-    pagina.click("#salir-editor")
-    assert pagina.get_attribute("#d-descartar", "open") is not None
-    assert foco(pagina) == "Seguir editando"
-    pagina.keyboard.press("Escape")
-    assert fichas(pagina) == ["0"]
-    pagina.click("#salir-editor")
-    pagina.click('#d-descartar button[value="descartar"]')
-    pagina.wait_for_selector(".vacio-propias")
-    assert pagina.evaluate("location.hash") == RUTA
-    assert _largo_historial(pagina) == largo + 1
-    assert guardadas(pagina) == []
+    limpia.click("#salir-editor")
+    limpia.wait_for_selector(".vacio-propias")
+    limpia.click("#anadir-propia")
+    limpia.wait_for_selector("#caja-combo")
+    limpia.click('[data-anadir="jab"]')
+    limpia.click("#salir-editor")
+    assert limpia.get_attribute("#d-descartar", "open") is not None
+    assert foco(limpia) == "Seguir editando"
+    limpia.keyboard.press("Escape")
+    assert fichas(limpia) == ["0"]
+    limpia.click("#salir-editor")
+    limpia.click('#d-descartar button[value="descartar"]')
+    limpia.wait_for_selector(".vacio-propias")
+    assert limpia.evaluate("location.hash") == RUTA
+    assert _largo_historial(limpia) == largo + 1
+    assert guardadas(limpia) == []
 
 
-def test_atras_del_navegador_con_cambios_vuelve_al_editor_y_pregunta_sin_bucles(pagina):
-    ir(pagina, RUTA)
-    pagina.click("#anadir-propia")
-    pagina.wait_for_selector("#caja-combo")
-    largo = _largo_historial(pagina)
-    anadir(pagina, "jab", "bloqueo")
-    pagina.go_back()
-    pagina.wait_for_selector("#d-descartar[open]")
-    pagina.wait_for_function(f"location.hash === '{RUTA}/nueva'")
-    assert fichas(pagina) == ["0", "1"]
-    assert _largo_historial(pagina) == largo
-    pagina.click('#d-descartar button[value=""]')
-    assert fichas(pagina) == ["0", "1"]
+def test_atras_del_navegador_con_cambios_vuelve_al_editor_y_pregunta_sin_bucles(limpia):
+    ir(limpia, RUTA)
+    limpia.click("#anadir-propia")
+    limpia.wait_for_selector("#caja-combo")
+    largo = _largo_historial(limpia)
+    anadir(limpia, "jab", "bloqueo")
+    limpia.go_back()
+    limpia.wait_for_selector("#d-descartar[open]")
+    limpia.wait_for_function(f"location.hash === '{RUTA}/nueva'")
+    assert fichas(limpia) == ["0", "1"]
+    assert _largo_historial(limpia) == largo
+    limpia.click('#d-descartar button[value=""]')
+    assert fichas(limpia) == ["0", "1"]
     # Otra vez atrás y «Descartar»: al listado, que es adonde se iba.
-    pagina.go_back()
-    pagina.wait_for_selector("#d-descartar[open]")
-    pagina.wait_for_function(f"location.hash === '{RUTA}/nueva'")
-    pagina.click('#d-descartar button[value="descartar"]')
-    pagina.wait_for_selector(".vacio-propias")
-    pagina.wait_for_timeout(200)
-    assert pagina.evaluate("location.hash") == RUTA
-    assert _largo_historial(pagina) == largo
-    assert pagina.locator("dialog[open]").count() == 0
+    limpia.go_back()
+    limpia.wait_for_selector("#d-descartar[open]")
+    limpia.wait_for_function(f"location.hash === '{RUTA}/nueva'")
+    limpia.click('#d-descartar button[value="descartar"]')
+    limpia.wait_for_selector(".vacio-propias")
+    limpia.wait_for_timeout(200)
+    assert limpia.evaluate("location.hash") == RUTA
+    assert _largo_historial(limpia) == largo
+    assert limpia.locator("dialog[open]").count() == 0
 
 
 def test_cambiar_de_pestana_con_cambios_pregunta_y_descartar_va_a_la_pestana(pagina):

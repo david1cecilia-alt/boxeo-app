@@ -48,7 +48,7 @@ Sin cambiar ninguna combinación hasta que conteste.
   («gancho-crochet», 6 · 3), de la que crecen.
 - **#75 (y #77 y #78, que heredan de ella):** ¿crochet de derecha tras dos jabs o mejor recto?
 - **#113 y #144:** tras el ballesteo, ¿gancho o recto?
-- **Ballesteo:** ¿cómo lo llama él, con paso o solo cuerpo, y es adecuado para el nivel de David?
+- **Ballesteo:** ¿es adecuado para el nivel de David? (Nombre y sin paso, confirmados con Iván el 04-11.)
 - **Flexión:** ¿qué es exactamente y en qué se diferencia de la «rueda»?
 - **Rueda:** ¿la rueda derecha (bajas y sales hacia tu derecha) va contra el crochet de su mano izquierda y la
   izquierda contra el de su derecha? Es razonamiento nuestro, sin confirmar.

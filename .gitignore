@@ -30,3 +30,4 @@ docs/diseno/
 
 # Fotos de fondo originales (PNG): solo se versionan sus WebP (herramientas/convertir_imagenes.py)
 static/imagenes/**/*.png
+static/imagenes/originales/

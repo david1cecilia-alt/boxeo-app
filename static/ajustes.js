@@ -1,6 +1,6 @@
 // Une los datos del usuario (almacén) con el motor: qué perfil usa el sorteo y
 // qué se propone al entrenar (lo último elegido). Sin reglas de boxeo.
-import { PERSONALIZADA_POR_DEFECTO, TIPOS } from "./almacen.js";
+import { FIJO_GENERAL, PERSONALIZADA_POR_DEFECTO, TIPOS } from "./almacen.js";
 import { datos } from "./motor/datos.js";
 import { VELOCIDADES, VELOCIDAD_POR_DEFECTO } from "./motor/ritmo.js";
 import {
@@ -95,14 +95,36 @@ export function repetirColetillas(config, propias = []) {
   return coletillasRepetibles(mezclaEfectiva(config.mezcla ?? "ninguna", validas, config.nivel), validas);
 }
 
+// Los presets de data/presets.json que dan sus asaltos a la General y a Prueba (ids estables).
+export const PRESET_DE_TIPO = Object.freeze({ general: "amateur", prueba: "prueba" });
+
+// La General: los asaltos del preset «amateur» (3 × 3:00, descanso 1:00) y lo fijo: el nivel de
+// data/perfil.json, ritmo Constante, sin mezcla, sin «Practicar más» y sin Reacción. No se edita; la voz,
+// «Nombrar combinaciones» y la guardia son los de Ajustes (preferencias).
+export function configGeneral() {
+  const { asaltos, duracion_asalto, descanso } = datos().presets.presets.find((p) => p.id === PRESET_DE_TIPO.general);
+  return { asaltos, duracion_asalto, descanso, nivel: datos().perfil.nivel, ...FIJO_GENERAL, practicar: [] };
+}
+
+// «Prueba 2×30 s» solo existe con ?prueba en la URL (index.html?prueba#entrenar): para probar sin
+// esperar. Nunca se guarda, así que al quitar ?prueba vuelve lo de siempre.
+export function conPrueba(url = globalThis.location?.href) {
+  if (!url) return false;
+  try {
+    return new URL(url).searchParams.has("prueba");
+  } catch {
+    return false;
+  }
+}
+
 // Lo que se propone al entrenar: lo último que se eligió en Entrenar. `tipo`: "general" o
-// "personalizada" (uno desconocido, la General). Nivel y guardia, si no se han elegido nunca, son los
-// de data/perfil.json.
-export function preferencias(perfilUsuario) {
+// "personalizada" (uno desconocido, la General); con ?prueba (`prueba`), "prueba". Nivel y guardia, si
+// no se han elegido nunca, son los de data/perfil.json.
+export function preferencias(perfilUsuario, { prueba = conPrueba() } = {}) {
   const base = datos().perfil;
   const s = perfilUsuario.sesion;
   return {
-    tipo: TIPOS.includes(s.tipo) ? s.tipo : TIPOS[0],
+    tipo: prueba ? "prueba" : TIPOS.includes(s.tipo) ? s.tipo : TIPOS[0],
     nivel: s.nivel ?? base.nivel,
     zurdo: s.zurdo ?? base.guardia === "zurda",
     voz: s.voz,

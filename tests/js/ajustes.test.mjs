@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { crearAlmacen, perfilPorDefecto } from "../../static/almacen.js";
 import {
-  MAX_PRACTICAR, OPCIONES_MEZCLA, cambiarPracticar, estadoMezcla, nuevoGuion, opcionesVoz, perfilSorteo, personalizadaValida, preferencias, recordarSesion, resumenElecciones,
+  MAX_PRACTICAR, OPCIONES_MEZCLA, PRESET_DE_TIPO, cambiarPracticar, conPrueba, configGeneral, estadoMezcla, nuevoGuion, opcionesVoz, perfilSorteo, personalizadaValida, preferencias, recordarSesion, resumenElecciones,
 } from "../../static/ajustes.js";
 import { crearAzar } from "../../static/motor/azar.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
@@ -110,6 +110,50 @@ test("un tipo desconocido (o «prueba», que nunca se guarda) vale la General", 
     assert.equal(preferencias(p).tipo, "general", String(tipo));
   }
   assert.equal("asalto" in preferencias(p), false);
+});
+
+test("configGeneral: 3 × 3:00 con 1:00 de descanso de data/presets.json y lo fijo de la General", () => {
+  const amateur = datos.presets.presets.find((p) => p.id === "amateur");
+  assert.equal(PRESET_DE_TIPO.general, "amateur");
+  assert.deepEqual(configGeneral(), {
+    asaltos: amateur.asaltos, duracion_asalto: amateur.duracion_asalto, descanso: amateur.descanso,
+    nivel: datos.perfil.nivel, ritmo: 3, mezcla: "ninguna", reaccion: false, practicar: [],
+  });
+  assert.deepEqual([amateur.asaltos, amateur.duracion_asalto, amateur.descanso], [3, 180, 60]);
+  assert.equal(datos.perfil.nivel, 1); // Básico
+  // Es una copia nueva cada vez: tocarla no cambia la General.
+  configGeneral().practicar.push({ movimiento: "3" });
+  assert.deepEqual(configGeneral().practicar, []);
+});
+
+test("configGeneral no depende de lo guardado: con una Personalizada elegida da lo mismo", () => {
+  const storage = almacenamiento();
+  const almacen = crearAlmacen({ storage });
+  const antes = configGeneral();
+  recordarSesion(almacen, { tipo: "personalizada", nivel: 3, ritmo: 5, mezcla: "mucho", reaccion: true,
+    personalizada: { asaltos: 4, duracion_asalto: 120, descanso: 45 } });
+  assert.deepEqual(configGeneral(), antes);
+});
+
+test("conPrueba: solo con ?prueba en la URL; sin URL (Node) o con una URL rara, no", () => {
+  assert.equal(conPrueba("http://boxeo.local/index.html?prueba#entrenar"), true);
+  assert.equal(conPrueba("http://boxeo.local/index.html?x=1&prueba=1"), true);
+  assert.equal(conPrueba("http://boxeo.local/index.html#entrenar"), false);
+  assert.equal(conPrueba("http://boxeo.local/index.html#entrenar?prueba"), false); // en el hash no cuenta
+  assert.equal(conPrueba("http://boxeo.local/index.html?pruebas"), false);
+  assert.equal(conPrueba("no es una url"), false);
+  assert.equal(conPrueba(), false); // en Node no hay location
+});
+
+test("preferencias con ?prueba propone Prueba sin tocar lo guardado; sin él, lo guardado", () => {
+  const storage = almacenamiento();
+  const almacen = crearAlmacen({ storage });
+  recordarSesion(almacen, { tipo: "personalizada", personalizada: { asaltos: 4, duracion_asalto: 120, descanso: 45 } });
+  const perfil = crearAlmacen({ storage }).datos.perfil;
+  assert.equal(preferencias(perfil, { prueba: true }).tipo, "prueba");
+  assert.equal(preferencias(perfil).tipo, "personalizada");
+  assert.deepEqual(preferencias(perfil, { prueba: true }).personalizada, { asaltos: 4, duracion_asalto: 120, descanso: 45 });
+  assert.equal(JSON.parse(storage.getItem("boxeo")).perfil.sesion.tipo, "personalizada");
 });
 
 test("recordarSesion guarda solo lo que llega y conserva el resto del perfil", () => {

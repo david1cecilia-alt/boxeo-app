@@ -2,7 +2,7 @@
 // guantes a 1–2 m del móvil). No contiene reglas de boxeo: el guion lo genera el motor y
 // el reproductor lo lanza en tiempo de sesión (con pausa).
 import {
-  NOMBRE_RITMO, OPCIONES_MEZCLA, estadoMezcla, nuevoGuion, opcionesVoz, personalizadaValida, preferencias,
+  NOMBRE_RITMO, OPCIONES_MEZCLA, PRESET_DE_TIPO, conPrueba, configGeneral, estadoMezcla, nuevoGuion, opcionesVoz, personalizadaValida, preferencias,
   recordarSesion, repetirColetillas, resumenElecciones,
 } from "../ajustes.js";
 import { crearAzar, semillaAleatoria } from "../motor/azar.js";
@@ -32,13 +32,14 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
 
   // ---------- Configuración ----------
 
-  // El tipo de sesión como chips (radios): la General (el preset «amateur»), Prueba (no se guarda) y
-  // Personalizado. Los ajustes avanzados solo se ven con "Personalizado".
-  const PRESET_DE_TIPO = { general: "amateur", prueba: "prueba" };
+  // El tipo de sesión como chips (radios): la General (con el nombre del preset «amateur»), Prueba
+  // (solo con ?prueba, y no se guarda) y Personalizado. Los ajustes avanzados solo se ven con
+  // "Personalizado".
+  const nombrePreset = (tipo) => presets.find((p) => p.id === PRESET_DE_TIPO[tipo]).nombre;
   const chip = (tipo, nombre) =>
     `<label class="chip-opcion"><input type="radio" name="preset" value="${tipo}"><span>${esc(nombre)}</span></label>`;
-  $("#presets").insertAdjacentHTML("beforeend", Object.entries(PRESET_DE_TIPO)
-    .map(([tipo, id]) => chip(tipo, presets.find((p) => p.id === id).nombre)).join("") + chip("personalizada", "Personalizado"));
+  $("#presets").insertAdjacentHTML("beforeend", chip("general", nombrePreset("general"))
+    + (conPrueba() ? chip("prueba", nombrePreset("prueba")) : "") + chip("personalizada", "Personalizado"));
   // «Tus combinaciones»: Ninguna · Poco · Bastante · Mucho en una fila y «Solo las mías» debajo.
   $("#mezclas").insertAdjacentHTML("beforeend", OPCIONES_MEZCLA.map(({ id, nombre, porcentaje }) =>
     `<label${id === "solo" ? ' class="mezcla-solo"' : ""}><input type="radio" name="mezcla" value="${id}">`
@@ -51,7 +52,8 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     const personalizado = tipo === "personalizada";
     $("#avanzados").hidden = !personalizado;
     if (personalizado) $("#avanzados").open = true;
-    const p = personalizado ? personalizada : presets.find((x) => x.id === PRESET_DE_TIPO[tipo]);
+    const p = personalizado ? personalizada
+      : tipo === "general" ? configGeneral() : presets.find((x) => x.id === PRESET_DE_TIPO[tipo]);
     $("#asaltos").value = p.asaltos;
     $("#duracion").value = p.duracion_asalto;
     $("#descanso").value = p.descanso;

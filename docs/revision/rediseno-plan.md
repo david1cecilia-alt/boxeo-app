@@ -449,6 +449,18 @@ los ficheros nuevos al precache).
 
 R0 y R1 no cambian nada visible, así que se pueden revisar y unir antes de tocar la interfaz.
 
+### 7.1 Lo que deja la R4 para después (10-11-2026)
+
+- **R5**: el antetítulo de Perfil («Ortodoxo · nivel Medio») lee el nivel de la Personalizada aunque esté
+  elegida la General; debería decir el de la sesión elegida (o no decir nivel).
+- **R5**: nombre y avatar/foto van en el hueco `#identidad` de la sección Ajustes, y la cabecera de Entrenar
+  (hoy un icono genérico y «Tu perfil») los enseña. Perfil ya no está en la barra: su «← Volver» a `#entrenar`.
+- **R7**: CSS que ya no usa nadie (`.presets`, `.resumen-presets`, `.config-tarjeta`, `.avanzados`,
+  `.config-titulo`, `.con-foto` de Entrenar) e `imagenes/entrenar-cabecera.webp` (sigue en el precache).
+- **R7**: con el panel del menú desplazado, la cabecera fija deja «Menú» muy pegado arriba.
+- Cada sesión nueva guarda su `tipo` (General, Personalizada o Prueba) y el Historial la nombra por él; las de
+  antes se siguen deduciendo por la duración (por eso `presets.json` conserva «Amateur 3×3»).
+
 ---
 
 ## 8. Riesgos

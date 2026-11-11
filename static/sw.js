@@ -11,6 +11,7 @@ const FICHEROS = [
   "app.js",
   "creador.js",
   "dictado.js",
+  "foto.js",
   "ajustes.js",
   "almacen.js",
   "historial.js",

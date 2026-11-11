@@ -219,7 +219,7 @@ def test_con_prueba_cambiar_la_guardia_no_la_quita_y_prueba_no_se_guarda(pagina)
     assert pagina.inner_text("#resumen-grande").startswith("2 × 0:30")
     assert sesion_guardada(pagina)["tipo"] == "personalizada"  # lo de antes: Prueba nunca se guarda
     pagina.goto(f"{ORIGEN}/index.html#entrenar")
-    pagina.wait_for_selector("#empezar")
+    pagina.wait_for_selector("#tipo-sesion input:checked", state="attached")  # #empezar ya está en el HTML
     assert tipo_marcado(pagina) == "personalizada"
 
 

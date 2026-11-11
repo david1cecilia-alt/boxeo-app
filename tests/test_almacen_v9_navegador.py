@@ -13,6 +13,7 @@ import pytest
 
 from herramientas.construir_sitio import construir
 from herramientas.fotos_maniqui import ORIGEN, abrir
+from tests.menu_quieto import esperar_menu_quieto
 
 HAY_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
 pytestmark = pytest.mark.skipif(not HAY_PLAYWRIGHT and not os.environ.get("CI"),
@@ -112,6 +113,7 @@ def test_un_v8_con_personalizado_conserva_sus_valores(pagina):
     assert resumen(pagina) == "4 × 2:00 · descanso 0:45"
     # Cambiar la personalizada (en el menú) se sigue guardando.
     pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/personalizar")
+    esperar_menu_quieto(pagina)
     pagina.fill("#asaltos", "5")
     assert guardado(pagina)["perfil"]["sesion"]["personalizada"] == {"asaltos": 5, "duracion_asalto": 120, "descanso": 45}
 
@@ -120,6 +122,7 @@ def test_practicar_mas_de_un_v8_sale_sin_el_cuanto(pagina):
     ir(pagina, v8(practicar=[{"movimiento": "6", "cuanto": "bastante"}, {"movimiento": "rodar", "cuanto": "poco"}]),
        ruta="#entrenar/menu/personalizar")
     pagina.wait_for_selector("#t-practicar", state="visible")
+    esperar_menu_quieto(pagina)
     assert pagina.locator(".hueco.lleno h3").all_inner_texts() == ["6 gancho de derecha", "rueda"]
     assert pagina.locator("#f-practicar .segmentado, [data-cuanto]").count() == 0
     assert guardado(pagina)["perfil"]["practicar"] == [{"movimiento": "6"}, {"movimiento": "rodar"}]
@@ -184,6 +187,7 @@ def test_importar_una_copia_v8_la_deja_en_v9(pagina, tmp_path):
     assert resumen(pagina) == "3 × 3:00 · descanso 1:00"
     pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/personalizar")
     pagina.wait_for_selector("#niveles", state="visible")
+    esperar_menu_quieto(pagina)
     assert pagina.is_checked('input[name="nivel"][value="3"]')
 
 

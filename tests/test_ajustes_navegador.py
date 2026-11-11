@@ -14,6 +14,7 @@ import pytest
 
 from herramientas.construir_sitio import construir
 from herramientas.fotos_maniqui import ORIGEN, abrir
+from tests.menu_quieto import esperar_menu_quieto
 
 HAY_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
 pytestmark = pytest.mark.skipif(not HAY_PLAYWRIGHT and not os.environ.get("CI"),
@@ -68,6 +69,7 @@ def ajustes(pagina):
     pagina.wait_for_function("window.listo === true")
     pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/personalizar")
     pagina.wait_for_selector("#t-practicar", state="visible")
+    esperar_menu_quieto(pagina)
     yield pagina
     if pagina.locator("#elegir-practicar[open]").count():
         _cerrar(pagina, lambda: pagina.keyboard.press("Escape"))
@@ -346,12 +348,14 @@ def test_atras_con_la_hoja_abierta_cierra_la_hoja_y_el_menu(ajustes):
     pagina.wait_for_selector("#asa")
     pagina.click("#asa")
     pagina.wait_for_selector("#t-practicar", state="visible")
+    esperar_menu_quieto(pagina)
     _abrir_panel(pagina)
     pagina.go_back()
     pagina.wait_for_function("location.hash === '#entrenar'")
     pagina.wait_for_function("!document.querySelector('dialog[open]')")
     pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/personalizar")
     pagina.wait_for_selector("#t-practicar", state="visible")
+    esperar_menu_quieto(pagina)
 
 
 # ---------- Ajustes (sección del menú) ----------
@@ -359,6 +363,7 @@ def test_atras_con_la_hoja_abierta_cierra_la_hoja_y_el_menu(ajustes):
 def _abrir_ajustes(pagina):
     pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/ajustes")
     pagina.wait_for_selector("#voz-id", state="visible")
+    esperar_menu_quieto(pagina)
 
 
 def test_ajustes_trae_voz_velocidad_nombrar_y_guardia_y_nada_de_practicar(ajustes):
@@ -389,6 +394,7 @@ def test_nombrar_y_la_guardia_se_guardan_sin_cambiar_de_tipo(ajustes):
     assert "Zurdo" in pagina.text_content("#resumen-elecciones")
     pagina.reload()
     pagina.wait_for_selector("#voz-id", state="visible")
+    esperar_menu_quieto(pagina)
     assert pagina.is_checked('input[name="voz"][value="numeros"]') and pagina.is_checked('input[name="guardia"][value="zurdo"]')
     pagina.click('#menu-ajustes label:has(input[name="voz"][value="nombres"])')
     pagina.click('#menu-ajustes label:has(input[name="guardia"][value="diestro"])')
@@ -401,6 +407,7 @@ def test_ajustes_al_arrancar_abre_el_menu_en_ajustes_sin_crecer_el_historial(aju
     largo = pagina.evaluate("history.length")
     pagina.goto(f"{ORIGEN}/index.html{de}")
     pagina.wait_for_selector("#voz-id", state="visible")
+    esperar_menu_quieto(pagina)
     assert pagina.evaluate("location.hash") == "#entrenar/menu/ajustes"
     assert pagina.evaluate("history.length") == largo + 1  # solo la entrada de la app
     assert pagina.evaluate("document.querySelector('[data-seccion=ajustes]').open")
@@ -418,6 +425,7 @@ def test_ajustes_desde_la_app_lleva_al_menu_y_atras_no_pasa_por_la_ruta_vieja(aj
     pagina.evaluate("location.hash = '#ajustes'")
     pagina.wait_for_function("location.hash === '#entrenar/menu/ajustes'")
     pagina.wait_for_selector("#voz-id", state="visible")
+    esperar_menu_quieto(pagina)
     assert pagina.evaluate("history.length") == largo + 1
     pagina.go_back()
     pagina.wait_for_function("location.hash === '#historial'")

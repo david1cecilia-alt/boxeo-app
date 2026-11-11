@@ -14,6 +14,7 @@ import pytest
 
 from herramientas.construir_sitio import construir
 from herramientas.fotos_maniqui import ORIGEN, abrir
+from tests.menu_quieto import esperar_menu_quieto
 
 HAY_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
 pytestmark = pytest.mark.skipif(not HAY_PLAYWRIGHT and not os.environ.get("CI"),
@@ -62,6 +63,8 @@ def ir(pagina, propias=(), sesion=None, ruta="#entrenar/menu/personalizar"):
     pagina.evaluate("(d) => localStorage.setItem('boxeo', d)", json.dumps(datos))
     pagina.goto(f"{ORIGEN}/index.html{ruta}")
     pagina.wait_for_selector("#mezclas label", state="attached")
+    if ruta.startswith("#entrenar/menu"):
+        esperar_menu_quieto(pagina)
 
 
 def desactivada(pagina, valor):
@@ -106,11 +109,12 @@ def test_con_dos_solo_las_mias_esta_desactivada_con_su_motivo_y_lo_demas_se_recu
     assert pagina.is_checked('input[name="mezcla"][value="mucho"]')
     pagina.keyboard.press("ArrowRight")
     assert pagina.is_checked('input[name="mezcla"][value="ninguna"]'), "de Mucho vuelve a Ninguna, sin pasar por Solo"
-    pagina.click('input[name="mezcla"][value="mucho"]', force=True)
+    pagina.click('#mezclas label:has(input[value="mucho"])')
     assert guardado(pagina)["perfil"]["sesion"]["mezcla"] == "mucho"
     assert "Mucho de las tuyas" in elecciones(pagina)
     pagina.reload()
     pagina.wait_for_selector("#mezclas label", state="visible")
+    esperar_menu_quieto(pagina)
     assert pagina.is_checked('input[name="mezcla"][value="mucho"]')
 
 
@@ -126,18 +130,18 @@ def test_con_cinco_solo_las_mias_desactiva_el_nivel_y_el_aviso_del_nivel_sin_pro
     ir(pagina, CINCO, {"nivel": 2})
     assert not desactivada(pagina, "solo")
     assert pagina.locator("#nota-mezcla").is_hidden()
-    pagina.click('input[name="mezcla"][value="solo"]', force=True)
+    pagina.click('#mezclas label:has(input[value="solo"])')
     assert pagina.eval_on_selector("#niveles", "(f) => f.disabled")
     assert pagina.inner_text("#nota-nivel") == "Con «Solo las mías» no cuenta el nivel: salen todas las tuyas."
     assert pagina.get_attribute("#niveles", "aria-describedby") == "nota-nivel"
     assert elecciones(pagina).startswith("Solo las tuyas · ")
     assert pagina.is_checked('input[name="nivel"][value="2"]'), "el nivel guardado no se pierde"
     # «Mucho» en medio: ninguna propia es de medio.
-    pagina.click('input[name="mezcla"][value="mucho"]', force=True)
+    pagina.click('#mezclas label:has(input[value="mucho"])')
     assert not pagina.eval_on_selector("#niveles", "(f) => f.disabled")
     assert pagina.locator("#nota-nivel").is_hidden()
     assert pagina.inner_text("#nota-mezcla") == "No tienes combinaciones de nivel medio: solo saldrán las de la biblioteca."
-    pagina.click('input[name="nivel"][value="1"]', force=True)
+    pagina.click('#niveles label:has(input[value="1"])')
     assert pagina.locator("#nota-mezcla").is_hidden()
     assert elecciones(pagina).startswith("Nivel básico · Mucho de las tuyas")
 
@@ -158,6 +162,7 @@ def test_crear_una_en_el_creador_activa_el_selector_al_volver(pagina):
     pagina.wait_for_selector("#anadir-propia")
     pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/personalizar")
     pagina.wait_for_selector("#mezclas label", state="visible")
+    esperar_menu_quieto(pagina)
     assert not pagina.eval_on_selector("#mezclas", "(f) => f.disabled")
     assert desactivada(pagina, "solo")
     assert "tienes 1" in pagina.inner_text("#nota-mezcla")
@@ -165,7 +170,6 @@ def test_crear_una_en_el_creador_activa_el_selector_al_volver(pagina):
 
 def test_a_390_el_selector_cabe_y_cada_opcion_se_toca_con_48_px(pagina):
     ir(pagina, CINCO)
-    pagina.wait_for_function("getComputedStyle(document.querySelector('.menu-panel')).transform === 'none'")
     medidas = pagina.eval_on_selector_all("#mezclas label span", """(spans) => spans.map((s) => {
       const r = s.getBoundingClientRect();
       return [s.textContent, r.width, r.height, s.scrollWidth - s.clientWidth, r.right];

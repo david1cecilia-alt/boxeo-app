@@ -16,6 +16,7 @@ import pytest
 
 from herramientas.construir_sitio import construir
 from herramientas.fotos_maniqui import ORIGEN
+from tests.menu_quieto import esperar_menu_quieto
 
 HAY_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
 pytestmark = pytest.mark.skipif(not HAY_PLAYWRIGHT and not os.environ.get("CI"),
@@ -92,6 +93,8 @@ def ir(pagina, ruta):
     vista = ruta[1:].split("/")[0]
     pagina.wait_for_function(f"document.body.dataset.vista === '{vista}'")
     pagina.wait_for_selector(f"#vista-{vista} h1", state="visible")
+    if ruta.startswith("#entrenar/menu"):
+        esperar_menu_quieto(pagina)
 
 
 def largo(pagina):
@@ -158,8 +161,7 @@ class Dedo:
 
 def abrir_con_el_asa(pagina):
     pagina.click("#asa")
-    pagina.wait_for_function(ESTA_ABIERTO)
-    pagina.wait_for_timeout(DURACION * 1000 + 50)
+    esperar_menu_quieto(pagina)
 
 
 def esperar_cerrado(pagina, hash_="#entrenar"):
@@ -220,7 +222,7 @@ def test_arrastrar_el_asa_abre_un_arrastre_corto_no_y_el_panel_a_la_derecha_cier
     dedo.arrastrar("#asa", -200, pasos=10, pausa=16, espera=150)
     pagina.wait_for_function(ESTA_ABIERTO)
     assert pagina.evaluate(FOCO) == "t-menu"
-    pagina.wait_for_timeout(DURACION * 1000 + 50)
+    esperar_menu_quieto(pagina)
     # El panel 200 px a la derecha (desde su franja): se cierra.
     dedo.arrastrar(".asa-panel", 200, pasos=10, pausa=16, espera=150)
     esperar_cerrado(pagina)
@@ -252,14 +254,13 @@ def test_un_gesto_rapido_aunque_corto_abre_y_cierra(abrir_pagina):
     pagina = abrir_pagina(toque=True)
     dedo = Dedo(pagina, "touch")
     dedo.arrastrar("#asa", -60, pasos=3)
-    pagina.wait_for_function(ESTA_ABIERTO)
-    pagina.wait_for_timeout(DURACION * 1000 + 50)
+    esperar_menu_quieto(pagina)
     dedo.arrastrar(".asa-panel", 60, pasos=3)
     esperar_cerrado(pagina)
     # El mismo recorrido, despacio (20 px cada 100 ms), no abre.
     dedo.arrastrar("#asa", -60, pasos=3, pausa=100)
     pagina.wait_for_function(ESTA_CERRADO)
-    pagina.wait_for_timeout(DURACION * 1000 + 50)
+    pagina.wait_for_timeout(DURACION * 1000 + 50)  # espera fija a propósito: que no se abra después
     assert pagina.evaluate("location.hash") == "#entrenar"
 
 
@@ -290,13 +291,12 @@ def test_un_arrastre_que_acaba_en_pointercancel_vuelve_sin_tocar_el_historial(ab
     # El asa se ve y responde.
     assert pagina.is_visible("#asa")
     pagina.tap("#asa")
-    pagina.wait_for_function(ESTA_ABIERTO)
-    pagina.wait_for_timeout(DURACION * 1000 + 50)
+    esperar_menu_quieto(pagina)
     # Cancelar a medias el arrastre del panel: vuelve a abierto, en la misma ruta.
     dedo.bajar(*centro(pagina, ".asa-panel"))
     dedo.mover(150, pasos=10, pausa=16)
     dedo.cancelar()
-    pagina.wait_for_timeout(DURACION * 1000 + 50)
+    esperar_menu_quieto(pagina)
     assert pagina.evaluate(ESTA_ABIERTO)
     assert pagina.evaluate("getComputedStyle(document.querySelector('.menu-panel')).transform") == "none"
     assert pagina.evaluate("location.hash") == "#entrenar/menu"
@@ -315,7 +315,7 @@ def test_arrastrar_el_deslizador_del_ritmo_no_mueve_ni_cierra_el_panel(abrir_pag
     dedo.bajar(caja["x"] + caja["width"] / 2, caja["y"] + caja["height"] / 2)
     dedo.mover(caja["width"] / 2 - 4, pasos=8, pausa=16)  # hacia la derecha: el gesto que cerraría el panel
     dedo.subir()
-    pagina.wait_for_timeout(DURACION * 1000 + 50)
+    pagina.wait_for_timeout(DURACION * 1000 + 50)  # espera fija a propósito: que no se cierre después
     assert pagina.evaluate(ABIERTO) and pagina.evaluate("location.hash") == "#entrenar/menu"
     assert pagina.evaluate("getComputedStyle(document.querySelector('.menu-panel')).transform") == "none"
     assert pagina.input_value("#ritmo") != antes

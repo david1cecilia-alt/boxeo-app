@@ -12,6 +12,7 @@ import pytest
 
 from herramientas.construir_sitio import construir
 from herramientas.fotos_maniqui import ORIGEN, abrir
+from tests.menu_quieto import esperar_menu_quieto
 
 HAY_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
 pytestmark = pytest.mark.skipif(not HAY_PLAYWRIGHT and not os.environ.get("CI"),
@@ -91,6 +92,7 @@ def test_el_almacen_v6_se_migra_sin_notas_ni_revisiones_y_la_guardia_pasa_a_ajus
     # La guardia sigue igual: en Ajustes (menú de Entrenar) sale marcado Zurdo.
     pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/ajustes")
     pagina.wait_for_selector("#voz-id", state="visible")
+    esperar_menu_quieto(pagina)
     assert pagina.is_checked('#menu-ajustes input[name="guardia"][value="zurdo"]')
 
 

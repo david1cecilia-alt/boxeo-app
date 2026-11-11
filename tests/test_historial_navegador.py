@@ -11,6 +11,7 @@ import pytest
 
 from herramientas.construir_sitio import construir
 from herramientas.fotos_maniqui import ORIGEN, abrir
+from tests.menu_quieto import esperar_menu_quieto
 
 HAY_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
 pytestmark = pytest.mark.skipif(not HAY_PLAYWRIGHT and not os.environ.get("CI"),
@@ -154,6 +155,7 @@ def test_los_titulos_del_menu_se_subrayan_sin_recuadro(pagina, ruta, titulo):
     pagina.set_viewport_size({"width": 1440, "height": 900})
     pagina.goto(f"{ORIGEN}/index.html#{ruta}")
     pagina.wait_for_selector(titulo, state="attached")
+    esperar_menu_quieto(pagina)
     pagina.keyboard.press("Shift")
     pagina.evaluate(f"document.querySelector('{titulo}').focus()")  # como tras restablecer
     assert pagina.evaluate(FOCO_DEL_TITULO, titulo) == [True, "none", "underline"]

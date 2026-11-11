@@ -15,6 +15,7 @@ import pytest
 
 from herramientas.construir_sitio import construir
 from herramientas.fotos_maniqui import ORIGEN, abrir
+from tests.menu_quieto import esperar_menu_quieto
 
 HAY_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
 pytestmark = pytest.mark.skipif(not HAY_PLAYWRIGHT and not os.environ.get("CI"),
@@ -152,7 +153,7 @@ DEFENSAS = {"esquiva_der", "esquiva_izq", "rodar_der", "rodar_izq", "paso_atras"
 def abrir_mis_combinaciones_del_menu(pagina):
     """Desde Entrenar: el asa (deja #entrenar/menu en el historial), la sección y su enlace."""
     pagina.click("#asa")
-    pagina.wait_for_selector("#menu[open]")
+    esperar_menu_quieto(pagina)
     pagina.click("#menu details[data-seccion='combinaciones'] summary")
     pagina.wait_for_selector("#ir-creador", state="visible")
 
@@ -193,6 +194,7 @@ def test_volver_del_listado_al_que_se_llego_directo_abre_el_menu_y_cerrarlo_no_s
     pagina.click(".volver-sub a")
     pagina.wait_for_function("location.hash === '#entrenar/menu/combinaciones'")
     pagina.wait_for_function(ABIERTO_EN_COMBINACIONES)
+    esperar_menu_quieto(pagina)
     assert pagina.evaluate("document.activeElement.id") == "ir-creador"
     pagina.click(".menu-cerrar")
     pagina.wait_for_function("location.hash === '#entrenar' && !document.querySelector('#menu[open]')")

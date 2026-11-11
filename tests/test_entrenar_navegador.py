@@ -10,6 +10,7 @@ import pytest
 
 from herramientas.construir_sitio import construir
 from herramientas.fotos_maniqui import ORIGEN, abrir
+from tests.menu_quieto import esperar_menu_quieto
 
 HAY_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
 pytestmark = pytest.mark.skipif(not HAY_PLAYWRIGHT and not os.environ.get("CI"),
@@ -119,6 +120,7 @@ def tipo_marcado(pagina):
 def abrir_personalizar(pagina):
     pagina.evaluate("location.hash = '#entrenar/menu/personalizar'")
     pagina.wait_for_selector("#niveles", state="visible")
+    esperar_menu_quieto(pagina)
 
 
 def cerrar_menu(pagina):
@@ -211,6 +213,7 @@ def test_con_prueba_cambiar_la_guardia_no_la_quita_y_prueba_no_se_guarda(pagina)
     assert tipo_marcado(pagina) == "prueba"
     pagina.evaluate("location.hash = '#entrenar/menu/ajustes'")
     pagina.wait_for_selector("#voz-id", state="visible")
+    esperar_menu_quieto(pagina)
     pagina.click('#menu-ajustes label:has(input[name="guardia"][value="zurdo"])')
     assert tipo_marcado(pagina) == "prueba"
     assert pagina.inner_text("#resumen-grande").startswith("2 × 0:30")
@@ -259,6 +262,7 @@ def test_la_guardia_de_ajustes_cambia_la_general_y_su_sesion_sale_con_lo_de_d1(p
     preparar(pagina, {"perfil": {"sesion": {"tipo": "general", **PERSONALIZADA}, "practicar": [{"movimiento": "3"}]}})
     pagina.evaluate("location.hash = '#entrenar/menu/ajustes'")
     pagina.wait_for_selector("#voz-id", state="visible")
+    esperar_menu_quieto(pagina)
     pagina.click('#menu-ajustes label:has(input[name="guardia"][value="zurdo"])')
     cerrar_menu(pagina)
     assert tipo_marcado(pagina) == "general"
@@ -331,7 +335,7 @@ def test_el_asa_no_tapa_empezar_ni_los_controles_ni_el_texto(pagina, ancho, alto
         assert not cruzan(c["asa"], c["sesion"])
     # Abierto: el asa de la franja del panel, ni con Empezar ni con ningún control del panel, en cada sección.
     pagina.evaluate("location.hash = '#entrenar/menu/personalizar'")
-    pagina.wait_for_function("getComputedStyle(document.querySelector('.menu-panel')).transform === 'none'")
+    esperar_menu_quieto(pagina)
     assert pagina.locator("#asa").evaluate("(e) => getComputedStyle(e).visibility") == "hidden"
     for seccion in ("personalizar", "combinaciones", "ajustes"):
         pagina.evaluate(f"document.querySelector(\"[data-seccion='{seccion}']\").open = true")

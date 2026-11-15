@@ -9,7 +9,7 @@ import {
   elegirGrupo, escuchar, ficha, hayCambios, puedeCrear, quitar, quitarUltima, resumen, textoBorrar,
 } from "../creador.js";
 import { ACCIONES_POR_NIVEL, MAX_ACCIONES, MAX_PROPIAS, NOMBRE_NIVEL } from "../motor/reglas.js";
-import { $, anunciar, atraparFoco, esc } from "./dom.js";
+import { $, abrirDialogo, anunciar, conectarDialogo, esc } from "./dom.js";
 import { enRutaMenu } from "./menu.js";
 
 export const RUTA = "#entrenar/mis-combinaciones";
@@ -33,40 +33,6 @@ export function fichasHtml(fichas) {
 
 // Un botón desactivado con aria-disabled (sigue en el orden del foco y dice por qué): no hace nada.
 export const desactivado = (boton) => boton?.getAttribute("aria-disabled") === "true";
-
-// Abre un <dialog> modal con el foco en `inicial`; al cerrarlo se llama a `alCerrar(lo elegido)`.
-// Se responde en el momento, no en el evento `close`: ese llega después y, si el diálogo se vuelve
-// a abrir enseguida (el «atrás» del navegador), se mezclaría con la respuesta siguiente.
-const respuestas = new WeakMap();
-export function abrirDialogo(dialogo, inicial, alCerrar) {
-  respuestas.set(dialogo, alCerrar);
-  dialogo.showModal();
-  $(inicial, dialogo)?.focus();
-}
-
-function cerrarDialogo(dialogo, valor) {
-  const alCerrar = respuestas.get(dialogo);
-  respuestas.delete(dialogo);
-  dialogo.close(valor);
-  alCerrar?.(valor);
-}
-
-// Los diálogos se cierran con Esc, tocando el velo (sin elegir: «») o con sus botones (value = lo elegido).
-function conectarDialogo(dialogo) {
-  dialogo.addEventListener("keydown", atraparFoco);
-  dialogo.addEventListener("cancel", (e) => {
-    e.preventDefault();
-    cerrarDialogo(dialogo, "");
-  });
-  dialogo.addEventListener("click", (e) => {
-    // En el velo (fuera de la caja; el relleno del diálogo también es `e.target === dialogo`).
-    const r = dialogo.getBoundingClientRect();
-    const fuera = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
-    if (e.target === dialogo && fuera) return cerrarDialogo(dialogo, "");
-    const boton = e.target.closest("button[value]");
-    if (boton) cerrarDialogo(dialogo, boton.value);
-  });
-}
 
 export function iniciarCreador({ almacen, raiz, voz }) {
   const propias = () => almacen.datos.combinacionesPropias;

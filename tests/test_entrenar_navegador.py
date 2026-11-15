@@ -309,7 +309,8 @@ def test_el_selector_tiene_general_y_personalizada_y_prueba_solo_con_el_parametr
     assert pagina.locator("#tipo-sesion label").all_inner_texts() == ["General", "Personalizada", "Prueba 2×30 s"]
 
 
-def test_la_barra_trae_entrenar_aprende_e_historial_y_entrenar_ya_no_tiene_foto(pagina):
+def test_la_barra_trae_entrenar_aprende_e_historial_y_entrenar_ya_no_tiene_foto(pagina, sitio):
+    assert not (sitio / "imagenes" / "entrenar-cabecera.webp").exists()  # ni se publica su foto
     preparar(pagina, {})
     assert pagina.locator("#pestanas a").evaluate_all("(as) => as.map((a) => a.getAttribute('href'))") == [
         "#entrenar", "#aprende", "#historial"]

@@ -7,7 +7,6 @@ con `herramientas/convertir_imagenes.py`.
 
 | Fichero | Dónde va |
 |---|---|
-| `entrenar-cabecera` | Cabecera de Entrenar |
 | `aprende-hero` | Cabecera de Aprende |
 | `cat-golpes`, `cat-defensas`, `cat-pies`, `cat-estrategia` | Carrusel de categorías de Aprende |
 | `historial-cabecera` | Cabecera de Historial |

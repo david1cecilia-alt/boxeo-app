@@ -136,10 +136,6 @@ h3 { margin: 16px 0 6px; font-size: 0.85rem; font-weight: 600; color: var(--suav
   font-size: clamp(5rem, 30vw, 11rem); color: var(--texto); opacity: 0.05;
   white-space: nowrap; pointer-events: none; user-select: none;
 }
-.marca-agua.vertical {
-  writing-mode: vertical-rl; top: 120px; right: calc(-26px - var(--hueco));
-  font-size: 150px; letter-spacing: 4px;
-}
 h1:focus, h2:focus { outline: none; }
 h1:focus-visible, h2:focus-visible { outline: 3px solid var(--foco); outline-offset: 4px; }
 /* Títulos que reciben el foco al navegar (el de cada vista, el periodo, el día y el detalle del
@@ -163,15 +159,14 @@ h1:focus-visible, h2:focus-visible { outline: 3px solid var(--foco); outline-off
 }
 .con-foto .cabecera { padding-top: var(--arriba-titular, 166px); }
 
-/* Marca en móvil (en el PC va en la barra lateral). */
-.marca-movil, .marca {
+/* Marca de la barra lateral del PC. */
+.marca {
   display: flex; align-items: center; gap: 8px; margin: 0;
   font-family: var(--letra-titular); text-transform: uppercase; font-size: 22px; letter-spacing: 2px; line-height: 1;
 }
-.marca-movil::before, .marca::before {
+.marca::before {
   content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--acento);
 }
-.marca-movil { padding-top: 20px; height: 44px; margin-bottom: -16px; }
 
 a { color: var(--texto); text-decoration-color: var(--acento); text-underline-offset: 3px; }
 
@@ -232,12 +227,7 @@ legend small { display: block; font-size: 0.85rem; }
 .rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; align-items: end; }
 hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
 
-/* Chips de opción (radios): presets, categorías, estilo. El seleccionado, en claro. */
-.fila-chips {
-  display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
-  margin: 0 calc(-1 * var(--hueco)); padding: 2px var(--hueco);
-}
-.fila-chips::-webkit-scrollbar { display: none; }
+/* Chips de opción (radios): categorías, estilo. El seleccionado, en claro. */
 .chip-opcion { position: relative; flex: none; }
 .chip-opcion input, .niveles input, .chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
 .chip-opcion span {
@@ -249,10 +239,6 @@ hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
   background: var(--chip-activo); border-color: var(--chip-activo); color: var(--sobre-chip-activo); font-weight: 600;
 }
 :is(.chip-opcion, .niveles, .chip) input:focus-visible + span { outline: 3px solid var(--foco); outline-offset: 2px; }
-
-/* Presets y su resumen ("3 × 3:00 · descanso 1:00"): debajo en el móvil, al lado en el PC. */
-.presets { display: grid; gap: 8px; }
-.resumen-presets { margin: 0; font-size: 0.8125rem; color: var(--suave); }
 
 /* Nivel: tres botones grandes (radios); el elegido, en rojo. */
 .niveles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -317,7 +303,6 @@ hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
 .niveles label input:checked + span { background: var(--acento-relleno); border-color: var(--acento-relleno); color: var(--sobre-acento); }
 
 /* Interruptores (switch): Zurdo y Reacción. */
-.interruptores { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .interruptor {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   min-height: 56px; padding: 0 14px; cursor: pointer;
@@ -1416,7 +1401,6 @@ dialog::backdrop { background: var(--velo); }
 
   .cabecera { padding-top: 48px; }
   h1 { font-size: 5rem; }
-  .marca-movil { display: none; }
 
   /* Foto a la derecha a su tamaño (como mucho), fundida al negro por la izquierda y por abajo. */
   .foto-cabecera { left: auto; right: calc(-1 * var(--hueco)); width: min(587px, 60%); height: calc(var(--alto-foto, 360px) + 60px); }
@@ -1429,7 +1413,6 @@ dialog::backdrop { background: var(--velo); }
   /* Perfil: la identidad justo debajo de «← Volver», sin el alto de la foto. */
   #vista-perfil .cabecera { padding-top: 24px; min-height: 0; }
   #vista-perfil .perfil-quien h1 { font-size: 3.5rem; }
-  .marca-agua.vertical { writing-mode: horizontal-tb; top: 36px; right: auto; left: -12px; font-size: 13rem; }
 
   /* Entrenar: a la izquierda la cabecera de perfil y el selector; a la derecha «Tu sesión» y Empezar, fijos
      al bajar (sticky). A la derecha de todo queda el margen de 112 px del asa (2.1): main llega al borde de
@@ -1477,7 +1460,6 @@ dialog::backdrop { background: var(--velo); }
   .resumen-historial > .cifras dd { font-size: 46px; }
   .resumen-historial > .cifras div { padding: 18px 12px; }
   .con-detalle .col-lista, #historial-contenido:not(.con-detalle) .col-detalle { display: grid; }
-  .volver-movil { display: none; }
   .meses { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   /* A 1024 px la galería es media columna: casillas de ~78 px, donde «Septiembre» (5,6 veces su
      letra) cabe justo a 13 px. Si la casilla no da para tanto (otra fuente, zoom), la letra baja lo

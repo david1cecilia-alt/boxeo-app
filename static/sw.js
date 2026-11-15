@@ -76,7 +76,6 @@ const FICHEROS = [
   "imagenes/cat-estrategia.webp",
   "imagenes/cat-golpes.webp",
   "imagenes/cat-pies.webp",
-  "imagenes/entrenar-cabecera.webp",
   "imagenes/historial-cabecera.webp",
   "imagenes/perfil-cabecera.webp",
   "iconos/guante.svg",

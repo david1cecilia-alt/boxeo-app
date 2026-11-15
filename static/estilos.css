@@ -397,16 +397,14 @@ input[type="file"].solo-lectores:focus-visible + *, label.boton:focus-within { o
   background: var(--superficie); border: 1px solid var(--linea); border-radius: 32px;
 }
 .cabecera-perfil:hover { background: var(--superficie-hover); }
-.avatar-generico {
-  display: grid; place-items: center; flex: none; width: 48px; height: 48px; border-radius: 50%;
-  background: var(--secundario); color: var(--suave);
+.cabecera-avatar { display: contents; }
+.cabecera-perfil .flecha {
+  flex: none; width: 20px; height: 20px; color: var(--suave);
+  fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
 }
-.avatar-generico svg, .cabecera-perfil .flecha {
-  width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
-}
-.cabecera-perfil .flecha { flex: none; width: 20px; height: 20px; color: var(--suave); }
 .cabecera-perfil-texto { display: grid; gap: 2px; flex: 1; min-width: 0; }
-.cabecera-perfil-nombre { font-weight: 600; }
+/* Nombre y estilo en una línea cada uno: lo que no cabe, con puntos suspensivos (a 390, un nombre de 30). */
+.cabecera-perfil-nombre { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cabecera-perfil-estilo { font-size: 0.8125rem; color: var(--suave); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* General | Personalizada (| Prueba): segmentado a todo el ancho; el elegido, en claro. */
 .segmentado-tipo {

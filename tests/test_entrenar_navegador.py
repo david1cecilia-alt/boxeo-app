@@ -232,10 +232,71 @@ def test_la_cabecera_es_un_solo_enlace_que_lleva_al_perfil(pagina):
     # Un solo elemento enfocable: nada dentro se enfoca aparte.
     assert cabecera.locator("a, button, input, [tabindex]").count() == 0
     assert " ".join(cabecera.inner_text().split()) == "Tu perfil Fajador · Zurdo"
-    assert cabecera.locator("img").count() == 0  # sin nombre ni avatar todavía (R5): un icono genérico
+    # Sin nombre ni avatar: la inicial no hay, así que una silueta decorativa.
+    assert cabecera.locator("img").count() == 0
+    assert cabecera.locator(".avatar-inicial[aria-hidden='true'] svg").count() == 1
     cabecera.click()
     pagina.wait_for_selector("#vista-perfil:not([hidden])")
     assert pagina.evaluate("location.hash") == "#perfil"
+
+
+FOTO = "data:image/jpeg;base64," + "A" * 400  # bien formada (fotoValida solo mira el formato)
+
+
+def test_la_cabecera_ensena_el_nombre_y_la_inicial(pagina):
+    preparar(pagina, {"perfil": {"identidad": {"nombre": "álex", "avatar": {"tipo": "inicial"}},
+                                 "estilo": {"mi_estilo": "boxer"}}})
+    cabecera = pagina.locator(".cabecera-perfil")
+    assert cabecera.locator(".cabecera-perfil-nombre").inner_text() == "álex"
+    inicial = cabecera.locator(".avatar-inicial")
+    assert inicial.inner_text() == "Á" and inicial.get_attribute("aria-hidden") == "true"
+    # El nombre accesible del enlace es el nombre y el estilo (la inicial no se lee).
+    assert pagina.get_by_role("link", name="álex Boxer · Diestro").count() == 1
+
+
+def test_la_cabecera_ensena_el_avatar_predefinido_o_la_foto_con_alt_vacio(pagina):
+    preparar(pagina, {"perfil": {"identidad": {"nombre": "Alex", "avatar": {"tipo": "predefinido", "id": "chica-gorra"}}}})
+    img = pagina.locator(".cabecera-perfil img.avatar")
+    assert img.get_attribute("src") == "imagenes/avatares/chica-gorra.webp"
+    assert img.get_attribute("alt") == ""
+    assert pagina.locator(".cabecera-perfil-nombre").inner_text() == "Alex"
+    preparar(pagina, {"perfil": {"identidad": {"nombre": "Alex", "avatar": {"tipo": "foto"}, "foto": FOTO}}})
+    img = pagina.locator(".cabecera-perfil img.avatar")
+    assert img.get_attribute("src") == FOTO
+    assert img.get_attribute("alt") == ""
+    assert pagina.get_by_role("link", name="Alex Descubre tu estilo · Diestro").count() == 1
+
+
+def test_a_390_un_nombre_largo_cabe_en_una_linea_con_puntos_suspensivos(pagina):
+    nombre = "Maximiliano Fernández-Castillo"
+    preparar(pagina, {"perfil": {"identidad": {"nombre": nombre, "avatar": {"tipo": "inicial"}}}})
+    caja = pagina.locator(".cabecera-perfil-nombre")
+    medida = caja.evaluate("""(el) => ({ cabe: el.scrollWidth <= el.clientWidth, alto: el.getBoundingClientRect().height,
+      linea: parseFloat(getComputedStyle(el).lineHeight) || 0, corte: getComputedStyle(el).textOverflow,
+      derecha: el.getBoundingClientRect().right, flecha: el.closest('a').querySelector('.flecha').getBoundingClientRect().left })""")
+    assert caja.inner_text() == nombre
+    assert not medida["cabe"], "a 390 no cabe entero: se corta"
+    assert medida["corte"] == "ellipsis"
+    assert medida["alto"] < 30  # una sola línea
+    assert medida["derecha"] <= medida["flecha"]  # no pisa la flecha
+
+
+def test_lo_que_se_cambia_en_ajustes_sale_en_la_cabecera_sin_recargar(pagina):
+    preparar(pagina, {}, ruta="#entrenar/menu/ajustes")
+    pagina.wait_for_selector("#identidad #nombre", state="visible")
+    esperar_menu_quieto(pagina)
+    pagina.locator("#nombre").fill("Sam")
+    pagina.locator("#nombre").dispatch_event("change")
+    assert pagina.locator(".cabecera-perfil-nombre").inner_text() == "Sam"
+    assert pagina.locator(".cabecera-perfil .avatar-inicial").inner_text() == "S"
+    pagina.locator('#identidad input[value="predefinido:chico-oro"]').check()
+    assert pagina.locator(".cabecera-perfil img.avatar").get_attribute("src") == "imagenes/avatares/chico-oro.webp"
+    pagina.locator('#identidad input[value="inicial"]').check()
+    assert pagina.locator(".cabecera-perfil img").count() == 0
+    assert pagina.evaluate("performance.getEntriesByType('navigation').length") == 1  # sin recargar
+    pagina.keyboard.press("Escape")
+    pagina.wait_for_function("location.hash === '#entrenar'")
+    assert pagina.locator(".cabecera-perfil-nombre").inner_text() == "Sam"
 
 
 def test_el_selector_tiene_general_y_personalizada_y_prueba_solo_con_el_parametro(pagina):

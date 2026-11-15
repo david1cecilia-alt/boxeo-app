@@ -24,12 +24,12 @@
     <section id="vista-entrenar" class="vista" aria-labelledby="t-entrenar">
       <h1 id="t-entrenar" class="solo-lectores" tabindex="-1">Entrenar</h1>
       <form id="config" class="formulario">
-        <!-- Un solo botón (un enlace) a #perfil. Sin nombre ni avatar todavía (R5): un icono genérico. -->
+        <!-- Un solo botón (un enlace) a #perfil: avatar (foto, predefinido o inicial, decorativo: el nombre
+             se lee al lado), nombre (o «Tu perfil») y estilo. Lo rellena entrenar.js con vistas/avatar.js. -->
         <a href="#perfil" class="cabecera-perfil" id="ir-perfil">
-          <span class="avatar-generico" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
+          <span class="cabecera-avatar" id="cabecera-avatar"></span>
           <span class="cabecera-perfil-texto">
-            <span class="cabecera-perfil-nombre">Tu perfil</span>
+            <span class="cabecera-perfil-nombre" id="cabecera-nombre">Tu perfil</span>
             <span class="cabecera-perfil-estilo" id="cabecera-estilo"></span>
           </span>
           <svg class="flecha" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>

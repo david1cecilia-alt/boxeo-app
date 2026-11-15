@@ -14,6 +14,7 @@ import { crearReproductor } from "../reproductor.js";
 import { activarSonido, campana, dejarDormir, mantenerDespierto, pitido, tablillas } from "../sonido.js";
 import { MAX_PROPIAS } from "../motor/reglas.js";
 import { iniciarAjustes } from "./ajustes.js";
+import { crearAvatar, nombreVisible } from "./avatar.js";
 import { RUTA as RUTA_CREADOR, iniciarCreador } from "./creador.js";
 import { $, anunciar, esc, minutos } from "./dom.js";
 import { RUTA_MENU, iniciarMenu } from "./menu.js";
@@ -90,9 +91,12 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       : `Tu Personalizada. <a href="${RUTA_MENU}/personalizar" id="ir-personalizar">Personalizar</a>`;
   }
 
-  // La cabecera de perfil: por ahora solo el estilo elegido (si lo hay) y la guardia. Nombre y avatar, R5.
+  // La cabecera de perfil: el avatar (decorativo, alt=""), el nombre (o «Tu perfil»), el estilo elegido (si lo
+  // hay) y la guardia. Se repinta al guardar algo en Ajustes (aplicarPreferencias).
   function pintarCabecera() {
-    const { mi_estilo: estilo } = almacen.datos.perfil.estilo;
+    const { identidad, estilo: { mi_estilo: estilo } } = almacen.datos.perfil;
+    $("#cabecera-avatar").replaceChildren(crearAvatar(identidad, { decorativo: true }));
+    $("#cabecera-nombre").textContent = nombreVisible(identidad);
     const nombreEstilo = MI_ESTILO.opciones.find(([v]) => v === estilo && v !== NO_SE)?.[1];
     const guardia = preferencias(almacen.datos.perfil).zurdo ? "Zurdo" : "Diestro";
     $("#cabecera-estilo").textContent = [nombreEstilo ?? "Descubre tu estilo", guardia].join(" · ");

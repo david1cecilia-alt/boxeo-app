@@ -3,7 +3,9 @@
 // estilos.css (solo transform y opacity); aquí solo se montan las letras, se cuentan los tiempos y se quita.
 //
 // Una vez por arranque en frío (sessionStorage, D13); si sessionStorage falla, se muestra. Con
-// prefers-reduced-motion no sale. El primer toque o tecla la salta con un fundido corto, y ni ese toque (ni
+// prefers-reduced-motion no sale. Tampoco si se arranca en el menú (#entrenar/menu…, o una ruta vieja que
+// rutas.js lleva allí: #ajustes y #ajustes/…, salvo Mis combinaciones): quien abre un enlace al menú va a
+// cambiar algo, y la intro taparía el panel; se da por vista igual. El primer toque o tecla la salta con un fundido corto, y ni ese toque (ni
 // el clic que lo sigue) ni esa tecla llegan a lo de debajo. Al salir del DOM lanza «intro-fin» en document
 // (vistas/dom.js: esperarIntro).
 (() => {
@@ -21,6 +23,13 @@
     document.dispatchEvent(new Event("intro-fin"));
   }
 
+  // ¿La ruta de arranque acaba en el menú? Va antes que rutas.js, así que ve aún la ruta vieja; la misma regla
+  // que rutaNueva() (lo comprueba test_intro_navegador.py).
+  function arrancaEnElMenu(hash) {
+    if (hash === "#ajustes/mis-combinaciones" || hash.startsWith("#ajustes/mis-combinaciones/")) return false;
+    return /^#(entrenar\/menu|ajustes)(\/|$)/.test(hash);
+  }
+
   let vista = false;
   try {
     vista = sessionStorage.getItem(CLAVE) !== null;
@@ -29,6 +38,7 @@
   try {
     sessionStorage.setItem(CLAVE, "vista");
   } catch { /* se mostrará también la próxima vez */ }
+  if (arrancaEnElMenu(location.hash)) return quitar();
 
   // Cada letra en su span, en orden de lectura (--i; los espacios no cuentan). Se parte solo entre palabras.
   let i = 0;

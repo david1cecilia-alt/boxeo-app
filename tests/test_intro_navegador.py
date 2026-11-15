@@ -2,7 +2,8 @@
 headless con Playwright), a 390 y 1440 px.
 
 Sale en un arranque en frío y no al recargar en la misma sesión; no sale con prefers-reduced-motion; sí si
-sessionStorage falla; sale del DOM en ≤ 2,2 s; el toque (ratón o dedo) o la tecla que la salta no llega a
+sessionStorage falla; no sale al arrancar en el menú (ni en una ruta vieja que lleva a él), con la misma
+regla que rutaNueva(); sale del DOM en ≤ 2,2 s; el toque (ratón o dedo) o la tecla que la salta no llega a
 lo de debajo; es decorativa (aria-hidden, no roba el foco); a 320 px no hay desplazamiento horizontal.
 
 El tiempo lo lleva el reloj de Playwright (page.clock), parado al cargar: nada de esperas fijas. La pista
@@ -61,7 +62,7 @@ def abrir_app(sitio, navegador):
         tipo = "text/javascript" if fichero.suffix == ".js" else mimetypes.guess_type(fichero.name)[0]
         ruta.fulfill(body=fichero.read_bytes(), content_type=tipo or "application/octet-stream")
 
-    def nueva(ancho=390, ruta="#entrenar", toque=False, sin_movimiento=False, antes=None):
+    def nueva(ancho=390, ruta="#entrenar", toque=False, sin_movimiento=False, antes=None, vista=None):
         contexto = navegador.new_context(
             viewport={"width": ancho, "height": ALTO[ancho]}, device_scale_factor=1, has_touch=toque,
             reduced_motion="reduce" if sin_movimiento else "no-preference")
@@ -75,7 +76,7 @@ def abrir_app(sitio, navegador):
         pagina.clock.install(time=INICIO)
         pagina.clock.pause_at(INICIO)
         pagina.route(f"{ORIGEN}/**", servir)
-        ir(pagina, ruta)
+        ir(pagina, ruta, vista)
         return pagina
 
     yield nueva
@@ -84,9 +85,9 @@ def abrir_app(sitio, navegador):
         assert not pagina.errores
 
 
-def ir(pagina, ruta="#entrenar"):
+def ir(pagina, ruta="#entrenar", vista=None):
     pagina.goto(f"{ORIGEN}/index.html{ruta}")
-    vista = ruta[1:].split("/")[0]
+    vista = vista or ruta[1:].split("/")[0]
     pagina.wait_for_function(f"document.body.dataset.vista === '{vista}'")
     if vista == "entrenar":
         pagina.wait_for_selector('#tipo-sesion input[name="tipo"]:checked', state="attached")
@@ -141,6 +142,32 @@ def test_no_sale_al_recargar_en_la_misma_sesion(abrir_app, ancho):
 def test_no_sale_con_prefers_reduced_motion(abrir_app, ancho):
     pagina = abrir_app(ancho, sin_movimiento=True)
     assert not pagina.evaluate(HAY_INTRO)
+
+
+# (ruta de arranque, vista a la que lleva). Las viejas (#ajustes…) las cambia rutas.js después de intro.js.
+ARRANQUES = [("#entrenar", "entrenar"), ("#entrenar/menu", "entrenar"), ("#entrenar/menu/personalizar", "entrenar"),
+             ("#entrenar/menu/ajustes", "entrenar"), ("#entrenar/menu/combinaciones", "entrenar"),
+             ("#entrenar/mis-combinaciones", "entrenar"), ("#entrenar/mis-combinaciones/nueva", "entrenar"),
+             ("#ajustes", "entrenar"), ("#ajustes/voz", "entrenar"), ("#ajustes/mis-combinaciones", "entrenar"),
+             ("#ajustes/mis-combinaciones/nueva", "entrenar"), ("#historial", "historial"), ("#perfil", "perfil"),
+             ("#aprende", "aprende")]
+AL_MENU = r"""async (hash) => {
+  const { rutaNueva } = await import("./rutas.js");
+  return /^#entrenar\/menu(\/|$)/.test(rutaNueva(hash) ?? hash);
+}"""
+
+
+@pytest.mark.parametrize("ruta,vista", ARRANQUES)
+def test_no_sale_al_arrancar_en_el_menu_con_la_misma_regla_que_rutanueva(abrir_app, ruta, vista):
+    pagina = abrir_app(390, ruta=ruta, vista=vista)
+    al_menu = pagina.evaluate(AL_MENU, ruta)
+    assert al_menu == pagina.evaluate("location.hash.startsWith('#entrenar/menu')")
+    assert pagina.evaluate(HAY_INTRO) is not al_menu
+    # Se da por vista igual: al recargar (o al cerrar el menú y volver a Entrenar) tampoco sale.
+    assert pagina.evaluate("sessionStorage.getItem('boxeo.intro')") == "vista"
+    if al_menu:
+        pagina.wait_for_selector("#menu[open]")
+        assert not pagina.evaluate("document.documentElement.matches('.con-intro, .intro-acercando')")
 
 
 @pytest.mark.parametrize("ancho", ANCHOS)

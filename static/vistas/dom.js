@@ -46,6 +46,12 @@ export function anunciar(texto) {
   setTimeout(() => (estado.textContent = texto), 50);
 }
 
+// Se cumple cuando la intro (intro.js) ya no está: al momento si no hay #intro, o al llegar «intro-fin».
+export function esperarIntro() {
+  if (!document.getElementById("intro")) return Promise.resolve();
+  return new Promise((listo) => document.addEventListener("intro-fin", () => listo(), { once: true }));
+}
+
 // El <dialog> modal deja el resto de la página inerte, pero con Tab el foco puede irse a la barra
 // del navegador: del último se vuelve al primero (y al revés con Mayús+Tab). Para su `keydown`.
 export function atraparFoco(e) {

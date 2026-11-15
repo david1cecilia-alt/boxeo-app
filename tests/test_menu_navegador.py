@@ -612,7 +612,7 @@ def test_sin_movimiento_el_panel_abre_y_cierra_al_momento(abrir_pagina, ancho):
 
 
 # ---------- La pista de la primera vez (plan del rediseño, 3.5) ----------
-# Con el reloj de Playwright parado: la pista dura 1,7 s (4 s el globo solo, sin movimiento).
+# Con el reloj de Playwright parado: la lengüeta dura 1,7 s y el globo, 4 s (con o sin movimiento).
 
 GLOBO = "() => !document.getElementById('pista-asa').hidden"
 LENGUETA = "() => !document.querySelector('.pista-panel').hidden"
@@ -634,12 +634,38 @@ def test_la_pista_sale_una_vez_tras_la_intro_y_se_guarda(abrir_pagina, ancho):
     assert pagina.get_attribute("#pista-asa", "role") == "note"
     assert pagina.inner_text("#pista-asa") == "Desliza o toca para personalizar tu sesión"
     assert pagina.get_attribute(".pista-panel", "class").split() == ["pista-panel", "asomando"]
-    pagina.clock.run_for(1700)
+    pagina.clock.run_for(4000)
     assert not hay(pagina, GLOBO) and not hay(pagina, LENGUETA)
     pagina.reload()  # ya vista: ni al recargar
     pagina.wait_for_selector("#vista-entrenar h1", state="attached")
     pagina.clock.run_for(2000)
     assert not hay(pagina, GLOBO)
+
+
+@pytest.mark.parametrize("ancho", ANCHOS)
+def test_la_lengueta_se_recoge_enseguida_y_el_globo_se_queda_4_s(abrir_pagina, ancho):
+    pagina = abrir_pagina(ancho, pista=True, reloj=True)
+    pagina.wait_for_function(GLOBO)
+    pagina.clock.run_for(3000)
+    assert hay(pagina, GLOBO) and not hay(pagina, LENGUETA)
+    # El fundido del globo (animación CSS, que no lleva el reloj de prueba) dura lo mismo que él.
+    assert hay(pagina, "() => document.getElementById('pista-asa').getAnimations()[0].effect.getTiming().duration") == 4000
+    pagina.clock.run_for(1300)  # 4,3 s
+    assert not hay(pagina, GLOBO) and not hay(pagina, LENGUETA)
+
+
+@pytest.mark.parametrize("como", ["toque", "tecla"])
+def test_tocar_o_pulsar_una_tecla_retira_el_globo_antes(abrir_pagina, como):
+    pagina = abrir_pagina(pista=True, reloj=True)
+    pagina.wait_for_function(GLOBO)
+    pagina.clock.run_for(2000)
+    assert hay(pagina, GLOBO)
+    if como == "toque":
+        pagina.mouse.click(5, 5)
+    else:
+        pagina.keyboard.press("Shift")
+    assert not hay(pagina, GLOBO) and not hay(pagina, LENGUETA)
+    assert not hay(pagina, ABIERTO)  # solo retira la pista
 
 
 @pytest.mark.parametrize("ancho", ANCHOS)

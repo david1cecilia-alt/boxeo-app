@@ -589,7 +589,7 @@ main { position: relative; }
 html.menu-abierto { overflow: hidden; background: var(--superficie); }
 html.menu-abierto #asa { visibility: hidden; }
 /* La pista de la primera vez (menu.js): una lengüeta de 64 px con el aspecto del panel asoma ~1,2 s y se
-   recoge, con un globo a la izquierda del asa. Ni abre el <dialog> ni recibe toques. Con
+   recoge, con un globo encima del asa que se queda 4 s. Ni abre el <dialog> ni recibe toques. Con
    prefers-reduced-motion solo se ve el globo, quieto. */
 .pista-panel {
   position: fixed; z-index: 4; top: 0; right: 0; bottom: 0; width: 64px; pointer-events: none;
@@ -612,7 +612,7 @@ html.menu-abierto #asa { visibility: hidden; }
   background: inherit; border: inherit; border-width: 0 1px 1px 0;
   transform: rotate(45deg);
 }
-.globo-asa.asomando { animation: pista-globo 1.7s ease both; }
+.globo-asa.asomando { animation: pista-globo 4s ease both; }
 @keyframes pista-asomar {
   0% { transform: translateX(100%); }
   15%, 85% { transform: translateX(0); }
@@ -620,7 +620,7 @@ html.menu-abierto #asa { visibility: hidden; }
 }
 @keyframes pista-globo {
   0% { opacity: 0; }
-  12%, 88% { opacity: 1; }
+  5%, 95% { opacity: 1; }
   100% { opacity: 0; }
 }
 .asa-puntos {

@@ -17,8 +17,8 @@ const FRACCION = 0.3;     // del ancho del panel para abrir o cerrar al soltar
 const VELOCIDAD = 0.5;    // px/ms: un gesto rápido abre o cierra aunque sea corto
 const VENTANA = 100;      // ms de movimiento con los que se mide la velocidad al soltar
 const DURACION = 220;     // ms de la transición del panel (la del CSS)
-const PISTA = 1700;       // ms de la pista: entra, ~1,2 s quieta y se recoge (pista-asomar en el CSS)
-const PISTA_QUIETA = 4000; // ms del globo solo, con prefers-reduced-motion
+const LENGUETA = 1700;    // ms de la lengüeta de la pista: entra, ~1,2 s quieta y se recoge (pista-asomar en el CSS)
+const GLOBO = 4000;       // ms del globo de la pista, con o sin movimiento (pista-globo en el CSS)
 
 export const enRutaMenu = (hash = location.hash) => hash === RUTA_MENU || hash.startsWith(`${RUTA_MENU}/`);
 
@@ -36,24 +36,35 @@ export function iniciarMenu({ pistaVista = () => true, marcarPista = () => {} } 
   let tragarClic = false;
   let pendiente = false; // se pidió cerrar por el historial y aún no ha cambiado la ruta
   let esperandoIntro = false;
-  let finPista = null;   // temporizador de la pista que se está viendo
+  let finPista = null;   // temporizador de la pista que se está viendo (el del globo, que dura más)
+  let finLengueta = null;
 
   const sinMovimiento = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // ---------- La pista de la primera vez (plan del rediseño, 3.5) ----------
   // Asoma una lengüeta con el aspecto del panel y un globo junto al asa, sin abrir el <dialog> (nada queda
   // inerte y los toques pasan: pointer-events: none). Siempre después de la intro, solo en Entrenar con el
-  // menú cerrado y fuera de la sesión. Se da por vista al enseñarla o al abrir el menú.
+  // menú cerrado y fuera de la sesión. Se da por vista al enseñarla o al abrir el menú. La lengüeta se recoge
+  // enseguida; el globo se queda 4 s para que dé tiempo a leerlo, salvo que antes se toque o se pulse una tecla
+  // (el toque o la tecla siguen su camino: solo se retira el globo).
   const asaALaVista = () => document.body.dataset.vista === "entrenar" && !document.body.classList.contains("entrenando")
     && !dialogo.open && !enRutaMenu() && asa.getClientRects().length > 0 && getComputedStyle(asa).visibility !== "hidden";
+
+  function recogerLengueta() {
+    clearTimeout(finLengueta);
+    finLengueta = null;
+    lengueta.hidden = true;
+    lengueta.classList.remove("asomando");
+  }
 
   function retirarPista() {
     clearTimeout(finPista);
     finPista = null;
-    lengueta.hidden = true;
+    recogerLengueta();
     globo.hidden = true;
-    lengueta.classList.remove("asomando");
     globo.classList.remove("asomando");
+    window.removeEventListener("pointerdown", retirarPista, true);
+    window.removeEventListener("keydown", retirarPista, true);
   }
 
   function darPistaPorVista() {
@@ -74,7 +85,10 @@ export function iniciarMenu({ pistaVista = () => true, marcarPista = () => {} } 
       lengueta.classList.add("asomando");
       globo.classList.add("asomando");
     }
-    finPista = setTimeout(retirarPista, quieta ? PISTA_QUIETA : PISTA);
+    if (!quieta) finLengueta = setTimeout(recogerLengueta, LENGUETA);
+    finPista = setTimeout(retirarPista, GLOBO);
+    window.addEventListener("pointerdown", retirarPista, true);
+    window.addEventListener("keydown", retirarPista, true);
   }
 
   // El panel sigue al dedo: x = cuánto asoma fuera por la derecha (0 = abierto del todo).

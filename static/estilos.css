@@ -850,12 +850,28 @@ html.menu-abierto #asa { visibility: hidden; }
 
 /* ---------- Historial ---------- */
 #vista-historial { --alto-foto: 240px; --arriba-titular: 96px; --posicion-foto: 50% 35%; }
-#vista-perfil { --alto-foto: 250px; --arriba-titular: 110px; --posicion-foto: 55% 25%; }
+#vista-perfil { --alto-foto: 250px; --arriba-titular: 56px; --posicion-foto: 55% 25%; } /* bajo «← Volver» */
 :is(#vista-historial, #vista-perfil) h1 { font-size: clamp(2.5rem, 11.8vw, 3.6rem); }
 :is(#vista-historial, #vista-perfil) .marca-agua { top: 6px; right: -10px; font-size: 140px; opacity: 0.04; }
 :is(#vista-historial, #vista-perfil) .foto-cabecera::after {
   background: linear-gradient(180deg, rgba(10, 10, 10, 0.45) 0%, rgba(10, 10, 10, 0.25) 40%, var(--fondo) 100%);
 }
+/* Perfil: «← Volver» arriba y la identidad (avatar | guardia y nombre, «Cambiar» debajo del nombre). */
+.volver-perfil { margin: 0; padding-top: env(safe-area-inset-top, 0px); }
+.identidad-perfil {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "avatar quien" "avatar cambiar";
+  column-gap: 16px; row-gap: 10px; align-items: center;
+}
+.perfil-avatar { grid-area: avatar; align-self: start; }
+.perfil-avatar .avatar { width: 88px; height: 88px; font-size: 2.25rem; border: 2px solid var(--linea-chip); }
+.perfil-quien { grid-area: quien; min-width: 0; }
+.perfil-quien .antetitulo { margin-bottom: 4px; }
+/* El nombre, hasta en dos líneas (uno de 30 caracteres sin espacios se parte donde haga falta). */
+#vista-perfil .perfil-quien h1 {
+  margin: 0; font-size: clamp(2rem, 9vw, 2.75rem); line-height: 1.05; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden;
+}
+#cambiar-identidad { grid-area: cambiar; justify-self: start; }
 
 .resumen-historial { display: grid; gap: 18px; min-width: 0; }
 
@@ -1373,6 +1389,9 @@ dialog::backdrop { background: var(--velo); }
   }
   .con-foto .cabecera { padding-top: calc(var(--arriba-titular, 150px) + 30px); min-height: calc(var(--alto-foto, 360px) - 20px); }
   :is(#vista-historial, #vista-perfil) h1 { font-size: 4.5rem; }
+  /* Perfil: la identidad justo debajo de «← Volver», sin el alto de la foto. */
+  #vista-perfil .cabecera { padding-top: 24px; min-height: 0; }
+  #vista-perfil .perfil-quien h1 { font-size: 3.5rem; }
   .marca-agua.vertical { writing-mode: horizontal-tb; top: 36px; right: auto; left: -12px; font-size: 13rem; }
 
   /* Entrenar: a la izquierda la cabecera de perfil y el selector; a la derecha «Tu sesión» y Empezar, fijos

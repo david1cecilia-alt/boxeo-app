@@ -151,10 +151,17 @@
       <div class="foto-cabecera" aria-hidden="true">
         <img src="imagenes/perfil-cabecera.webp" alt="" width="553" height="941" loading="lazy">
       </div>
-      <header class="cabecera">
+      <p class="volver-perfil"><a href="#entrenar" class="volver" id="volver-perfil">← Volver</a></p>
+      <!-- La identidad: avatar, guardia, nombre (hasta en 2 líneas) y «Cambiar» (abre Ajustes en el menú). -->
+      <header class="cabecera identidad-perfil">
         <span class="marca-agua" aria-hidden="true">Yo</span>
-        <p class="antetitulo" id="antetitulo-perfil"></p>
-        <h1 id="t-perfil" tabindex="-1">Tu<br><span class="acento">estilo</span></h1>
+        <span class="perfil-avatar" id="perfil-avatar"></span>
+        <div class="perfil-quien">
+          <p class="antetitulo" id="antetitulo-perfil"></p>
+          <h1 id="t-perfil" tabindex="-1">Tu perfil</h1>
+        </div>
+        <button type="button" class="boton secundario pequeno" id="cambiar-identidad">Cambiar<span
+          class="solo-lectores"> nombre, avatar y guardia</span></button>
       </header>
       <div id="perfil-contenido"></div>
     </section>

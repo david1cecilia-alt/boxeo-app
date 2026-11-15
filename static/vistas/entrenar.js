@@ -102,6 +102,15 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     $("#cabecera-estilo").textContent = [nombreEstilo ?? "Descubre tu estilo", guardia].join(" · ");
   }
 
+  // La cabecera abre Perfil marcando la entrada nueva: su «← Volver» sabe que puede hacer history.back().
+  // Con Ctrl, Mayús, etc. (otra pestaña o ventana) se deja hacer al navegador.
+  $("#ir-perfil").addEventListener("click", (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    location.hash = "#perfil";
+    history.replaceState({ ...history.state, desdeEntrenar: true }, "");
+  });
+
   // Elegir la General o Prueba no borra la Personalizada: sigue guardada para cuando se vuelva. Prueba no se
   // recuerda: es solo para probar.
   $("#tipo-sesion").addEventListener("change", (e) => {

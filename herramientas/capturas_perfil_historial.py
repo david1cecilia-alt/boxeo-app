@@ -71,7 +71,7 @@ def capturar(sitio: Path) -> list[Path]:
             # Página entera: al agrandar la ventana, el Perfil crece y `entera` lo cortaría.
             rutas.append(SALIDA / f"perfil-plegado-{ancho}.png")
             pagina.screenshot(path=rutas[-1], full_page=True)
-            for seccion in ("#d-sobre-ti", "#d-mi-estilo"):
+            for seccion in ("#d-cuestionario", "#d-mi-estilo", "#d-sobre-ti"):
                 if not pagina.locator(seccion).evaluate("d => d.open"):
                     pagina.click(f"{seccion} > summary")
             pagina.wait_for_timeout(200)

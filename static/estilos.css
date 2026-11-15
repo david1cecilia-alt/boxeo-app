@@ -588,6 +588,41 @@ main { position: relative; }
    pintando el suyo. Con barras superpuestas (móvil) no hay hueco. */
 html.menu-abierto { overflow: hidden; background: var(--superficie); }
 html.menu-abierto #asa { visibility: hidden; }
+/* La pista de la primera vez (menu.js): una lengüeta de 64 px con el aspecto del panel asoma ~1,2 s y se
+   recoge, con un globo a la izquierda del asa. Ni abre el <dialog> ni recibe toques. Con
+   prefers-reduced-motion solo se ve el globo, quieto. */
+.pista-panel {
+  position: fixed; z-index: 4; top: 0; right: 0; bottom: 0; width: 64px; pointer-events: none;
+  background: var(--superficie); border-left: 1px solid var(--linea);
+  transform: translateX(100%);
+}
+.pista-panel.asomando { animation: pista-asomar 1.7s cubic-bezier(0.32, 0.72, 0, 1) both; }
+/* El globo va encima del asa (alineado a su derecha), no a su lado: a 1440 px a su izquierda queda «Empezar». */
+.globo-asa {
+  position: fixed; z-index: 6; top: 42%; right: calc(28px + env(safe-area-inset-right, 0px));
+  max-width: min(64vw, 240px); margin: 0; padding: 10px 14px; pointer-events: none;
+  transform: translateY(calc(-100% - 12px));
+  background: var(--superficie); border: 1px solid var(--linea-chip); border-radius: 12px;
+  color: var(--texto); font-size: 0.9375rem; font-weight: 600; line-height: 1.3;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.45);
+}
+/* La flechita del globo, hacia abajo, sobre la pastilla del asa (11 px de su borde derecho). */
+.globo-asa::after {
+  content: ""; position: absolute; bottom: -7px; right: 5px; width: 12px; height: 12px;
+  background: inherit; border: inherit; border-width: 0 1px 1px 0;
+  transform: rotate(45deg);
+}
+.globo-asa.asomando { animation: pista-globo 1.7s ease both; }
+@keyframes pista-asomar {
+  0% { transform: translateX(100%); }
+  15%, 85% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
+@keyframes pista-globo {
+  0% { opacity: 0; }
+  12%, 88% { opacity: 1; }
+  100% { opacity: 0; }
+}
 .asa-puntos {
   display: grid; place-items: center; flex: none; pointer-events: none;
   width: 22px; height: 56px; border-radius: 11px;
@@ -1557,7 +1592,7 @@ html.con-intro { overflow: hidden; background: #050303; }
    hoja de «Practicar más» ni la barra. Va junto a «entrada» (mismo nombre en el mismo puesto), así quitarla
    no repite la entrada; `backwards` no deja transform al acabar (no cambia el sitio de lo fijo). */
 @keyframes intro-acercar { from { transform: scale(1.04); } to { transform: none; } }
-html.intro-acercando .vista > :not(#asa, #menu, #elegir-practicar, #pantalla, .marca-agua) {
+html.intro-acercando .vista > :not(#asa, #menu, #elegir-practicar, #pantalla, .marca-agua, .pista-panel, .globo-asa) {
   animation: entrada 0.28s ease-out both, intro-acercar 0.4s ease-out backwards;
   animation-delay: 0s;
 }

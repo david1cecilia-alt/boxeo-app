@@ -8,7 +8,7 @@
 // Todos los cierres del usuario («✕», Esc, velo, arrastre, el asa del panel) pasan por pedirCierre():
 // con entrada propia, history.back(); si se llegó directo (recarga sin marca, enlace, redirección),
 // location.replace("#entrenar"), para no salir de la app. «Atrás» cambia la ruta y cierra por el mismo camino.
-import { $, $$, atraparFoco } from "./dom.js";
+import { $, $$, atraparFoco, esperarIntro } from "./dom.js";
 
 export const RUTA_MENU = "#entrenar/menu";
 export const SECCIONES = ["personalizar", "combinaciones", "ajustes"];
@@ -17,21 +17,65 @@ const FRACCION = 0.3;     // del ancho del panel para abrir o cerrar al soltar
 const VELOCIDAD = 0.5;    // px/ms: un gesto rápido abre o cierra aunque sea corto
 const VENTANA = 100;      // ms de movimiento con los que se mide la velocidad al soltar
 const DURACION = 220;     // ms de la transición del panel (la del CSS)
+const PISTA = 1700;       // ms de la pista: entra, ~1,2 s quieta y se recoge (pista-asomar en el CSS)
+const PISTA_QUIETA = 4000; // ms del globo solo, con prefers-reduced-motion
 
 export const enRutaMenu = (hash = location.hash) => hash === RUTA_MENU || hash.startsWith(`${RUTA_MENU}/`);
 
-export function iniciarMenu() {
+// `pistaVista()`: si la pista del asa ya se enseñó (perfil.pistas.asa); `marcarPista()` lo guarda.
+export function iniciarMenu({ pistaVista = () => true, marcarPista = () => {} } = {}) {
   const asa = $("#asa");
   const dialogo = $("#menu");
   const panel = $(".menu-panel", dialogo);
   const titulo = $("#t-menu", dialogo);
+  const lengueta = $(".pista-panel");
+  const globo = $("#pista-asa");
   const raiz = document.documentElement;
   let retirada = null;   // temporizador del cierre animado
   let arrastre = null;
   let tragarClic = false;
   let pendiente = false; // se pidió cerrar por el historial y aún no ha cambiado la ruta
+  let esperandoIntro = false;
+  let finPista = null;   // temporizador de la pista que se está viendo
 
   const sinMovimiento = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---------- La pista de la primera vez (plan del rediseño, 3.5) ----------
+  // Asoma una lengüeta con el aspecto del panel y un globo junto al asa, sin abrir el <dialog> (nada queda
+  // inerte y los toques pasan: pointer-events: none). Siempre después de la intro, solo en Entrenar con el
+  // menú cerrado y fuera de la sesión. Se da por vista al enseñarla o al abrir el menú.
+  const asaALaVista = () => document.body.dataset.vista === "entrenar" && !document.body.classList.contains("entrenando")
+    && !dialogo.open && !enRutaMenu() && asa.getClientRects().length > 0 && getComputedStyle(asa).visibility !== "hidden";
+
+  function retirarPista() {
+    clearTimeout(finPista);
+    finPista = null;
+    lengueta.hidden = true;
+    globo.hidden = true;
+    lengueta.classList.remove("asomando");
+    globo.classList.remove("asomando");
+  }
+
+  function darPistaPorVista() {
+    if (!pistaVista()) marcarPista();
+  }
+
+  async function pista() {
+    if (pistaVista() || esperandoIntro || finPista) return;
+    esperandoIntro = true;
+    await esperarIntro();
+    esperandoIntro = false;
+    if (pistaVista() || finPista || !asaALaVista()) return;
+    marcarPista();
+    const quieta = sinMovimiento();
+    lengueta.hidden = quieta;
+    globo.hidden = false;
+    if (!quieta) {
+      lengueta.classList.add("asomando");
+      globo.classList.add("asomando");
+    }
+    finPista = setTimeout(retirarPista, quieta ? PISTA_QUIETA : PISTA);
+  }
 
   // El panel sigue al dedo: x = cuánto asoma fuera por la derecha (0 = abierto del todo).
   function seguir(x, ancho) {
@@ -48,6 +92,8 @@ export function iniciarMenu() {
   function ponerDialogo() {
     clearTimeout(retirada);
     retirada = null;
+    retirarPista();
+    darPistaPorVista();
     if (!dialogo.open) dialogo.showModal();
   }
 
@@ -225,6 +271,10 @@ export function iniciarMenu() {
       pendiente = false;
       retirar(opciones);
     },
+    // Entrenar a la vista con el menú cerrado: la pista, si toca (espera a que acabe la intro).
+    pista,
+    // Al salir de Entrenar, ir a Mis combinaciones o empezar la sesión: fuera al momento.
+    retirarPista,
     get abierto() { return dialogo.open; },
   };
 }

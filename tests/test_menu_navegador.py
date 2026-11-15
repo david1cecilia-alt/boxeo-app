@@ -28,6 +28,7 @@ SEMBRAR = """<!doctype html><meta charset="utf-8">
 ANCHOS = [390, 1440]
 ALTO = {390: 844, 1440: 900}
 DURACION = 0.22  # s de la transición del panel (vistas/menu.js)
+INICIO = 1_800_000_000_000  # ms: la hora del reloj de prueba de la pista (da igual cuál)
 ABIERTO = "document.getElementById('menu').open"
 ESTA_ABIERTO = ("() => { const m = document.getElementById('menu'); return m.open && m.classList.contains('visible')"
                 " && location.hash.startsWith('#entrenar/menu'); }")
@@ -69,12 +70,16 @@ def abrir_pagina(sitio, navegador):
         tipo = "text/javascript" if fichero.suffix == ".js" else mimetypes.guess_type(fichero.name)[0]
         ruta.fulfill(body=fichero.read_bytes(), content_type=tipo or "application/octet-stream")
 
-    def nueva(ancho=390, ruta="#entrenar", toque=False, sin_movimiento=False, pista=False):
+    def nueva(ancho=390, ruta="#entrenar", toque=False, sin_movimiento=False, pista=False, intro=False, reloj=False):
+        """`pista` / `intro`: las deja salir (tests/sin_intro.py); `reloj`: el de Playwright, parado al cargar."""
         contexto = navegador.new_context(
             viewport={"width": ancho, "height": ALTO[ancho]}, device_scale_factor=1, has_touch=toque,
             reduced_motion="reduce" if sin_movimiento else "no-preference")
         pagina = contexto.new_page()
-        preparar(pagina, pista=pista)
+        preparar(pagina, intro=intro, pista=pista)
+        if reloj:
+            pagina.clock.install(time=INICIO)
+            pagina.clock.pause_at(INICIO)
         pagina.errores = []
         pagina.on("pageerror", lambda e: pagina.errores.append(str(e)))
         pagina.route(f"{ORIGEN}/**", servir)
@@ -604,3 +609,110 @@ def test_sin_movimiento_el_panel_abre_y_cierra_al_momento(abrir_pagina, ancho):
     assert estado == ["0s", "none", True]
     pagina.click(".menu-cerrar")
     assert not pagina.evaluate(ABIERTO)  # sin esperar a ninguna transición
+
+
+# ---------- La pista de la primera vez (plan del rediseño, 3.5) ----------
+# Con el reloj de Playwright parado: la pista dura 1,7 s (4 s el globo solo, sin movimiento).
+
+GLOBO = "() => !document.getElementById('pista-asa').hidden"
+LENGUETA = "() => !document.querySelector('.pista-panel').hidden"
+PISTA_VISTA = "() => JSON.parse(localStorage.getItem('boxeo') ?? 'null')?.perfil.pistas.asa === true"
+
+
+def hay(pagina, condicion):
+    return pagina.evaluate(condicion)
+
+
+@pytest.mark.parametrize("ancho", ANCHOS)
+def test_la_pista_sale_una_vez_tras_la_intro_y_se_guarda(abrir_pagina, ancho):
+    pagina = abrir_pagina(ancho, pista=True, intro=True, reloj=True)
+    assert hay(pagina, "() => document.getElementById('intro') !== null")
+    assert not hay(pagina, GLOBO) and not hay(pagina, PISTA_VISTA)  # durante la intro, todavía no
+    pagina.clock.run_for(2000)  # acaba la intro
+    pagina.wait_for_function(GLOBO)
+    assert hay(pagina, LENGUETA) and hay(pagina, PISTA_VISTA)
+    assert pagina.get_attribute("#pista-asa", "role") == "note"
+    assert pagina.inner_text("#pista-asa") == "Desliza o toca para personalizar tu sesión"
+    assert pagina.get_attribute(".pista-panel", "class").split() == ["pista-panel", "asomando"]
+    pagina.clock.run_for(1700)
+    assert not hay(pagina, GLOBO) and not hay(pagina, LENGUETA)
+    pagina.reload()  # ya vista: ni al recargar
+    pagina.wait_for_selector("#vista-entrenar h1", state="attached")
+    pagina.clock.run_for(2000)
+    assert not hay(pagina, GLOBO)
+
+
+@pytest.mark.parametrize("ancho", ANCHOS)
+def test_con_la_pista_ya_vista_no_sale(abrir_pagina, ancho):
+    pagina = abrir_pagina(ancho)  # tests/sin_intro.py la deja vista
+    assert hay(pagina, PISTA_VISTA)
+    assert not hay(pagina, GLOBO) and not hay(pagina, LENGUETA)
+
+
+def test_arrancando_en_historial_no_sale_hasta_ir_a_entrenar(abrir_pagina):
+    pagina = abrir_pagina(ruta="#historial", pista=True, reloj=True)
+    assert not hay(pagina, GLOBO) and not hay(pagina, PISTA_VISTA)
+    pagina.evaluate("location.hash = '#entrenar'")
+    pagina.wait_for_function(GLOBO)
+    assert hay(pagina, PISTA_VISTA)
+
+
+def test_si_se_abre_el_menu_antes_no_sale_y_queda_vista(abrir_pagina):
+    pagina = abrir_pagina(ruta="#entrenar/menu", pista=True)
+    assert hay(pagina, PISTA_VISTA)
+    pagina.click(".menu-cerrar")
+    esperar_cerrado(pagina)
+    assert not hay(pagina, GLOBO) and not hay(pagina, LENGUETA)
+
+
+@pytest.mark.parametrize("ancho", ANCHOS)
+def test_durante_la_pista_el_menu_sigue_cerrado_y_empezar_se_pulsa(abrir_pagina, ancho):
+    pagina = abrir_pagina(ancho, pista=True, reloj=True)
+    pagina.wait_for_function(GLOBO)
+    assert not hay(pagina, ABIERTO)
+    assert hay(pagina, "() => document.querySelector('[inert]') === null")
+    assert pagina.get_attribute("#asa", "aria-expanded") == "false"
+    pagina.click("#empezar")  # sin force: nada de la pista se interpone
+    assert hay(pagina, "() => document.body.classList.contains('entrenando')")
+    assert not hay(pagina, GLOBO) and not hay(pagina, LENGUETA)  # empezar la retira al momento
+
+
+def test_durante_la_pista_el_asa_abre_el_menu_y_la_retira(abrir_pagina):
+    pagina = abrir_pagina(pista=True)
+    pagina.wait_for_function(GLOBO)
+    abrir_con_el_asa(pagina)
+    assert not hay(pagina, GLOBO) and not hay(pagina, LENGUETA)
+
+
+def test_salir_de_entrenar_durante_la_pista_la_retira(abrir_pagina):
+    pagina = abrir_pagina(pista=True, reloj=True)
+    pagina.wait_for_function(GLOBO)
+    pagina.evaluate("location.hash = '#historial'")
+    pagina.wait_for_function("document.body.dataset.vista === 'historial'")
+    assert not hay(pagina, GLOBO) and not hay(pagina, LENGUETA)
+    pagina.evaluate("location.hash = '#entrenar'")  # ya vista: no vuelve
+    pagina.wait_for_function("document.body.dataset.vista === 'entrenar'")
+    assert not hay(pagina, GLOBO)
+
+
+@pytest.mark.parametrize("ancho", ANCHOS)
+def test_sin_movimiento_la_pista_es_solo_el_globo_quieto(abrir_pagina, ancho):
+    pagina = abrir_pagina(ancho, pista=True, sin_movimiento=True, reloj=True)
+    pagina.wait_for_function(GLOBO)
+    assert not hay(pagina, LENGUETA)
+    assert hay(pagina, "() => document.getElementById('pista-asa').getAnimations().length === 0")
+    assert hay(pagina, "() => getComputedStyle(document.getElementById('pista-asa')).opacity === '1'")
+    pagina.clock.run_for(3900)
+    assert hay(pagina, GLOBO)
+    pagina.clock.run_for(200)
+    assert not hay(pagina, GLOBO)
+
+
+@pytest.mark.parametrize("ancho", ANCHOS)
+def test_el_globo_de_la_pista_no_tapa_empezar(abrir_pagina, ancho):
+    pagina = abrir_pagina(ancho, pista=True, sin_movimiento=True, reloj=True)
+    pagina.wait_for_function(GLOBO)
+    g, e = pagina.locator("#pista-asa").bounding_box(), pagina.locator("#empezar").bounding_box()
+    assert g["y"] + g["height"] <= e["y"] or e["y"] + e["height"] <= g["y"] \
+        or g["x"] + g["width"] <= e["x"] or e["x"] + e["width"] <= g["x"]
+    assert g["x"] >= 0 and g["x"] + g["width"] <= ancho

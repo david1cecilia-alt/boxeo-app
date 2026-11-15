@@ -83,11 +83,14 @@ def test_un_v8_con_lo_de_la_general_abre_con_amateur_y_se_guarda_en_v9(pagina):
     assert elegido(pagina) == "general"
     assert resumen(pagina) == "3 × 3:00 · descanso 1:00"
     assert pagina.locator("#config input[type=number]").count() == 0  # la General no se edita
+    # Quien viene de la v8 ve la pista una vez: la migración la deja sin ver (asa: false, como comprueba
+    # tests/js/almacen.test.mjs) y, al enseñarla en Entrenar, se guarda vista.
+    pagina.wait_for_function("JSON.parse(localStorage.getItem('boxeo')).perfil.pistas.asa === true")
     datos = guardado(pagina)
     assert datos["version"] == 9
     assert datos["perfil"]["sesion"]["tipo"] == "general" and "asalto" not in datos["perfil"]["sesion"]
     assert datos["perfil"]["identidad"] == {"nombre": "", "avatar": {"tipo": "inicial"}, "foto": None}
-    assert datos["perfil"]["pistas"] == {"asa": False}
+    assert datos["perfil"]["pistas"] == {"asa": True}
     assert datos["combinacionesPropias"] == [PROPIA]
 
 

@@ -94,6 +94,10 @@
       <!-- El asa y el menú lateral (#entrenar/menu[/<seccion>]): lo mueve vistas/menu.js. -->
       <button id="asa" type="button" aria-controls="menu" aria-expanded="false"
               aria-label="Menú: personalizar, mis combinaciones y ajustes"><span class="asa-puntos" aria-hidden="true"></span></button>
+      <!-- La pista de la primera vez (vistas/menu.js): una lengüeta que asoma como el panel y un globo junto al
+           asa. No abren el <dialog> ni reciben toques (pointer-events: none). -->
+      <div class="pista-panel" aria-hidden="true" hidden></div>
+      <p id="pista-asa" class="globo-asa" role="note" hidden>Desliza o toca para personalizar tu sesión</p>
       <dialog id="menu" aria-labelledby="t-menu">
         <div class="menu-panel">
           <button class="asa-panel" type="button" tabindex="-1" aria-label="Cerrar el menú"><span class="asa-puntos" aria-hidden="true"></span></button>

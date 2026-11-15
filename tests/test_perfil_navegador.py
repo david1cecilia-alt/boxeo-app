@@ -55,11 +55,15 @@ BOXER = {"distancia": "larga", "presion": "salir", "volumen": "pocos_fuertes", "
 EMPATE = {"distancia": "corta", "presion": "salir", "volumen": "combos_largos", "iniciativa": "segun_rival"}
 
 
-def _abrir_perfil(pagina, estilo=None, ancho=390):
-    """Abre el Perfil con `estilo` (respuestas y «Mi estilo») guardado en el localStorage de prueba."""
+def _abrir_perfil(pagina, estilo=None, ancho=390, desde="#entrenar"):
+    """Abre el Perfil con `estilo` (respuestas y «Mi estilo») guardado en el localStorage de prueba.
+    `desde`: la vista donde arranca la app antes (la migración se guarda al arrancar en cualquiera)."""
     pagina.set_viewport_size({"width": ancho, "height": 900})
-    pagina.goto(f"{ORIGEN}/index.html#entrenar")
-    pagina.wait_for_selector("#empezar")
+    pagina.goto(f"{ORIGEN}/index.html{desde}")
+    if desde == "#entrenar":
+        pagina.wait_for_selector("#empezar")
+    else:
+        pagina.wait_for_function(f"document.body.dataset.vista === '{desde[1:]}'")
     pagina.wait_for_function("localStorage.getItem('boxeo') !== null")  # migrada y guardada al arrancar
     pagina.evaluate("""async (estilo) => {
         const datos = JSON.parse(localStorage.getItem("boxeo"));
@@ -76,7 +80,7 @@ def _abrir_perfil(pagina, estilo=None, ancho=390):
 
 
 def test_el_almacen_v6_se_migra_sin_notas_ni_revisiones_y_la_guardia_pasa_a_ajustes(pagina):
-    _abrir_perfil(pagina)
+    _abrir_perfil(pagina, desde="#perfil")  # sin pasar por Entrenar: la pista no sale y la migración se ve tal cual
     datos = _guardado(pagina)
     assert datos["version"] == 9  # la actual: pasa por la 7, la 8 (combinaciones propias) y la 9
     # Amateur con nivel 3 no es la General: Personalizada 3×3, para que la sesión no cambie.

@@ -154,6 +154,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     });
     estado.temporizador = setInterval(tic, 100);
     pantalla.encender();
+    menu.retirarPista();
     document.body.classList.add("entrenando");
     $("#pantalla").hidden = false;
     $("#progreso").innerHTML = "<i><b></b></i>".repeat(config.asaltos);
@@ -391,7 +392,10 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   // Lo abre y cierra la ruta: mostrar() le dice qué hacer en cada cambio. Sus secciones: Personalizar
   // sesión (personalizar.js), Mis combinaciones (aquí) y Ajustes (ajustes.js). Lo que se guarda en ellas
   // se refleja al momento aquí debajo (el selector y «Tu sesión»).
-  const menu = iniciarMenu();
+  const menu = iniciarMenu({
+    pistaVista: () => almacen.datos.perfil.pistas.asa,
+    marcarPista: () => almacen.guardarPerfil({ ...almacen.datos.perfil, pistas: { ...almacen.datos.perfil.pistas, asa: true } }),
+  });
   const alCambiarMenu = () => {
     aplicarPreferencias();
     resumir();
@@ -434,6 +438,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     mostrar(parametro = "") {
       const [primera, ...resto] = parametro.split("/");
       if (primera === "mis-combinaciones") {
+        menu.retirarPista();
         cerrarMenu({ animar: false, foco: false }); // el foco lo pone el creador
         // Con una sesión en marcha no se abre: la sesión sigue y la ruta vuelve a #entrenar.
         if (estado) return location.replace("#entrenar");
@@ -461,12 +466,16 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
         if (veniaDelCreador && seccion === "combinaciones") $("#ir-creador").focus({ preventScroll: true });
       } else {
         cerrarMenu();
+        menu.pista(); // la primera vez, tras la intro
       }
       // Del creador a Entrenar sin cambiar de vista (atrás, un enlace): el router no mueve el foco.
       if (veniaDelCreador && !enMenu) $("#t-entrenar").focus({ preventScroll: true });
     },
     // Al dejar Entrenar, el menú se cierra al momento (sin tocar el historial ni el foco).
-    ocultar() { cerrarMenu({ animar: false, foco: false }); },
+    ocultar() {
+      menu.retirarPista();
+      cerrarMenu({ animar: false, foco: false });
+    },
     get entrenando() { return estado !== null; },
   };
 }

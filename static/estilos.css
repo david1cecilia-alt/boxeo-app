@@ -26,33 +26,35 @@
   font-display: swap;
 }
 
-/* Todos los colores y letras de la app viven aquí (tokens). Negro neutro + rojo como único acento.
+/* Todos los colores y letras de la app viven aquí (tokens). Gris oscuro neutro (R = G = B) + rojo como único
+   acento. La intro «Que empiece el asalto» lleva sus colores propios, de su diseño.
    El fondo rojo completo se reserva para los últimos 10 s (--fase-final): en el resto de la
    app el rojo va en texto, botones, pestaña activa y chips destacados.
    Contraste comprobado en tests/js/contraste.test.mjs. */
 :root {
   color-scheme: dark;
-  --fondo: #0a0a0a;
-  --superficie: #141414;      /* tarjeta sólida */
-  --superficie-hover: #1c1c1c;
-  --campo: #101010;
+  --fondo: #121212;
+  --fondo-rgb: 18 18 18;       /* el mismo, para los degradados que funden las fotos: rgb(var(--fondo-rgb) / .45) */
+  --superficie: #1a1a1a;      /* tarjeta sólida */
+  --superficie-hover: #202020;
+  --campo: #161616;
   --cristal: rgba(255, 255, 255, 0.05);        /* tarjeta de cristal (sobre negro o foto oscura) */
   --borde-cristal: rgba(255, 255, 255, 0.10);
-  --barra: rgba(20, 20, 20, 0.95);             /* barra flotante: se lee hasta sobre una foto clara */
+  --barra: rgba(26, 26, 26, 0.97);             /* barra flotante: se lee hasta sobre una foto clara */
   --desenfoque: blur(16px) saturate(140%);
   --linea: rgba(255, 255, 255, 0.09);          /* borde de tarjetas, separadores y rejilla de gráficos */
   --linea-chip: rgba(255, 255, 255, 0.16);     /* chip no seleccionado y botón secundario */
-  --borde: #737373;           /* bordes de campos de texto: 3:1 */
-  --texto: #f5f3f0;
-  --suave: #a8a29e;           /* texto secundario */
-  --terciario: #d6d3d1;
-  --tenue: #8c8783;           /* días y meses futuros: más apagado que --suave, aún 4,5:1 */
+  --borde: #757575;           /* bordes de campos de texto: 3:1 */
+  --texto: #f2f2f2;
+  --suave: #a3a3a3;           /* texto secundario */
+  --terciario: #d4d4d4;
+  --tenue: #8f8f8f;           /* días y meses futuros: más apagado que --suave, aún 4,5:1 */
   --acento: #ff3b30;          /* rojo de texto: palabra roja, contexto, cifras */
   --acento-relleno: #d7192a;  /* rojo de relleno: botones, pestaña activa, chip destacado (texto blanco) */
   --acento-relleno-hover: #b81424;
   --sobre-acento: #ffffff;
-  --chip-activo: #f5f3f0;     /* chip seleccionado */
-  --sobre-chip-activo: #0a0a0a;
+  --chip-activo: #f2f2f2;     /* chip seleccionado */
+  --sobre-chip-activo: #121212;
   --secundario: rgba(255, 255, 255, 0.06);
   --secundario-hover: rgba(255, 255, 255, 0.12);
   --foco: #ffffff;
@@ -65,18 +67,18 @@
   --resplandor: rgba(255, 59, 48, 0.32); /* halo rojo detrás del maniquí */
 
   /* Fases de la sesión: fondo y texto */
-  --fase-asalto: #0a0a0a;
+  --fase-asalto: #121212;
   --fase-final: #d7192a;
   --fase-descanso: #0b3b34;
   --fase-reaccion: #ffb703;
   --fase-reaccion-texto: #0a0a0a;
-  --fase-pausa: #1c1c1c;
+  --fase-pausa: #202020;
 
   /* Series de los gráficos (validadas sobre --superficie) */
   --serie-asaltos: #ff3b30;   /* semana actual */
   --serie-barra: rgba(255, 255, 255, 0.34);  /* resto de semanas */
-  --serie-rpe: #e8e2da;
-  --acento-tenue: rgba(255, 59, 48, 0.14);   /* fondo de la pastilla de RPE */
+  --serie-rpe: #e5e5e5;
+  --acento-tenue: rgba(255, 59, 48, 0.08);   /* fondo de la pastilla de RPE */
 
   --alto-nav: 68px;
   --hueco: 20px;              /* margen lateral en móvil */
@@ -131,7 +133,7 @@ h3 { margin: 16px 0 6px; font-size: 0.85rem; font-weight: 600; color: var(--suav
 .marca-agua {
   position: absolute; z-index: -1; right: -8px; top: 10px;
   font-family: var(--letra-titular); text-transform: uppercase; line-height: 1;
-  font-size: clamp(5rem, 30vw, 11rem); color: #fff; opacity: 0.05;
+  font-size: clamp(5rem, 30vw, 11rem); color: var(--texto); opacity: 0.05;
   white-space: nowrap; pointer-events: none; user-select: none;
 }
 .marca-agua.vertical {
@@ -156,8 +158,8 @@ h1:focus-visible, h2:focus-visible { outline: 3px solid var(--foco); outline-off
 .foto-cabecera img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: var(--posicion-foto, 50% 45%); }
 .foto-cabecera::after {
   content: ""; position: absolute; inset: 0;
-  background: linear-gradient(180deg, rgba(10, 10, 10, 0.55) 0%, rgba(10, 10, 10, 0) 30%,
-    rgba(10, 10, 10, 0.2) 60%, var(--fondo) 100%);
+  background: linear-gradient(180deg, rgb(var(--fondo-rgb) / 0.55) 0%, rgb(var(--fondo-rgb) / 0) 30%,
+    rgb(var(--fondo-rgb) / 0.2) 60%, var(--fondo) 100%);
 }
 .con-foto .cabecera { padding-top: var(--arriba-titular, 166px); }
 
@@ -330,7 +332,7 @@ hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
 }
 .interruptor input::before {
   content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
-  border-radius: 50%; background: #fff; transition: transform 0.15s;
+  border-radius: 50%; background: var(--texto); transition: transform 0.15s;
 }
 .interruptor input:checked { background: var(--acento-relleno); }
 .interruptor input:checked::before { transform: translateX(16px); }
@@ -889,7 +891,7 @@ html.menu-abierto #asa { visibility: hidden; }
 :is(#vista-historial, #vista-perfil) h1 { font-size: clamp(2.5rem, 11.8vw, 3.6rem); }
 :is(#vista-historial, #vista-perfil) .marca-agua { top: 6px; right: -10px; font-size: 140px; opacity: 0.04; }
 :is(#vista-historial, #vista-perfil) .foto-cabecera::after {
-  background: linear-gradient(180deg, rgba(10, 10, 10, 0.45) 0%, rgba(10, 10, 10, 0.25) 40%, var(--fondo) 100%);
+  background: linear-gradient(180deg, rgb(var(--fondo-rgb) / 0.45) 0%, rgb(var(--fondo-rgb) / 0.25) 40%, var(--fondo) 100%);
 }
 /* Perfil: «← Volver» arriba y la identidad (avatar | guardia y nombre, «Cambiar» debajo del nombre). */
 .volver-perfil { margin: 0; padding-top: env(safe-area-inset-top, 0px); }
@@ -1263,7 +1265,7 @@ dialog.hoja { padding: 0; }
 #vista-aprende h1 { font-size: clamp(2.5rem, 11.8vw, 3.6rem); overflow-wrap: anywhere; }
 #vista-aprende .marca-agua { top: 6px; right: -10px; font-size: 140px; opacity: 0.04; }
 #vista-aprende .foto-cabecera::after {
-  background: linear-gradient(180deg, rgba(10, 10, 10, 0.45) 0%, rgba(10, 10, 10, 0.25) 40%, var(--fondo) 100%);
+  background: linear-gradient(180deg, rgb(var(--fondo-rgb) / 0.45) 0%, rgb(var(--fondo-rgb) / 0.25) 40%, var(--fondo) 100%);
 }
 #aprende-contenido { display: grid; gap: 16px; align-content: start; min-width: 0; }
 #aprende-contenido p { margin: 0; }
@@ -1419,8 +1421,8 @@ dialog::backdrop { background: var(--velo); }
   /* Foto a la derecha a su tamaño (como mucho), fundida al negro por la izquierda y por abajo. */
   .foto-cabecera { left: auto; right: calc(-1 * var(--hueco)); width: min(587px, 60%); height: calc(var(--alto-foto, 360px) + 60px); }
   .foto-cabecera::after {
-    background: linear-gradient(90deg, var(--fondo) 0%, rgba(10, 10, 10, 0) 45%),
-      linear-gradient(180deg, rgba(10, 10, 10, 0.3) 0%, rgba(10, 10, 10, 0) 30%, rgba(10, 10, 10, 0.2) 60%, var(--fondo) 100%);
+    background: linear-gradient(90deg, var(--fondo) 0%, rgb(var(--fondo-rgb) / 0) 45%),
+      linear-gradient(180deg, rgb(var(--fondo-rgb) / 0.3) 0%, rgb(var(--fondo-rgb) / 0) 30%, rgb(var(--fondo-rgb) / 0.2) 60%, var(--fondo) 100%);
   }
   .con-foto .cabecera { padding-top: calc(var(--arriba-titular, 150px) + 30px); min-height: calc(var(--alto-foto, 360px) - 20px); }
   :is(#vista-historial, #vista-perfil) h1 { font-size: 4.5rem; }

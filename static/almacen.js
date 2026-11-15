@@ -71,10 +71,18 @@ export function historialPorDefecto() {
   return { agrupar: "semana" };
 }
 
-// Nombre y avatar de la cabecera. `avatar`: null (la inicial del nombre), { tipo: "predefinido", id }
-// (uno de data/avatares.json) o { tipo: "foto", datos } (data URL JPEG o WebP, ver fotoValida).
+// Nombre, avatar y foto de la cabecera y del Perfil. `avatar`: el que se enseña, { tipo: "inicial" } (la
+// inicial del nombre), { tipo: "predefinido", id } (uno de data/avatares.json) o { tipo: "foto" } (la foto).
+// `foto`: la foto propia (data URL JPEG o WebP, ver fotoValida) o null; se guarda aunque se elija otro
+// avatar. `nombre`: sin espacios en los extremos y como mucho MAX_NOMBRE caracteres ("" = sin nombre).
+export const MAX_NOMBRE = 30;
 export function identidadPorDefecto() {
-  return { nombre: "", avatar: null };
+  return { nombre: "", avatar: { tipo: "inicial" }, foto: null };
+}
+
+// El nombre tal como se guarda: recortado y como mucho MAX_NOMBRE caracteres (sin partir un emoji en dos).
+export function nombreValido(nombre) {
+  return typeof nombre === "string" ? [...nombre.trim()].slice(0, MAX_NOMBRE).join("").trim() : "";
 }
 
 // Pistas de la interfaz ya enseñadas (true) o por enseñar (false).
@@ -213,13 +221,25 @@ export function fotoValida(datos) {
 }
 export const AVISO_FOTO = "La foto de tu avatar no era válida y se ha quitado.";
 
-// El avatar guardado si está bien formado; si no, null (y `quitada`: true si era una foto mala).
-function avatarValido(avatar) {
-  if (avatar?.tipo === "predefinido" && typeof avatar.id === "string" && avatar.id) {
-    return { avatar: { tipo: "predefinido", id: avatar.id }, quitada: false };
+// Los ids de data/avatares.json (lo carga cargarDatos). Solo se piden si hay un predefinido elegido.
+const idsAvataresPorDefecto = () => datosMotor().avatares.avatares.map((a) => a.id);
+
+// La identidad bien formada (ver identidadPorDefecto) y `quitada`: true si había una foto mala. Normaliza
+// el formato anterior, con la foto dentro del avatar ({ tipo: "foto", datos }), y el avatar null de antes.
+// Un predefinido que ya no está en data/avatares.json, o la foto elegida sin foto, pasan a la inicial.
+function identidadValida(identidad, idsAvatares) {
+  const { avatar } = identidad ?? {};
+  let foto = identidad?.foto ?? null;
+  if (foto === null && avatar?.tipo === "foto" && avatar.datos != null) foto = avatar.datos;
+  const quitada = foto !== null && !fotoValida(foto);
+  if (quitada) foto = null;
+  let elegido = { tipo: "inicial" };
+  if (avatar?.tipo === "predefinido" && typeof avatar.id === "string" && idsAvatares().includes(avatar.id)) {
+    elegido = { tipo: "predefinido", id: avatar.id };
+  } else if (avatar?.tipo === "foto" && foto !== null) {
+    elegido = { tipo: "foto" };
   }
-  if (avatar?.tipo === "foto" && fotoValida(avatar.datos)) return { avatar: { tipo: "foto", datos: avatar.datos }, quitada: false };
-  return { avatar: null, quitada: avatar?.tipo === "foto" };
+  return { identidad: { nombre: nombreValido(identidad?.nombre), avatar: elegido, foto }, quitada };
 }
 
 // «Practicar más» bien formado: [{ movimiento }], sin repetir (lo que traiga de más se ignora).
@@ -247,12 +267,11 @@ function sesionValida(s) {
 
 // Rellena lo que falte con los valores por defecto (datos escritos a mano o a medias) y quita lo mal
 // formado. En `avisos` deja lo quitado que hay que decir al usuario (una foto mala).
-function completar(datos, avisos = []) {
+function completar(datos, avisos = [], { idsAvatares = idsAvataresPorDefecto } = {}) {
   const base = vacio();
   const perfil = datos.perfil ?? {};
   const sesion = { ...base.perfil.sesion, ...perfil.sesion };
-  const identidad = { ...base.perfil.identidad, ...perfil.identidad };
-  const { avatar, quitada } = avatarValido(identidad.avatar);
+  const { identidad, quitada } = identidadValida(perfil.identidad, idsAvatares);
   if (quitada) avisos.push(AVISO_FOTO);
   return {
     ...base,
@@ -275,7 +294,7 @@ function completar(datos, avisos = []) {
       voz: { ...base.perfil.voz, ...perfil.voz },
       historial: { ...base.perfil.historial, ...perfil.historial },
       practicar: practicarValido(perfil.practicar),
-      identidad: { nombre: typeof identidad.nombre === "string" ? identidad.nombre : "", avatar },
+      identidad,
       pistas: { asa: perfil.pistas?.asa === true },
     },
   };
@@ -285,8 +304,11 @@ function completar(datos, avisos = []) {
  * Lleva unos datos de cualquier versión conocida a la actual.
  * Devuelve { datos, migrado, avisos }. Lanza ErrorAlmacen si la versión es de una app más nueva.
  * `nivelGeneral`: el nivel de la General (data/perfil.json); solo se pide al migrar una v8 con nivel.
+ * `idsAvatares`: los ids de data/avatares.json; solo se piden si hay un avatar predefinido elegido.
  */
-export function migrar(datos, { crearId = () => crearUuid(), nivelGeneral = () => datosMotor().perfil.nivel } = {}) {
+export function migrar(datos, {
+  crearId = () => crearUuid(), nivelGeneral = () => datosMotor().perfil.nivel, idsAvatares = idsAvataresPorDefecto,
+} = {}) {
   if (datos == null) return { datos: vacio(), migrado: false, avisos: [] };
   let version = datos.version;
   if (!Number.isInteger(version) || version < 0) throw new ErrorAlmacen("Datos sin versión válida");
@@ -299,7 +321,7 @@ export function migrar(datos, { crearId = () => crearUuid(), nivelGeneral = () =
     version = datos.version;
   }
   const avisos = [];
-  return { datos: completar(datos, avisos), migrado, avisos };
+  return { datos: completar(datos, avisos, { idsAvatares }), migrado, avisos };
 }
 
 export const claveSesion = (origen, id) => `${origen}:${id}`;
@@ -311,12 +333,13 @@ export function crearAlmacen({
   alFallar = () => {}, // la app muestra el aviso
   alAvisar = () => {}, // al leer se ha quitado algo (una foto mala): se dice, pero se sigue guardando
   nivelGeneral, // para migrar (ver migrar); por defecto, el de data/perfil.json
+  idsAvatares = idsAvataresPorDefecto, // los avatares predefinidos que existen (ver migrar)
 } = {}) {
   let datos = vacio();
   let persistente = true;
   let aviso = null; // texto para el usuario si algo falla
   let avisos = []; // lo quitado al leer o al importar la última vez
-  const opciones = nivelGeneral ? { crearId, nivelGeneral } : { crearId };
+  const opciones = nivelGeneral ? { crearId, nivelGeneral, idsAvatares } : { crearId, idsAvatares };
 
   function fallo(texto) {
     persistente = false;
@@ -408,7 +431,7 @@ export function crearAlmacen({
 
     // ---- Perfil ----
     guardarPerfil(perfil) {
-      datos.perfil = completar({ perfil }).perfil;
+      datos.perfil = completar({ perfil }, [], { idsAvatares }).perfil;
       guardar();
     },
 

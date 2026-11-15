@@ -1,7 +1,8 @@
 // Datos del motor (los mismos JSON de data/). Se inyectan: el navegador los carga
 // con fetch y los tests de Node con fs, así el motor no sabe de dónde vienen.
 
-const FICHEROS = ["acciones", "combinaciones", "perfil", "presets"];
+// `avatares` no lo usa el motor: lo carga aquí para que el almacén sepa qué avatares predefinidos existen.
+const FICHEROS = ["acciones", "avatares", "combinaciones", "perfil", "presets"];
 
 let actuales = null;
 

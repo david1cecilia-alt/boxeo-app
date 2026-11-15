@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
-  AVISO_FOTO, MAX_FOTO, TIPOS_SESION, VERSION, claveSesion, crearAlmacen, crearUuid, fotoValida, historialPorDefecto, identidadPorDefecto, migrar,
-  pistasPorDefecto, sesionPorDefecto, vacio, vozPorDefecto,
+  AVISO_FOTO, MAX_FOTO, MAX_NOMBRE, TIPOS_SESION, VERSION, claveSesion, crearAlmacen, crearUuid, fotoValida, historialPorDefecto,
+  identidadPorDefecto, migrar, nombreValido, pistasPorDefecto, sesionPorDefecto, vacio, vozPorDefecto,
 } from "../../static/almacen.js";
 import { cargarDatosDeDisco } from "./datos.mjs";
 
@@ -767,10 +767,10 @@ test("v8 → v9: «Practicar más» pierde el cuánto y conserva el orden", () =
   assert.deepEqual(datos.perfil.practicar, [{ movimiento: "6" }, { movimiento: "rodar" }]);
 });
 
-test("v8 → v9: nombre y avatar vacíos y la pista del asa sin ver; lo demás, intacto", () => {
+test("v8 → v9: sin nombre, con la inicial, sin foto y la pista del asa sin ver; lo demás, intacto", () => {
   const v8 = almacenV8();
   const { datos } = migrar(structuredClone(v8));
-  assert.deepEqual(datos.perfil.identidad, { nombre: "", avatar: null });
+  assert.deepEqual(datos.perfil.identidad, { nombre: "", avatar: { tipo: "inicial" }, foto: null });
   assert.deepEqual(datos.perfil.identidad, identidadPorDefecto());
   assert.deepEqual(datos.perfil.pistas, { asa: false });
   assert.deepEqual(datos.perfil.pistas, pistasPorDefecto());
@@ -848,14 +848,30 @@ test("fotoValida: solo data URL JPEG o WebP en base64 y como mucho 200 000 carac
   for (const mala of malas) assert.equal(fotoValida(mala), false, String(mala).slice(0, 40));
 });
 
-test("nombre y avatar (predefinido o foto) se guardan, se exportan y vuelven igual al importar", () => {
-  for (const avatar of [{ tipo: "predefinido", id: "chica-gorra" }, { tipo: "foto", datos: FOTO_JPEG }, null]) {
+// Unos datos v9 con esta identidad tal cual (sin pasar por completar).
+function conIdentidad(identidad) {
+  const datos = vacio();
+  datos.perfil.identidad = identidad;
+  return datos;
+}
+
+test("identidad nueva: nombre, avatar (inicial, predefinido o foto) y foto se guardan, se exportan y vuelven igual", () => {
+  const casos = [
+    { nombre: "Alex", avatar: { tipo: "inicial" }, foto: null },
+    { nombre: "Alex", avatar: { tipo: "predefinido", id: "chica-gorra" }, foto: null },
+    { nombre: "Alex", avatar: { tipo: "foto" }, foto: FOTO_JPEG },
+    // Elegir otro avatar no borra la foto.
+    { nombre: "", avatar: { tipo: "predefinido", id: "chico-oro" }, foto: FOTO_WEBP },
+    { nombre: "Alex", avatar: { tipo: "inicial" }, foto: FOTO_JPEG },
+  ];
+  for (const identidad of casos) {
     const storage = almacenamiento();
     const origen = crearAlmacen({ storage });
-    origen.guardarPerfil({ ...origen.datos.perfil, identidad: { nombre: "Alex", avatar }, pistas: { asa: true } });
-    assert.deepEqual(crearAlmacen({ storage }).datos.perfil.identidad, { nombre: "Alex", avatar });
+    origen.guardarPerfil({ ...origen.datos.perfil, identidad, pistas: { asa: true } });
+    assert.deepEqual(origen.datos.perfil.identidad, identidad);
+    assert.deepEqual(crearAlmacen({ storage }).datos.perfil.identidad, identidad);
     const copia = JSON.parse(JSON.stringify(origen.exportar()));
-    assert.deepEqual(copia.datos.perfil.identidad.avatar, avatar);
+    assert.deepEqual(copia.datos.perfil.identidad, identidad);
     const destino = crearAlmacen({ storage: almacenamiento() });
     destino.importar(copia);
     assert.deepEqual(destino.datos, origen.datos);
@@ -864,44 +880,122 @@ test("nombre y avatar (predefinido o foto) se guardan, se exportan y vuelven igu
   }
 });
 
-test("una foto mal formada en una copia se descarta al importar, se avisa y lo demás entra", () => {
-  const malas = ["data:image/png;base64,AAAA", `data:image/jpeg;base64,${"A".repeat(MAX_FOTO)}`, "javascript:alert(1)", 7];
-  for (const datos of malas) {
-    const copia = JSON.parse(JSON.stringify(crearAlmacen({ storage: almacenamiento() }).exportar()));
-    copia.datos.perfil.identidad = { nombre: "Alex", avatar: { tipo: "foto", datos } };
-    copia.datos.sesiones = [{ ...SESION_V0, id: "s-1" }];
-    const storage = almacenamiento();
-    const destino = crearAlmacen({ storage });
-    assert.equal(destino.importar(copia), true);
-    assert.deepEqual(destino.datos.perfil.identidad, { nombre: "Alex", avatar: null });
-    assert.deepEqual(destino.avisos, [AVISO_FOTO]);
-    assert.equal(destino.datos.sesiones.length, 1);
-    assert.equal(JSON.parse(storage.mapa.get("boxeo")).perfil.identidad.avatar, null);
+test("formato anterior: avatar null → inicial y { tipo: 'foto', datos } → foto aparte y avatar foto", () => {
+  assert.deepEqual(migrar(conIdentidad({ nombre: "Alex", avatar: null })).datos.perfil.identidad,
+    { nombre: "Alex", avatar: { tipo: "inicial" }, foto: null });
+  const r = migrar(conIdentidad({ nombre: "Alex", avatar: { tipo: "foto", datos: FOTO_JPEG } }));
+  assert.deepEqual(r.datos.perfil.identidad, { nombre: "Alex", avatar: { tipo: "foto" }, foto: FOTO_JPEG });
+  assert.deepEqual(r.avisos, []);
+  assert.equal(r.migrado, false);
+  assert.equal(r.datos.version, 9);
+  // Predefinido del formato anterior: igual que antes, con foto null.
+  assert.deepEqual(migrar(conIdentidad({ nombre: "Alex", avatar: { tipo: "predefinido", id: "chica-robot" } })).datos.perfil.identidad,
+    { nombre: "Alex", avatar: { tipo: "predefinido", id: "chica-robot" }, foto: null });
+});
+
+test("formato anterior en un almacén guardado: se normaliza al leer y se guarda así", () => {
+  const storage = almacenamiento({ boxeo: JSON.stringify(conIdentidad({ nombre: "Alex", avatar: { tipo: "foto", datos: FOTO_WEBP } })) });
+  const almacen = crearAlmacen({ storage });
+  assert.deepEqual(almacen.datos.perfil.identidad, { nombre: "Alex", avatar: { tipo: "foto" }, foto: FOTO_WEBP });
+  almacen.guardarPerfil(almacen.datos.perfil);
+  assert.deepEqual(JSON.parse(storage.mapa.get("boxeo")).perfil.identidad, { nombre: "Alex", avatar: { tipo: "foto" }, foto: FOTO_WEBP });
+});
+
+test("formato anterior en una copia: se importa normalizado", () => {
+  const copia = JSON.parse(JSON.stringify(crearAlmacen({ storage: almacenamiento() }).exportar()));
+  copia.datos.perfil.identidad = { nombre: "Alex", avatar: { tipo: "foto", datos: FOTO_JPEG } };
+  const destino = crearAlmacen({ storage: almacenamiento() });
+  assert.equal(destino.importar(copia), true);
+  assert.deepEqual(destino.datos.perfil.identidad, { nombre: "Alex", avatar: { tipo: "foto" }, foto: FOTO_JPEG });
+  assert.deepEqual(destino.avisos, []);
+});
+
+const FOTOS_MALAS = ["data:image/png;base64,AAAA", `data:image/jpeg;base64,${"A".repeat(MAX_FOTO)}`, "javascript:alert(1)", 7];
+
+test("una foto mal formada en una copia (formato nuevo o anterior) se descarta, se avisa y lo demás entra", () => {
+  for (const datos of FOTOS_MALAS) {
+    const formas = [{ nombre: "Alex", avatar: { tipo: "foto" }, foto: datos }, { nombre: "Alex", avatar: { tipo: "foto", datos } }];
+    for (const identidad of formas) {
+      const copia = JSON.parse(JSON.stringify(crearAlmacen({ storage: almacenamiento() }).exportar()));
+      copia.datos.perfil.identidad = identidad;
+      copia.datos.sesiones = [{ ...SESION_V0, id: "s-1" }];
+      const storage = almacenamiento();
+      const destino = crearAlmacen({ storage });
+      assert.equal(destino.importar(copia), true);
+      assert.deepEqual(destino.datos.perfil.identidad, { nombre: "Alex", avatar: { tipo: "inicial" }, foto: null });
+      assert.deepEqual(destino.avisos, [AVISO_FOTO]);
+      assert.equal(destino.datos.sesiones.length, 1);
+      assert.equal(JSON.parse(storage.mapa.get("boxeo")).perfil.identidad.foto, null);
+    }
   }
 });
 
+test("una foto mala guardada con otro avatar elegido se quita, se avisa y el avatar se queda", () => {
+  const r = migrar(conIdentidad({ nombre: "", avatar: { tipo: "predefinido", id: "chico-oro" }, foto: FOTOS_MALAS[0] }));
+  assert.deepEqual(r.datos.perfil.identidad, { nombre: "", avatar: { tipo: "predefinido", id: "chico-oro" }, foto: null });
+  assert.deepEqual(r.avisos, [AVISO_FOTO]);
+});
+
 test("una foto mala ya guardada se quita al leer y se avisa con alAvisar, sin dejar de guardar", () => {
-  const datos = vacio();
-  datos.perfil.identidad = { nombre: "Alex", avatar: { tipo: "foto", datos: "data:image/gif;base64,R0lG" } };
+  const datos = conIdentidad({ nombre: "Alex", avatar: { tipo: "foto", datos: "data:image/gif;base64,R0lG" } });
   const avisados = [];
   const almacen = crearAlmacen({ storage: almacenamiento({ boxeo: JSON.stringify(datos) }), alAvisar: (t) => avisados.push(t) });
   assert.deepEqual(avisados, [AVISO_FOTO]);
-  assert.equal(almacen.datos.perfil.identidad.avatar, null);
+  assert.deepEqual(almacen.datos.perfil.identidad.avatar, { tipo: "inicial" });
+  assert.equal(almacen.datos.perfil.identidad.foto, null);
   assert.equal(almacen.persistente, true);
   assert.equal(almacen.aviso, null);
 });
 
+test("avatar «foto» sin foto → inicial, sin aviso", () => {
+  for (const identidad of [{ avatar: { tipo: "foto" } }, { avatar: { tipo: "foto" }, foto: null }]) {
+    const r = migrar(conIdentidad({ nombre: "Alex", ...identidad }));
+    assert.deepEqual(r.datos.perfil.identidad, { nombre: "Alex", avatar: { tipo: "inicial" }, foto: null });
+    assert.deepEqual(r.avisos, []);
+  }
+});
+
+test("un predefinido que no está en data/avatares.json → inicial (la foto se queda)", () => {
+  for (const id of ["no-existe", "", 3, undefined]) {
+    const r = migrar(conIdentidad({ nombre: "Alex", avatar: { tipo: "predefinido", id }, foto: FOTO_JPEG }));
+    assert.deepEqual(r.datos.perfil.identidad, { nombre: "Alex", avatar: { tipo: "inicial" }, foto: FOTO_JPEG }, String(id));
+    assert.deepEqual(r.avisos, []);
+  }
+  // Los ids que valen salen de data/avatares.json (o de los que se le pasen).
+  const id = datosMotor.avatares.avatares[6].id;
+  assert.deepEqual(migrar(conIdentidad({ avatar: { tipo: "predefinido", id } })).datos.perfil.identidad.avatar, { tipo: "predefinido", id });
+  assert.deepEqual(migrar(conIdentidad({ avatar: { tipo: "predefinido", id: "otro" } }), { idsAvatares: () => ["otro"] })
+    .datos.perfil.identidad.avatar, { tipo: "predefinido", id: "otro" });
+  // Sin predefinido elegido no hace falta saberlos.
+  const nunca = { idsAvatares: () => { throw new Error("no se pide"); } };
+  assert.deepEqual(migrar(conIdentidad({ avatar: { tipo: "foto" }, foto: FOTO_JPEG }), nunca).datos.perfil.identidad.avatar, { tipo: "foto" });
+  assert.deepEqual(crearAlmacen({ storage: almacenamiento(), ...nunca }).datos.perfil.identidad, identidadPorDefecto());
+});
+
+test("el nombre se guarda sin espacios en los extremos y como mucho 30 caracteres", () => {
+  assert.equal(MAX_NOMBRE, 30);
+  assert.equal(nombreValido("  Alex  "), "Alex");
+  assert.equal(nombreValido("A".repeat(40)), "A".repeat(30));
+  assert.equal(nombreValido(`${"A".repeat(29)} B`), "A".repeat(29));
+  assert.equal(nombreValido(`${"🥊".repeat(31)}`), "🥊".repeat(30));
+  for (const raro of [12, null, undefined, {}]) assert.equal(nombreValido(raro), "");
+  const almacen = crearAlmacen({ storage: almacenamiento() });
+  almacen.guardarPerfil({ ...almacen.datos.perfil, identidad: { ...almacen.datos.perfil.identidad, nombre: `  ${"B".repeat(40)} ` } });
+  assert.equal(almacen.datos.perfil.identidad.nombre, "B".repeat(30));
+});
+
 test("nombre, avatar y pistas escritos a mano se sanean sin aviso", () => {
-  const datos = vacio();
-  datos.perfil.identidad = { nombre: 12, avatar: { tipo: "predefinido", id: "" } };
+  const datos = conIdentidad({ nombre: 12, avatar: { tipo: "predefinido", id: "" } });
   datos.perfil.pistas = { asa: "sí" };
   const r = migrar(datos);
-  assert.deepEqual(r.datos.perfil.identidad, { nombre: "", avatar: null });
+  assert.deepEqual(r.datos.perfil.identidad, identidadPorDefecto());
   assert.deepEqual(r.datos.perfil.pistas, { asa: false });
   assert.deepEqual(r.avisos, []);
-  const raro = vacio();
-  raro.perfil.identidad = { avatar: { tipo: "predefinido", id: "chico-oro", sobra: "<b>" } };
-  assert.deepEqual(migrar(raro).datos.perfil.identidad, { nombre: "", avatar: { tipo: "predefinido", id: "chico-oro" } });
+  for (const raro of [null, "x", { avatar: { tipo: "otro" } }, { avatar: "inicial" }]) {
+    assert.deepEqual(migrar(conIdentidad(raro)).datos.perfil.identidad, identidadPorDefecto(), JSON.stringify(raro));
+  }
+  const sobra = conIdentidad({ avatar: { tipo: "predefinido", id: "chico-oro", sobra: "<b>" }, otra: 1 });
+  assert.deepEqual(migrar(sobra).datos.perfil.identidad, { nombre: "", avatar: { tipo: "predefinido", id: "chico-oro" }, foto: null });
 });
 
 test("VERSION es 9", () => {

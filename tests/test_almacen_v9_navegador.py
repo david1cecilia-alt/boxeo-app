@@ -84,7 +84,7 @@ def test_un_v8_con_lo_de_la_general_abre_con_amateur_y_se_guarda_en_v9(pagina):
     datos = guardado(pagina)
     assert datos["version"] == 9
     assert datos["perfil"]["sesion"]["tipo"] == "general" and "asalto" not in datos["perfil"]["sesion"]
-    assert datos["perfil"]["identidad"] == {"nombre": "", "avatar": None}
+    assert datos["perfil"]["identidad"] == {"nombre": "", "avatar": {"tipo": "inicial"}, "foto": None}
     assert datos["perfil"]["pistas"] == {"asa": False}
     assert datos["combinacionesPropias"] == [PROPIA]
 
@@ -178,7 +178,7 @@ def test_importar_una_copia_v8_la_deja_en_v9(pagina, tmp_path):
     nuevo = guardado(pagina)
     assert nuevo["perfil"]["sesion"]["tipo"] == "personalizada"
     assert nuevo["perfil"]["practicar"] == [{"movimiento": "cuerpo"}]
-    assert nuevo["perfil"]["identidad"] == {"nombre": "", "avatar": None}
+    assert nuevo["perfil"]["identidad"] == {"nombre": "", "avatar": {"tipo": "inicial"}, "foto": None}
     assert nuevo["combinacionesPropias"] == [PROPIA]
     # Entrenar lo enseña con la sesión de siempre.
     pagina.goto(f"{ORIGEN}/index.html#entrenar")
@@ -207,7 +207,7 @@ def test_importar_una_copia_con_una_foto_mala_la_quita_y_avisa(pagina, tmp_path)
     assert aviso.inner_text() == "La foto de tu avatar no era válida y se ha quitado."
     assert aviso.get_attribute("role") == "alert"
     assert [t for t, _ in dialogos] == ["confirm"]  # solo «¿Seguir?»: ningún alert
-    assert guardado(pagina)["perfil"]["identidad"] == {"nombre": "Alex", "avatar": None}
+    assert guardado(pagina)["perfil"]["identidad"] == {"nombre": "Alex", "avatar": {"tipo": "inicial"}, "foto": None}
 
 
 def test_exportar_lleva_la_v9(pagina):
@@ -218,4 +218,4 @@ def test_exportar_lleva_la_v9(pagina):
     copia = json.loads(open(descarga.value.path(), encoding="utf-8").read())
     assert copia["version"] == 9 and copia["datos"]["version"] == 9
     assert copia["datos"]["perfil"]["sesion"]["tipo"] == "general"
-    assert copia["datos"]["perfil"]["identidad"] == {"nombre": "", "avatar": None}
+    assert copia["datos"]["perfil"]["identidad"] == {"nombre": "", "avatar": {"tipo": "inicial"}, "foto": None}

@@ -11,6 +11,7 @@ import pytest
 
 from herramientas.construir_sitio import construir
 from herramientas.fotos_maniqui import ORIGEN, abrir
+from tests.sin_intro import preparar
 from tests.menu_quieto import esperar_menu_quieto
 
 HAY_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
@@ -67,6 +68,7 @@ def sitio(tmp_path_factory):
 @pytest.fixture(scope="module")
 def pagina(sitio):
     with abrir(sitio, SEMBRAR, 390, 844, barras=True) as (pagina, errores):
+        preparar(pagina)
         pagina.goto(f"{ORIGEN}/__pagina__.html")
         pagina.wait_for_function("window.listo === true")
         yield pagina

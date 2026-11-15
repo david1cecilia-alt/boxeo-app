@@ -27,6 +27,7 @@ if __package__ in (None, ""):
 from herramientas.construir_sitio import construir  # noqa: E402
 from herramientas.fotos_maniqui import ORIGEN, abrir  # noqa: E402
 from tests.menu_quieto import esperar_menu_quieto  # noqa: E402
+from tests.sin_intro import preparar  # noqa: E402
 
 RAIZ = Path(__file__).resolve().parent.parent
 SALIDA = RAIZ / ".playwright-mcp" / "capturas" / "rediseno"
@@ -114,6 +115,7 @@ def capturar(sitio: Path, fase: str, nombres=None) -> list[Path]:
     rutas = []
     for ancho, alto in TAMANOS:
         with abrir(sitio, VACIA, ancho, alto, barras=ancho > 800) as (pagina, errores):
+            preparar(pagina)  # sin la intro ni la pista del asa
             pagina.emulate_media(reduced_motion="reduce")
             for nombre in nombres:
                 estado, llegar = capturas[nombre]

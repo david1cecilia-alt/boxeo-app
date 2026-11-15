@@ -10,6 +10,7 @@ import pytest
 
 from herramientas.construir_sitio import construir
 from herramientas.fotos_maniqui import ORIGEN, abrir
+from tests.sin_intro import preparar
 
 HAY_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
 pytestmark = pytest.mark.skipif(not HAY_PLAYWRIGHT and not os.environ.get("CI"),
@@ -66,6 +67,7 @@ def sitio(tmp_path_factory):
 @pytest.fixture
 def pagina(sitio):
     with abrir(sitio, VACIA, 390, 844) as (pagina, errores):
+        preparar(pagina)
         pagina.goto(f"{ORIGEN}/__pagina__.html")
         pagina.wait_for_function("window.listo === true")
         yield pagina

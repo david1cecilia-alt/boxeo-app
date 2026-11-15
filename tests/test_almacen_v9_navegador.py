@@ -13,6 +13,7 @@ import pytest
 
 from herramientas.construir_sitio import construir
 from herramientas.fotos_maniqui import ORIGEN, abrir
+from tests.sin_intro import preparar
 from tests.menu_quieto import esperar_menu_quieto
 
 HAY_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
@@ -45,6 +46,7 @@ def sitio(tmp_path_factory):
 @pytest.fixture
 def pagina(sitio):
     with abrir(sitio, VACIA, 390, 844) as (pagina, errores):
+        preparar(pagina)
         yield pagina
         assert not errores
 

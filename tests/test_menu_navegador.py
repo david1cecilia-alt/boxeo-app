@@ -17,6 +17,7 @@ import pytest
 from herramientas.construir_sitio import construir
 from herramientas.fotos_maniqui import ORIGEN
 from tests.menu_quieto import esperar_menu_quieto
+from tests.sin_intro import preparar
 
 HAY_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
 pytestmark = pytest.mark.skipif(not HAY_PLAYWRIGHT and not os.environ.get("CI"),
@@ -68,11 +69,12 @@ def abrir_pagina(sitio, navegador):
         tipo = "text/javascript" if fichero.suffix == ".js" else mimetypes.guess_type(fichero.name)[0]
         ruta.fulfill(body=fichero.read_bytes(), content_type=tipo or "application/octet-stream")
 
-    def nueva(ancho=390, ruta="#entrenar", toque=False, sin_movimiento=False):
+    def nueva(ancho=390, ruta="#entrenar", toque=False, sin_movimiento=False, pista=False):
         contexto = navegador.new_context(
             viewport={"width": ancho, "height": ALTO[ancho]}, device_scale_factor=1, has_touch=toque,
             reduced_motion="reduce" if sin_movimiento else "no-preference")
         pagina = contexto.new_page()
+        preparar(pagina, pista=pista)
         pagina.errores = []
         pagina.on("pageerror", lambda e: pagina.errores.append(str(e)))
         pagina.route(f"{ORIGEN}/**", servir)

@@ -1,11 +1,12 @@
 // Sección «Ajustes» del menú de Entrenar (#entrenar/menu/ajustes): la voz y su velocidad, «Nombrar
-// combinaciones» y la guardia. Valen para la General y la Personalizada (y Prueba), así que tocarlas no
-// cambia de tipo. Se guarda al cambiar cada campo, solo en este navegador. La voz y su velocidad se
-// aplican al momento (también a la línea «Voz: …» de Entrenar). Nombre y avatar llegarán aquí (R5).
+// combinaciones», la guardia, y el nombre y el avatar o la foto (avatar.js). Valen para la General y la
+// Personalizada (y Prueba), así que tocarlas no cambia de tipo. Se guarda al cambiar cada campo, solo en
+// este navegador. La voz y su velocidad se aplican al momento (también a la línea «Voz: …» de Entrenar).
 import { NOMBRE_VELOCIDAD, opcionesVoz, preferencias, recordarSesion } from "../ajustes.js";
 import { accionesPorIds, textoHablado } from "../motor/acciones.js";
 import { VELOCIDADES } from "../motor/ritmo.js";
 import { nombreCortoVoz } from "../voz.js";
+import { iniciarIdentidad } from "./avatar.js";
 import { $, anunciar, esc } from "./dom.js";
 
 const EJEMPLO = ["jab", "directo", "gancho_izq"]; // lo que dice «Probar voz»
@@ -16,7 +17,8 @@ const sinCortarIdioma = (texto) => esc(texto).replace(/ (\([^)]*\))$/, '&nbsp;<s
 const MODOS_VOZ = [["numeros", "1 · 2", "Números"], ["nombres", "Jab", "Nombres"], ["ambos", "1 jab", "Ambos"]];
 const GUARDIAS = [["diestro", "Diestro", "izquierda delante"], ["zurdo", "Zurdo", "derecha delante, todo en espejo"]];
 
-// `alCambiar()`: tras guardar Nombrar o la guardia (Entrenar repinta «Tu sesión» y los nombres de «Practicar más»).
+// `alCambiar()`: tras guardar Nombrar, la guardia o la identidad (Entrenar repinta la cabecera, «Tu sesión» y
+// los nombres de «Practicar más»).
 export function iniciarAjustes({ almacen, voz, alCambiar }) {
   const raiz = $("#menu-ajustes");
   // Al cargar las voces (o elegir otra) se rehace el selector.
@@ -26,6 +28,14 @@ export function iniciarAjustes({ almacen, voz, alCambiar }) {
     anunciar("Guardado");
     $("#guardado-ajustes", raiz).textContent = almacen.persistente ? "Guardado." : "Guardado solo en memoria.";
   }
+
+  const identidad = iniciarIdentidad({
+    almacen,
+    alGuardar() {
+      avisarGuardado();
+      alCambiar();
+    },
+  });
 
   function pintar() {
     const p = almacen.datos.perfil;
@@ -57,12 +67,12 @@ export function iniciarAjustes({ almacen, voz, alCambiar }) {
           ${GUARDIAS.map(([valor, nombre, detalle]) => `<label><input type="radio" name="guardia" value="${valor}"
             ${(valor === "zurdo") === zurdo ? "checked" : ""}><span>${nombre}<small class="solo-lectores">: ${detalle}</small></span></label>`).join("")}
         </fieldset>
-        <!-- Nombre y avatar o foto: R5. -->
-        <div id="identidad" hidden></div>
-        <p class="nota">Valen para la General y para tu Personalizada. Se guardan solo en este dispositivo.
-          <span id="guardado-ajustes"></span></p>
+        <p class="nota">La voz, Nombrar y la guardia valen para la General y para tu Personalizada.</p>
+        <div id="identidad"></div>
+        <p class="nota">Todo se guarda solo en este dispositivo. <span id="guardado-ajustes"></span></p>
       </form>`;
     pintarVoces();
+    identidad.pintar($("#identidad", raiz));
   }
 
   // Selector de voces: «Automática» y las voces en español de este dispositivo. Si la guardada no

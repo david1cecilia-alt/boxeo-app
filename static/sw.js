@@ -23,6 +23,7 @@ const FICHEROS = [
   "manifest.json",
   "vistas/ajustes.js",
   "vistas/aprende.js",
+  "vistas/avatar.js",
   "vistas/campos.js",
   "vistas/creador.js",
   "vistas/dom.js",

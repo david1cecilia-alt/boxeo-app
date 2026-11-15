@@ -672,6 +672,28 @@ html.menu-abierto #asa { visibility: hidden; }
 .menu-seccion .hueco-cabecera { align-items: center; }
 .menu-seccion .hueco-cabecera h3 { margin: 0; }
 
+/* ---------- Avatar (vistas/avatar.js): foto, predefinido o inicial, siempre redondo ---------- */
+.avatar {
+  display: grid; place-items: center; flex: none; width: 48px; height: 48px; border-radius: 50%;
+  object-fit: cover; background: var(--secundario); color: var(--texto);
+  font-size: 1.25rem; font-weight: 700; line-height: 1; overflow: hidden; user-select: none;
+}
+.avatar-inicial svg {
+  width: 24px; height: 24px; fill: none; stroke: var(--suave); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+/* «Nombre y avatar» en Ajustes: radios redondos que se envuelven; el elegido, con anillo claro. */
+.identidad { display: grid; gap: 12px; }
+.identidad .campo input { color: var(--texto); }
+.avatares-fila { display: flex; flex-wrap: wrap; gap: 8px; }
+.avatar-opcion { position: relative; display: block; border-radius: 50%; }
+.avatar-opcion input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.avatar-opcion .avatar { width: 52px; height: 52px; border: 3px solid transparent; box-sizing: border-box; }
+.avatar-opcion input:checked + .avatar { border-color: var(--chip-activo); }
+.avatar-opcion input:focus-visible + .avatar { outline: 3px solid var(--foco); outline-offset: 2px; }
+.identidad-foto .boton { flex: 1 1 auto; white-space: nowrap; }
+#mensaje-foto:empty { display: none; }
+#mensaje-foto.aviso { padding: 10px 14px; }
+
 /* ---------- Mis combinaciones (el creador, #entrenar/mis-combinaciones) ---------- */
 /* Dentro de Entrenar, en #entrenar-sub: mientras se ve, nada más de Entrenar (foto, cabecera, configuración).
    La subpágina trae su «Volver» y su título. */

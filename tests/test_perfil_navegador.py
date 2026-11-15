@@ -113,22 +113,32 @@ def test_orden_estilo_cuestionario_mi_estilo_y_sobre_ti_con_las_preguntas_en_su_
 
 def test_el_cuestionario_solo_se_ve_al_abrirlo_y_dice_hacer_o_repetir(pagina):
     _abrir_perfil(pagina, {"distancia": "larga", "presion": "salir", "volumen": "pocos_fuertes"})
-    # Faltan respuestas y no hay «Mi estilo»: aún no hay estilo, así que «Hacer el cuestionario», cerrado.
+    # Faltan respuestas: «Hacer el cuestionario», cerrado.
     assert pagina.locator("#t-cuestionario").text_content() == "Hacer el cuestionario"
     assert pagina.locator("#resumen-cuestionario").inner_text() == "3 de 7 preguntas"
     assert not pagina.locator("#d-cuestionario").evaluate("d => d.open")
     assert not pagina.locator("#f-estilo").is_visible()
     pagina.locator("#d-cuestionario > summary").click()
     assert pagina.locator("#f-estilo").is_visible()
-    # Con las respuestas que dan estilo: «Repetir el cuestionario», y también cerrado.
+    # Completo (da recomendación): «Repetir el cuestionario», y también cerrado.
     _abrir_perfil(pagina, BOXER)
     assert pagina.locator("#t-cuestionario").text_content() == "Repetir el cuestionario"
     assert not pagina.locator("#d-cuestionario").evaluate("d => d.open")
     assert not pagina.locator("#f-estilo").is_visible()
     assert pagina.locator("#estilo-resumen .titular").inner_text().lower() == "boxer"
-    # Con «Mi estilo» elegido y sin responder nada, también hay estilo.
-    _abrir_perfil(pagina, {"mi_estilo": "fajador"})
+    # Completo y con «Mi estilo» elegido (la tarjeta dice el elegido): «Repetir».
+    _abrir_perfil(pagina, {**BOXER, "mi_estilo": "fajador"})
     assert pagina.locator("#t-cuestionario").text_content() == "Repetir el cuestionario"
+    assert pagina.locator("#estilo-resumen .titular").inner_text().lower() == "fajador"
+    # 0 de 7 con «Mi estilo» elegido: la tarjeta dice el estilo, pero el cuestionario sigue por hacer.
+    _abrir_perfil(pagina, {"mi_estilo": "fajador"})
+    assert pagina.locator("#resumen-cuestionario").inner_text() == "0 de 7 preguntas"
+    assert pagina.locator("#t-estilo").inner_text().lower() == "tu estilo"
+    assert pagina.locator("#estilo-resumen .titular").inner_text().lower() == "fajador"
+    assert pagina.locator("#t-cuestionario").text_content() == "Hacer el cuestionario"
+    # A medias con «Mi estilo» elegido: también «Hacer».
+    _abrir_perfil(pagina, {"distancia": "larga", "presion": "salir", "mi_estilo": "boxer"})
+    assert pagina.locator("#t-cuestionario").text_content() == "Hacer el cuestionario"
     assert not pagina.locator("#d-sobre-ti").evaluate("d => d.open")
     assert not pagina.locator("#d-mi-estilo").evaluate("d => d.open")
     assert pagina.locator("#resumen-sobre-ti").inner_text() == "1 de 4 datos"  # la altura del almacén v6

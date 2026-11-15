@@ -476,8 +476,8 @@ R0 y R1 no cambian nada visible, así que se pueden revisar y unir antes de toca
 - ~~**R5**: nombre y avatar/foto en el hueco `#identidad` de Ajustes y en la cabecera de Entrenar; «← Volver»
   en Perfil.~~ **Hecho (R5, 15-11-2026)**: `vistas/avatar.js` en `#identidad` (nombre, inicial, 7 avatares, «Tu
   foto», «Subir una foto…», «Quitar foto»); la cabecera de Entrenar enseña avatar, nombre y estilo; Perfil con la
-  identidad y «Cambiar» (abre Ajustes en el menú y vuelve con el foco en «Cambiar»), el cuestionario detrás de
-  «Repetir el cuestionario» y «← Volver» (`history.back()` desde Entrenar; si no, `replace("#entrenar")`).
+  identidad y «Cambiar» (abre Ajustes en el menú y vuelve con el foco en «Cambiar»), el cuestionario plegado
+  («Hacer el cuestionario» hasta completarlo; después, «Repetir el cuestionario») y «← Volver» (`history.back()` desde Entrenar; si no, `replace("#entrenar")`).
   Formato de la identidad en 4.1.
 - **R7**: CSS que ya no usa nadie (`.presets`, `.resumen-presets`, `.config-tarjeta`, `.avanzados`,
   `.config-titulo`, `.con-foto` de Entrenar) e `imagenes/entrenar-cabecera.webp` (sigue en el precache).

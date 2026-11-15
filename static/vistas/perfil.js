@@ -2,8 +2,8 @@
 // navegador). Arriba, la identidad: avatar, nombre, la guardia («Diestro» o «Zurdo») y «Cambiar», que abre
 // Ajustes en el menú de Entrenar (allí se editan nombre, avatar y guardia) y, al cerrarlo, vuelve aquí con el
 // foco en «Cambiar». Debajo, el rectángulo con su estilo: el de «Mi estilo» si lo ha elegido (manda siempre) o
-// el recomendado según sus respuestas (data/estilos.json). Después, plegables: el cuestionario («Repetir el
-// cuestionario», o «Hacer…» si aún no hay estilo), «Mi estilo» y «Sobre ti» (fecha y medidas). Se guarda al
+// el recomendado según sus respuestas (data/estilos.json). Después, plegables: el cuestionario («Hacer el
+// cuestionario» hasta completarlo; después, «Repetir…»), «Mi estilo» y «Sobre ti» (fecha y medidas). Se guarda al
 // cambiar cada campo. Lo que cambia el entreno (voz, guardia, «Practicar más»…) está en el menú de Entrenar.
 //
 // Historial del navegador: la cabecera de Entrenar marca su entrada #perfil con `desdeEntrenar` («← Volver»
@@ -109,17 +109,17 @@ export function iniciarPerfil({ almacen }) {
     pintarResumen();
   }
 
-  // Tarjeta de estilo y resúmenes de las secciones: cambian al responder sin repintar todo. Hay estilo si se
-  // ha elegido uno en «Mi estilo» o la recomendación ya tiene las respuestas que necesita.
+  // Tarjeta de estilo y resúmenes de las secciones: cambian al responder sin repintar todo. El cuestionario
+  // dice «Repetir» solo si está completo (ya da recomendación); si no, «Hacer», aunque haya un estilo elegido
+  // en «Mi estilo».
   function pintarResumen() {
     const p = almacen.datos.perfil;
-    const mio = NOMBRES_ESTILO[p.estilo.mi_estilo];
     $("#resumen-cuestionario").textContent = `${respondidas(p.estilo)} de ${Object.keys(ESTILO).length} preguntas`;
-    $("#resumen-mi-estilo").textContent = mio ?? "Sin elegir";
+    $("#resumen-mi-estilo").textContent = NOMBRES_ESTILO[p.estilo.mi_estilo] ?? "Sin elegir";
     $("#resumen-sobre-ti").textContent = `${puestos(p.basicos)} de ${CAMPOS_SOBRE_TI.length} datos`;
     const t = estilos ? tarjetaEstilo(p, estilos) : null;
-    const hayEstilo = Boolean(mio) || Boolean(t && !t.faltan);
-    $("#t-cuestionario").textContent = hayEstilo ? "Repetir el cuestionario" : "Hacer el cuestionario";
+    const completo = Boolean(t && !t.faltan);
+    $("#t-cuestionario").textContent = completo ? "Repetir el cuestionario" : "Hacer el cuestionario";
     if (!t) return; // la tarjeta se pinta al cargar la tabla
     $("#t-estilo").textContent = t.titulo;
     $("#estilo-resumen").innerHTML = t.html;
@@ -145,7 +145,7 @@ export function iniciarPerfil({ almacen }) {
       </section>
 
       <details class="tarjeta plegable" id="d-cuestionario">
-        <summary><span class="titulo-plegable" id="t-cuestionario">Repetir el cuestionario</span>
+        <summary><span class="titulo-plegable" id="t-cuestionario">Hacer el cuestionario</span>
           <span class="resumen-plegable" id="resumen-cuestionario"></span></summary>
         <div class="cuerpo-plegable">
           <form class="grupos-estilo" id="f-estilo" aria-label="Cómo boxeas">

@@ -19,6 +19,7 @@ if __package__ in (None, ""):
 from herramientas.capturas_practicar import entera  # noqa: E402
 from herramientas.construir_sitio import construir  # noqa: E402
 from herramientas.fotos_maniqui import ORIGEN, abrir  # noqa: E402
+from tests.sin_intro import preparar as sin_intro  # noqa: E402
 
 RAIZ = Path(__file__).resolve().parent.parent
 SALIDA = RAIZ / ".playwright-mcp" / "capturas"
@@ -59,6 +60,7 @@ def capturar(sitio: Path) -> list[Path]:
     SALIDA.mkdir(parents=True, exist_ok=True)
     rutas = []
     with abrir(sitio, SEMBRAR, 390, 900) as (pagina, errores):
+        sin_intro(pagina)  # sin la intro ni la pista del asa
         pagina.goto(f"{ORIGEN}/__pagina__.html")
         pagina.wait_for_function("window.listo === true")
         for ancho in (390, 1024, 1440):
@@ -82,8 +84,8 @@ def capturar(sitio: Path) -> list[Path]:
             else:
                 pagina.screenshot(path=rutas[-1], full_page=True)
 
-            # Ajustes: sección del menú de Entrenar (#ajustes lleva allí); arriba y con el panel abajo del todo.
-            pagina.goto(f"{ORIGEN}/index.html#ajustes")
+            # Ajustes: sección del menú de Entrenar; arriba y con el panel abajo del todo.
+            pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/ajustes")
             pagina.wait_for_selector("#voz-id", state="visible")
             pagina.wait_for_timeout(400)
             rutas.append(SALIDA / f"ajustes-arriba-{ancho}.png")

@@ -20,6 +20,7 @@ if __package__ in (None, ""):
 
 from herramientas.construir_sitio import construir  # noqa: E402
 from herramientas.fotos_maniqui import ORIGEN, abrir  # noqa: E402
+from tests.sin_intro import preparar as sin_intro  # noqa: E402
 
 RAIZ = Path(__file__).resolve().parent.parent
 SALIDA = RAIZ / ".playwright-mcp" / "capturas"
@@ -62,6 +63,7 @@ def capturar(sitio: Path) -> list[Path]:
 
     for ancho in ANCHOS:
         with abrir(sitio, VACIA, ancho, ALTO[ancho], barras=True) as (pagina, errores):
+            sin_intro(pagina)  # sin la intro ni la pista del asa
             # Mis combinaciones, sección del menú de Entrenar (antes, una tarjeta de Ajustes).
             ir(pagina, "#entrenar/menu/combinaciones", EJEMPLOS)
             pagina.screenshot(path=guardar("menu", ancho))

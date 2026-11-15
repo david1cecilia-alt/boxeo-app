@@ -21,6 +21,7 @@ if __package__ in (None, ""):
 
 from herramientas.construir_sitio import construir  # noqa: E402
 from herramientas.fotos_maniqui import ORIGEN, abrir  # noqa: E402
+from tests.sin_intro import preparar as sin_intro  # noqa: E402
 
 RAIZ = Path(__file__).resolve().parent.parent
 SALIDA = RAIZ / ".playwright-mcp" / "capturas"
@@ -78,6 +79,7 @@ def capturar(sitio: Path) -> list[Path]:
 
     for ancho in ANCHOS:
         with abrir(sitio, VACIA, ancho, ALTO[ancho]) as (pagina, errores):
+            sin_intro(pagina)  # sin la intro ni la pista del asa
             abrir_ajustes(pagina)
             pagina.screenshot(path=guardar("vacio", ancho))
             elegir(pagina, ELEGIDOS[:1])
@@ -93,6 +95,7 @@ def capturar(sitio: Path) -> list[Path]:
             pagina.screenshot(path=guardar("zurdo", ancho))
             assert not errores, errores
     with abrir(sitio, VACIA, 390, 844) as (pagina, errores):
+        sin_intro(pagina)  # sin la intro ni la pista del asa
         pagina.add_init_script(SEMILLA)
         abrir_ajustes(pagina)
         elegir(pagina, ELEGIDOS)  # con la General elegida, pasa a la Personalizada (D3)

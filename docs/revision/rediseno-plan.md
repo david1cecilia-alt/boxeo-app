@@ -251,7 +251,7 @@ muestra. Una vez por arranque en frío: `sessionStorage`, con try/catch; si fall
 |---|---|---|
 | `perfil.sesion.asalto` (`amateur` / `prueba` / `personalizado`) | `perfil.sesion.tipo` (`general` / `personalizada`) | `personalizado` → `personalizada`. `amateur` o `prueba` → **`general` solo si todo lo demás coincide con lo fijo de la General** (D1). Si no (por ejemplo, nivel 2 o «Tus combinaciones» en Poco), → `personalizada` con `personalizada = { 3, 180, 60 }`, para que **al actualizar no cambie la sesión** (el mismo criterio que en v3 → v4 y v6 → v7). `prueba` nunca se queda. |
 | `perfil.practicar = [{ movimiento, cuanto }]` | `[{ movimiento }]` | Se quita `cuanto`. **Se podría hacer sin migrar**: el motor nuevo ignora `cuanto`. Como la v9 hace falta igualmente, se limpia aquí. |
-| — | `perfil.identidad = { nombre: "", avatar: null }` | Nuevo, vacío. `avatar`: `null`, `{ tipo: "predefinido", id }` o `{ tipo: "foto", datos }`. |
+| — | `perfil.identidad = { nombre: "", avatar: { tipo: "inicial" }, foto: null }` | Nuevo, vacío. Formato en 4.1 (decidido en la R5). |
 | — | `perfil.pistas = { asa: false }` | Nuevo. A quien ya usaba la app también se le enseña la pista una vez. |
 | `perfil.sesion.zurdo` (guardia) | **igual** | **Sin migrar**: solo cambia dónde se edita (Ajustes), no dónde se guarda. `preferencias()` ya lo da a la General y a la Personalizada. |
 | `perfil.sesion.voz` (Nombrar combinaciones) | **igual** | **Sin migrar**, por lo mismo. |
@@ -265,6 +265,26 @@ Tests de la migración (en `tests/js/almacen.test.mjs`): amateur con lo fijo →
 → personalizada 3×3; amateur con mezcla Poco → personalizada; prueba → general; personalizado →
 personalizada con sus valores; `cuanto` quitado; `identidad` y `pistas` por defecto; v0 → v9 de un tirón;
 copia v8 importada → v9; foto mal formada descartada al importar; `VERSION === 9`.
+
+### 4.1 Formato de la identidad (decidido en la R5, 15-11-2026)
+
+```
+identidad = { nombre, avatar, foto }
+avatar    = { tipo: "inicial" } | { tipo: "predefinido", id } | { tipo: "foto" }
+foto      = data URL validada con fotoValida() | null
+```
+
+- `avatar` es el que se enseña; `foto` se guarda aparte, así **elegir otro avatar no borra la foto** (solo
+  «Quitar foto»). `{ tipo: "foto" }` no lleva datos dentro.
+- `nombre`: sin espacios en los extremos y como mucho 30 caracteres (`nombreValido`, `MAX_NOMBRE`); `""` vale
+  y se enseña «Tu perfil».
+- `completar()` normaliza, **sin subir `VERSION`**: `avatar: null` → `{ tipo: "inicial" }`; el formato anterior
+  `{ tipo: "foto", datos }` → `foto = datos` (si pasa `fotoValida()`) y `avatar: { tipo: "foto" }`; una foto que no
+  pasa → `foto: null`, la inicial si era la elegida y el aviso `AVISO_FOTO`; un `id` predefinido que no está en
+  `data/avatares.json` → inicial; `{ tipo: "foto" }` sin foto → inicial.
+- Los ids válidos salen de `data/avatares.json`, que `cargarDatos()` carga con los demás JSON (solo se piden si
+  hay un predefinido elegido).
+- La foto va en la copia de seguridad y vuelve igual al importar; una mal formada se descarta y se avisa.
 
 ---
 
@@ -451,10 +471,14 @@ R0 y R1 no cambian nada visible, así que se pueden revisar y unir antes de toca
 
 ### 7.1 Lo que deja la R4 para después (10-11-2026)
 
-- **R5**: el antetítulo de Perfil («Ortodoxo · nivel Medio») lee el nivel de la Personalizada aunque esté
-  elegida la General; debería decir el de la sesión elegida (o no decir nivel).
-- **R5**: nombre y avatar/foto van en el hueco `#identidad` de la sección Ajustes, y la cabecera de Entrenar
-  (hoy un icono genérico y «Tu perfil») los enseña. Perfil ya no está en la barra: su «← Volver» a `#entrenar`.
+- ~~**R5**: el antetítulo de Perfil («Ortodoxo · nivel Medio») lee el nivel de la Personalizada aunque esté
+  elegida la General.~~ **Hecho (R5, 15-11-2026)**: el antetítulo dice solo «Diestro» o «Zurdo».
+- ~~**R5**: nombre y avatar/foto en el hueco `#identidad` de Ajustes y en la cabecera de Entrenar; «← Volver»
+  en Perfil.~~ **Hecho (R5, 15-11-2026)**: `vistas/avatar.js` en `#identidad` (nombre, inicial, 7 avatares, «Tu
+  foto», «Subir una foto…», «Quitar foto»); la cabecera de Entrenar enseña avatar, nombre y estilo; Perfil con la
+  identidad y «Cambiar» (abre Ajustes en el menú y vuelve con el foco en «Cambiar»), el cuestionario detrás de
+  «Repetir el cuestionario» y «← Volver» (`history.back()` desde Entrenar; si no, `replace("#entrenar")`).
+  Formato de la identidad en 4.1.
 - **R7**: CSS que ya no usa nadie (`.presets`, `.resumen-presets`, `.config-tarjeta`, `.avanzados`,
   `.config-titulo`, `.con-foto` de Entrenar) e `imagenes/entrenar-cabecera.webp` (sigue en el precache).
 - **R7**: con el panel del menú desplazado, la cabecera fija deja «Menú» muy pegado arriba.

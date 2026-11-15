@@ -215,19 +215,37 @@ de los tests y para el enlace «Crea la primera» si queda alguno.
 - **Foco**: al abrir, al título del menú (`h2 tabindex="-1"`), que el lector anuncia; al cerrar, de vuelta al
   asa (lo hace `dialog.close()`, que se comprueba con un test). Al volver de Mis combinaciones, el foco va a su
   enlace del menú.
-- **Pista de la primera vez**: si `perfil.pistas.asa` es `false`, tras la intro el panel asoma 64 px durante
-  unos 1,2 s, con el globo «Desliza o toca para personalizar tu sesión» (`role="note"`), y se recoge. Se marca
-  vista en cuanto se ha enseñado una vez o se abre el menú. Con `prefers-reduced-motion` no hay movimiento:
-  solo el globo unos segundos.
+- **Pista de la primera vez** (decidida en la R6, D15): si `perfil.pistas.asa` es `false`, la primera vez que se
+  ve Entrenar con el menú cerrado y fuera de una sesión, siempre **después** de la intro (`esperarIntro()`), asoma
+  una lengüeta de 64 px con el aspecto del panel durante unos 1,2 s, con el globo «Desliza o toca para
+  personalizar tu sesión» (`role="note"`), y se recoge. **No abre el `<dialog>`** (nada de `showModal()`, nada
+  inerte): lengüeta y globo llevan `pointer-events: none`, así que un toque en «Empezar» durante la pista
+  funciona. Si se arranca en `#historial`, `#aprende` o `#perfil`, sale al llegar a Entrenar. Se guarda
+  `pistas.asa = true` en cuanto se enseña o se abre el menú (si se abre antes, ya no sale). Se retira al momento
+  si se sale de Entrenar, se abre el menú o empieza la sesión. Con `prefers-reduced-motion` no hay movimiento:
+  solo el globo unos 4 s.
 - **Solo en Entrenar**: el asa está dentro de `#vista-entrenar`, y se oculta durante la sesión
   (`body.entrenando`) y en Mis combinaciones.
 
-### 3.6 Animación de entrada (solo el hueco)
+### 3.6 Animación de entrada «QUE EMPIECE EL ASALTO» (decidida en la R6, D14)
 
-`div#intro` a pantalla completa, gris liso, con un contenido vacío para la fase visual. Dura como mucho
-1 s. Desaparece sola, o al primer `pointerdown` o tecla, que se cancela (`preventDefault` +
-`stopPropagation`) para que no pulse lo que haya debajo. Con `prefers-reduced-motion: reduce` no se
-muestra. Una vez por arranque en frío: `sessionStorage`, con try/catch; si falla, se muestra (D13).
+`div#intro` (`aria-hidden="true"`, no roba el foco) es el primer hijo de `<body>`, seguido de
+`<script src="intro.js">` clásico: decide antes de pintar, así no se ve Entrenar un instante antes de la intro.
+
+- **Aspecto**: fondo casi negro con luces rojas desenfocadas (degradados radiales que se mueven muy despacio, sin
+  parpadeo); en el centro «QUE EMPIECE EL ASALTO» en Anton, mayúsculas, letras rojas de neón (`text-shadow`), cada
+  letra en su `span`, a `min(17vw, 7.5rem)` y partido solo entre palabras (2 líneas a 390 px).
+- **Tiempos (~2 s)**: 0-0,3 s encendidas; 0,3-1,5 s se apagan una a una en orden de lectura (~60 ms por letra, los
+  espacios no cuentan), cada una una sola vez y sin destellos (WCAG 2.3.1); 1,5-1,9 s la «cámara» avanza (scale de
+  la capa) mientras se desvanece, y el contenido de la vista visible al arrancar aparece con un acercamiento
+  1,04 → 1 (nunca el asa ni la barra). Al terminar, la capa sale del DOM y se lanza `intro-fin` en `document`;
+  `esperarIntro()` lo espera (si no hay `#intro`, ya ha terminado).
+- Solo `transform` y `opacity`, CSS puro (sin imágenes, librerías ni 3D); funciona sin conexión.
+- **Saltarla**: el primer toque o tecla la termina con un fundido de ~150 ms. Ese `pointerdown`/`keydown` se
+  cancela en captura (`preventDefault` + `stopPropagation`), y también el `click` (y el `keyup`) que lo siguen,
+  para que no pulse lo de debajo.
+- Con `prefers-reduced-motion: reduce` no se muestra. Una vez por arranque en frío: `sessionStorage['boxeo.intro']`,
+  con try/catch; si falla, se muestra (D13).
 
 ### 3.7 Avatar y foto
 
@@ -447,7 +465,12 @@ los ficheros nuevos al precache).
 - **`?prueba`**: sin él no hay opción Prueba; con él sí, y elegirla no se guarda.
 - **Foto**: recorte de una imagen 800 × 600 → 256 × 256 JPEG, < 60 KB; va en exportar y vuelve igual al
   importar; una foto mal formada en una copia se descarta.
-- **Intro**: dura ≤ 1 s; el toque que la salta no pulsa Empezar; con `prefers-reduced-motion` no aparece.
+- **Intro** (`tests/test_intro_navegador.py`, 390 y 1440): sale en arranque en frío y no al recargar; sale del DOM
+  en ≤ 2,2 s (`page.clock`); el toque (ratón y `tap()` táctil) o la tecla que la salta no pulsa Empezar; con
+  `prefers-reduced-motion` no aparece; con `sessionStorage` roto sí; `aria-hidden`; sin scroll horizontal a 320 px.
+- **Pista**: además de lo de arriba, arrancando en `#historial` no sale hasta ir a `#entrenar`; abrir el menú antes
+  la da por vista; durante la pista el `<dialog>` no está abierto y Empezar se pulsa; se retira al salir de
+  Entrenar o empezar la sesión.
 - **Motor**: `peso_practicar` con un factor y el tope con 3 elegidos, en Python y en la equivalencia JS.
 - **Perfil**: cabecera de Entrenar → `#perfil`; el cuestionario solo se ve tras «Repetir»; nombre y avatar
   salen en la cabecera.
@@ -482,6 +505,9 @@ R0 y R1 no cambian nada visible, así que se pueden revisar y unir antes de toca
 - **R7**: CSS que ya no usa nadie (`.presets`, `.resumen-presets`, `.config-tarjeta`, `.avanzados`,
   `.config-titulo`, `.con-foto` de Entrenar) e `imagenes/entrenar-cabecera.webp` (sigue en el precache).
 - **R7**: con el panel del menú desplazado, la cabecera fija deja «Menú» muy pegado arriba.
+- **R7**: las herramientas de capturas (además de `capturas_rediseno.py`) usan la ayuda sin intro
+  (`tests/sin_intro.py`).
+- **Fase visual**: menú fluido con inercia y aspecto glossy.
 - Cada sesión nueva guarda su `tipo` (General, Personalizada o Prueba) y el Historial la nombra por él; las de
   antes se siguen deduciendo por la duración (por eso `presets.json` conserva «Amateur 3×3»).
 
@@ -506,8 +532,10 @@ R0 y R1 no cambian nada visible, así que se pueden revisar y unir antes de toca
    «General · nivel …». Es lo esperado, pero cambia lo que se ve.
 7. **Muchos tests de navegador a la vez** (R4). Por eso R3 crea el menú vacío antes de mover nada a él.
 8. **La intro y la pista pueden tapar el primer clic de todos los tests de navegador** (y de las
-   herramientas de capturas). En R6, una salida común: el `sessionStorage` de la intro y `pistas.asa = true`
-   en los datos de prueba, o abrir con `prefers-reduced-motion`. Se decide antes de escribir la intro.
+   herramientas de capturas). **Resuelto en la R6 (D16)**: `tests/sin_intro.py` (`preparar(pagina)`) mete un
+   `add_init_script` que marca la intro vista en `sessionStorage` y deja `pistas.asa = true` en los datos v9 (y en
+   el almacén vacío); los datos de versiones viejas no se tocan, para probar la migración tal cual. La app no
+   lleva parámetros ni claves ocultas para esto.
 
 ---
 
@@ -530,3 +558,6 @@ Las propuestas de la tabla se revisaron con David. Lo que se decidió:
 | D11 | Practicar más: ¿3 movimientos como máximo? | **Sí, 3 como máximo**, según la simulación de 5.3. |
 | D12 | ¿El asa también en el PC? | **La misma asa.** |
 | D13 | ¿La intro en cada arranque o una vez por sesión del navegador? | **Sí a la propuesta**: una vez por arranque en frío (`sessionStorage`). |
+| D14 | ¿Qué enseña la intro? (R6, 15-11-2026) | «QUE EMPIECE EL ASALTO» en neón rojo sobre casi negro; las letras se apagan una a una y la cámara avanza; ~2 s, se salta con un toque o tecla que no llega a lo de debajo (3.6). |
+| D15 | ¿Cómo es la pista del asa? (R6) | Lengüeta de 64 px y globo, sin abrir el `<dialog>` ni dejar nada inerte, siempre tras la intro y solo en Entrenar (3.5). |
+| D16 | ¿Cómo evitan los tests la intro y la pista? (R6) | Una ayuda común, `tests/sin_intro.py`, con un `add_init_script`; la app no lleva nada para ello (riesgo 8). |

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Boxeo</title>
-  <meta name="theme-color" content="#0a0a0a">
+  <meta name="theme-color" content="#121212">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,86 +17,45 @@
   <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
+  <!-- Intro «QUE EMPIECE EL ASALTO»: intro.js la monta (o la quita) antes de pintar. Decorativa. -->
+  <div id="intro" aria-hidden="true"></div>
+  <script src="intro.js"></script>
   <p id="aviso-almacen" class="aviso fijo" role="alert" hidden></p>
 
   <main>
-    <!-- Ajustes en el móvil: engranaje arriba a la derecha (en el PC va en el menú). -->
-    <a id="ir-ajustes" href="#ajustes" aria-label="Ajustes">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></a>
-
     <!-- ============ Entrenar ============ -->
-    <section id="vista-entrenar" class="vista con-foto" aria-labelledby="t-entrenar">
-      <div class="foto-cabecera" aria-hidden="true">
-        <img src="imagenes/entrenar-cabecera.webp" alt="" width="587" height="887" fetchpriority="high">
-      </div>
-      <span class="marca-agua vertical" aria-hidden="true">Asalto</span>
-      <p class="marca-movil" aria-hidden="true">Boxeo</p>
-      <header class="cabecera">
-        <p class="antetitulo">Sesión de hoy</p>
-        <h1 id="t-entrenar" tabindex="-1">Listo para<br><span class="acento">el asalto</span></h1>
-      </header>
+    <section id="vista-entrenar" class="vista" aria-labelledby="t-entrenar">
+      <h1 id="t-entrenar" class="solo-lectores" tabindex="-1">Entrenar</h1>
       <form id="config" class="formulario">
-        <div class="config-opciones">
-          <div class="presets">
-            <fieldset class="fila-chips" id="presets" aria-describedby="resumen-config">
-              <legend class="solo-lectores">Preset</legend>
-            </fieldset>
-            <p id="resumen-config" class="resumen-presets"></p>
-          </div>
+        <!-- Un solo botón (un enlace) a #perfil: avatar (foto, predefinido o inicial, decorativo: el nombre
+             se lee al lado), nombre (o «Tu perfil») y estilo. Lo rellena entrenar.js con vistas/avatar.js. -->
+        <a href="#perfil" class="cabecera-perfil" id="ir-perfil">
+          <span class="cabecera-avatar" id="cabecera-avatar"></span>
+          <span class="cabecera-perfil-texto">
+            <span class="cabecera-perfil-nombre" id="cabecera-nombre">Tu perfil</span>
+            <span class="cabecera-perfil-estilo" id="cabecera-estilo"></span>
+          </span>
+          <svg class="flecha" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        </a>
 
-          <div class="tarjeta cristal config-tarjeta">
-            <fieldset class="niveles" id="niveles" aria-describedby="nota-nivel">
-              <legend><span>Nivel</span></legend>
-              <label><input type="radio" name="nivel" value="1"><span><b>1</b>Básico</span></label>
-              <label><input type="radio" name="nivel" value="2"><span><b>2</b>Medio</span></label>
-              <label><input type="radio" name="nivel" value="3"><span><b>3</b>Avanzado</span></label>
-            </fieldset>
-            <p id="nota-nivel" class="nota nota-campo" hidden></p>
-            <hr>
-            <div class="mezcla">
-              <fieldset class="niveles mezclas" id="mezclas" aria-describedby="nota-mezcla">
-                <legend><span>Tus combinaciones</span></legend>
-              </fieldset>
-              <p id="nota-mezcla" class="nota nota-campo" hidden></p>
-            </div>
-            <hr>
-            <div class="ritmo">
-              <label for="ritmo" class="cabeza-campo"><span>Ritmo</span><span id="resumen-ritmo" class="resumen-config"></span></label>
-              <input type="range" id="ritmo" min="1" max="5" step="1" value="3" aria-describedby="resumen-ritmo">
-              <div class="marcas-ritmo" aria-hidden="true"><span>Calmado</span><span>Intenso</span></div>
-            </div>
-            <hr>
-            <fieldset class="niveles modos-voz">
-              <legend><span>Nombrar combinaciones</span></legend>
-              <label><input type="radio" name="voz" value="numeros"><span><b>1 · 2</b>Números</span></label>
-              <label><input type="radio" name="voz" value="nombres"><span><b>Jab</b>Nombres</span></label>
-              <label><input type="radio" name="voz" value="ambos"><span><b>1 jab</b>Ambos</span></label>
-            </fieldset>
-            <hr>
-            <div class="interruptores">
-              <label class="interruptor"><span>Zurdo<small class="solo-lectores">: todo en espejo, derecha delante</small></span>
-                <input type="checkbox" role="switch" id="zurdo"></label>
-              <label class="interruptor"><span>Reacción<small class="solo-lectores">: señales al azar, esquiva, contra, sal…</small></span>
-                <input type="checkbox" role="switch" id="reaccion"></label>
-            </div>
-            <details class="avanzados" id="avanzados">
-              <summary>Ajustes avanzados</summary>
-              <div class="rejilla">
-                <label class="campo">Asaltos <input id="asaltos" type="number" inputmode="numeric" min="1" max="20"></label>
-                <label class="campo">Duración (s) <input id="duracion" type="number" inputmode="numeric" min="20" max="600" step="10"></label>
-                <label class="campo">Descanso (s) <input id="descanso" type="number" inputmode="numeric" min="0" max="300" step="5"></label>
-              </div>
-            </details>
-          </div>
-        </div>
+        <fieldset class="segmentado-tipo" id="tipo-sesion">
+          <legend class="solo-lectores">Tipo de sesión</legend>
+        </fieldset>
 
-        <div class="config-sesion">
-          <p class="titular config-titulo" aria-hidden="true">Tu <span class="acento">sesión</span></p>
-          <p class="resumen-grande" id="resumen-grande" aria-hidden="true"></p>
-          <p class="resumen-elecciones" id="resumen-elecciones" aria-hidden="true"></p>
+        <div class="derecha-entrenar">
+        <section class="config-sesion tu-sesion" aria-labelledby="t-tu-sesion">
+          <h2 id="t-tu-sesion" class="titulo-campo">Tu sesión</h2>
+          <p class="resumen-grande" id="resumen-grande"></p>
+          <p class="resumen-detalle" id="resumen-detalle"></p>
+          <ul class="chips-sesion" id="resumen-elecciones" aria-label="Lo elegido"></ul>
+          <p class="nota nota-sesion" id="nota-sesion"></p>
+        </section>
+        <div class="empezar-caja">
           <button id="empezar" type="submit" class="boton principal empezar">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>Empezar</button>
           <p id="info-voz" class="nota"></p>
+          <p class="aviso mensaje-error" id="mensaje-empezar" role="alert" hidden></p>
+        </div>
         </div>
       </form>
 
@@ -129,6 +88,44 @@
         </div>
         <p class="nota atajos">Teclado: espacio = pausa · Esc = parar</p>
       </section>
+
+      <!-- «Mis combinaciones» (#entrenar/mis-combinaciones/…): lo pinta vistas/creador.js. -->
+      <div id="entrenar-sub" hidden></div>
+
+      <!-- El asa y el menú lateral (#entrenar/menu[/<seccion>]): lo mueve vistas/menu.js. -->
+      <button id="asa" type="button" aria-controls="menu" aria-expanded="false"
+              aria-label="Menú: personalizar, mis combinaciones y ajustes"><span class="asa-puntos" aria-hidden="true"></span></button>
+      <!-- La pista de la primera vez (vistas/menu.js): una lengüeta que asoma como el panel y un globo junto al
+           asa. No abren el <dialog> ni reciben toques (pointer-events: none). -->
+      <div class="pista-panel" aria-hidden="true" hidden></div>
+      <p id="pista-asa" class="globo-asa" role="note" hidden>Desliza o toca para personalizar tu sesión</p>
+      <dialog id="menu" aria-labelledby="t-menu">
+        <div class="menu-panel">
+          <button class="asa-panel" type="button" tabindex="-1" aria-label="Cerrar el menú"><span class="asa-puntos" aria-hidden="true"></span></button>
+          <div class="menu-contenido">
+            <header class="menu-cabecera">
+              <h2 id="t-menu" tabindex="-1" autofocus>Menú</h2>
+              <button class="menu-cerrar" type="button" aria-label="Cerrar el menú">✕</button>
+            </header>
+            <!-- Las pintan vistas/personalizar.js, vistas/entrenar.js y vistas/ajustes.js. -->
+            <details data-seccion="personalizar" open>
+              <summary>Personalizar sesión</summary>
+              <div id="menu-personalizar" class="menu-seccion"></div>
+            </details>
+            <details data-seccion="combinaciones">
+              <summary>Mis combinaciones</summary>
+              <div id="menu-combinaciones" class="menu-seccion"></div>
+            </details>
+            <details data-seccion="ajustes">
+              <summary>Ajustes</summary>
+              <div id="menu-ajustes" class="menu-seccion"></div>
+            </details>
+          </div>
+        </div>
+      </dialog>
+      <!-- «Practicar más» (Personalizar sesión): la hoja para elegir. Fuera de #menu a propósito: es otro
+           modal encima del menú, y dentro sus teclas subirían hasta el atraparFoco del menú. -->
+      <dialog id="elegir-practicar" class="hoja" aria-labelledby="t-elegir"></dialog>
     </section>
 
     <!-- ============ Aprende ============ -->
@@ -162,24 +159,21 @@
       <div class="foto-cabecera" aria-hidden="true">
         <img src="imagenes/perfil-cabecera.webp" alt="" width="553" height="941" loading="lazy">
       </div>
-      <header class="cabecera">
+      <p class="volver-perfil"><a href="#entrenar" class="volver" id="volver-perfil">← Volver</a></p>
+      <!-- La identidad: avatar, guardia, nombre (hasta en 2 líneas) y «Cambiar» (abre Ajustes en el menú). -->
+      <header class="cabecera identidad-perfil">
         <span class="marca-agua" aria-hidden="true">Yo</span>
-        <p class="antetitulo" id="antetitulo-perfil"></p>
-        <h1 id="t-perfil" tabindex="-1">Tu<br><span class="acento">estilo</span></h1>
+        <span class="perfil-avatar" id="perfil-avatar"></span>
+        <div class="perfil-quien">
+          <p class="antetitulo" id="antetitulo-perfil"></p>
+          <h1 id="t-perfil" tabindex="-1">Tu perfil</h1>
+        </div>
+        <button type="button" class="boton secundario pequeno" id="cambiar-identidad">Cambiar<span
+          class="solo-lectores"> nombre, avatar y guardia</span></button>
       </header>
       <div id="perfil-contenido"></div>
     </section>
 
-    <!-- ============ Ajustes ============ -->
-    <section id="vista-ajustes" class="vista" aria-labelledby="t-ajustes" hidden>
-      <p class="volver-movil"><a href="#entrenar" class="volver" id="volver-ajustes">← Volver</a></p>
-      <header class="cabecera">
-        <span class="marca-agua" aria-hidden="true">Voz</span>
-        <p class="antetitulo">Lo que cambia tu entreno</p>
-        <h1 id="t-ajustes" tabindex="-1">Tus<br><span class="acento">ajustes</span></h1>
-      </header>
-      <div id="ajustes-contenido"></div>
-    </section>
   </main>
 
   <nav id="pestanas" aria-label="Secciones">
@@ -195,14 +189,6 @@
     <a href="#historial">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
       <span>Historial</span>
-    </a>
-    <a href="#perfil">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
-      <span>Perfil</span>
-    </a>
-    <a href="#ajustes" class="solo-escritorio">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-      <span>Ajustes</span>
     </a>
   </nav>
 

@@ -13,6 +13,7 @@ import pytest
 
 from herramientas.construir_sitio import construir
 from herramientas.fotos_maniqui import ORIGEN, abrir
+from tests.sin_intro import preparar
 
 HAY_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
 pytestmark = pytest.mark.skipif(not HAY_PLAYWRIGHT and not os.environ.get("CI"),
@@ -50,6 +51,7 @@ def pagina(tmp_path_factory):
     assert HAY_PLAYWRIGHT, "Las pruebas del gráfico necesitan Playwright (pip install -r requirements.txt)"
     sitio = construir(tmp_path_factory.mktemp("sitio") / "_site", "prueba", fotos=False)
     with abrir(sitio, SEMBRAR, 390, 844, barras=True) as (pagina, errores):
+        preparar(pagina)
         pagina.goto(f"{ORIGEN}/__pagina__.html")
         pagina.wait_for_function("window.listo === true")
         yield pagina
@@ -108,7 +110,7 @@ def test_rpe_cambia_la_grafica_y_se_recuerda(pagina):
     assert _titulo(pagina) == "RPE medio por semana"
     assert pagina.locator(".unidad-grafico").inner_text() == "RPE (0–10)"
     assert _guardado(pagina)["perfil"]["historial"] == {"agrupar": "semana", "grafica": "rpe"}
-    assert _guardado(pagina)["version"] == 8
+    assert _guardado(pagina)["version"] == 9
     # Se recuerda al volver al Historial desde otra pestaña y al recargar.
     pagina.evaluate("location.hash = '#entrenar'")
     pagina.wait_for_selector("#vista-entrenar h1", state="visible")

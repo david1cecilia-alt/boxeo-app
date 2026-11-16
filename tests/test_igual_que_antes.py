@@ -17,7 +17,7 @@ from motor.sorteo import SorteoBiblioteca, SorteoMezcla, cargar_perfil
 from motor.temporizador import ConfigSesion, construir_guion, guion_a_dict
 
 FIJOS = Path(__file__).resolve().parent / "fijos" / "igual_que_antes.json"
-PRACTICAR = [[], [{"movimiento": "6", "cuanto": "bastante"}, {"movimiento": "esquiva", "cuanto": "poco"}]]
+PRACTICAR = [[], [{"movimiento": "6"}, {"movimiento": "esquiva"}]]
 CONFIGS = [
     {"nivel": 1},
     {"nivel": 2, "modo_reaccion": True, "ritmo": 5, "voz": "ambos"},

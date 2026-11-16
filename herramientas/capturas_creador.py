@@ -1,9 +1,9 @@
-"""Capturas de «Mis combinaciones» (el creador, en Ajustes) a 390, 1024 y 1440.
+"""Capturas de «Mis combinaciones» (el creador, en #entrenar/mis-combinaciones) a 390, 1024 y 1440.
 
 Monta la web en una carpeta temporal (sin fotos del maniquí) y la abre en Chromium headless. Las
 combinaciones de ejemplo solo viven en el localStorage de ese Chromium. Guarda en .playwright-mcp/capturas/
 (no se versiona), con el ancho al final del nombre:
-- creador-ajustes: la tarjeta «Mis combinaciones 3/20» en Ajustes.
+- creador-menu: «Mis combinaciones 3/20», sección del menú de Entrenar.
 - creador-listado-vacio, creador-listado-3, creador-listado-20: el listado.
 - creador-editor-vacio, creador-editor-cuerpo («Al cuerpo» activo, con 3 acciones), creador-editor-10.
 - creador-avisos: el diálogo «Antes de guardar» con dos avisos.
@@ -20,12 +20,13 @@ if __package__ in (None, ""):
 
 from herramientas.construir_sitio import construir  # noqa: E402
 from herramientas.fotos_maniqui import ORIGEN, abrir  # noqa: E402
+from tests.sin_intro import preparar as sin_intro  # noqa: E402
 
 RAIZ = Path(__file__).resolve().parent.parent
 SALIDA = RAIZ / ".playwright-mcp" / "capturas"
 ANCHOS = (390, 1024, 1440)
 ALTO = {390: 844, 1024: 768, 1440: 900}
-RUTA = "#ajustes/mis-combinaciones"
+RUTA = "#entrenar/mis-combinaciones"
 VACIA = """<!doctype html><meta charset="utf-8"><script>localStorage.clear(); window.listo = true;</script>"""
 EJEMPLOS = [["jab", "rodar_der", "uppercut_der"], ["jab", "directo", "esquiva_izq", "gancho_izq", "directo"],
             ["bloqueo", "parada", "paso_atras"]]
@@ -62,8 +63,10 @@ def capturar(sitio: Path) -> list[Path]:
 
     for ancho in ANCHOS:
         with abrir(sitio, VACIA, ancho, ALTO[ancho], barras=True) as (pagina, errores):
-            ir(pagina, "#ajustes", EJEMPLOS)
-            entera(pagina, guardar("ajustes", ancho))
+            sin_intro(pagina)  # sin la intro ni la pista del asa
+            # Mis combinaciones, sección del menú de Entrenar (antes, una tarjeta de Ajustes).
+            ir(pagina, "#entrenar/menu/combinaciones", EJEMPLOS)
+            pagina.screenshot(path=guardar("menu", ancho))
             ir(pagina, RUTA)
             entera(pagina, guardar("listado-vacio", ancho))
             ir(pagina, RUTA, EJEMPLOS)

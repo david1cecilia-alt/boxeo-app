@@ -8,11 +8,10 @@ prueba van solo en su localStorage. Guarda en .playwright-mcp/capturas/ (no se v
   ve con el número nuevo sin migrar.
 - numeros-aprende-<ancho>.png: la lista de Aprende con los títulos «1/7 Jab»…
 - boceto-creador-<ancho>.png: docs/revision/boceto-creador.html con «Al cuerpo» encendido (7-12) y unos
-  golpes en la tira. Se copian también a docs/revision/ (esas sí se versionan).
+  golpes en la tira. Solo aquí: las de docs/revision/ (versionadas) no se tocan.
 Uso: python herramientas/capturas_numeros.py
 """
 import json
-import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -23,10 +22,10 @@ if __package__ in (None, ""):
 from herramientas.capturas_practicar import entera  # noqa: E402
 from herramientas.construir_sitio import construir  # noqa: E402
 from herramientas.fotos_maniqui import ORIGEN, abrir  # noqa: E402
+from tests.sin_intro import preparar as sin_intro  # noqa: E402
 
 RAIZ = Path(__file__).resolve().parent.parent
 SALIDA = RAIZ / ".playwright-mcp" / "capturas"
-REVISION = RAIZ / "docs" / "revision"
 ANCHOS = (390, 1440)
 ALTO = {390: 844, 1440: 900}
 VACIA = """<!doctype html><meta charset="utf-8"><script>localStorage.clear(); window.listo = true;</script>"""
@@ -71,11 +70,14 @@ def capturar(sitio: Path) -> list[Path]:
     for ancho in ANCHOS:
         # Sesión en modo Números con un golpe al cuerpo en pantalla.
         with abrir(sitio, VACIA, ancho, ALTO[ancho]) as (pagina, errores):
+            sin_intro(pagina)  # sin la intro ni la pista del asa
             pagina.add_init_script(SEMILLA)
             preparar(pagina)
+            # Nivel y «Nombrar combinaciones» viven ahora en el menú: se dejan guardados (Personalizada de nivel 2).
+            pagina.evaluate("""() => localStorage.setItem('boxeo', JSON.stringify({ version: 9,
+              perfil: { sesion: { tipo: 'personalizada', nivel: 2, voz: 'numeros' } } }))""")
             pagina.goto(f"{ORIGEN}/index.html#entrenar")
-            pagina.click('label:has(input[name="nivel"][value="2"])')
-            pagina.click('label:has(input[name="voz"][value="numeros"])')
+            pagina.wait_for_selector("#tipo-sesion input:checked", state="attached")
             pagina.click("#empezar")
             pagina.wait_for_function(CON_CUERPO, timeout=180_000, polling=100)
             pagina.click("#pausa")
@@ -85,6 +87,7 @@ def capturar(sitio: Path) -> list[Path]:
             assert not errores, errores
         # Historial con una sesión antigua.
         with abrir(sitio, SEMBRAR_V5, ancho, ALTO[ancho], barras=True) as (pagina, errores):
+            sin_intro(pagina)  # sin la intro ni la pista del asa
             preparar(pagina)
             pagina.goto(f"{ORIGEN}/index.html#historial/local%3Avieja-cuerpo")
             pagina.wait_for_selector("#historial-detalle ol li")
@@ -94,6 +97,7 @@ def capturar(sitio: Path) -> list[Path]:
             assert not errores, errores
         # Aprende.
         with abrir(sitio, VACIA, ancho, ALTO[ancho]) as (pagina, errores):
+            sin_intro(pagina)  # sin la intro ni la pista del asa
             preparar(pagina)
             pagina.goto(f"{ORIGEN}/index.html#aprende")
             pagina.wait_for_selector(".aprende-lista .ficha-enlace", state="visible")
@@ -112,7 +116,6 @@ def capturar(sitio: Path) -> list[Path]:
             pagina.evaluate("document.fonts.ready")
             rutas.append(SALIDA / f"boceto-creador-{ancho}.png")
             entera(pagina, rutas[-1])
-            shutil.copyfile(rutas[-1], REVISION / rutas[-1].name)
             assert not errores, errores
     return rutas
 

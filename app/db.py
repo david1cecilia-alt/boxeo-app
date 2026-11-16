@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS sesiones (
     nivel           INTEGER NOT NULL,
     zurdo           INTEGER NOT NULL DEFAULT 0,
     duracion_asalto INTEGER NOT NULL,
-    descanso        INTEGER NOT NULL
+    descanso        INTEGER NOT NULL,
+    tipo            TEXT    CHECK (tipo IN ('general', 'personalizada', 'prueba'))  -- NULL: sesión de antes
 );
 CREATE TABLE IF NOT EXISTS combinaciones (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,18 +33,29 @@ def conectar(ruta: Path) -> sqlite3.Connection:
     return conexion
 
 
+# Columnas añadidas después de crear la tabla: una base vieja las recibe al arrancar (las filas que ya
+# estaban quedan con NULL). Nunca se borra ni se reescribe nada.
+COLUMNAS_NUEVAS = {
+    "tipo": "TEXT CHECK (tipo IN ('general', 'personalizada', 'prueba'))",
+}
+
+
 def crear_tablas(ruta: Path) -> None:
-    with closing(conectar(ruta)) as c:
+    with closing(conectar(ruta)) as c, c:
         c.executescript(ESQUEMA)
+        existentes = {f["name"] for f in c.execute("PRAGMA table_info(sesiones)")}
+        for nombre, definicion in COLUMNAS_NUEVAS.items():
+            if nombre not in existentes:
+                c.execute(f"ALTER TABLE sesiones ADD COLUMN {nombre} {definicion}")
 
 
 def guardar_sesion(ruta: Path, sesion: dict) -> int:
     with closing(conectar(ruta)) as c, c:  # el segundo "with c" hace commit o rollback
         cursor = c.execute(
-            "INSERT INTO sesiones (fecha, asaltos, nivel, zurdo, duracion_asalto, descanso) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO sesiones (fecha, asaltos, nivel, zurdo, duracion_asalto, descanso, tipo) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
             (sesion["fecha"], sesion["asaltos"], sesion["nivel"], int(sesion["zurdo"]),
-             sesion["duracion_asalto"], sesion["descanso"]))
+             sesion["duracion_asalto"], sesion["descanso"], sesion.get("tipo")))
         sesion_id = cursor.lastrowid
         c.executemany(
             "INSERT INTO combinaciones (sesion_id, orden, asalto, texto, ids) VALUES (?, ?, ?, ?, ?)",

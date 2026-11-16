@@ -11,6 +11,8 @@ import pytest
 
 from herramientas.construir_sitio import construir
 from herramientas.fotos_maniqui import ORIGEN, abrir
+from tests.sin_intro import preparar
+from tests.menu_quieto import esperar_menu_quieto
 
 HAY_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
 pytestmark = pytest.mark.skipif(not HAY_PLAYWRIGHT and not os.environ.get("CI"),
@@ -66,6 +68,7 @@ def sitio(tmp_path_factory):
 @pytest.fixture(scope="module")
 def pagina(sitio):
     with abrir(sitio, SEMBRAR, 390, 844, barras=True) as (pagina, errores):
+        preparar(pagina)
         pagina.goto(f"{ORIGEN}/__pagina__.html")
         pagina.wait_for_function("window.listo === true")
         yield pagina
@@ -125,9 +128,9 @@ def test_el_titulo_enfocado_se_subraya_sin_recuadro(pagina, ruta, titulo):
 
 
 # Lo mismo en el título de cada vista (al llegar desde otra, el foco va a su h1) y en los que
-# reciben el foco dentro de Ajustes. El foco no se quita: solo cambia cómo se ve.
+# reciben el foco dentro del menú de Entrenar. El foco no se quita: solo cambia cómo se ve.
 @pytest.mark.parametrize("vista, desde", [("entrenar", "perfil"), ("historial", "entrenar"),
-                                          ("perfil", "entrenar"), ("ajustes", "entrenar")])
+                                          ("perfil", "entrenar")])
 def test_el_titulo_de_cada_vista_se_subraya_sin_recuadro(pagina, vista, desde):
     pagina.set_viewport_size({"width": 1440, "height": 900})
     pagina.goto(f"{ORIGEN}/index.html#{desde}")
@@ -138,11 +141,23 @@ def test_el_titulo_de_cada_vista_se_subraya_sin_recuadro(pagina, vista, desde):
     assert pagina.evaluate(FOCO_DEL_TITULO, f"#t-{vista}") == [True, "none", "underline"]
 
 
-@pytest.mark.parametrize("vista, titulo", [("ajustes", "#t-practicar")])
-def test_los_titulos_de_ajustes_se_subrayan_sin_recuadro(pagina, vista, titulo):
+def test_al_pulsar_cada_pestana_el_foco_va_al_titulo_de_su_vista(pagina):
+    # El router deja el foco donde lo ponga la vista solo si lo pone ella (el creador, el menú al
+    # volver de él); al pulsar una pestaña, siempre al h1 de la vista.
     pagina.set_viewport_size({"width": 1440, "height": 900})
-    pagina.goto(f"{ORIGEN}/index.html#{vista}")
+    pagina.goto(f"{ORIGEN}/index.html#entrenar")
+    pagina.wait_for_selector("#vista-entrenar h1", state="visible")
+    for vista in ("aprende", "historial", "entrenar"):  # Perfil ya no está en la barra
+        pagina.click(f'#pestanas a[href="#{vista}"]')
+        pagina.wait_for_function(f"document.activeElement?.matches('#t-{vista}')")
+
+
+@pytest.mark.parametrize("ruta, titulo", [("entrenar/menu/personalizar", "#t-practicar"), ("entrenar/menu", "#t-menu")])
+def test_los_titulos_del_menu_se_subrayan_sin_recuadro(pagina, ruta, titulo):
+    pagina.set_viewport_size({"width": 1440, "height": 900})
+    pagina.goto(f"{ORIGEN}/index.html#{ruta}")
     pagina.wait_for_selector(titulo, state="attached")
+    esperar_menu_quieto(pagina)
     pagina.keyboard.press("Shift")
     pagina.evaluate(f"document.querySelector('{titulo}').focus()")  # como tras restablecer
     assert pagina.evaluate(FOCO_DEL_TITULO, titulo) == [True, "none", "underline"]

@@ -1,11 +1,14 @@
 // Arranque: carga los datos del motor y el almacén, decide de dónde salen las sesiones
-// (servidor o este dispositivo) y monta las tres pestañas y Ajustes. Sin reglas de boxeo.
+// (servidor o este dispositivo) y monta las pestañas (Entrenar trae el menú con Ajustes). Sin reglas de boxeo.
+
+// rutas.js TIENE QUE SER LA PRIMERA IMPORTACIÓN: al cargarse redirige las rutas viejas de «Mis
+// combinaciones» y Ajustes y registra su oyente de hashchange, que debe ir antes que el del creador (al
+// iniciar Entrenar). Si no, vería la ruta vieja.
+import { iniciarRutas } from "./rutas.js";
 import { opcionesVoz } from "./ajustes.js";
 import { claveSesion, crearAlmacen } from "./almacen.js";
 import { crearHistorial } from "./historial.js";
 import { cargarDatos } from "./motor/datos.js";
-import { iniciarRutas } from "./rutas.js";
-import { iniciarAjustes } from "./vistas/ajustes.js";
 import { iniciarAprende } from "./vistas/aprende.js";
 import { atajosEntrenar, iniciarEntrenar } from "./vistas/entrenar.js";
 import { iniciarHistorial } from "./vistas/historial.js";
@@ -20,14 +23,15 @@ function avisar(texto) {
 }
 
 async function arrancar() {
-  const almacen = crearAlmacen({ alFallar: avisar });
+  // Primero los datos: migrar un almacén v8 necesita el nivel de la General (data/perfil.json).
   await cargarDatos();
+  const almacen = crearAlmacen({ alFallar: avisar, alAvisar: avisar });
   const historial = await crearHistorial(almacen);
   const voz = crearVoz(opcionesVoz(almacen.datos.perfil));
   const valoracion = crearValoracion({ almacen });
 
   const entrenar = iniciarEntrenar({
-    almacen, historial, voz,
+    almacen, historial, voz, avisar,
     // Al terminar o parar: formulario post-sesión (se puede saltar y rellenar desde el historial).
     alTerminar: ({ id, combinaciones }) =>
       valoracion.abrir({ clave: claveSesion(historial.origen, id), combinaciones }),
@@ -37,9 +41,8 @@ async function arrancar() {
   iniciarRutas({
     entrenar,
     aprende: iniciarAprende(),
-    historial: iniciarHistorial({ almacen, historial, valoracion }),
+    historial: iniciarHistorial({ almacen, historial, valoracion, avisar }),
     perfil: iniciarPerfil({ almacen }),
-    ajustes: iniciarAjustes({ almacen, voz }),
   }, "entrenar");
 }
 

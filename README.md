@@ -70,9 +70,8 @@ es una PWA instalable y todo se calcula en el dispositivo.
 - **Perfil** (informativo): estilo (cada pregunta admite «No lo sé») con un **estilo recomendado**
   orientativo (boxer, boxer-puncher, contragolpeador o fajador) a partir de las respuestas, con su
   porqué y, si están, alcance frente a altura (tabla en `data/estilos.json`, a revisar con el
-  entrenador); si se elige «Mi estilo», ese manda y la recomendación va debajo. Sobre ti (fecha de inicio y
-  medidas opcionales), notas del entrenador y los puntos marcados `REVISAR CON ENTRENADOR` en el
-  motor para apuntar su respuesta.
+  entrenador); si se elige «Mi estilo», ese manda y, si las respuestas apuntan a otro, debajo sale
+  «Según tus respuestas: …». Sobre ti: fecha de inicio y medidas opcionales.
 - **Sin conexión**: service worker con la app entera en caché.
 
 ## Tus datos

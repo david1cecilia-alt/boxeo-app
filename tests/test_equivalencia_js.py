@@ -173,13 +173,13 @@ def test_movimientos_de_practicar_iguales_en_js_y_python(js):
     assert js["movimientos"] == movimientos()
 
 
-@pytest.mark.parametrize("i", range(4))
+@pytest.mark.parametrize("i", range(5))
 def test_peso_de_practicar_identico_en_js_y_python(js, i):
     caso = js["practicar"][i]
     assert caso["pesos"] == [peso_practicar(c.acciones, caso["elegidos"]) for c in biblioteca()]
 
 
-@pytest.mark.parametrize("i", range(4))
+@pytest.mark.parametrize("i", range(5))
 def test_sorteo_con_practicar_igual_en_js_y_python(js, i):
     caso = js["practicar"][i]
     sorteo = SorteoBiblioteca(2, perfil={**cargar_perfil(), "practicar": caso["elegidos"]}, rng=random.Random(200))

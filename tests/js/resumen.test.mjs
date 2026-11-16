@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { GRAFICAS, graficaElegida, lunes, minutosDeAsalto, moverPeriodo, porPeriodo, porSemana, textoMinutos, tituloGrupo, totales } from "../../static/vistas/resumen.js";
+import { GRAFICAS, graficaElegida, lunes, minutosDeAsalto, moverPeriodo, porPeriodo, porSemana, textoMinutos, tituloGrupo, tituloSesion, totales } from "../../static/vistas/resumen.js";
 
 const HOY = new Date(2026, 9, 28, 18, 0); // miércoles 28 de octubre de 2026
 const sesiones = [
@@ -87,4 +87,18 @@ test("la gráfica del Historial muestra lo guardado en perfil.historial.grafica 
     { historial: { grafica: 7 } }, { historial: { grafica: null } }, { historial: null }]) {
     assert.equal(graficaElegida(perfil), "asaltos", JSON.stringify(perfil));
   }
+});
+
+test("tituloSesion: las nuevas por su tipo; las de antes (sin tipo), por la duración como siempre", () => {
+  const presets = [
+    { id: "amateur", nombre: "Amateur 3×3", duracion_asalto: 180, descanso: 60 },
+    { id: "prueba", nombre: "Prueba 2×30 s", duracion_asalto: 30, descanso: 10 },
+  ];
+  const tres = { duracion_asalto: 180, descanso: 60 };
+  assert.equal(tituloSesion({ ...tres, nivel: 1, tipo: "general" }, presets), "General · nivel 1");
+  assert.equal(tituloSesion({ ...tres, nivel: 3, tipo: "personalizada" }, presets), "Personalizada · nivel 3");
+  assert.equal(tituloSesion({ duracion_asalto: 30, descanso: 10, nivel: 2, tipo: "prueba" }, presets), "Prueba");
+  assert.equal(tituloSesion({ ...tres, nivel: 2 }, presets), "Amateur 3×3 · nivel 2");
+  assert.equal(tituloSesion({ duracion_asalto: 120, descanso: 45, nivel: 2 }, presets), "Personalizado · nivel 2");
+  assert.equal(tituloSesion({ ...tres, nivel: 2, tipo: null }, presets), "Amateur 3×3 · nivel 2");
 });

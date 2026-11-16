@@ -26,33 +26,35 @@
   font-display: swap;
 }
 
-/* Todos los colores y letras de la app viven aquí (tokens). Negro neutro + rojo como único acento.
+/* Todos los colores y letras de la app viven aquí (tokens). Gris oscuro neutro (R = G = B) + rojo como único
+   acento. La intro «Que empiece el asalto» lleva sus colores propios, de su diseño.
    El fondo rojo completo se reserva para los últimos 10 s (--fase-final): en el resto de la
    app el rojo va en texto, botones, pestaña activa y chips destacados.
    Contraste comprobado en tests/js/contraste.test.mjs. */
 :root {
   color-scheme: dark;
-  --fondo: #0a0a0a;
-  --superficie: #141414;      /* tarjeta sólida */
-  --superficie-hover: #1c1c1c;
-  --campo: #101010;
+  --fondo: #121212;
+  --fondo-rgb: 18 18 18;       /* el mismo, para los degradados que funden las fotos: rgb(var(--fondo-rgb) / .45) */
+  --superficie: #1a1a1a;      /* tarjeta sólida */
+  --superficie-hover: #202020;
+  --campo: #161616;
   --cristal: rgba(255, 255, 255, 0.05);        /* tarjeta de cristal (sobre negro o foto oscura) */
   --borde-cristal: rgba(255, 255, 255, 0.10);
-  --barra: rgba(20, 20, 20, 0.95);             /* barra flotante: se lee hasta sobre una foto clara */
+  --barra: rgba(26, 26, 26, 0.97);             /* barra flotante: se lee hasta sobre una foto clara */
   --desenfoque: blur(16px) saturate(140%);
   --linea: rgba(255, 255, 255, 0.09);          /* borde de tarjetas, separadores y rejilla de gráficos */
   --linea-chip: rgba(255, 255, 255, 0.16);     /* chip no seleccionado y botón secundario */
-  --borde: #737373;           /* bordes de campos de texto: 3:1 */
-  --texto: #f5f3f0;
-  --suave: #a8a29e;           /* texto secundario */
-  --terciario: #d6d3d1;
-  --tenue: #8c8783;           /* días y meses futuros: más apagado que --suave, aún 4,5:1 */
+  --borde: #757575;           /* bordes de campos de texto: 3:1 */
+  --texto: #f2f2f2;
+  --suave: #a3a3a3;           /* texto secundario */
+  --terciario: #d4d4d4;
+  --tenue: #8f8f8f;           /* días y meses futuros: más apagado que --suave, aún 4,5:1 */
   --acento: #ff3b30;          /* rojo de texto: palabra roja, contexto, cifras */
   --acento-relleno: #d7192a;  /* rojo de relleno: botones, pestaña activa, chip destacado (texto blanco) */
   --acento-relleno-hover: #b81424;
   --sobre-acento: #ffffff;
-  --chip-activo: #f5f3f0;     /* chip seleccionado */
-  --sobre-chip-activo: #0a0a0a;
+  --chip-activo: #f2f2f2;     /* chip seleccionado */
+  --sobre-chip-activo: #121212;
   --secundario: rgba(255, 255, 255, 0.06);
   --secundario-hover: rgba(255, 255, 255, 0.12);
   --foco: #ffffff;
@@ -65,22 +67,23 @@
   --resplandor: rgba(255, 59, 48, 0.32); /* halo rojo detrás del maniquí */
 
   /* Fases de la sesión: fondo y texto */
-  --fase-asalto: #0a0a0a;
+  --fase-asalto: #121212;
   --fase-final: #d7192a;
   --fase-descanso: #0b3b34;
   --fase-reaccion: #ffb703;
   --fase-reaccion-texto: #0a0a0a;
-  --fase-pausa: #1c1c1c;
+  --fase-pausa: #202020;
 
   /* Series de los gráficos (validadas sobre --superficie) */
   --serie-asaltos: #ff3b30;   /* semana actual */
   --serie-barra: rgba(255, 255, 255, 0.34);  /* resto de semanas */
-  --serie-rpe: #e8e2da;
-  --acento-tenue: rgba(255, 59, 48, 0.14);   /* fondo de la pastilla de RPE */
+  --serie-rpe: #e5e5e5;
+  --acento-tenue: rgba(255, 59, 48, 0.08);   /* fondo de la pastilla de RPE */
 
   --alto-nav: 68px;
   --hueco: 20px;              /* margen lateral en móvil */
   --radio: 22px;
+  --radio-avatar: 28%;        /* avatares: cuadrado redondeado (en un círculo se cortaban orejas y barbillas) */
 
   /* Tipografía: titulares condensados en mayúsculas y texto legible */
   --letra-titular: "Anton", "Impact", "Arial Narrow", sans-serif;
@@ -89,10 +92,16 @@
 
 * { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; overflow-x: hidden; }
+/* scrollbar-gutter: el hueco de la barra se reserva siempre, así html.menu-abierto (overflow: hidden)
+   no hace saltar la página al quitarla. Con barras superpuestas (móvil) no ocupa nada. */
+html { -webkit-text-size-adjust: 100%; overflow-x: hidden; scrollbar-gutter: stable; }
 
+/* El body mide como poco la ventana: con el menú abierto el lienzo toma el color del panel (ver
+   html.menu-abierto) y, si el body acabara con el contenido, por debajo el velo oscurecería otro gris. */
 body {
   margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--fondo);
   color: var(--texto);
   font-family: var(--letra-texto);
@@ -129,12 +138,8 @@ h3 { margin: 16px 0 6px; font-size: 0.85rem; font-weight: 600; color: var(--suav
 .marca-agua {
   position: absolute; z-index: -1; right: -8px; top: 10px;
   font-family: var(--letra-titular); text-transform: uppercase; line-height: 1;
-  font-size: clamp(5rem, 30vw, 11rem); color: #fff; opacity: 0.05;
+  font-size: clamp(5rem, 30vw, 11rem); color: var(--texto); opacity: 0.05;
   white-space: nowrap; pointer-events: none; user-select: none;
-}
-.marca-agua.vertical {
-  writing-mode: vertical-rl; top: 120px; right: calc(-26px - var(--hueco));
-  font-size: 150px; letter-spacing: 4px;
 }
 h1:focus, h2:focus { outline: none; }
 h1:focus-visible, h2:focus-visible { outline: 3px solid var(--foco); outline-offset: 4px; }
@@ -154,20 +159,19 @@ h1:focus-visible, h2:focus-visible { outline: 3px solid var(--foco); outline-off
 .foto-cabecera img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: var(--posicion-foto, 50% 45%); }
 .foto-cabecera::after {
   content: ""; position: absolute; inset: 0;
-  background: linear-gradient(180deg, rgba(10, 10, 10, 0.55) 0%, rgba(10, 10, 10, 0) 30%,
-    rgba(10, 10, 10, 0.2) 60%, var(--fondo) 100%);
+  background: linear-gradient(180deg, rgb(var(--fondo-rgb) / 0.55) 0%, rgb(var(--fondo-rgb) / 0) 30%,
+    rgb(var(--fondo-rgb) / 0.2) 60%, var(--fondo) 100%);
 }
 .con-foto .cabecera { padding-top: var(--arriba-titular, 166px); }
 
-/* Marca en móvil (en el PC va en la barra lateral). */
-.marca-movil, .marca {
+/* Marca de la barra lateral del PC. */
+.marca {
   display: flex; align-items: center; gap: 8px; margin: 0;
   font-family: var(--letra-titular); text-transform: uppercase; font-size: 22px; letter-spacing: 2px; line-height: 1;
 }
-.marca-movil::before, .marca::before {
+.marca::before {
   content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--acento);
 }
-.marca-movil { padding-top: 20px; height: 44px; margin-bottom: -16px; }
 
 a { color: var(--texto); text-decoration-color: var(--acento); text-underline-offset: 3px; }
 
@@ -189,11 +193,16 @@ a { color: var(--texto); text-decoration-color: var(--acento); text-underline-of
   position: absolute; width: 1px; height: 1px; overflow: hidden;
   clip: rect(0 0 0 0); white-space: nowrap;
 }
+/* El aviso para lectores va al final de <body>: sin top, quedaba debajo de todo y alargaba la página 1 px
+   (con la sesión a pantalla completa, salía la barra de desplazamiento). */
+#estado { top: 0; left: 0; }
 
 .aviso {
   background: var(--aviso-fondo); color: var(--aviso); border-radius: 10px; padding: 10px 14px; margin: 0;
 }
 .aviso.fijo { position: sticky; top: 0; z-index: 20; border-radius: 0; text-align: center; }
+/* Un error junto a los botones que lo han causado (Historial, Empezar), en vez de un diálogo nativo. */
+.aviso.mensaje-error { margin: 12px 0 0; padding: 10px 14px; }
 
 /* ---------- Foco visible en todo lo interactivo ---------- */
 :focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
@@ -228,12 +237,7 @@ legend small { display: block; font-size: 0.85rem; }
 .rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; align-items: end; }
 hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
 
-/* Chips de opción (radios): presets, categorías, estilo. El seleccionado, en claro. */
-.fila-chips {
-  display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
-  margin: 0 calc(-1 * var(--hueco)); padding: 2px var(--hueco);
-}
-.fila-chips::-webkit-scrollbar { display: none; }
+/* Chips de opción (radios): categorías, estilo. El seleccionado, en claro. */
 .chip-opcion { position: relative; flex: none; }
 .chip-opcion input, .niveles input, .chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
 .chip-opcion span {
@@ -245,10 +249,6 @@ hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
   background: var(--chip-activo); border-color: var(--chip-activo); color: var(--sobre-chip-activo); font-weight: 600;
 }
 :is(.chip-opcion, .niveles, .chip) input:focus-visible + span { outline: 3px solid var(--foco); outline-offset: 2px; }
-
-/* Presets y su resumen ("3 × 3:00 · descanso 1:00"): debajo en el móvil, al lado en el PC. */
-.presets { display: grid; gap: 8px; }
-.resumen-presets { margin: 0; font-size: 0.8125rem; color: var(--suave); }
 
 /* Nivel: tres botones grandes (radios); el elegido, en rojo. */
 .niveles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -313,7 +313,6 @@ hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
 .niveles label input:checked + span { background: var(--acento-relleno); border-color: var(--acento-relleno); color: var(--sobre-acento); }
 
 /* Interruptores (switch): Zurdo y Reacción. */
-.interruptores { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .interruptor {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   min-height: 56px; padding: 0 14px; cursor: pointer;
@@ -328,7 +327,7 @@ hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
 }
 .interruptor input::before {
   content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
-  border-radius: 50%; background: #fff; transition: transform 0.15s;
+  border-radius: 50%; background: var(--texto); transition: transform 0.15s;
 }
 .interruptor input:checked { background: var(--acento-relleno); }
 .interruptor input:checked::before { transform: translateX(16px); }
@@ -384,26 +383,78 @@ label.boton { color: var(--sobre-acento); }
 input[type="file"].solo-lectores:focus-visible + *, label.boton:focus-within { outline: 3px solid var(--foco); }
 
 /* ---------- Entrenar ---------- */
-.config-opciones, .config-sesion { display: grid; gap: 14px; min-width: 0; }
-.config-tarjeta { display: grid; gap: 14px; padding: 16px; }
-.config-titulo, .resumen-grande, .resumen-elecciones { display: none; margin: 0; }
+/* De arriba abajo: la cabecera de perfil (un solo enlace a #perfil), el selector General | Personalizada,
+   «Tu sesión» y Empezar. En el PC (abajo), dos columnas con «Tu sesión» fija a la derecha. Gris neutro: los
+   colores van en la fase visual. */
+#vista-entrenar { padding-top: calc(16px + env(safe-area-inset-top, 0px)); }
+#config { gap: 16px; }
+.cabecera-perfil {
+  display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 8px 12px 8px 8px;
+  color: var(--texto); text-decoration: none;
+  background: var(--superficie); border: 1px solid var(--linea); border-radius: 32px;
+}
+.cabecera-perfil:hover { background: var(--superficie-hover); }
+.cabecera-avatar { display: contents; }
+.cabecera-perfil .flecha {
+  flex: none; width: 20px; height: 20px; color: var(--suave);
+  fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+.cabecera-perfil-texto { display: grid; gap: 2px; flex: 1; min-width: 0; }
+/* Nombre y estilo en una línea cada uno: lo que no cabe, con puntos suspensivos (a 390, un nombre de 30). */
+.cabecera-perfil-nombre { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cabecera-perfil-estilo { font-size: 0.8125rem; color: var(--suave); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* General | Personalizada (| Prueba): segmentado a todo el ancho; el elegido, en claro. */
+/* Cada chip, como poco del ancho de su palabra más larga: «Personalizada» no se encoge hasta tocar el de al
+   lado y «Prueba 2×30 s» parte en dos líneas. */
+.segmentado-tipo {
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(min-content, 1fr); gap: 4px;
+  margin: 0; padding: 4px; border: 0; border-radius: 28px; background: var(--secundario);
+}
+.segmentado-tipo label { position: relative; display: grid; }
+.segmentado-tipo input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.segmentado-tipo span {
+  display: grid; place-items: center; min-height: 48px; padding: 4px 8px; border-radius: 24px;
+  font-weight: 600; font-size: 0.9375rem; line-height: 1.2; text-align: center; color: var(--suave);
+}
+.segmentado-tipo input:checked + span { background: var(--chip-activo); color: var(--sobre-chip-activo); }
+.segmentado-tipo input:focus-visible + span { outline: 3px solid var(--foco); outline-offset: 1px; }
+/* «Tu sesión»: los asaltos en grande, el descanso y la duración, las pastillas y qué es. */
+.tu-sesion {
+  display: grid; gap: 8px; padding: 20px; min-width: 0;
+  background: var(--superficie); border: 1px solid var(--linea); border-radius: 22px;
+}
+.resumen-grande { margin: 0; font-family: var(--letra-titular); font-size: 2.5rem; line-height: 1; letter-spacing: 0.02em; }
+.resumen-detalle { margin: 0; color: var(--suave); }
+.chips-sesion { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 0; padding: 0; list-style: none; }
+.chips-sesion li {
+  padding: 4px 10px; border-radius: 999px; background: var(--secundario); font-size: 0.8125rem; color: var(--texto);
+}
+.nota-sesion { margin: 4px 0 0; font-size: 0.8125rem; }
+/* En el móvil el asa (fija, a 28 px del borde) puede caer sobre el borde derecho de «Tu sesión» (D5): el
+   texto nunca llega a esa franja (riesgo 3 del plan). En el PC tiene su margen propio. */
+@media (max-width: 1023.98px) { .tu-sesion { padding-right: 56px; } }
+.nota-sesion a { color: var(--texto); font-weight: 600; }
+.empezar-caja { display: grid; gap: 12px; }
+.empezar-caja .nota { margin: -4px 0 0; text-align: center; font-size: 0.75rem; }
 .empezar {
   min-height: 64px; width: 100%; gap: 12px;
   font-family: var(--letra-titular); font-weight: 400; font-size: 26px; letter-spacing: 0.08em; text-transform: uppercase;
 }
 .empezar svg { width: 22px; height: 22px; }
-.config-sesion .nota { margin: -4px 0 0; text-align: center; font-size: 0.75rem; }
 .voz-corta { display: none; }
 
 /* ---------- Sesión en curso ---------- */
 body.entrenando #vista-entrenar > :not(#pantalla), body.entrenando #pestanas { display: none; }
 body.entrenando main { padding: 0; max-width: none; }
+/* Sin el relleno de arriba de Entrenar: #pantalla mide la ventana y empieza en y = 0 (si no, quedaba una
+   franja del fondo encima y la página se desplazaba ese tanto). La zona segura la lleva #pantalla. */
+body.entrenando #vista-entrenar { padding-top: 0; }
 
 #pantalla {
   position: relative; isolation: isolate; overflow: hidden;
   min-height: 100dvh;
   display: flex; flex-direction: column;
-  padding: 20px var(--hueco) calc(20px + env(safe-area-inset-bottom));
+  padding: calc(20px + env(safe-area-inset-top, 0px)) var(--hueco) calc(20px + env(safe-area-inset-bottom));
   background: var(--fase-asalto);
   transition: background-color 0.2s;
 }
@@ -513,39 +564,190 @@ body.entrenando main { padding: 0; max-width: none; }
 }
 #pestanas a:focus-visible { outline-offset: -4px; }
 .marca { display: none; }
-#pestanas .solo-escritorio { display: none; } /* en el móvil, Ajustes va en el engranaje */
 
-/* Engranaje de Ajustes (móvil): arriba a la derecha en las tres pestañas, sobre la foto o el
-   negro. En Ajustes, mientras se entrena y en el PC no se ve. */
 main { position: relative; }
-#ir-ajustes {
-  position: absolute; z-index: 5; top: calc(14px + env(safe-area-inset-top)); right: var(--hueco);
-  display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
-  color: var(--texto); background: var(--barra); border: 1px solid var(--borde-cristal);
-}
-#ir-ajustes:hover { background: var(--superficie-hover); }
-#ir-ajustes svg {
-  width: 22px; height: 22px; fill: none; stroke: currentColor;
-  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
-}
-body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: none; }
 
-/* ---------- Ajustes ---------- */
-/* «Volver», fijo arriba al bajar (en el móvil; en el PC la barra lateral ya está siempre a la vista). */
-#vista-ajustes .volver-movil {
-  position: sticky; top: 0; z-index: 5; margin: 0 calc(-1 * var(--hueco)) -24px;
-  padding: calc(8px + env(safe-area-inset-top, 0px)) var(--hueco) 8px; background: var(--fondo);
-}
-#vista-ajustes .volver-movil .volver { display: inline-flex; align-items: center; min-height: 44px; }
-#vista-ajustes h1 { font-size: clamp(2.5rem, 11.8vw, 3.6rem); }
-#vista-ajustes .marca-agua { top: 6px; right: -10px; font-size: 140px; opacity: 0.04; }
-#ajustes-contenido { display: grid; gap: 16px; align-content: start; min-width: 0; }
+/* ---------- Ajustes (sección del menú de Entrenar) ---------- */
 .voz-eleccion, .voz-velocidad { display: grid; gap: 14px; align-content: start; min-width: 0; }
 
-/* ---------- Mis combinaciones (el creador, #ajustes/mis-combinaciones) ---------- */
-/* En la subpágina no se ve la cabecera de Ajustes: la subpágina trae su «Volver» y su título. */
-#vista-ajustes[data-sub] > :is(.volver-movil, .cabecera) { display: none; }
-#vista-ajustes[data-sub] #ajustes-contenido { padding-top: 0; }
+/* ---------- El asa y el menú lateral de Entrenar (vistas/menu.js) ---------- */
+/* El asa: botón de 48 × 72 a 28 px del borde derecho y al 42 % de alto (fuera de la franja del gesto
+   «Atrás»); se ve una pastilla con 2 × 3 puntitos pegada a su lado derecho. touch-action: none para que
+   arrastrarla no desplace la página. Durante la sesión y en Mis combinaciones la esconden las reglas de
+   #vista-entrenar de arriba y de abajo; con el menú abierto, el panel trae la suya. */
+#asa, .asa-panel {
+  display: flex; align-items: center; justify-content: flex-end;
+  width: 48px; height: 72px; padding: 0; border: 0; background: none; color: var(--suave);
+  cursor: grab; touch-action: none; -webkit-tap-highlight-color: transparent; user-select: none;
+}
+#asa {
+  position: fixed; z-index: 5; top: 42%;
+  right: calc(28px + env(safe-area-inset-right, 0px));
+}
+.vista > :is(#asa, #menu, #elegir-practicar) { animation: none; } /* la entrada de la vista le pisaría el transform */
+/* Con barra clásica, el hueco que reserva scrollbar-gutter queda fuera del <dialog> (ni 100vw ni una sombra
+   llegan): solo se ve el fondo del lienzo, que con el menú abierto toma el color del panel. El body sigue
+   pintando el suyo. Con barras superpuestas (móvil) no hay hueco. */
+html.menu-abierto { overflow: hidden; background: var(--superficie); }
+html.menu-abierto #asa { visibility: hidden; }
+/* La pista de la primera vez (menu.js): una lengüeta de 64 px con el aspecto del panel asoma ~1,2 s y se
+   recoge, con un globo encima del asa que se queda 4 s. Ni abre el <dialog> ni recibe toques. Con
+   prefers-reduced-motion solo se ve el globo, quieto. */
+.pista-panel {
+  position: fixed; z-index: 4; top: 0; right: 0; bottom: 0; width: 64px; pointer-events: none;
+  background: var(--superficie); border-left: 1px solid var(--linea);
+  transform: translateX(100%);
+}
+.pista-panel.asomando { animation: pista-asomar 1.7s cubic-bezier(0.32, 0.72, 0, 1) both; }
+/* El globo va encima del asa (alineado a su derecha), no a su lado: a 1440 px a su izquierda queda «Empezar». */
+.globo-asa {
+  position: fixed; z-index: 6; top: 42%; right: calc(28px + env(safe-area-inset-right, 0px));
+  max-width: min(64vw, 240px); margin: 0; padding: 10px 14px; pointer-events: none;
+  transform: translateY(calc(-100% - 12px));
+  background: var(--superficie); border: 1px solid var(--linea-chip); border-radius: 12px;
+  color: var(--texto); font-size: 0.9375rem; font-weight: 600; line-height: 1.3;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.45);
+}
+/* La flechita del globo, hacia abajo, sobre la pastilla del asa (11 px de su borde derecho). */
+.globo-asa::after {
+  content: ""; position: absolute; bottom: -7px; right: 5px; width: 12px; height: 12px;
+  background: inherit; border: inherit; border-width: 0 1px 1px 0;
+  transform: rotate(45deg);
+}
+.globo-asa.asomando { animation: pista-globo 4s ease both; }
+@keyframes pista-asomar {
+  0% { transform: translateX(100%); }
+  15%, 85% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
+@keyframes pista-globo {
+  0% { opacity: 0; }
+  5%, 95% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.asa-puntos {
+  display: grid; place-items: center; flex: none; pointer-events: none;
+  width: 22px; height: 56px; border-radius: 11px;
+  border: 1px solid var(--linea-chip); background: var(--superficie);
+}
+/* 2 × 3 puntitos: una rejilla de 16 × 24 px con un punto en cada casilla de 8 px. */
+.asa-puntos::before {
+  content: ""; width: 16px; height: 24px;
+  background: radial-gradient(circle, currentColor 1.6px, transparent 2.1px) 0 0 / 8px 8px;
+}
+#asa:hover .asa-puntos, .asa-panel:hover .asa-puntos { color: var(--texto); }
+
+/* El panel: el <dialog> ocupa toda la pantalla y hace de velo (transparente al abrir, se oscurece con
+   --progreso mientras se arrastra); dentro, el panel de min(88vw, 420px) entra desde la derecha. Un clic en
+   el propio <dialog> es fuera del panel. Sin padding en el <dialog>: si no, su relleno contaría como velo.
+   overflow: visible y no hidden: con hidden el <dialog> es un contenedor de scroll, el foco del título lo
+   desplaza mientras el panel está fuera y ese desplazamiento se come el transform del arrastre. */
+#menu {
+  position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none;
+  margin: 0; padding: 0; border: 0; border-radius: 0; overflow: visible;
+  background: rgb(0 0 0 / calc(0.7 * var(--progreso, 0)));
+  transition: background-color 220ms ease;
+}
+#menu.visible { --progreso: 1; }
+#menu::backdrop { background: transparent; }
+.menu-panel {
+  position: absolute; top: 0; right: 0; bottom: 0; width: min(88vw, 420px);
+  background: var(--superficie); border-left: 1px solid var(--linea);
+  transform: translateX(100%); transition: transform 220ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+#menu.visible .menu-panel { transform: none; }
+#menu.arrastrando, #menu.arrastrando .menu-panel { transition: none; }
+/* La franja propia del asa, a la izquierda del panel y a la misma altura que el asa de fuera. */
+.asa-panel { position: absolute; left: 0; top: 42%; justify-content: center; }
+.menu-contenido {
+  height: 100%; overflow-y: auto; overscroll-behavior: contain;
+  /* Sin relleno arriba: lo lleva la cabecera fija, así se ve igual pegada que sin pegar (también con notch). */
+  padding: 0 calc(16px + env(safe-area-inset-right, 0px)) 24px 56px;
+}
+.menu-cabecera {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  box-sizing: content-box; min-height: 56px; margin-bottom: 8px; padding-top: max(16px, env(safe-area-inset-top, 0px));
+  touch-action: none; cursor: grab;
+  /* Fija arriba al desplazar el panel: «✕» y el arrastre de cierre siempre a mano. Con top: 0 y el relleno
+     dentro, el título nunca queda por encima del borde del panel (antes, con top negativo, se cortaba). */
+  position: sticky; top: 0; z-index: 1;
+  background: var(--superficie);
+}
+.menu-cabecera h2 { font-size: 2rem; }
+.menu-cerrar {
+  flex: none; width: 48px; height: 48px; border: 0; border-radius: 50%;
+  background: var(--secundario); color: var(--texto); font-size: 1.25rem; cursor: pointer;
+}
+.menu-cerrar:hover { background: var(--secundario-hover); }
+.menu-contenido details { border-top: 1px solid var(--linea); padding: 4px 0; scroll-margin-top: calc(72px + max(16px, env(safe-area-inset-top, 0px))); } /* bajo la cabecera fija */
+.menu-contenido details > .nota { margin: 0 0 12px; }
+.menu-contenido summary { min-height: 48px; display: flex; align-items: center; font-weight: 600; cursor: pointer; }
+/* Cada sección: sus campos uno debajo de otro, al ancho del panel (min(88vw, 420px) menos la franja). */
+.menu-seccion { display: grid; gap: 20px; padding: 4px 0 20px; min-width: 0; }
+.menu-seccion > .formulario { display: grid; gap: 16px; min-width: 0; }
+.menu-seccion .nota { margin: 0; font-size: 0.8125rem; }
+.titulo-campo {
+  margin: 0; font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--suave); font-family: inherit;
+}
+/* Con la General o Prueba elegida: «Estás en General…» arriba de Personalizar sesión (D3). Vacío, no ocupa. */
+.aviso-personalizar {
+  margin: 0; padding: 12px 14px; border-left: 3px solid var(--acento); border-radius: 0 12px 12px 0;
+  background: var(--secundario); font-size: 0.875rem; line-height: 1.4;
+}
+.aviso-personalizar:empty { display: none; }
+.rejilla-asaltos { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+/* «Tus combinaciones» en el panel estrecho: de dos en dos y «Solo las mías» a todo el ancho. */
+.menu-seccion .mezclas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.menu-seccion .mezclas b { font-size: 18px; }
+.rejilla-asaltos .campo { font-size: 0.8125rem; }
+.menu-seccion .interruptor { justify-content: space-between; }
+.guardias { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.guardias label span { min-height: 56px; }
+/* «Practicar más» en el panel: un hueco por fila, bajos (el panel es estrecho a cualquier ancho). */
+.menu-seccion .huecos-practicar { grid-template-columns: minmax(0, 1fr); grid-auto-rows: 60px; gap: 8px; }
+.menu-seccion .hueco.lleno { align-content: center; padding: 4px 4px 4px 14px; }
+.menu-seccion .hueco-cabecera { align-items: center; }
+.menu-seccion .hueco-cabecera h3 { margin: 0; }
+
+/* ---------- Avatar (vistas/avatar.js): foto, predefinido o inicial, siempre en cuadrado redondeado ---------- */
+.avatar {
+  display: grid; place-items: center; flex: none; width: 48px; height: 48px; border-radius: var(--radio-avatar);
+  object-fit: cover; background: var(--secundario); color: var(--texto);
+  font-size: 1.25rem; font-weight: 700; line-height: 1; overflow: hidden; user-select: none;
+}
+.avatar-inicial svg {
+  width: 24px; height: 24px; fill: none; stroke: var(--suave); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+/* «Nombre y avatar» en Ajustes: radios con la forma del avatar que se envuelven; el elegido, con anillo claro
+   (el anillo y el foco siguen la misma forma). */
+.identidad { display: grid; gap: 12px; }
+.identidad .campo input { color: var(--texto); }
+.avatares-fila { display: flex; flex-wrap: wrap; gap: 8px; }
+.avatar-opcion { position: relative; display: block; border-radius: var(--radio-avatar); }
+.avatar-opcion input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.avatar-opcion .avatar { width: 52px; height: 52px; border: 3px solid transparent; box-sizing: border-box; }
+.avatar-opcion input:checked + .avatar { border-color: var(--chip-activo); }
+.avatar-opcion input:focus-visible + .avatar { outline: 3px solid var(--foco); outline-offset: 2px; }
+.identidad-foto .boton { flex: 1 1 auto; white-space: nowrap; }
+/* Con ratón y sin pantalla táctil, capture no abre la cámara: fuera «Hacer una foto» y la galería se llama
+   «Subir una foto…». Sin @media anidado, (not (any-pointer: coarse)) no lo entienden los navegadores viejos. */
+.solo-raton { display: none; }
+@media (pointer: fine) {
+  @media not all and (any-pointer: coarse) {
+    .solo-tactil { display: none; }
+    .solo-raton { display: inline; }
+  }
+}
+#mensaje-foto:empty { display: none; }
+#mensaje-foto.aviso { padding: 10px 14px; }
+
+/* ---------- Mis combinaciones (el creador, #entrenar/mis-combinaciones) ---------- */
+/* Dentro de Entrenar, en #entrenar-sub: mientras se ve, nada más de Entrenar (foto, cabecera, configuración).
+   La subpágina trae su «Volver» y su título. */
+#vista-entrenar[data-sub] > :not(#entrenar-sub) { display: none; }
+#entrenar-sub { display: grid; gap: 16px; align-content: start; min-width: 0; }
+#entrenar-sub[hidden] { display: none; }
 .volver-sub {
   position: sticky; top: 0; z-index: 5; margin: 0 calc(-1 * var(--hueco)) -8px;
   padding: calc(8px + env(safe-area-inset-top, 0px)) var(--hueco) 8px; background: var(--fondo);
@@ -698,12 +900,28 @@ body[data-vista="ajustes"] #ir-ajustes, body.entrenando #ir-ajustes { display: n
 
 /* ---------- Historial ---------- */
 #vista-historial { --alto-foto: 240px; --arriba-titular: 96px; --posicion-foto: 50% 35%; }
-#vista-perfil { --alto-foto: 250px; --arriba-titular: 110px; --posicion-foto: 55% 25%; }
+#vista-perfil { --alto-foto: 250px; --arriba-titular: 56px; --posicion-foto: 55% 25%; } /* bajo «← Volver» */
 :is(#vista-historial, #vista-perfil) h1 { font-size: clamp(2.5rem, 11.8vw, 3.6rem); }
 :is(#vista-historial, #vista-perfil) .marca-agua { top: 6px; right: -10px; font-size: 140px; opacity: 0.04; }
 :is(#vista-historial, #vista-perfil) .foto-cabecera::after {
-  background: linear-gradient(180deg, rgba(10, 10, 10, 0.45) 0%, rgba(10, 10, 10, 0.25) 40%, var(--fondo) 100%);
+  background: linear-gradient(180deg, rgb(var(--fondo-rgb) / 0.45) 0%, rgb(var(--fondo-rgb) / 0.25) 40%, var(--fondo) 100%);
 }
+/* Perfil: «← Volver» arriba y la identidad (avatar | guardia y nombre, «Cambiar» debajo del nombre). */
+.volver-perfil { margin: 0; padding-top: env(safe-area-inset-top, 0px); }
+.identidad-perfil {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "avatar quien" "avatar cambiar";
+  column-gap: 16px; row-gap: 10px; align-items: center;
+}
+.perfil-avatar { grid-area: avatar; align-self: start; }
+.perfil-avatar .avatar { width: 88px; height: 88px; font-size: 2.25rem; border: 2px solid var(--linea-chip); }
+.perfil-quien { grid-area: quien; min-width: 0; }
+.perfil-quien .antetitulo { margin-bottom: 4px; }
+/* El nombre, hasta en dos líneas (uno de 30 caracteres sin espacios se parte donde haga falta). */
+#vista-perfil .perfil-quien h1 {
+  margin: 0; font-size: clamp(2rem, 9vw, 2.75rem); line-height: 1.05; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden;
+}
+#cambiar-identidad { grid-area: cambiar; justify-self: start; }
 
 .resumen-historial { display: grid; gap: 18px; min-width: 0; }
 
@@ -1055,18 +1273,15 @@ dialog.hoja { padding: 0; }
 
 /* ---------- Aprende ---------- */
 /* Lista de fichas agrupada por categoría y, en #aprende/<id>, la ficha: sus apartados en tarjetas
-   (en el PC, dos columnas) y las fuentes plegadas, como las secciones del Perfil. */
+   (en el PC, dos columnas) y «Mostrar más» plegado, como las secciones del Perfil. */
 #vista-aprende { --alto-foto: 250px; --arriba-titular: 110px; --posicion-foto: 50% 30%; }
 #vista-aprende h1 { font-size: clamp(2.5rem, 11.8vw, 3.6rem); overflow-wrap: anywhere; }
 #vista-aprende .marca-agua { top: 6px; right: -10px; font-size: 140px; opacity: 0.04; }
 #vista-aprende .foto-cabecera::after {
-  background: linear-gradient(180deg, rgba(10, 10, 10, 0.45) 0%, rgba(10, 10, 10, 0.25) 40%, var(--fondo) 100%);
+  background: linear-gradient(180deg, rgb(var(--fondo-rgb) / 0.45) 0%, rgb(var(--fondo-rgb) / 0.25) 40%, var(--fondo) 100%);
 }
 #aprende-contenido { display: grid; gap: 16px; align-content: start; min-width: 0; }
 #aprende-contenido p { margin: 0; }
-/* Aviso discreto: punto ámbar y texto secundario, sin mayúsculas. */
-.aviso-pendiente { display: flex; align-items: center; gap: 8px; color: var(--suave); font-size: 0.8125rem; }
-.aviso-pendiente::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--aviso); }
 .grupo-fichas { display: grid; gap: 10px; min-width: 0; }
 .grupo-fichas h2 { margin: 12px 0 0; }
 .grupo-fichas .nota { margin-top: -6px; }
@@ -1093,7 +1308,6 @@ dialog.hoja { padding: 0; }
 /* «Al cuerpo»: lo común, plegado dentro de la tarjeta; «Mostrar más»: variantes y detalles. */
 .comun-cuerpo > summary { margin: 0; min-height: 48px; }
 .comun-cuerpo[open] > summary { margin-bottom: 4px; }
-#aprende-contenido .fuentes-comun { margin-top: 10px; font-size: 0.8125rem; overflow-wrap: anywhere; }
 .mas-ficha .titulo-plegable { white-space: nowrap; }
 /* En pantallas estrechas el resumen va debajo del título (alineado con él), en una línea y cortado con «…». */
 @media (max-width: 719px) {
@@ -1108,8 +1322,6 @@ dialog.hoja { padding: 0; }
 .mas-apartado h3 { margin: 0; font-size: 1rem; }
 .mas-apartado ul { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
 .nombre-variante { display: block; font-weight: 600; }
-.fuentes-ficha .cuerpo-plegable { gap: 0; }
-.fuentes-ficha li { overflow-wrap: anywhere; }
 .pie-aprende { font-size: 0.75rem; }
 @media (min-width: 720px) {
   .lista-fichas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1192,8 +1404,6 @@ dialog::backdrop { background: var(--velo); }
     height: 52px; padding: 0 18px; border-radius: 26px; font-size: 0.9375rem;
   }
   #pestanas a:hover:not([aria-current]) { background: var(--superficie-hover); }
-  #pestanas .solo-escritorio { display: flex; }
-  #ir-ajustes { display: none; }
   /* La línea del menú, también en el fondo de la página: el borde de la barra fija solo mide lo
      que la ventana y se cortaba a media página (al pintar la página entera o si algo la tapaba). */
   html { min-height: 100%; }
@@ -1213,41 +1423,38 @@ dialog::backdrop { background: var(--velo); }
 
   .cabecera { padding-top: 48px; }
   h1 { font-size: 5rem; }
-  .marca-movil { display: none; }
 
   /* Foto a la derecha a su tamaño (como mucho), fundida al negro por la izquierda y por abajo. */
   .foto-cabecera { left: auto; right: calc(-1 * var(--hueco)); width: min(587px, 60%); height: calc(var(--alto-foto, 360px) + 60px); }
   .foto-cabecera::after {
-    background: linear-gradient(90deg, var(--fondo) 0%, rgba(10, 10, 10, 0) 45%),
-      linear-gradient(180deg, rgba(10, 10, 10, 0.3) 0%, rgba(10, 10, 10, 0) 30%, rgba(10, 10, 10, 0.2) 60%, var(--fondo) 100%);
+    background: linear-gradient(90deg, var(--fondo) 0%, rgb(var(--fondo-rgb) / 0) 45%),
+      linear-gradient(180deg, rgb(var(--fondo-rgb) / 0.3) 0%, rgb(var(--fondo-rgb) / 0) 30%, rgb(var(--fondo-rgb) / 0.2) 60%, var(--fondo) 100%);
   }
   .con-foto .cabecera { padding-top: calc(var(--arriba-titular, 150px) + 30px); min-height: calc(var(--alto-foto, 360px) - 20px); }
-  #vista-entrenar { --arriba-titular: 120px; }
   :is(#vista-historial, #vista-perfil) h1 { font-size: 4.5rem; }
-  .marca-agua.vertical { writing-mode: horizontal-tb; top: 36px; right: auto; left: -12px; font-size: 13rem; }
+  /* Perfil: la identidad justo debajo de «← Volver», sin el alto de la foto. */
+  #vista-perfil .cabecera { padding-top: 24px; min-height: 0; }
+  #vista-perfil .perfil-quien h1 { font-size: 3.5rem; }
 
-  /* Entrenar: presets arriba; debajo, opciones a la izquierda y sesión a la derecha, alineadas
-     arriba. La sesión se queda a la vista (sticky) mientras se baja por las opciones. */
-  #config { grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr); gap: 14px 32px; align-items: start; }
-  .config-opciones { display: contents; }
-  .presets { grid-column: 1 / -1; grid-row: 1; } /* a todo el ancho: a 1024 px no caben en la columna */
-  .config-tarjeta { grid-column: 1; grid-row: 2; }
-  .config-sesion { grid-column: 2; grid-row: 2; }
-  .fila-chips { margin: 0; padding: 2px 0; flex-wrap: wrap; overflow: visible; }
-  .config-tarjeta { padding: 24px; gap: 18px; }
-  .presets { display: flex; align-items: center; gap: 16px; }
-  .presets .fila-chips { flex: none; flex-wrap: nowrap; } /* siempre en una fila */
-  .resumen-presets { display: none; } /* ya sale en «Tu sesión» (los lectores lo siguen oyendo en los chips) */
+  /* Entrenar: a la izquierda la cabecera de perfil y el selector; a la derecha «Tu sesión» y Empezar, fijos
+     al bajar (sticky). A la derecha de todo queda el margen de 112 px del asa (2.1): main llega al borde de
+     la ventana hasta ~1450 px y lleva 48 de relleno; #config deja otros 64. Más ancho, main se centra y el
+     margen crece solo. */
+  #vista-entrenar { padding-top: 40px; }
+  #config {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 428px); grid-template-rows: auto auto 1fr;
+    gap: 32px 32px; align-items: start; margin-right: 64px;
+  }
+  .cabecera-perfil { grid-column: 1; grid-row: 1; max-width: 520px; }
+  #tipo-sesion { grid-column: 1; grid-row: 2; }
+  .tu-sesion, .empezar-caja { grid-column: 2; }
+  .derecha-entrenar { grid-column: 2; grid-row: 2 / 4; position: sticky; top: 24px; display: grid; gap: 16px; }
+  .tu-sesion { padding: 24px; }
+  .resumen-grande { font-size: 3rem; }
   .niveles label span { min-height: 84px; font-size: 0.875rem; }
   .niveles b { font-size: 32px; }
-  .mezclas b { font-size: 24px; } /* cuatro por fila: «35 %» no cabe a 32 px en la columna de 1024 */
-  .config-sesion {
-    position: sticky; top: 24px; gap: 16px; padding: 28px;
-    background: var(--superficie); border: 1px solid var(--linea); border-radius: 22px;
-  }
-  .config-titulo { display: block; font-size: 2.25rem; }
-  .resumen-grande { display: block; margin-top: -6px; color: var(--suave); font-size: 1.05rem; }
-  .resumen-elecciones { display: block; margin-top: -10px; color: var(--suave); font-size: 0.875rem; }
+  .menu-seccion .niveles label span { min-height: 56px; }
+  .menu-seccion .niveles b { font-size: 24px; }
   .voz-larga { display: none; }
   .voz-corta { display: inline; }
   #info-voz { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* solo si una voz no cabe ni corta */
@@ -1275,7 +1482,6 @@ dialog::backdrop { background: var(--velo); }
   .resumen-historial > .cifras dd { font-size: 46px; }
   .resumen-historial > .cifras div { padding: 18px 12px; }
   .con-detalle .col-lista, #historial-contenido:not(.con-detalle) .col-detalle { display: grid; }
-  .volver-movil { display: none; }
   .meses { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   /* A 1024 px la galería es media columna: casillas de ~78 px, donde «Septiembre» (5,6 veces su
      letra) cabe justo a 13 px. Si la casilla no da para tanto (otra fuente, zoom), la letra baja lo
@@ -1296,18 +1502,13 @@ dialog::backdrop { background: var(--velo); }
     .resumen-historial > .cifras div { padding-inline: 14px; } /* columna estrecha: sitio para «sesiones / mes» */
   }
 
-  /* Ajustes: Voz a todo el ancho, con la voz a la izquierda y la velocidad y «Probar voz» a la
-     derecha; «Practicar más» debajo, del mismo ancho, con sus tres huecos en fila (a 1024 y a 1440). */
-  #vista-ajustes h1 { font-size: 4.5rem; }
-  #ajustes-contenido { gap: 24px; }
-  #f-voz { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 32px; }
-  .voz-cabeza { grid-column: 1 / -1; }
 
   /* Mis combinaciones: el listado, del ancho de una lectura cómoda; el editor, en dos columnas
      (paleta a la izquierda, golpes en tres columnas; la caja y Guardar a la derecha, fijas al bajar). */
   .volver-sub { position: static; margin: 0 0 -8px; padding: 32px 0 0; background: none; }
   .cabecera-sub h1 { font-size: 4.5rem; }
-  #vista-ajustes[data-sub] #ajustes-contenido > :is(.cabecera-sub, .lista-propias, .vacio-propias, .anadir-propia, .motivo) { max-width: 760px; }
+  #entrenar-sub { gap: 24px; }
+  #entrenar-sub > :is(.cabecera-sub, .lista-propias, .vacio-propias, .anadir-propia, .motivo) { max-width: 760px; }
   .editor { grid-template-columns: minmax(0, 1fr) minmax(340px, 0.75fr); gap: 32px; align-items: start; }
   .editor-paleta { grid-column: 1; grid-row: 1; }
   .editor-combo { grid-column: 2; grid-row: 1; position: sticky; top: 24px; }
@@ -1321,7 +1522,7 @@ dialog::backdrop { background: var(--velo); }
   .plegable { padding: 0 24px; }
 
   /* Aprende: fichas en tres columnas; la ficha, en dos (qué es, cuándo y cómo a la izquierda;
-     errores, ventajas, inconvenientes, notas y fuentes a la derecha). */
+     errores, ventajas, inconvenientes, notas y «Mostrar más» a la derecha). */
   #vista-aprende h1 { font-size: 4.5rem; }
   .lista-fichas { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
   .aprende-ficha { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 32px; }
@@ -1343,6 +1544,66 @@ dialog::backdrop { background: var(--velo); }
 /* La sesión no anima su entrada: tiene que estar lista al instante. */
 #pantalla { animation: none; }
 
+/* ---------- Intro «QUE EMPIECE EL ASALTO» (intro.js; plan del rediseño, 3.6) ---------- */
+/* ~2 s, solo transform y opacity: 0-0,3 s encendidas; 0,3-1,5 s se apagan una a una (60 ms por letra, en
+   orden de lectura, cada una una vez y sin destellos); 1,5-1,9 s la cámara avanza (scale de la escena)
+   mientras la capa se desvanece, y la vista de debajo se acerca (1,04 → 1). La letra apagada es el propio
+   texto, rojo muy oscuro; la encendida, un ::after encima con el neón que se funde a opacidad 0. */
+#intro {
+  --neon: #ff2a1f;
+  --neon-brillo: rgba(255, 42, 31, 0.75);
+  --apagada: #3a0d0b;
+  position: fixed; inset: 0; z-index: 100; overflow: hidden;
+  display: grid; place-items: center; padding: 16px;
+  background: #050303; pointer-events: auto;
+  animation: intro-fuera 0.4s ease-in 1.5s both;
+}
+#intro:empty { display: none; } /* aún sin letras (o sin JS): no tapa nada */
+/* El hueco que reserva scrollbar-gutter queda fuera de la capa fija: el lienzo toma su fondo (como con el
+   menú abierto) y no se desplaza lo de debajo mientras está. */
+html.con-intro { overflow: hidden; background: #050303; }
+/* Luces rojas desenfocadas: degradados radiales que derivan muy despacio (sin cambiar de brillo). */
+#intro::before, #intro::after {
+  content: ""; position: absolute; width: 90vmax; height: 90vmax; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(200, 20, 15, 0.32) 0%, rgba(200, 20, 15, 0.12) 35%, transparent 68%);
+  animation: intro-deriva 9s ease-in-out infinite alternate;
+}
+#intro::before { top: -45vmax; left: -35vmax; }
+#intro::after {
+  right: -40vmax; bottom: -50vmax;
+  background: radial-gradient(circle, rgba(150, 10, 25, 0.3) 0%, rgba(150, 10, 25, 0.1) 40%, transparent 70%);
+  animation-direction: alternate-reverse;
+}
+.intro-escena { position: relative; z-index: 1; animation: intro-camara 0.4s ease-in 1.5s both; }
+.intro-lema {
+  margin: 0; max-width: 100%; text-align: center;
+  font-family: var(--letra-titular); font-weight: 400; text-transform: uppercase;
+  font-size: min(17vw, 7.5rem); line-height: 1.02; letter-spacing: 0.02em;
+}
+.intro-palabra { display: inline-block; white-space: nowrap; }
+.intro-letra { position: relative; display: inline-block; color: var(--apagada); }
+.intro-letra::after {
+  content: attr(data-l); position: absolute; inset: 0; color: var(--neon);
+  text-shadow: 0 0 4px var(--neon-brillo), 0 0 14px var(--neon-brillo), 0 0 34px rgba(255, 42, 31, 0.45);
+  animation: intro-apagar 0.14s ease-out calc(300ms + var(--i) * 60ms) both;
+}
+#intro.saltando { animation: intro-saltar 0.15s ease-out both; }
+#intro.saltando .intro-escena { animation-play-state: paused; }
+@keyframes intro-apagar { from { opacity: 1; } to { opacity: 0; } }
+@keyframes intro-camara { from { transform: scale(1); } to { transform: scale(2.4); } }
+@keyframes intro-fuera { from { opacity: 1; } to { opacity: 0; } }
+@keyframes intro-saltar { from { opacity: var(--desde, 1); } to { opacity: 0; } }
+@keyframes intro-deriva { from { transform: translate(0, 0); } to { transform: translate(6vmax, 4vmax); } }
+/* La vista de debajo se acerca al final. Solo el contenido de la vista que se ve, nunca el asa, el menú, la
+   hoja de «Practicar más» ni la barra. Va junto a «entrada» (mismo nombre en el mismo puesto), así quitarla
+   no repite la entrada; `backwards` no deja transform al acabar (no cambia el sitio de lo fijo). */
+@keyframes intro-acercar { from { transform: scale(1.04); } to { transform: none; } }
+html.intro-acercando .vista > :not(#asa, #menu, #elegir-practicar, #pantalla, .marca-agua, .pista-panel, .globo-asa) {
+  animation: entrada 0.28s ease-out both, intro-acercar 0.4s ease-out backwards;
+  animation-delay: 0s;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
+  #intro { display: none; } /* intro.js ya no la monta; por si acaso */
 }

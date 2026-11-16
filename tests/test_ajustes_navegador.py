@@ -1,8 +1,10 @@
-"""«Practicar más» de Ajustes en un navegador de verdad (Chromium headless con Playwright).
+"""Las secciones del menú de Entrenar en un navegador de verdad (Chromium headless con Playwright):
+«Practicar más» (en Personalizar sesión) y Ajustes (voz, velocidad, Nombrar combinaciones y guardia).
 
-Tres huecos del mismo tamaño: uno vacío abre un panel (<dialog>) con pestañas Golpes, Defensas y Salidas
-para elegir; uno lleno dice el movimiento y cuánto más, y se puede quitar. Se guarda en el almacén. Sin
-Playwright se salta en local; en CI falla.
+«Practicar más»: tres huecos del mismo tamaño; uno vacío abre un panel (<dialog>, encima del menú) con
+pestañas Golpes, Defensas y Salidas para elegir; uno lleno dice el movimiento y se puede quitar. Se guarda en
+el almacén. Ajustes ya no es una página: #ajustes lleva al menú abierto en Ajustes. Sin Playwright se salta en
+local; en CI falla.
 """
 import importlib.util
 import json
@@ -12,6 +14,8 @@ import pytest
 
 from herramientas.construir_sitio import construir
 from herramientas.fotos_maniqui import ORIGEN, abrir
+from tests.sin_intro import preparar
+from tests.menu_quieto import esperar_menu_quieto
 
 HAY_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
 pytestmark = pytest.mark.skipif(not HAY_PLAYWRIGHT and not os.environ.get("CI"),
@@ -51,6 +55,7 @@ def pagina(tmp_path_factory):
     assert HAY_PLAYWRIGHT, "Las pruebas de Ajustes necesitan Playwright (pip install -r requirements.txt)"
     sitio = construir(tmp_path_factory.mktemp("sitio") / "_site", "prueba", fotos=False)
     with abrir(sitio, SEMBRAR, 390, 844, barras=True) as (pagina, errores):
+        preparar(pagina)
         pagina.goto(f"{ORIGEN}/__pagina__.html")
         pagina.wait_for_function("window.listo === true")
         yield pagina
@@ -59,9 +64,14 @@ def pagina(tmp_path_factory):
 
 @pytest.fixture
 def ajustes(pagina):
-    """Ajustes abierto y, al acabar, sin nada elegido ni el panel abierto, para la prueba siguiente."""
-    pagina.goto(f"{ORIGEN}/index.html#ajustes")
-    pagina.wait_for_selector("#t-practicar")
+    """El menú abierto en Personalizar sesión y, al acabar, sin nada elegido ni el panel abierto, para la
+    prueba siguiente. Pasa antes por la página vacía (otro documento): la app arranca de cero, sin nada
+    guardado."""
+    pagina.goto(f"{ORIGEN}/__pagina__.html")
+    pagina.wait_for_function("window.listo === true")
+    pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/personalizar")
+    pagina.wait_for_selector("#t-practicar", state="visible")
+    esperar_menu_quieto(pagina)
     yield pagina
     if pagina.locator("#elegir-practicar[open]").count():
         _cerrar(pagina, lambda: pagina.keyboard.press("Escape"))
@@ -97,28 +107,6 @@ def _elegir(pagina, movimiento, pestana="golpe"):
     _abrir_panel(pagina)
     pagina.click(f"#pestana-{pestana}")
     _cerrar(pagina, lambda: pagina.click(f'[data-elegir="{movimiento}"]'))
-
-
-def _en_una_linea(pagina):
-    """Cada botón del selector «Un poco más | Bastante más», en una sola línea y sin salirse."""
-    return pagina.evaluate("""() => [...document.querySelectorAll('.segmentado span')].every((s) => {
-      const r = document.createRange();
-      r.selectNodeContents(s);
-      return r.getClientRects().length === 1 && s.scrollWidth <= s.clientWidth;
-    })""")
-
-
-def _selector_holgado(pagina):
-    """Cada texto del selector, entero y sin tocar el borde de su botón; botones dentro de la tarjeta."""
-    return pagina.evaluate("""() => [...document.querySelectorAll('.segmentado span')].map((s) => {
-      const r = document.createRange();
-      r.selectNodeContents(s);
-      const texto = r.getBoundingClientRect(), caja = s.getBoundingClientRect();
-      const tarjeta = s.closest('.hueco').getBoundingClientRect();
-      return { texto: s.textContent, lineas: r.getClientRects().length, cabe: s.scrollWidth <= s.clientWidth,
-        holgura: Math.min(texto.left - caja.left, caja.right - texto.right),
-        dentro: caja.left >= tarjeta.left && caja.right <= tarjeta.right };
-    })""")
 
 
 def _hoja(pagina):
@@ -174,9 +162,10 @@ def test_tres_huecos_vacios_iguales_y_el_panel_tiene_6_mas_1_7_y_3(ajustes):
           .map((b) => b.getBoundingClientRect().height)""")
         assert min(altos_lista) >= 48
     pagina.click("#pestana-golpe")
-    # A 390, hoja inferior: pegada abajo y a todo el ancho.
+    # A 390, hoja inferior: pegada abajo y a todo el ancho (el del velo del menú, que también ocupa la pantalla).
     hoja = pagina.evaluate("() => document.querySelector('#elegir-practicar').getBoundingClientRect().toJSON()")
-    assert round(hoja["bottom"]) == 844 and round(hoja["width"]) == pagina.evaluate("document.documentElement.clientWidth")
+    velo = pagina.evaluate("document.querySelector('#menu').getBoundingClientRect().width")
+    assert round(hoja["bottom"]) == 844 and round(hoja["left"]) == 0 and round(hoja["width"]) == round(velo)
     # Esc cierra sin elegir y el foco vuelve al hueco desde el que se abrió.
     _cerrar(pagina, lambda: pagina.keyboard.press("Escape"))
     assert _foco(pagina)["hueco"] == "0"
@@ -188,7 +177,7 @@ def test_elegir_cambiar_y_quitar_desde_los_huecos(ajustes):
     _elegir(pagina, "6")
     foco = _foco(pagina)
     assert foco["hueco"] == "0" and "lleno" in foco["clase"]  # el foco, en la tarjeta recién llenada
-    assert _guardado(pagina) == [{"movimiento": "6", "cuanto": "poco"}]
+    assert _guardado(pagina) == [{"movimiento": "6"}]
     # Lo ya elegido sale marcado y no se puede volver a elegir.
     _abrir_panel(pagina)
     ficha = pagina.locator('[data-elegir="6"]')
@@ -196,7 +185,7 @@ def test_elegir_cambiar_y_quitar_desde_los_huecos(ajustes):
     assert "(ya elegido)" in ficha.text_content() and "✓" in ficha.inner_text()
     ficha.click(force=True)  # Playwright no pulsa lo aria-disabled; una persona sí puede
     assert pagina.locator("#elegir-practicar[open]").count() == 1
-    assert _guardado(pagina) == [{"movimiento": "6", "cuanto": "poco"}]
+    assert _guardado(pagina) == [{"movimiento": "6"}]
     _cerrar(pagina, lambda: pagina.click('[data-elegir="cuerpo"]'))
     _elegir(pagina, "rodar", "defensa")
     assert pagina.locator(".hueco.vacio").count() == 0
@@ -204,18 +193,16 @@ def test_elegir_cambiar_y_quitar_desde_los_huecos(ajustes):
                                                                   "rueda"]
     assert len(set(_altos(pagina))) == 1
     assert pagina.locator("#practicar-estado").inner_text() == "3 de 3 elegidos."
-    # Cuánto más: «Un poco más | Bastante más», sin el factor del sorteo.
-    assert pagina.locator('[data-hueco="2"] .segmentado span').all_inner_texts() == ["Un poco más", "Bastante más"]
-    pagina.locator('[data-movimiento="rodar"][data-cuanto="bastante"]').check()
-    assert _guardado(pagina) == [{"movimiento": "6", "cuanto": "poco"}, {"movimiento": "cuerpo", "cuanto": "poco"},
-                                 {"movimiento": "rodar", "cuanto": "bastante"}]
+    # Un solo nivel: sin «Un poco más | Bastante más».
+    assert pagina.locator("#f-practicar .segmentado, [data-cuanto]").count() == 0
+    assert _guardado(pagina) == [{"movimiento": "6"}, {"movimiento": "cuerpo"}, {"movimiento": "rodar"}]
     # Quitar: el botón mide 48 px como mínimo; los demás suben y el foco va al hueco que queda vacío.
     quitar = pagina.locator('[data-quitar="cuerpo"]')
     assert quitar.get_attribute("aria-label") == "Quitar golpes al cuerpo"
     caja = quitar.bounding_box()
     assert caja["width"] >= 48 and caja["height"] >= 48
     quitar.click()
-    assert _guardado(pagina) == [{"movimiento": "6", "cuanto": "poco"}, {"movimiento": "rodar", "cuanto": "bastante"}]
+    assert _guardado(pagina) == [{"movimiento": "6"}, {"movimiento": "rodar"}]
     assert pagina.locator(".hueco.lleno h3").all_inner_texts() == ["6 gancho de derecha", "rueda"]
     foco = _foco(pagina)
     assert foco["hueco"] == "2" and "vacio" in foco["clase"]
@@ -240,7 +227,7 @@ def test_pestanas_con_teclado_y_el_foco_no_sale_del_panel(ajustes):
     # Al pulsar Enter en una ficha se elige.
     pagina.focus('[data-elegir="pivote"]')
     _cerrar(pagina, lambda: pagina.keyboard.press("Enter"))
-    assert _guardado(pagina) == [{"movimiento": "pivote", "cuanto": "poco"}]
+    assert _guardado(pagina) == [{"movimiento": "pivote"}]
     # «Cerrar» también devuelve el foco al hueco.
     _abrir_panel(pagina)
     _cerrar(pagina, lambda: pagina.click("#elegir-practicar [data-cerrar]"))
@@ -253,12 +240,10 @@ def test_al_pasar_a_zurdo_el_hueco_cambia_de_mano_pero_lo_guardado_no(ajustes):
     assert pagina.locator('[data-elegir="4"]').inner_text().strip() == "4 crochet de derecha"
     _cerrar(pagina, lambda: pagina.click('[data-elegir="4"]'))
     antes = _guardado(pagina)
-    assert antes == [{"movimiento": "4", "cuanto": "poco"}]  # la clave del movimiento: ni el texto ni la mano
+    assert antes == [{"movimiento": "4"}]  # la clave del movimiento: ni el texto ni la mano
     assert pagina.locator(".hueco.lleno h3").all_inner_texts() == ["4 crochet de derecha"]
-    pagina.goto(f"{ORIGEN}/index.html#entrenar")
-    pagina.locator("#zurdo").check()
-    pagina.goto(f"{ORIGEN}/index.html#ajustes")
-    pagina.wait_for_selector("#t-practicar")
+    # La guardia, en la sección Ajustes del mismo menú: Practicar más se repinta sin salir.
+    _guardia(pagina, "zurdo")
     assert pagina.locator(".hueco.lleno h3").all_inner_texts() == ["4 crochet de izquierda"]
     _abrir_panel(pagina)
     ficha = pagina.locator('[data-elegir="4"]')
@@ -266,25 +251,27 @@ def test_al_pasar_a_zurdo_el_hueco_cambia_de_mano_pero_lo_guardado_no(ajustes):
     assert ficha.get_attribute("aria-disabled") == "true"
     _cerrar(pagina, lambda: pagina.keyboard.press("Escape"))
     assert _guardado(pagina) == antes
-    # Vuelta a diestro, para las demás pruebas.
-    pagina.goto(f"{ORIGEN}/index.html#entrenar")
-    pagina.locator("#zurdo").uncheck()
-    pagina.goto(f"{ORIGEN}/index.html#ajustes")
-    pagina.wait_for_selector("#t-practicar")
+    _guardia(pagina, "diestro")  # vuelta a diestro, para las demás pruebas
 
 
-def test_nada_se_sale_de_la_pantalla_a_390(ajustes):
+def _guardia(pagina, guardia):
+    pagina.evaluate("document.querySelector('[data-seccion=ajustes]').open = true")
+    pagina.click(f'#menu-ajustes label:has(input[name="guardia"][value="{guardia}"])')
+
+
+CABE_EN_EL_PANEL = "(() => { const c = document.querySelector('.menu-contenido'); return c.scrollWidth <= c.clientWidth; })()"
+
+
+def test_nada_se_sale_del_panel_a_390(ajustes):
     pagina = ajustes
     for movimiento, pestana in (("3", "golpe"), ("paso_atras", "defensa"), ("salir", "movimiento")):
         _elegir(pagina, movimiento, pestana)
     ancho = pagina.evaluate("document.documentElement.clientWidth")
     assert pagina.evaluate("document.documentElement.scrollWidth") <= ancho
+    assert pagina.evaluate(CABE_EN_EL_PANEL)
     derecha = pagina.evaluate("""() => Math.max(...[...document.querySelectorAll('#f-practicar .hueco *')]
       .map((e) => e.getBoundingClientRect().right))""")
-    assert derecha <= ancho
-    # El selector de cada hueco, en una línea por botón.
-    assert _en_una_linea(pagina)
-    assert all(b["holgura"] >= 6 and b["dentro"] for b in _selector_holgado(pagina))
+    assert derecha <= pagina.evaluate("document.querySelector('.menu-panel').getBoundingClientRect().right")
 
 
 def _pestanas_quietas(pagina):
@@ -325,76 +312,140 @@ def test_a_390_la_hoja_mide_lo_que_su_pestana_mas_alta_y_si_no_cabe_hace_scroll(
         pagina.set_viewport_size({"width": 390, "height": 844})
 
 
-def test_a_1024_tres_huecos_en_fila_y_el_panel_centrado(ajustes):
+def test_a_1024_huecos_uno_debajo_de_otro_en_el_panel_y_la_hoja_centrada(ajustes):
     pagina = ajustes
     pagina.set_viewport_size({"width": 1024, "height": 768})
     try:
         _elegir(pagina, "4")
         _elegir(pagina, "bloqueo", "defensa")
+        # El panel mide 420 px a cualquier ancho: un hueco por fila, del mismo ancho y alto.
         cajas = pagina.evaluate("""() => [...document.querySelectorAll('.huecos-practicar > li')]
           .map((li) => li.getBoundingClientRect().toJSON())""")
-        assert len({round(c["top"]) for c in cajas}) == 1
+        assert len({round(c["top"]) for c in cajas}) == 3
         assert len({(round(c["width"]), round(c["height"])) for c in cajas}) == 1
-        assert _en_una_linea(pagina)
-        # Selector con la letra y el relleno de Velocidad; ningún texto cortado ni pegado al borde.
-        estilo = """(s) => { const c = getComputedStyle(document.querySelector(s));
-          return [c.fontSize, c.paddingTop, c.paddingRight, c.paddingBottom, c.paddingLeft]; }"""
-        assert pagina.evaluate(f"({estilo})('.segmentado span')") == pagina.evaluate(
-            f"({estilo})('.velocidades .chip-opcion span')")
-        for boton in _selector_holgado(pagina):
-            assert boton["lineas"] == 1 and boton["cabe"] and boton["dentro"], boton
-            assert boton["holgura"] >= 6, boton
         _abrir_panel(pagina)
         assert _filas(pagina) == [[3, 3], [1], [1] * 7, [1] * 3]
         assert _pestanas_quietas(pagina)["defensa"]["bajo"] <= 24
         hoja = pagina.evaluate("() => document.querySelector('#elegir-practicar').getBoundingClientRect().toJSON()")
         assert hoja["width"] <= 560 and hoja["bottom"] < 768
-        assert abs((hoja["left"] + hoja["right"]) / 2 - pagina.evaluate("document.documentElement.clientWidth") / 2) <= 1
+        velo = pagina.evaluate("document.querySelector('#menu').getBoundingClientRect().width")
+        assert abs((hoja["left"] + hoja["right"]) / 2 - velo / 2) <= 1
         _cerrar(pagina, lambda: pagina.keyboard.press("Escape"))
     finally:
         pagina.set_viewport_size({"width": 390, "height": 844})
 
 
-def test_ajustes_queda_con_voz_y_practicar_mas_sin_tus_datos_ni_zurdo(ajustes):
+def test_elegir_con_la_general_pasa_a_personalizada_y_al_cerrar_el_menu_se_ve(ajustes):
     pagina = ajustes
-    formularios = pagina.eval_on_selector_all("#ajustes-contenido > form", "els => els.map(e => e.id)")
-    assert formularios == ["f-voz", "f-practicar"]
-    texto = pagina.locator("#ajustes-contenido").inner_text().lower()
-    for frase in ("tus datos", "guardia", "nivel", "zurd"):
+    assert pagina.is_checked('#tipo-sesion input[value="general"]')
+    _elegir(pagina, "3")
+    datos = json.loads(pagina.evaluate("localStorage.getItem('boxeo')"))
+    assert datos["perfil"]["sesion"]["tipo"] == "personalizada"
+    assert pagina.is_checked('#tipo-sesion input[value="personalizada"]')
+
+
+def test_atras_con_la_hoja_abierta_cierra_la_hoja_y_el_menu(ajustes):
+    pagina = ajustes
+    pagina.goto(f"{ORIGEN}/index.html#entrenar")
+    pagina.wait_for_selector("#asa")
+    pagina.click("#asa")
+    pagina.wait_for_selector("#t-practicar", state="visible")
+    esperar_menu_quieto(pagina)
+    _abrir_panel(pagina)
+    pagina.go_back()
+    pagina.wait_for_function("location.hash === '#entrenar'")
+    pagina.wait_for_function("!document.querySelector('dialog[open]')")
+    pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/personalizar")
+    pagina.wait_for_selector("#t-practicar", state="visible")
+    esperar_menu_quieto(pagina)
+
+
+# ---------- Ajustes (sección del menú) ----------
+
+def _abrir_ajustes(pagina):
+    pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/ajustes")
+    pagina.wait_for_selector("#voz-id", state="visible")
+    esperar_menu_quieto(pagina)
+
+
+def test_ajustes_trae_voz_velocidad_nombrar_y_guardia_y_nada_de_practicar(ajustes):
+    pagina = ajustes
+    _abrir_ajustes(pagina)
+    seccion = pagina.locator("#menu-ajustes")
+    assert seccion.locator("#voz-id, #probar-voz").count() == 2
+    assert seccion.locator('input[name="voz-velocidad"]').count() == 3
+    assert [i.get_attribute("value") for i in seccion.locator('input[name="voz"]').all()] == ["numeros", "nombres", "ambos"]
+    assert [i.get_attribute("value") for i in seccion.locator('input[name="guardia"]').all()] == ["diestro", "zurdo"]
+    assert pagina.locator("#identidad").count() == 1  # el hueco de nombre y avatar (R5)
+    texto = seccion.inner_text().lower()
+    for frase in ("practicar", "tus datos", "nivel", "asaltos"):
         assert frase not in texto, frase
-    assert pagina.locator('#vista-ajustes [data-grupo="basicos"], #vista-ajustes #zurdo').count() == 0
+    # En Entrenar ya no están Nombrar ni la guardia; la página de Ajustes y su engranaje, tampoco.
+    assert pagina.locator('#config input[name="voz"], #zurdo').count() == 0
+    assert pagina.locator("#vista-ajustes, #ir-ajustes, #pestanas a[href='#ajustes']").count() == 0
 
 
-def test_a_390_volver_se_queda_fijo_arriba_al_bajar_sin_tapar_nada_al_empezar(ajustes):
+def test_nombrar_y_la_guardia_se_guardan_sin_cambiar_de_tipo(ajustes):
     pagina = ajustes
-    volver = pagina.locator("#volver-ajustes")
-    pagina.evaluate("window.scrollTo(0, 0)")
-    pagina.evaluate(ANIMACIONES_ACABADAS)  # la entrada de la vista mueve los bloques 10 px
-    caja = pagina.locator("#vista-ajustes .volver-movil").bounding_box()
-    cabecera = pagina.locator("#vista-ajustes .cabecera .antetitulo").bounding_box()
-    assert caja["y"] + caja["height"] <= cabecera["y"]  # arriba del todo, no pisa el antetítulo
-    pagina.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)")
-    pagina.evaluate(SCROLL_QUIETO)
-    assert pagina.evaluate("window.scrollY") > 200
-    fija = pagina.locator("#vista-ajustes .volver-movil").bounding_box()
-    assert abs(fija["y"]) <= 1 and volver.is_visible()
-    # Con fondo: lo que pasa por debajo no se transparenta.
-    assert pagina.locator("#vista-ajustes .volver-movil").evaluate("e => getComputedStyle(e).backgroundColor") \
-        not in ("rgba(0, 0, 0, 0)", "transparent")
-    pagina.evaluate("window.scrollTo(0, 0)")
+    _abrir_ajustes(pagina)
+    pagina.click('#menu-ajustes label:has(input[name="voz"][value="numeros"])')
+    pagina.click('#menu-ajustes label:has(input[name="guardia"][value="zurdo"])')
+    sesion = json.loads(pagina.evaluate("localStorage.getItem('boxeo')"))["perfil"]["sesion"]
+    assert (sesion["voz"], sesion["zurdo"], sesion["tipo"]) == ("numeros", True, "general")
+    # La General también es zurda: «Tu sesión» lo dice detrás del menú.
+    assert "Zurdo" in pagina.text_content("#resumen-elecciones")
+    pagina.reload()
+    pagina.wait_for_selector("#voz-id", state="visible")
+    esperar_menu_quieto(pagina)
+    assert pagina.is_checked('input[name="voz"][value="numeros"]') and pagina.is_checked('input[name="guardia"][value="zurdo"]')
+    pagina.click('#menu-ajustes label:has(input[name="voz"][value="nombres"])')
+    pagina.click('#menu-ajustes label:has(input[name="guardia"][value="diestro"])')
 
 
-@pytest.mark.parametrize("ancho", (1024, 1440))
-def test_en_escritorio_voz_a_todo_el_ancho_en_dos_columnas_y_nada_fijo(ajustes, ancho):
+@pytest.mark.parametrize("de", ["#ajustes", "#ajustes/otra-cosa"])
+def test_ajustes_al_arrancar_abre_el_menu_en_ajustes_sin_crecer_el_historial(ajustes, de):
+    pagina = ajustes
+    pagina.goto(f"{ORIGEN}/__pagina__.html")
+    largo = pagina.evaluate("history.length")
+    pagina.goto(f"{ORIGEN}/index.html{de}")
+    pagina.wait_for_selector("#voz-id", state="visible")
+    esperar_menu_quieto(pagina)
+    assert pagina.evaluate("location.hash") == "#entrenar/menu/ajustes"
+    assert pagina.evaluate("history.length") == largo + 1  # solo la entrada de la app
+    assert pagina.evaluate("document.querySelector('[data-seccion=ajustes]').open")
+    # Cerrar sustituye la entrada (no hay marca de menú): no sale de la app.
+    pagina.click(".menu-cerrar")
+    pagina.wait_for_function("location.hash === '#entrenar' && !document.querySelector('#menu[open]')")
+    assert pagina.evaluate("history.length") == largo + 1
+
+
+def test_ajustes_desde_la_app_lleva_al_menu_y_atras_no_pasa_por_la_ruta_vieja(ajustes):
+    pagina = ajustes
+    pagina.goto(f"{ORIGEN}/index.html#historial")
+    pagina.wait_for_selector("#t-historial")
+    largo = pagina.evaluate("history.length")
+    pagina.evaluate("location.hash = '#ajustes'")
+    pagina.wait_for_function("location.hash === '#entrenar/menu/ajustes'")
+    pagina.wait_for_selector("#voz-id", state="visible")
+    esperar_menu_quieto(pagina)
+    assert pagina.evaluate("history.length") == largo + 1
+    pagina.go_back()
+    pagina.wait_for_function("location.hash === '#historial'")
+    assert pagina.locator("#menu[open]").count() == 0
+
+
+@pytest.mark.parametrize("ancho", (390, 1440))
+def test_la_seccion_ajustes_cabe_en_el_panel(ajustes, ancho):
     pagina = ajustes
     pagina.set_viewport_size({"width": ancho, "height": 900})
     try:
-        assert not pagina.locator("#volver-ajustes").is_visible()
-        voz = pagina.locator("#f-voz").bounding_box()
-        practicar = pagina.locator("#f-practicar").bounding_box()
-        assert abs(voz["x"] - practicar["x"]) <= 1 and abs(voz["width"] - practicar["width"]) <= 1
-        eleccion = pagina.locator(".voz-eleccion").bounding_box()
-        velocidad = pagina.locator(".voz-velocidad").bounding_box()
-        assert abs(eleccion["y"] - velocidad["y"]) <= 1 and velocidad["x"] > eleccion["x"] + eleccion["width"]
+        _abrir_ajustes(pagina)
+        assert pagina.evaluate(CABE_EN_EL_PANEL)
+        chips = [c.bounding_box() for c in pagina.locator(".velocidades .chip-opcion").all()]
+        assert len({round(c["y"]) for c in chips}) == 1
+        # Los que se ven: con ratón y sin táctil, «Hacer una foto» está oculto (no sirve en un PC).
+        for control in pagina.locator("#menu-ajustes :is(label:has(input[type=radio]), select, button)").all():
+            if control.is_visible():
+                assert control.bounding_box()["height"] >= 44
     finally:
         pagina.set_viewport_size({"width": 390, "height": 844})

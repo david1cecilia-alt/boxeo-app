@@ -2,27 +2,39 @@
 // guantes a 1–2 m del móvil). No contiene reglas de boxeo: el guion lo genera el motor y
 // el reproductor lo lanza en tiempo de sesión (con pausa).
 import {
-  NOMBRE_RITMO, OPCIONES_MEZCLA, PERSONALIZADO, estadoMezcla, nuevoGuion, opcionesVoz, personalizadaValida, preferencias,
-  recordarSesion, repetirColetillas, resumenElecciones,
+  PRESET_DE_TIPO, conPrueba, configSesion, duracionAproximada, eleccionesSesion, estadoMezcla, nuevoGuion, preferencias,
+  recordarSesion, repetirColetillas,
 } from "../ajustes.js";
 import { crearAzar, semillaAleatoria } from "../motor/azar.js";
 import { datos } from "../motor/datos.js";
-import { PAUSA_POR_RITMO } from "../motor/ritmo.js";
 import { COMBINACIONES, PREPARACION, validarConfig } from "../motor/temporizador.js";
 import { PARA_REACCIONAR, crearDictado } from "../dictado.js";
 import { crearPantallaEncendida } from "../pantalla.js";
 import { crearReproductor } from "../reproductor.js";
 import { activarSonido, campana, dejarDormir, mantenerDespierto, pitido, tablillas } from "../sonido.js";
+import { MAX_PROPIAS } from "../motor/reglas.js";
+import { iniciarAjustes } from "./ajustes.js";
+import { crearAvatar, nombreVisible } from "./avatar.js";
+import { RUTA as RUTA_CREADOR, iniciarCreador } from "./creador.js";
 import { $, anunciar, esc, minutos } from "./dom.js";
+import { RUTA_MENU, iniciarMenu } from "./menu.js";
+import { MI_ESTILO } from "./opciones.js";
+import { NO_SE } from "../almacen.js";
+import { iniciarPersonalizar } from "./personalizar.js";
 import { combinacionesParaVer, pasosCombo } from "./pasos.js";
 
 const SEGUNDOS_FINAL = 10;
-const decimal = (x) => String(x).replace(".", ",");
+// Qué es la sesión elegida, debajo de sus pastillas (la Personalizada lleva el enlace a Personalizar).
+const NOTA_SESION = {
+  general: "General: ritmo, nivel y combinaciones fijos. Voz y guardia, las de Ajustes.",
+  prueba: 'Sesión corta de prueba: 2 asaltos de 30 s con lo de tu Personalizada. Se guarda en el Historial como "Prueba".',
+};
 const TEXTO_FASE = {
   asalto: "En asalto", final: "Últimos 10 s", descanso: "Descanso", reaccion: "¡Reacción!", pausa: "En pausa",
 };
 
-export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
+// `avisar(texto)`: el aviso de arriba de la app (#aviso-almacen, el de app.js).
+export function iniciarEntrenar({ almacen, historial, voz, alTerminar, avisar = () => {} }) {
   const form = $("#config");
   const presets = datos().presets.presets;
   let estado = null;        // sesión en curso, o null
@@ -31,142 +43,85 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   let perfilAplicado = null;
 
   // ---------- Configuración ----------
+  // Aquí solo se elige el tipo de sesión y se ve su resumen; la Personalizada se cambia en el menú
+  // (vistas/personalizar.js) y voz, Nombrar y guardia, en su sección Ajustes (vistas/ajustes.js).
 
-  // Presets como chips (radios); los ajustes avanzados solo se ven con "Personalizado".
-  const chip = (id, nombre) =>
-    `<label class="chip-opcion"><input type="radio" name="preset" value="${id}"><span>${esc(nombre)}</span></label>`;
-  $("#presets").insertAdjacentHTML("beforeend",
-    presets.map((p) => chip(p.id, p.nombre)).join("") + chip(PERSONALIZADO, "Personalizado"));
-  // «Tus combinaciones»: Ninguna · Poco · Bastante · Mucho en una fila y «Solo las mías» debajo.
-  $("#mezclas").insertAdjacentHTML("beforeend", OPCIONES_MEZCLA.map(({ id, nombre, porcentaje }) =>
-    `<label${id === "solo" ? ' class="mezcla-solo"' : ""}><input type="radio" name="mezcla" value="${id}">`
-    + `<span><b>${porcentaje} %</b>${esc(nombre)}</span></label>`).join(""));
+  // El tipo de sesión, segmentado a todo el ancho (radios): General | Personalizada y, solo con ?prueba,
+  // «Prueba 2×30 s» (no se guarda).
+  const nombrePreset = (tipo) => presets.find((p) => p.id === PRESET_DE_TIPO[tipo]).nombre;
+  const opcion = (tipo, nombre) =>
+    `<label><input type="radio" name="tipo" value="${tipo}"><span>${esc(nombre)}</span></label>`;
+  $("#tipo-sesion").insertAdjacentHTML("beforeend", opcion("general", "General") + opcion("personalizada", "Personalizada")
+    + (conPrueba() ? opcion("prueba", nombrePreset("prueba")) : ""));
+  const radioTipo = (tipo) => $(`#tipo-sesion input[value="${tipo}"]`);
+  const tipoElegido = () => $("#tipo-sesion input:checked")?.value ?? "general";
   aplicarPreferencias();
 
-  // Marca el asalto y rellena sus valores: los del preset o los de la personalizada guardada.
-  function elegirAsalto(id, personalizada) {
-    $(`input[name="preset"][value="${id}"]`).checked = true;
-    const personalizado = id === PERSONALIZADO;
-    $("#avanzados").hidden = !personalizado;
-    if (personalizado) $("#avanzados").open = true;
-    const p = personalizado ? personalizada : presets.find((x) => x.id === id);
-    $("#asaltos").value = p.asaltos;
-    $("#duracion").value = p.duracion_asalto;
-    $("#descanso").value = p.descanso;
-  }
-
-  // En el móvil la fila de chips se desplaza en horizontal: si el elegido no se ve entero, se mueve
-  // lo justo para mostrarlo (sin animación y sin tocar el scroll vertical de la página).
-  function verChipElegido() {
-    const fila = $("#presets");
-    const chip = $('input[name="preset"]:checked')?.parentElement;
-    if (!chip || fila.scrollWidth <= fila.clientWidth) return;
-    const relleno = parseFloat(getComputedStyle(fila).paddingLeft) || 0;
-    const f = fila.getBoundingClientRect();
-    const c = chip.getBoundingClientRect();
-    if (c.right > f.right - relleno) fila.scrollLeft += c.right - (f.right - relleno);
-    else if (c.left < f.left + relleno) fila.scrollLeft -= f.left + relleno - c.left;
-  }
-
-  // Lo último que se eligió aquí (o lo que se cambió en Guardia/Nivel del perfil). Se aplica solo
-  // si el perfil ha cambiado: lo de aquí ya está guardado, así que aplicarlo de nuevo no pisa nada.
+  // Lo último que se eligió (o lo que se cambió en el menú). Se aplica solo si el perfil ha cambiado: lo de
+  // aquí ya está guardado, así que aplicarlo de nuevo no pisa nada.
   function aplicarPreferencias() {
     if (perfilAplicado === almacen.datos.perfil) return;
     perfilAplicado = almacen.datos.perfil;
-    const { asalto, nivel, zurdo, voz, ritmo, reaccion, mezcla, personalizada } = preferencias(perfilAplicado);
-    elegirAsalto(asalto, personalizada);
-    $(`input[name="nivel"][value="${nivel}"]`).checked = true;
-    $(`input[name="mezcla"][value="${mezcla}"]`).checked = true;
-    $(`input[name="voz"][value="${voz}"]`).checked = true;
-    $("#ritmo").value = ritmo;
-    $("#zurdo").checked = zurdo;
-    $("#reaccion").checked = reaccion;
+    // El tipo guardado. Prueba no se guarda: con ?prueba se arranca en ella y se queda mientras no se elija
+    // otro tipo o se toque algo de la Personalizada (personalizar.js).
+    const { tipo } = preferencias(perfilAplicado, { prueba: false });
+    const marcado = $("#tipo-sesion input:checked")?.value;
+    const prueba = marcado ? marcado === "prueba" : conPrueba();
+    radioTipo(prueba ? "prueba" : tipo).checked = true;
     resumir();
+    pintarCabecera();
   }
 
-  // Cada cambio se guarda al momento para la próxima sesión.
-  function recordar(cambios) {
-    recordarSesion(almacen, cambios);
-    perfilAplicado = almacen.datos.perfil;
-  }
-
+  // La sesión que sale al pulsar Empezar: la del tipo marcado, con lo guardado (configSesion). La General
+  // nunca lee lo de la Personalizada.
   function leerConfig() {
-    return {
-      asaltos: Number($("#asaltos").value),
-      duracion_asalto: Number($("#duracion").value),
-      descanso: Number($("#descanso").value),
-      nivel: Number($('input[name="nivel"]:checked').value),
-      zurdo: $("#zurdo").checked,
-      modo_reaccion: $("#reaccion").checked,
-      pausa: null, // la del ritmo
-      ritmo: Number($("#ritmo").value),
-      voz: $('input[name="voz"]:checked')?.value ?? "nombres",
-      mezcla: $('input[name="mezcla"]:checked')?.value ?? "ninguna",
-      velocidad: opcionesVoz(almacen.datos.perfil).velocidad, // la de Ajustes
-    };
+    return configSesion(almacen.datos.perfil, { tipo: tipoElegido() });
   }
 
+  // «Tu sesión»: la del tipo elegido (la General, siempre la de configGeneral()), con sus pastillas y qué es.
   function resumir() {
-    const c = leerConfigSegura();
-    if (!c) return;
-    // Hueco desde que la voz termina hasta la siguiente (se golpea mientras se oye).
-    const [min, max] = PAUSA_POR_RITMO[c.ritmo];
-    const hueco = min === max ? decimal(min) : `${decimal(min)}–${decimal(max)}`;
-    $("#resumen-ritmo").textContent = `${NOMBRE_RITMO[c.ritmo]} · ${hueco} s entre combinaciones`;
-    $("#ritmo").style.setProperty("--lleno", `${(c.ritmo - 1) * 25}%`);
-    const resumen = `${c.asaltos} × ${minutos(c.duracion_asalto)} · descanso ${minutos(c.descanso)}`;
-    $("#resumen-config").textContent = resumen;
-    $("#resumen-grande").textContent = resumen;
-    $("#resumen-elecciones").textContent = resumenElecciones({ ...c, mezcla: pintarMezcla(c) });
+    const c = leerConfig();
+    $("#resumen-grande").textContent = `${c.asaltos} × ${minutos(c.duracion_asalto)}`;
+    $("#resumen-detalle").textContent = `descanso ${minutos(c.descanso)} · ${duracionAproximada(c)}`;
+    // La mezcla con la que se sorteará de verdad (con «Solo las mías», el nivel no cuenta).
+    const { efectiva } = estadoMezcla(c.mezcla, almacen.datos.combinacionesPropias, c.nivel);
+    $("#resumen-elecciones").innerHTML = eleccionesSesion({ ...c, mezcla: efectiva })
+      .map((texto) => `<li>${esc(texto)}</li>`).join("");
+    $("#nota-sesion").innerHTML = NOTA_SESION[c.tipo]
+      ? esc(NOTA_SESION[c.tipo])
+      : `Tu Personalizada. <a href="${RUTA_MENU}/personalizar" id="ir-personalizar">Personalizar</a>`;
   }
 
-  // Estados de «Tus combinaciones» (y del nivel) con las propias de ahora. Devuelve la mezcla con
-  // la que se sorteará de verdad. Los desactivados lo están de verdad (disabled): el motivo va
-  // escrito debajo y en aria-describedby del grupo.
-  function pintarMezcla(c) {
-    const { total, efectiva, motivoSolo, aviso, nivelCuenta } = estadoMezcla(c.mezcla, almacen.datos.combinacionesPropias, c.nivel);
-    $("#mezclas").disabled = total === 0;
-    $('input[name="mezcla"][value="solo"]').disabled = total > 0 && Boolean(motivoSolo);
-    $("#niveles").disabled = !nivelCuenta;
-    const notaNivel = $("#nota-nivel");
-    notaNivel.hidden = nivelCuenta;
-    notaNivel.textContent = nivelCuenta ? "" : "Con «Solo las mías» no cuenta el nivel: salen todas las tuyas.";
-    const nota = $("#nota-mezcla");
-    if (total === 0) {
-      nota.innerHTML = 'Aún no tienes combinaciones propias. <a href="#ajustes/mis-combinaciones/nueva">Crea la primera</a> y mézclala con la biblioteca.';
-    } else {
-      nota.textContent = [motivoSolo, aviso].filter(Boolean).join(" ");
+  // La cabecera de perfil: el avatar (decorativo, alt=""), el nombre (o «Tu perfil»), el estilo elegido (si lo
+  // hay) y la guardia. Se repinta al guardar algo en Ajustes (aplicarPreferencias).
+  function pintarCabecera() {
+    const { identidad, estilo: { mi_estilo: estilo } } = almacen.datos.perfil;
+    $("#cabecera-avatar").replaceChildren(crearAvatar(identidad, { decorativo: true }));
+    $("#cabecera-nombre").textContent = nombreVisible(identidad);
+    const nombreEstilo = MI_ESTILO.opciones.find(([v]) => v === estilo && v !== NO_SE)?.[1];
+    const guardia = preferencias(almacen.datos.perfil).zurdo ? "Zurdo" : "Diestro";
+    $("#cabecera-estilo").textContent = [nombreEstilo ?? "Descubre tu estilo", guardia].join(" · ");
+  }
+
+  // La cabecera abre Perfil marcando la entrada nueva: su «← Volver» sabe que puede hacer history.back().
+  // Con Ctrl, Mayús, etc. (otra pestaña o ventana) se deja hacer al navegador.
+  $("#ir-perfil").addEventListener("click", (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    location.hash = "#perfil";
+    history.replaceState({ ...history.state, desdeEntrenar: true }, "");
+  });
+
+  // Elegir la General o Prueba no borra la Personalizada: sigue guardada para cuando se vuelva. Prueba no se
+  // recuerda: es solo para probar.
+  $("#tipo-sesion").addEventListener("change", (e) => {
+    if (e.target.value !== "prueba") {
+      recordarSesion(almacen, { tipo: e.target.value });
+      perfilAplicado = almacen.datos.perfil;
     }
-    nota.hidden = !nota.textContent;
-    return efectiva;
-  }
-
-  function leerConfigSegura() {
-    return $('input[name="nivel"]:checked') ? leerConfig() : null;
-  }
-
-  // Elegir Amateur o Prueba no borra la personalizada: sigue guardada para cuando se vuelva.
-  $("#presets").addEventListener("change", (e) => {
-    elegirAsalto(e.target.value, preferencias(almacen.datos.perfil).personalizada);
-    recordar({ asalto: e.target.value });
-  });
-  // La personalizada se guarda en cuanto es válida (a medio escribir, no).
-  for (const id of ["asaltos", "duracion", "descanso"]) {
-    $(`#${id}`).addEventListener("input", () => {
-      const { asaltos, duracion_asalto, descanso } = leerConfig();
-      const personalizada = { asaltos, duracion_asalto, descanso };
-      if (personalizadaValida(personalizada)) recordar({ personalizada });
-      resumir();
-    });
-  }
-  form.addEventListener("change", (e) => {
-    const { nivel, zurdo, modo_reaccion, ritmo, voz, mezcla } = leerConfig();
-    const cambio = { nivel: { nivel }, voz: { voz }, mezcla: { mezcla } }[e.target.name]
-      ?? { ritmo: { ritmo }, zurdo: { zurdo }, reaccion: { reaccion: modo_reaccion } }[e.target.id];
-    if (cambio) recordar(cambio);
     resumir();
+    personalizar.actualizar(); // el aviso del menú
   });
-  $("#ritmo").addEventListener("input", resumir);
   form.addEventListener("submit", (e) => { e.preventDefault(); empezar(); });
 
   // ---------- Sesión ----------
@@ -175,10 +130,11 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     activarSonido(); // tiene que ser dentro del clic
     const config = leerConfig();
     const errores = validarConfig(config);
-    if (errores.length) {
-      alert("Configuración no válida:\n" + errores.join("\n"));
-      return;
-    }
+    // Con la interfaz de ahora casi no puede pasar: se dice bajo Empezar, sin bloquear la página.
+    const mensaje = $("#mensaje-empezar");
+    mensaje.textContent = errores.length ? `Configuración no válida: ${errores.join(" ")}` : "";
+    mensaje.hidden = !errores.length;
+    if (errores.length) return;
     const eventos = nuevoGuion(config, almacen.datos.perfil, crearAzar(semillaAleatoria()),
       almacen.datos.combinacionesPropias);
     estado = {
@@ -200,6 +156,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     });
     estado.temporizador = setInterval(tic, 100);
     pantalla.encender();
+    menu.retirarPista();
     document.body.classList.add("entrenando");
     $("#pantalla").hidden = false;
     $("#progreso").innerHTML = "<i><b></b></i>".repeat(config.asaltos);
@@ -383,6 +340,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       ritmo: sesion.config.ritmo,
       voz: sesion.config.voz,
       modo_reaccion: sesion.config.modo_reaccion,
+      tipo: sesion.config.tipo, // General, Personalizada o Prueba: el nombre en el Historial
       combinaciones: dichas,
     };
     try {
@@ -390,7 +348,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       // En la valoración, como en el Historial: con los números en cifra («1 jab»).
       alTerminar({ id, combinaciones: combinacionesParaVer(datosSesion, dichas) });
     } catch (e) {
-      alert(`No se pudo guardar la sesión: ${e.message}`);
+      avisar(`No se pudo guardar la sesión: ${e.message}`);
     }
   }
 
@@ -408,21 +366,128 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
   pintarVoz();
   voz.alCambiar?.(pintarVoz);
 
+  // ---------- «Mis combinaciones» (#entrenar/mis-combinaciones/…) ----------
+  // Se pinta en #entrenar-sub y, mientras se ve, el CSS esconde lo demás de Entrenar (#vista-entrenar[data-sub]).
+  // Se crea aquí, antes que el router: su oyente de hashchange tiene que ir antes que el del router.
+  const vista = $("#vista-entrenar");
+  const sub = $("#entrenar-sub");
+  const creador = iniciarCreador({ almacen, raiz: sub, voz });
+
+  function mostrarCreador(ruta) {
+    vista.dataset.sub = "creador";
+    vista.setAttribute("aria-labelledby", "t-creador");
+    sub.hidden = false;
+    creador.mostrar(ruta);
+  }
+
+  // Al salir del creador se vacía (sus diálogos y botones no se quedan en la página) y vuelve Entrenar.
+  function cerrarCreador() {
+    if (!vista.dataset.sub) return false;
+    delete vista.dataset.sub;
+    vista.setAttribute("aria-labelledby", "t-entrenar");
+    sub.hidden = true;
+    sub.replaceChildren();
+    return true;
+  }
+
+  // ---------- El asa y el menú lateral (#entrenar/menu[/<seccion>]) ----------
+  // Lo abre y cierra la ruta: mostrar() le dice qué hacer en cada cambio. Sus secciones: Personalizar
+  // sesión (personalizar.js), Mis combinaciones (aquí) y Ajustes (ajustes.js). Lo que se guarda en ellas
+  // se refleja al momento aquí debajo (el selector y «Tu sesión»).
+  const menu = iniciarMenu({
+    pistaVista: () => almacen.datos.perfil.pistas.asa,
+    marcarPista: () => almacen.guardarPerfil({ ...almacen.datos.perfil, pistas: { ...almacen.datos.perfil.pistas, asa: true } }),
+  });
+  const alCambiarMenu = () => {
+    aplicarPreferencias();
+    resumir();
+  };
+  const personalizar = iniciarPersonalizar({
+    almacen, tipoElegido,
+    alCambiar() {
+      radioTipo("personalizada").checked = true; // también desde Prueba (D3)
+      alCambiarMenu();
+    },
+  });
+  const ajustes = iniciarAjustes({
+    almacen, voz,
+    alCambiar() {
+      alCambiarMenu();
+      personalizar.pintar(); // los nombres de «Practicar más» llevan la mano de la guardia
+    },
+  });
+
+  function pintarCombinaciones() {
+    $("#menu-combinaciones").innerHTML = `
+      <p class="nota">Crea las tuyas y mézclalas con la biblioteca en tu Personalizada.</p>
+      <a href="${RUTA_CREADOR}" class="tarjeta tarjeta-enlace" id="ir-creador">
+        <span class="tarjeta-enlace-texto">
+          <span class="titular">Mis combinaciones
+            <span class="acento">${almacen.datos.combinacionesPropias.length}/${MAX_PROPIAS}</span></span>
+        </span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </a>`;
+  }
+  pintarCombinaciones();
+
+  // Cerrar el menú cierra también la hoja de «Practicar más», que va encima de él.
+  function cerrarMenu(opciones) {
+    personalizar.cerrar();
+    menu.cerrarPorRuta(opciones);
+  }
+
   return {
-    mostrar() {
-      if (estado) return;
+    mostrar(parametro = "") {
+      const [primera, ...resto] = parametro.split("/");
+      if (primera === "mis-combinaciones") {
+        menu.retirarPista();
+        cerrarMenu({ animar: false, foco: false }); // el foco lo pone el creador
+        // Con una sesión en marcha no se abre: la sesión sigue y la ruta vuelve a #entrenar.
+        if (estado) return location.replace("#entrenar");
+        return mostrarCreador(resto.join("/"));
+      }
+      const enMenu = primera === "menu";
+      const veniaDelCreador = cerrarCreador();
+      if (estado) {
+        // Con una sesión en marcha tampoco se abre el menú.
+        if (enMenu) location.replace("#entrenar");
+        return;
+      }
       aplicarPreferencias();
-      resumir(); // las propias pueden haber cambiado en Ajustes
-      document.fonts.ready.then(verChipElegido); // el ancho de los chips depende de la fuente
+      resumir(); // las propias pueden haber cambiado en el creador
+      if (enMenu) {
+        // Al volver de Mis combinaciones, su sección abierta y el foco en su enlace (de donde se salió).
+        if (!menu.abierto) {
+          pintarCombinaciones();
+          personalizar.pintar();
+          ajustes.pintar();
+        }
+        // La sección de la ruta manda; sin ella (atrás desde el listado), la de Mis combinaciones.
+        const seccion = resto[0] || (veniaDelCreador ? "combinaciones" : undefined);
+        menu.abrirPorRuta(seccion);
+        if (veniaDelCreador && seccion === "combinaciones") $("#ir-creador").focus({ preventScroll: true });
+      } else {
+        cerrarMenu();
+        menu.pista(); // la primera vez, tras la intro
+      }
+      // Del creador a Entrenar sin cambiar de vista (atrás, un enlace): el router no mueve el foco.
+      if (veniaDelCreador && !enMenu) $("#t-entrenar").focus({ preventScroll: true });
+    },
+    // Al dejar Entrenar, el menú se cierra al momento (sin tocar el historial ni el foco).
+    ocultar() {
+      menu.retirarPista();
+      cerrarMenu({ animar: false, foco: false });
     },
     get entrenando() { return estado !== null; },
   };
 }
 
-// Atajos de teclado en el PC durante la sesión: espacio = pausa, Esc = parar.
+// Atajos de teclado en el PC durante la sesión: espacio = pausa, Esc = parar. Nunca con el menú abierto:
+// un oyente de document sigue recibiendo teclas aunque el <dialog> modal deje la página inerte.
 export function atajosEntrenar() {
   document.addEventListener("keydown", (e) => {
     if (!document.body.classList.contains("entrenando") || e.target.closest("dialog")) return;
+    if ($("#menu")?.open) return;
     if (e.key === " " && e.target === document.body) { e.preventDefault(); $("#pausa").click(); }
     if (e.key === "Escape") $("#parar").click();
   });

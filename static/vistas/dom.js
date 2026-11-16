@@ -46,15 +46,67 @@ export function anunciar(texto) {
   setTimeout(() => (estado.textContent = texto), 50);
 }
 
+// Se cumple cuando la intro (intro.js) ya no está: al momento si no hay #intro, o al llegar «intro-fin».
+export function esperarIntro() {
+  if (!document.getElementById("intro")) return Promise.resolve();
+  return new Promise((listo) => document.addEventListener("intro-fin", () => listo(), { once: true }));
+}
+
 // El <dialog> modal deja el resto de la página inerte, pero con Tab el foco puede irse a la barra
 // del navegador: del último se vuelve al primero (y al revés con Mayús+Tab). Para su `keydown`.
 export function atraparFoco(e) {
   if (e.key !== "Tab") return;
-  const enfocables = $$("button, input, a[href]", e.currentTarget)
-    .filter((el) => el.tabIndex >= 0 && el.getClientRects().length && !el.closest("[hidden]"));
+  // Solo los que Tab alcanza de verdad: ni lo de dentro de un <details> cerrado (checkVisibility) ni, de un
+  // grupo de radios con uno marcado, los demás (Tab solo para en el marcado).
+  const raiz = e.currentTarget;
+  const marcado = (nombre) => $$(`input[type="radio"]`, raiz).some((r) => r.name === nombre && r.checked);
+  const enfocables = $$("button, input, select, textarea, a[href], summary", raiz)
+    .filter((el) => el.tabIndex >= 0 && el.getClientRects().length && !el.closest("[hidden]")
+      && (el.checkVisibility?.() ?? true) && (el.type !== "radio" || el.checked || !marcado(el.name)));
   const [primero, ultimo] = [enfocables[0], enfocables.at(-1)];
-  if (e.shiftKey ? document.activeElement === primero : document.activeElement === ultimo) {
+  if (!primero) return;
+  // El foco puede estar fuera de la lista (un título con tabindex="-1"): cuenta si va antes del primero
+  // o después del último.
+  const actual = document.activeElement;
+  const fuera = !enfocables.includes(actual);
+  const antes = fuera && actual.compareDocumentPosition(primero) & Node.DOCUMENT_POSITION_FOLLOWING;
+  const despues = fuera && actual.compareDocumentPosition(ultimo) & Node.DOCUMENT_POSITION_PRECEDING;
+  if (e.shiftKey ? actual === primero || antes : actual === ultimo || despues) {
     e.preventDefault();
     (e.shiftKey ? ultimo : primero).focus();
   }
+}
+
+// Abre un <dialog> modal con el foco en `inicial`; al cerrarlo se llama a `alCerrar(lo elegido)`.
+// Se responde en el momento, no en el evento `close`: ese llega después y, si el diálogo se vuelve
+// a abrir enseguida (el «atrás» del navegador), se mezclaría con la respuesta siguiente.
+const respuestas = new WeakMap();
+export function abrirDialogo(dialogo, inicial, alCerrar) {
+  respuestas.set(dialogo, alCerrar);
+  dialogo.showModal();
+  $(inicial, dialogo)?.focus();
+}
+
+function cerrarDialogo(dialogo, valor) {
+  const alCerrar = respuestas.get(dialogo);
+  respuestas.delete(dialogo);
+  dialogo.close(valor);
+  alCerrar?.(valor);
+}
+
+// Los diálogos se cierran con Esc, tocando el velo (sin elegir: «») o con sus botones (value = lo elegido).
+export function conectarDialogo(dialogo) {
+  dialogo.addEventListener("keydown", atraparFoco);
+  dialogo.addEventListener("cancel", (e) => {
+    e.preventDefault();
+    cerrarDialogo(dialogo, "");
+  });
+  dialogo.addEventListener("click", (e) => {
+    // En el velo (fuera de la caja; el relleno del diálogo también es `e.target === dialogo`).
+    const r = dialogo.getBoundingClientRect();
+    const fuera = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+    if (e.target === dialogo && fuera) return cerrarDialogo(dialogo, "");
+    const boton = e.target.closest("button[value]");
+    if (boton) cerrarDialogo(dialogo, boton.value);
+  });
 }

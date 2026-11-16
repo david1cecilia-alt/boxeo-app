@@ -12,7 +12,8 @@ import { $, esc } from "./dom.js";
 const NOTA_ZURDO =
   "Escrito para guardia diestra (pie izquierdo delante). Si eres zurdo, cambia izquierda por derecha en tus manos y tus pies." +
   " Lo que se refiere al rival no cambia: su hígado sigue en su lado derecho y su crochet de izquierda te sigue llegando por tu derecha.";
-const PENDIENTE = "Pendiente de revisar con el entrenador";
+// Las marcas de revisión (`revisar`, `pendiente`) y las fuentes de tecnica.json son internas: no se enseñan
+// (se repasan en docs/revision/).
 
 // «3/9 Crochet de izquierda»: la ficha tiene el id del golpe a la cara; el del cuerpo es <id>_cuerpo.
 export function tituloFicha(f) {
@@ -41,10 +42,8 @@ export function iniciarAprende() {
     const grupos = tecnica.categorias
       .map((c) => ({ ...c, fichas: tecnica.fichas.filter((f) => f.categoria === c.id) }))
       .filter((c) => c.fichas.length);
-    const pendientes = tecnica.fichas.some((f) => f.revisar);
     raiz.className = "aprende-lista";
     raiz.innerHTML = `
-      ${pendientes ? `<p class="aviso-pendiente">${PENDIENTE}: son un borrador.</p>` : ""}
       ${grupos.map((g) => `
         <section class="grupo-fichas" aria-labelledby="g-${esc(g.id)}">
           <h2 id="g-${esc(g.id)}">${esc(g.titulo)}</h2>
@@ -69,18 +68,12 @@ export function iniciarAprende() {
   const apartado = (id, nombre, cuerpo) =>
     `<section class="tarjeta apartado" aria-labelledby="a-${id}"><h2 id="a-${id}">${nombre}</h2>${cuerpo}</section>`;
 
-  function fuente(x) {
-    if (!x.url) return esc(x.titulo);
-    return `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.titulo)}<span class="solo-lectores"> (se abre en otra pestaña)</span></a>`;
-  }
-
   // «Al cuerpo»: lo propio del golpe a la vista y, plegado, lo común a todos (está una vez, en la categoría).
   function alCuerpo(f, comun) {
     const plegado = comun ? `
       <details class="avanzados comun-cuerpo">
         <summary>Para todos los golpes al cuerpo</summary>
         ${lista(comun.puntos.map((p) => `<strong>${esc(p.titulo)}</strong> ${esc(p.texto)}`))}
-        ${comun.fuentes?.length ? `<p class="nota fuentes-comun">Fuentes: ${comun.fuentes.map(fuente).join(" · ")}</p>` : ""}
       </details>` : "";
     return apartado("cuerpo", "Al cuerpo", `<p>${esc(f.al_cuerpo)}</p>${plegado}`);
   }
@@ -116,10 +109,9 @@ export function iniciarAprende() {
     raiz.className = "aprende-ficha";
     raiz.innerHTML = `
       <p class="volver-ficha"><a href="#aprende" class="volver">← Aprende</a></p>
-      <div class="cabeza-ficha">
-        ${f.revisar ? `<p class="aviso-pendiente">${PENDIENTE}</p>` : ""}
-        ${f.en_ingles ? `<p class="nota en-ingles">En inglés: <span lang="en">${esc(f.en_ingles)}</span></p>` : ""}
-      </div>
+      ${f.en_ingles ? `<div class="cabeza-ficha">
+        <p class="nota en-ingles">En inglés: <span lang="en">${esc(f.en_ingles)}</span></p>
+      </div>` : ""}
       <div class="col-ficha">
         ${apartado("que", "Qué es", `<p>${esc(f.que_es ?? f.frase)}</p>`)}
         ${apartado("cuando", "Cuándo suele servir", `<p>${esc(f.cuando)}</p>`)}
@@ -132,10 +124,6 @@ export function iniciarAprende() {
         ${f.inconvenientes ? apartado("inconvenientes", "Inconvenientes", `<p>${esc(f.inconvenientes)}</p>`) : ""}
         ${(f.notas ?? []).map((n, i) => apartado(`nota-${i}`, esc(n.titulo), `<p>${esc(n.texto)}</p>`)).join("")}
         ${mostrarMas(f)}
-        <details class="tarjeta plegable fuentes-ficha">
-          <summary><span class="titulo-plegable">Fuentes</span></summary>
-          <div class="cuerpo-plegable">${lista(f.fuentes.map(fuente))}</div>
-        </details>
       </div>
       <p class="nota pie-aprende">${NOTA_ZURDO}</p>`;
   }

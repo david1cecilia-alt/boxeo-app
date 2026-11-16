@@ -100,7 +100,7 @@ def test_las_fuentes_enlazan_por_https(tecnica):
 
 
 def test_al_usuario_no_le_sale_la_marca_en_mayusculas(tecnica):
-    # La marca solo va en `pendiente` (para revisar.json); la vista dice «Pendiente de revisar con el entrenador».
+    # La marca solo va en `pendiente` (para revisar.json), que la vista no enseña.
     for f in [*tecnica["fichas"], *tecnica["categorias"]]:
         visible = {k: v for k, v in f.items() if k != "pendiente"}
         assert "REVISAR" not in json.dumps(visible, ensure_ascii=False), f["id"]

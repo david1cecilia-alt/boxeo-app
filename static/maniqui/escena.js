@@ -166,7 +166,7 @@ const HUMO = [
 
 export function crearEscena(lienzo, datos) {
   const esqueleto = datos.esqueleto;
-  const fondo = new THREE.Color(token("--fondo", "#0a0a0a"));
+  const fondo = new THREE.Color(token("--fondo", "#121212"));
   const acento = new THREE.Color(token("--acento", "#ff3b30"));
   const rojoHalo = new THREE.Color(token("--acento-relleno", "#d7192a"));
 

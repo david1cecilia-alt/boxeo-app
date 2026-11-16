@@ -21,6 +21,7 @@ if __package__ in (None, ""):
 
 from herramientas.construir_sitio import construir  # noqa: E402
 from herramientas.fotos_maniqui import ORIGEN, abrir  # noqa: E402
+from tests.sin_intro import preparar as sin_intro  # noqa: E402
 
 RAIZ = Path(__file__).resolve().parent.parent
 SALIDA = RAIZ / ".playwright-mcp" / "capturas"
@@ -61,6 +62,7 @@ def capturar(sitio: Path) -> list[Path]:
 
     for ancho in ANCHOS:
         with abrir(sitio, VACIA, ancho, ALTO[ancho]) as (pagina, errores):
+            sin_intro(pagina)  # sin la intro ni la pista del asa
             pagina.goto(f"{ORIGEN}/__pagina__.html")
             pagina.wait_for_function("window.listo === true")
             ir(pagina, "aprende", ".lista-fichas")
@@ -82,7 +84,7 @@ def capturar(sitio: Path) -> list[Path]:
             if ancho == 390:
                 ir(pagina, "aprende/salir", ".aprende-ficha")
                 entera(pagina, guardar("aprende-ficha-salir-390"))
-                ir(pagina, "ajustes", "#t-practicar")
+                ir(pagina, "entrenar/menu/personalizar", "#t-practicar")
                 pagina.locator(".hueco.vacio").first.click()
                 pagina.click("#pestana-defensa")
                 pagina.click('[data-elegir="rodar"]')

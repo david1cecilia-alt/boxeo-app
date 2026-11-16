@@ -1,18 +1,22 @@
-"""«Mis combinaciones» (el creador, en Ajustes) en un navegador de verdad (Chromium headless con Playwright).
+"""«Mis combinaciones» (el creador, en #entrenar/mis-combinaciones) en un navegador de verdad (Chromium headless
+con Playwright).
 
-Tarjeta en Ajustes, listado (vacío, con combinaciones y 20/20), editor (grupos, «Al cuerpo», fichas, máximo
+Enlace en el menú de Entrenar, el creador dentro de Entrenar (sin que asome nada de Entrenar), listado (vacío, con combinaciones y 20/20), editor (grupos, «Al cuerpo», fichas, máximo
 10, Guardar con mínimo 2), avisos al guardar, borrar con confirmación y «¿Descartar los cambios?» al salir
 (también con el «atrás» del navegador, sin duplicar entradas del historial). Los datos de prueba solo
 viven en el localStorage de este Chromium. Sin Playwright se salta en local; en CI falla.
 """
 import importlib.util
 import json
+import mimetypes
 import os
 
 import pytest
 
 from herramientas.construir_sitio import construir
 from herramientas.fotos_maniqui import ORIGEN, abrir
+from tests.sin_intro import preparar
+from tests.menu_quieto import esperar_menu_quieto
 
 HAY_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
 pytestmark = pytest.mark.skipif(not HAY_PLAYWRIGHT and not os.environ.get("CI"),
@@ -23,24 +27,24 @@ SEMBRAR = """<!doctype html><meta charset="utf-8">
 # Las pruebas sirven la app desde http://boxeo.local, que no es un contexto seguro: ahí Chromium no tiene
 # crypto.randomUUID, como al abrir la app por http desde otra máquina de la red local. El almacén usa
 # entonces getRandomValues (crearUuid), así que se prueba tal cual, sin parches.
-RUTA = "#ajustes/mis-combinaciones"
+RUTA = "#entrenar/mis-combinaciones"
 EJEMPLOS = [["jab", "rodar_der", "uppercut_der"], ["jab", "directo", "esquiva_izq", "gancho_izq", "directo"],
             ["bloqueo", "parada", "paso_atras"]]
 ANIMACIONES_ACABADAS = "() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {})))"
 # Elementos de la subpágina que se salen por la derecha del ancho útil (sin la barra de desplazamiento).
 SE_SALEN = """() => { const ancho = document.documentElement.clientWidth;
-  return [...document.querySelectorAll('#ajustes-contenido *')]
+  return [...document.querySelectorAll('#entrenar-sub *')]
     .filter((e) => e.getClientRects().length && !e.closest('dialog:not([open])') && !e.closest('.solo-lectores'))
     .filter((e) => { const r = e.getBoundingClientRect(); return r.right > ancho + 0.5 || r.left < -0.5; })
     .map((e) => `${e.tagName}.${e.className}`); }"""
 # Botones visibles de la subpágina con menos de 48 px de alto o de ancho.
-PEQUENOS = """() => [...document.querySelectorAll('#ajustes-contenido button')]
+PEQUENOS = """() => [...document.querySelectorAll('#entrenar-sub button')]
   .filter((b) => b.getClientRects().length && !b.closest('dialog:not([open])'))
   .map((b) => ({ b, r: b.getBoundingClientRect() })).filter(({ r }) => r.height < 47.5 || r.width < 47.5)
   .map(({ b, r }) => `${b.className || b.id} ${Math.round(r.width)}x${Math.round(r.height)}`)"""
 
 # Palabras partidas en dos líneas en las baldosas y los botones (cada palabra debe ocupar un solo trozo).
-PARTIDAS = """() => [...document.querySelectorAll('#ajustes-contenido :is(.baldosa span, .boton, dialog[open] .boton)')]
+PARTIDAS = """() => [...document.querySelectorAll('#entrenar-sub :is(.baldosa span, .boton, dialog[open] .boton)')]
   .filter((e) => e.getClientRects().length).flatMap((e) => {
     const nodo = [...e.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
     if (!nodo) return [];
@@ -64,6 +68,7 @@ def sitio(tmp_path_factory):
 @pytest.fixture(scope="module")
 def navegador(sitio):
     with abrir(sitio, SEMBRAR, 390, 844, barras=True) as (pagina, errores):
+        preparar(pagina)
         yield pagina
         assert not errores
 
@@ -72,6 +77,30 @@ def navegador(sitio):
 def pagina(navegador):
     navegador.set_viewport_size({"width": 390, "height": 844})
     return navegador
+
+
+# Una página nueva, con su historial vacío, para las pruebas que cuentan entradas del historial: Chromium
+# no pasa de 50 (history.length se queda en 50) y la página del módulo llega con las demás pruebas.
+@pytest.fixture
+def limpia(sitio, navegador):
+    def servir(ruta):
+        relativa = ruta.request.url.removeprefix(ORIGEN + "/").split("?")[0]
+        if relativa == "__pagina__.html":
+            return ruta.fulfill(body=SEMBRAR, content_type="text/html; charset=utf-8")
+        fichero = sitio / relativa
+        if not fichero.is_file():
+            return ruta.fulfill(status=404)
+        tipo = "text/javascript" if fichero.suffix == ".js" else mimetypes.guess_type(fichero.name)[0]
+        ruta.fulfill(body=fichero.read_bytes(), content_type=tipo or "application/octet-stream")
+
+    pagina = navegador.context.browser.new_page(viewport={"width": 390, "height": 844}, device_scale_factor=1)
+    preparar(pagina)
+    errores = []
+    pagina.on("pageerror", lambda e: errores.append(str(e)))
+    pagina.route(f"{ORIGEN}/**", servir)
+    yield pagina
+    pagina.context.close()
+    assert not errores
 
 
 def ir(pagina, ruta, propias=()):
@@ -83,7 +112,10 @@ def ir(pagina, ruta, propias=()):
             {"id": f"p-{i}", "ids": ids, "creada": "2026-11-04T10:00:00"} for i, ids in enumerate(propias)]}
         pagina.evaluate("(d) => localStorage.setItem('boxeo', d)", json.dumps(datos))
     pagina.goto(f"{ORIGEN}/index.html{ruta}")
-    pagina.wait_for_selector("#t-creador" if ruta.startswith(RUTA) else "#t-practicar")
+    if ruta.startswith(RUTA):
+        pagina.wait_for_selector("#t-creador")
+    else:
+        pagina.wait_for_selector(f"#vista-{ruta[1:].split('/')[0]} h1", state="visible")
 
 
 def guardadas(pagina):
@@ -121,23 +153,204 @@ DEFENSAS = {"esquiva_der", "esquiva_izq", "rodar_der", "rodar_izq", "paso_atras"
 
 # ---------- Tarjeta y listado ----------
 
-def test_la_tarjeta_de_ajustes_dice_cuantas_y_lleva_al_listado_y_volver_devuelve_el_foco(pagina):
-    ir(pagina, "#ajustes", EJEMPLOS)
-    assert " ".join(pagina.inner_text("#ir-creador").split()) == (
-        "MIS COMBINACIONES 3/20 Crea las tuyas y mézclalas con la biblioteca en Entrenar.")
+def abrir_mis_combinaciones_del_menu(pagina):
+    """Desde Entrenar: el asa (deja #entrenar/menu en el historial), la sección y su enlace."""
+    pagina.click("#asa")
+    esperar_menu_quieto(pagina)
+    pagina.click("#menu details[data-seccion='combinaciones'] summary")
+    pagina.wait_for_selector("#ir-creador", state="visible")
+
+
+ABIERTO_EN_COMBINACIONES = """() => document.querySelector('#menu').open
+  && document.querySelector("#menu details[data-seccion='combinaciones']").open"""
+
+
+def test_el_enlace_del_menu_dice_cuantas_lleva_al_listado_y_volver_devuelve_al_menu_con_el_foco(limpia):
+    pagina = limpia
+    ir(pagina, "#entrenar", EJEMPLOS)
+    abrir_mis_combinaciones_del_menu(pagina)
+    assert " ".join(pagina.inner_text("#ir-creador").split()) == "MIS COMBINACIONES 3/20"
+    largo = _largo_historial(pagina)
     pagina.click("#ir-creador")
     pagina.wait_for_selector(".lista-propias")
+    assert pagina.evaluate("location.hash") == RUTA
     assert foco(pagina) == "t-creador"
-    assert pagina.is_hidden("#t-ajustes")
+    assert pagina.locator("#menu[open]").count() == 0
+    assert pagina.is_hidden("#t-entrenar")
     assert pagina.locator(".propia h2").all_inner_texts() == ["COMBINACIÓN 1", "COMBINACIÓN 2", "COMBINACIÓN 3"]
     assert pagina.locator(".pastilla-nivel").all_inner_texts() == ["Básico", "Medio", "Básico"]
     # Fichas con el código de la sesión y, para lectores de pantalla, el texto hablado.
     assert pagina.locator(".propia").first.locator(".fichas-combo li").all_text_contents() == [
         "1jab", "rueda dcha.", "6gancho dcha."]
     assert "rueda derecha" in pagina.locator(".propia .solo-lectores").first.inner_text()
+    # «← Volver»: atrás, a la entrada del menú (sin apilar), con su sección abierta y el foco en el enlace.
     pagina.click(".volver-sub a")
-    pagina.wait_for_selector("#t-practicar")
-    assert foco(pagina) == "ir-creador"
+    pagina.wait_for_function("location.hash === '#entrenar/menu'")
+    pagina.wait_for_function(ABIERTO_EN_COMBINACIONES)
+    assert pagina.evaluate("document.activeElement.id") == "ir-creador"
+    assert _largo_historial(pagina) == largo + 1  # la del listado sigue delante, como tras un atrás
+
+
+def test_volver_del_listado_al_que_se_llego_directo_abre_el_menu_y_cerrarlo_no_sale_de_la_app(limpia):
+    pagina = limpia
+    ir(pagina, RUTA, EJEMPLOS)
+    pagina.click(".volver-sub a")
+    pagina.wait_for_function("location.hash === '#entrenar/menu/combinaciones'")
+    pagina.wait_for_function(ABIERTO_EN_COMBINACIONES)
+    esperar_menu_quieto(pagina)
+    assert pagina.evaluate("document.activeElement.id") == "ir-creador"
+    pagina.click(".menu-cerrar")
+    pagina.wait_for_function("location.hash === '#entrenar' && !document.querySelector('#menu[open]')")
+    # Sin bucles: atrás vuelve al listado, y del listado a la página de antes de la app.
+    pagina.go_back()
+    pagina.wait_for_selector(".lista-propias")
+    assert pagina.evaluate("location.hash") == RUTA
+
+
+# Lo de Entrenar que no debe verse mientras se ve el creador (ni el asa).
+DE_ENTRENAR = ["#config", ".cabecera-perfil", "#tipo-sesion", ".tu-sesion", "#empezar", "#asa"]
+
+
+def _nada_de_entrenar(pagina):
+    return [s for s in DE_ENTRENAR if pagina.locator(s).first.is_visible()]
+
+
+@pytest.mark.parametrize("ancho", [390, 1440])
+def test_el_creador_no_deja_ver_nada_de_entrenar_y_al_salir_vuelve_todo(pagina, ancho):
+    pagina.set_viewport_size({"width": ancho, "height": 900})
+    ir(pagina, RUTA, EJEMPLOS)
+    assert _nada_de_entrenar(pagina) == []
+    assert pagina.get_attribute("#vista-entrenar", "aria-labelledby") == "t-creador"
+    assert pagina.get_attribute('#pestanas a[href="#entrenar"]', "aria-current") == "page"
+    pagina.evaluate("location.hash = '#entrenar'")
+    pagina.wait_for_selector("#config", state="visible")
+    assert pagina.is_visible("#t-entrenar")
+    assert pagina.locator("#entrenar-sub *").count() == 0  # se vacía al salir
+    assert pagina.get_attribute("#vista-entrenar", "aria-labelledby") == "t-entrenar"
+    assert foco(pagina) == "t-entrenar"
+
+
+def test_entrar_salir_y_volver_a_entrar_en_el_creador_sigue_funcionando(pagina):
+    ir(pagina, RUTA)
+    for _ in range(2):
+        pagina.click("#anadir-propia")
+        pagina.wait_for_selector("#caja-combo")
+        anadir(pagina, "jab", "directo")
+        pagina.click("#salir-editor")
+        pagina.wait_for_selector("#d-descartar[open]")
+        pagina.click('#d-descartar button[value="descartar"]')
+        pagina.wait_for_selector(".vacio-propias")
+        assert pagina.evaluate("location.hash") == RUTA
+        # Fuera (se vacía #entrenar-sub) y otra vez dentro.
+        pagina.click('#pestanas a[href="#entrenar"]')
+        pagina.wait_for_selector("#config", state="visible")
+        assert pagina.locator("#entrenar-sub *").count() == 0
+        pagina.evaluate(f"location.hash = '{RUTA}'")
+        pagina.wait_for_selector(".vacio-propias")
+        assert foco(pagina) == "t-creador"
+    # Y se guarda igual que la primera vez.
+    pagina.click("#anadir-propia")
+    anadir(pagina, "jab", "directo")
+    pagina.click("#guardar")
+    pagina.click('#d-avisos button[value="guardar"]')  # es igual que una de la biblioteca: «Guardar igual»
+    pagina.wait_for_selector(".lista-propias")
+    assert guardadas(pagina) == [["jab", "directo"]]
+
+
+def test_con_una_sesion_en_marcha_el_creador_no_se_abre_y_la_sesion_sigue(pagina):
+    ir(pagina, "#entrenar")
+    pagina.wait_for_selector("#empezar")
+    pagina.click("#empezar")
+    pagina.wait_for_selector("#pantalla", state="visible")
+    pagina.evaluate(f"location.hash = '{RUTA}/nueva'")
+    pagina.wait_for_function("location.hash === '#entrenar'")
+    assert pagina.is_visible("#pantalla")
+    assert pagina.evaluate("document.body.classList.contains('entrenando')")
+    assert pagina.locator("#entrenar-sub *").count() == 0
+    pagina.click("#parar")
+    pagina.wait_for_selector("#pantalla", state="hidden")
+
+
+# ---------- Rutas viejas (#ajustes/mis-combinaciones…) ----------
+
+VIEJA = "#ajustes/mis-combinaciones"
+# Cuenta cuántas veces se pinta el título del creador (listado o editor) desde que carga la página, y los
+# hashchange (al arrancar no debe saltar ninguno: la ruta vieja se cambia con replaceState).
+CONTAR_PINTADAS = """window.__pintadas = 0; window.__cambios = 0;
+addEventListener('hashchange', () => window.__cambios++);
+new MutationObserver((ms) => { for (const m of ms) for (const n of m.addedNodes)
+  if (n.nodeType === 1 && (n.id === 't-creador' || n.querySelector?.('#t-creador'))) window.__pintadas++; })
+  .observe(document, { childList: true, subtree: true });"""
+
+
+@pytest.mark.parametrize("sufijo", ["", "/nueva", "/editar/p-0"])
+def test_la_ruta_vieja_al_arrancar_lleva_a_la_nueva_sin_crecer_el_historial_y_pinta_una_vez(limpia, sufijo):
+    limpia.add_init_script(CONTAR_PINTADAS)
+    limpia.goto(f"{ORIGEN}/__pagina__.html")
+    limpia.wait_for_function("window.listo === true")
+    limpia.evaluate("(d) => localStorage.setItem('boxeo', d)", json.dumps({"version": 8, "combinacionesPropias": [
+        {"id": "p-0", "ids": EJEMPLOS[0], "creada": "2026-11-04T10:00:00"}]}))
+    largo = _largo_historial(limpia)
+    limpia.goto(f"{ORIGEN}/index.html{VIEJA}{sufijo}")
+    limpia.wait_for_selector("#t-creador")
+    assert limpia.evaluate("location.hash") == f"{RUTA}{sufijo}"
+    assert _largo_historial(limpia) == largo + 1  # solo la página nueva: la ruta vieja no queda
+    limpia.wait_for_timeout(300)  # por si llegara un hashchange de más
+    assert limpia.evaluate("window.__pintadas") == 1
+    assert limpia.evaluate("window.__cambios") == 0
+    assert limpia.is_visible(".lista-propias" if sufijo == "" else "#caja-combo")
+
+
+@pytest.mark.parametrize("sufijo", ["", "/nueva", "/editar/p-0"])
+def test_la_ruta_vieja_desde_la_app_lleva_a_la_nueva_y_atras_no_pasa_por_la_vieja(limpia, sufijo):
+    ir(limpia, "#historial", EJEMPLOS)
+    largo = _largo_historial(limpia)
+    limpia.evaluate(f"location.hash = '{VIEJA}{sufijo}'")
+    limpia.wait_for_function(f"location.hash === '{RUTA}{sufijo}'")
+    limpia.wait_for_selector(".lista-propias" if sufijo == "" else "#caja-combo")
+    assert _largo_historial(limpia) == largo + 1  # como un enlace a la ruta nueva: la vieja se sustituye
+    assert foco(limpia) == "t-creador"
+    limpia.go_back()
+    limpia.wait_for_function("location.hash === '#historial'")
+    limpia.wait_for_selector("#t-historial", state="visible")
+
+
+def test_menu_mis_combinaciones_editor_con_cambios_y_atras(limpia):
+    # Riesgo 1 del plan, con el enlace real: el «atrás» del menú y el del creador no chocan, sin bucles.
+    ir(limpia, "#entrenar")
+    abrir_mis_combinaciones_del_menu(limpia)
+    limpia.click("#ir-creador")
+    limpia.wait_for_selector(".vacio-propias")
+    limpia.click("#anadir-propia")
+    limpia.wait_for_selector("#caja-combo")
+    largo = _largo_historial(limpia)
+    anadir(limpia, "jab", "bloqueo")
+    # 1.º atrás: pregunta, y «Seguir editando» deja el editor como estaba.
+    limpia.go_back()
+    limpia.wait_for_selector("#d-descartar[open]")
+    limpia.wait_for_function(f"location.hash === '{RUTA}/nueva'")
+    limpia.click('#d-descartar button[value=""]')
+    assert fichas(limpia) == ["0", "1"]
+    assert _largo_historial(limpia) == largo
+    # 2.º atrás: pregunta, y «Descartar» lleva al listado.
+    limpia.go_back()
+    limpia.wait_for_selector("#d-descartar[open]")
+    limpia.click('#d-descartar button[value="descartar"]')
+    limpia.wait_for_selector(".vacio-propias")
+    limpia.wait_for_function(f"location.hash === '{RUTA}'")
+    assert limpia.locator("dialog[open]").count() == 0
+    # 3.º atrás: el menú, sin preguntar, abierto en Mis combinaciones y con el foco en su enlace.
+    limpia.go_back()
+    limpia.wait_for_function("location.hash === '#entrenar/menu'")
+    limpia.wait_for_function(ABIERTO_EN_COMBINACIONES)
+    assert limpia.evaluate("document.activeElement.id") == "ir-creador"
+    assert limpia.locator("#entrenar-sub *").count() == 0
+    # 4.º atrás: Entrenar, con el menú cerrado y el foco en el asa.
+    limpia.go_back()
+    limpia.wait_for_function("location.hash === '#entrenar' && !document.querySelector('dialog[open]')")
+    assert foco(limpia) == "asa"
+    assert _largo_historial(limpia) == largo
+    assert guardadas(limpia) == []
 
 
 def test_listado_vacio_explica_para_que_sirve(pagina):
@@ -324,53 +537,53 @@ def _largo_historial(pagina):
     return pagina.evaluate("history.length")
 
 
-def test_volver_con_cambios_pregunta_y_descartar_vuelve_al_listado_sin_apilar(pagina):
-    ir(pagina, RUTA)
-    largo = _largo_historial(pagina)
-    pagina.click("#anadir-propia")
-    pagina.wait_for_selector("#caja-combo")
+def test_volver_con_cambios_pregunta_y_descartar_vuelve_al_listado_sin_apilar(limpia):
+    ir(limpia, RUTA)
+    largo = _largo_historial(limpia)
+    limpia.click("#anadir-propia")
+    limpia.wait_for_selector("#caja-combo")
     # Sin cambios, «← Mis combinaciones» vuelve atrás sin preguntar.
-    pagina.click("#salir-editor")
-    pagina.wait_for_selector(".vacio-propias")
-    pagina.click("#anadir-propia")
-    pagina.wait_for_selector("#caja-combo")
-    pagina.click('[data-anadir="jab"]')
-    pagina.click("#salir-editor")
-    assert pagina.get_attribute("#d-descartar", "open") is not None
-    assert foco(pagina) == "Seguir editando"
-    pagina.keyboard.press("Escape")
-    assert fichas(pagina) == ["0"]
-    pagina.click("#salir-editor")
-    pagina.click('#d-descartar button[value="descartar"]')
-    pagina.wait_for_selector(".vacio-propias")
-    assert pagina.evaluate("location.hash") == RUTA
-    assert _largo_historial(pagina) == largo + 1
-    assert guardadas(pagina) == []
+    limpia.click("#salir-editor")
+    limpia.wait_for_selector(".vacio-propias")
+    limpia.click("#anadir-propia")
+    limpia.wait_for_selector("#caja-combo")
+    limpia.click('[data-anadir="jab"]')
+    limpia.click("#salir-editor")
+    assert limpia.get_attribute("#d-descartar", "open") is not None
+    assert foco(limpia) == "Seguir editando"
+    limpia.keyboard.press("Escape")
+    assert fichas(limpia) == ["0"]
+    limpia.click("#salir-editor")
+    limpia.click('#d-descartar button[value="descartar"]')
+    limpia.wait_for_selector(".vacio-propias")
+    assert limpia.evaluate("location.hash") == RUTA
+    assert _largo_historial(limpia) == largo + 1
+    assert guardadas(limpia) == []
 
 
-def test_atras_del_navegador_con_cambios_vuelve_al_editor_y_pregunta_sin_bucles(pagina):
-    ir(pagina, RUTA)
-    pagina.click("#anadir-propia")
-    pagina.wait_for_selector("#caja-combo")
-    largo = _largo_historial(pagina)
-    anadir(pagina, "jab", "bloqueo")
-    pagina.go_back()
-    pagina.wait_for_selector("#d-descartar[open]")
-    pagina.wait_for_function(f"location.hash === '{RUTA}/nueva'")
-    assert fichas(pagina) == ["0", "1"]
-    assert _largo_historial(pagina) == largo
-    pagina.click('#d-descartar button[value=""]')
-    assert fichas(pagina) == ["0", "1"]
+def test_atras_del_navegador_con_cambios_vuelve_al_editor_y_pregunta_sin_bucles(limpia):
+    ir(limpia, RUTA)
+    limpia.click("#anadir-propia")
+    limpia.wait_for_selector("#caja-combo")
+    largo = _largo_historial(limpia)
+    anadir(limpia, "jab", "bloqueo")
+    limpia.go_back()
+    limpia.wait_for_selector("#d-descartar[open]")
+    limpia.wait_for_function(f"location.hash === '{RUTA}/nueva'")
+    assert fichas(limpia) == ["0", "1"]
+    assert _largo_historial(limpia) == largo
+    limpia.click('#d-descartar button[value=""]')
+    assert fichas(limpia) == ["0", "1"]
     # Otra vez atrás y «Descartar»: al listado, que es adonde se iba.
-    pagina.go_back()
-    pagina.wait_for_selector("#d-descartar[open]")
-    pagina.wait_for_function(f"location.hash === '{RUTA}/nueva'")
-    pagina.click('#d-descartar button[value="descartar"]')
-    pagina.wait_for_selector(".vacio-propias")
-    pagina.wait_for_timeout(200)
-    assert pagina.evaluate("location.hash") == RUTA
-    assert _largo_historial(pagina) == largo
-    assert pagina.locator("dialog[open]").count() == 0
+    limpia.go_back()
+    limpia.wait_for_selector("#d-descartar[open]")
+    limpia.wait_for_function(f"location.hash === '{RUTA}/nueva'")
+    limpia.click('#d-descartar button[value="descartar"]')
+    limpia.wait_for_selector(".vacio-propias")
+    limpia.wait_for_timeout(200)
+    assert limpia.evaluate("location.hash") == RUTA
+    assert _largo_historial(limpia) == largo
+    assert limpia.locator("dialog[open]").count() == 0
 
 
 def test_cambiar_de_pestana_con_cambios_pregunta_y_descartar_va_a_la_pestana(pagina):
@@ -423,3 +636,14 @@ def test_nada_se_sale_y_los_toques_miden_48(pagina, ancho):
         assert caja["x"] > paleta["x"] + paleta["width"] - 1 and abs(caja["y"] - paleta["y"]) < 2
     else:  # una: la combinación encima
         assert caja["y"] + caja["height"] <= paleta["y"]
+
+
+def test_a_390_con_el_scroll_abajo_anadir_combinacion_queda_por_encima_de_la_barra(pagina):
+    pagina.set_viewport_size({"width": 390, "height": 844})
+    ir(pagina, RUTA, EJEMPLOS * 3)  # 9: el listado no cabe y hay que bajar
+    pagina.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)")
+    pagina.wait_for_function("Math.ceil(scrollY + innerHeight) >= document.documentElement.scrollHeight - 1")
+    boton = pagina.locator("#anadir-propia").bounding_box()
+    barra = pagina.locator("#pestanas").bounding_box()
+    assert boton["y"] + boton["height"] <= barra["y"], (boton, barra)
+    assert boton["y"] >= 0

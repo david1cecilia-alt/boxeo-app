@@ -109,3 +109,26 @@ test("el fondo rojo completo es solo de los últimos 10 s", () => {
   const usos = [...css.matchAll(/([^{}]+)\{[^}]*background(?:-color)?:\s*var\(--fase-final\)/g)].map((m) => m[1].trim());
   assert.deepEqual(usos, ['#pantalla[data-fase="final"]']);
 });
+
+// Gris neutro (rediseño, R7): los fondos, superficies y textos grises no tiran a cálido ni a frío.
+const GRISES = ["fondo", "superficie", "superficie-hover", "campo", "barra", "borde", "texto", "suave", "terciario",
+  "tenue", "chip-activo", "sobre-chip-activo", "fase-asalto", "fase-pausa", "serie-rpe", "foco", "sobre-acento"];
+
+test("los tokens grises son neutros (R = G = B)", () => {
+  for (const t of GRISES) {
+    const valor = tokens[t];
+    assert.ok(valor, `falta --${t}`);
+    const [r, g, b] = valor.startsWith("#")
+      ? [1, 3, 5].map((i) => parseInt(valor.slice(i, i + 2), 16))
+      : valor.slice(5, -1).split(",").slice(0, 3).map(Number);
+    assert.ok(r === g && g === b, `--${t} no es gris neutro: ${valor}`);
+  }
+});
+
+test("los degradados de las fotos usan el fondo (--fondo-rgb), no un negro suelto", () => {
+  const fondoRgb = raiz.match(/--fondo-rgb:\s*(\d+) (\d+) (\d+);/);
+  assert.ok(fondoRgb, "falta --fondo-rgb");
+  assert.deepEqual(fondoRgb.slice(1).map(Number), rgb("fondo"));
+  assert.ok(!/rgba\(10, ?10, ?10/.test(css), "queda un rgba(10, 10, 10, …) suelto");
+  assert.ok(/rgb\(var\(--fondo-rgb\) \/ [\d.]+\)/.test(css));
+});

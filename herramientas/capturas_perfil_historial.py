@@ -1,10 +1,11 @@
-"""Capturas del Perfil y de Ajustes (390, 1024 y 1440) y del Historial (igual, con Asaltos y con RPE).
+"""Capturas del Perfil y de Ajustes (sección del menú de Entrenar) a 390, 1024 y 1440, y del Historial (igual,
+con Asaltos y con RPE).
 
 Monta la web en una carpeta temporal (sin fotos del maniquí) y la abre en Chromium headless con datos
 de prueba solo en su localStorage: unas respuestas de estilo y sesiones de las últimas semanas, con una semana sin sesiones y otra sin valorar. Guarda en
 .playwright-mcp/capturas/ (no se versiona):
 - perfil-plegado-<ancho>.png y perfil-desplegado-<ancho>.png (página entera)
-- ajustes-arriba-<ancho>.png y ajustes-scroll-<ancho>.png (la ventana, al bajar del todo: «Volver» fijo en el móvil)
+- ajustes-arriba-<ancho>.png y ajustes-scroll-<ancho>.png (el menú abierto en Ajustes, arriba y abajo del todo)
 - historial-asaltos-<ancho>.png y historial-rpe-<ancho>.png
 Uso: python herramientas/capturas_perfil_historial.py
 """
@@ -18,6 +19,7 @@ if __package__ in (None, ""):
 from herramientas.capturas_practicar import entera  # noqa: E402
 from herramientas.construir_sitio import construir  # noqa: E402
 from herramientas.fotos_maniqui import ORIGEN, abrir  # noqa: E402
+from tests.sin_intro import preparar as sin_intro  # noqa: E402
 
 RAIZ = Path(__file__).resolve().parent.parent
 SALIDA = RAIZ / ".playwright-mcp" / "capturas"
@@ -58,6 +60,7 @@ def capturar(sitio: Path) -> list[Path]:
     SALIDA.mkdir(parents=True, exist_ok=True)
     rutas = []
     with abrir(sitio, SEMBRAR, 390, 900) as (pagina, errores):
+        sin_intro(pagina)  # sin la intro ni la pista del asa
         pagina.goto(f"{ORIGEN}/__pagina__.html")
         pagina.wait_for_function("window.listo === true")
         for ancho in (390, 1024, 1440):
@@ -70,7 +73,7 @@ def capturar(sitio: Path) -> list[Path]:
             # Página entera: al agrandar la ventana, el Perfil crece y `entera` lo cortaría.
             rutas.append(SALIDA / f"perfil-plegado-{ancho}.png")
             pagina.screenshot(path=rutas[-1], full_page=True)
-            for seccion in ("#d-sobre-ti", "#d-mi-estilo"):
+            for seccion in ("#d-cuestionario", "#d-mi-estilo", "#d-sobre-ti"):
                 if not pagina.locator(seccion).evaluate("d => d.open"):
                     pagina.click(f"{seccion} > summary")
             pagina.wait_for_timeout(200)
@@ -81,12 +84,13 @@ def capturar(sitio: Path) -> list[Path]:
             else:
                 pagina.screenshot(path=rutas[-1], full_page=True)
 
-            pagina.goto(f"{ORIGEN}/index.html#ajustes")
-            pagina.wait_for_selector("#t-practicar")
+            # Ajustes: sección del menú de Entrenar; arriba y con el panel abajo del todo.
+            pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/ajustes")
+            pagina.wait_for_selector("#voz-id", state="visible")
             pagina.wait_for_timeout(400)
             rutas.append(SALIDA / f"ajustes-arriba-{ancho}.png")
             pagina.screenshot(path=rutas[-1])
-            pagina.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)")
+            pagina.evaluate("document.querySelector('.menu-contenido').scrollTop = 1e6")
             pagina.wait_for_timeout(200)
             rutas.append(SALIDA / f"ajustes-scroll-{ancho}.png")
             pagina.screenshot(path=rutas[-1])

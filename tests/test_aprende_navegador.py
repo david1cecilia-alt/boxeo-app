@@ -1,8 +1,8 @@
 """Aprende en un navegador de verdad (Chromium headless con Playwright).
 
-La lista agrupada (Golpes, Defensas, Salidas), una ficha abierta, el foco al entrar y al volver, las fuentes en
-pestaña nueva, «Al cuerpo» y «Mostrar más» plegados y manejables con el teclado, sin desbordes a 390, 768, 1024
-y 1440 (con todo desplegado), y la barra de pestañas con Aprende a 390 sin apretar.
+La lista agrupada (Golpes, Defensas, Salidas), una ficha abierta, el foco al entrar y al volver, sin avisos de
+revisión ni fuentes a la vista, «Al cuerpo» y «Mostrar más» plegados y manejables con el teclado, sin desbordes a
+390, 768, 1024 y 1440 (con todo desplegado), y la barra de pestañas con Aprende a 390 sin apretar.
 Sin Playwright se salta en local; en CI falla.
 """
 import importlib.util
@@ -12,6 +12,7 @@ import pytest
 
 from herramientas.construir_sitio import construir
 from herramientas.fotos_maniqui import ORIGEN, abrir
+from tests.sin_intro import preparar
 
 HAY_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
 pytestmark = pytest.mark.skipif(not HAY_PLAYWRIGHT and not os.environ.get("CI"),
@@ -38,6 +39,7 @@ def pagina(tmp_path_factory):
     assert HAY_PLAYWRIGHT, "Las pruebas de Aprende necesitan Playwright (pip install -r requirements.txt)"
     sitio = construir(tmp_path_factory.mktemp("sitio") / "_site", "prueba", fotos=False)
     with abrir(sitio, VACIA, 390, 844, barras=True) as (pagina, errores):
+        preparar(pagina)
         pagina.goto(f"{ORIGEN}/__pagina__.html")
         pagina.wait_for_function("window.listo === true")
         yield pagina
@@ -69,13 +71,16 @@ def test_la_lista_va_agrupada_en_golpes_defensas_y_salidas(pagina):
     assert pagina.locator("#pestanas a[href='#aprende']").get_attribute("aria-current") == "page"
 
 
-def test_el_aviso_de_revision_es_discreto_y_nunca_en_mayusculas(pagina):
-    for hash_ in ("aprende", "aprende/rodar"):
+def test_ni_avisos_de_revision_ni_fuentes_en_la_lista_ni_en_las_fichas(pagina):
+    # Las marcas de revisión y las fuentes se quedan en data/tecnica.json y docs/revision/, sin enseñarse.
+    for hash_ in ("aprende", "aprende/jab", "aprende/gancho_izq", "aprende/rodar", "aprende/salir"):
         _ir(pagina, hash_)
-        texto = pagina.locator("#vista-aprende").text_content()
-        assert "Pendiente de revisar con el entrenador" in texto
-        assert "REVISAR" not in texto and "REVISAR" not in pagina.locator("#vista-aprende").inner_text()
-        assert pagina.locator(".aviso-pendiente").evaluate("e => getComputedStyle(e).textTransform") == "none"
+        # Con todo desplegado, para que salga también lo plegado.
+        pagina.evaluate("document.querySelectorAll('#vista-aprende details').forEach((d) => { d.open = true; })")
+        vista = pagina.locator("#vista-aprende")
+        for texto in (vista.text_content(), vista.inner_text()):
+            for prohibido in ("Pendiente de revisar", "REVISAR", "Fuentes", "revisad"):
+                assert prohibido not in texto, (hash_, prohibido)
 
 
 def test_la_nota_del_zurdo_dice_que_lo_del_rival_no_cambia(pagina):
@@ -132,19 +137,6 @@ def test_una_ficha_que_no_existe_lleva_a_la_lista(pagina):
     assert pagina.locator("#t-aprende").inner_text().startswith("APRENDE")
 
 
-def test_las_fuentes_se_abren_en_pestana_nueva_y_por_https(pagina):
-    _ir(pagina, "aprende/bloqueo")
-    fuentes = pagina.locator(".fuentes-ficha")
-    assert fuentes.evaluate("d => d.open") is False
-    pagina.click(".fuentes-ficha summary")
-    enlaces = fuentes.locator("a").evaluate_all(
-        "as => as.map((a) => [a.getAttribute('href'), a.target, a.rel, a.textContent])")
-    assert len(enlaces) == 4
-    for href, destino, rel, texto in enlaces:
-        assert href.startswith("https://") and destino == "_blank" and "noopener" in rel.split()
-        assert texto.endswith("(se abre en otra pestaña)")
-
-
 def _plegado(pagina, selector):
     return pagina.locator(selector).evaluate("""d => ({ abierto: d.open,
         visible: [...d.children].slice(1).some((h) => h.checkVisibility()) })""")
@@ -168,9 +160,9 @@ def test_mostrar_mas_del_jab_se_abre_con_el_teclado_y_trae_variantes_y_detalles(
     assert pagina.locator(".mas-ficha .nombre-variante").count() == 6
     pagina.keyboard.press("Space")
     assert _plegado(pagina, ".mas-ficha")["abierto"] is False
-    # «Mostrar más» va antes que las fuentes, que siguen plegadas aparte.
+    # «Mostrar más» es el único plegable de la ficha.
     plegables = pagina.locator(".col-ficha > details").evaluate_all("ds => ds.map((d) => d.className)")
-    assert plegables == ["tarjeta plegable mas-ficha", "tarjeta plegable fuentes-ficha"]
+    assert plegables == ["tarjeta plegable mas-ficha"]
 
 
 def test_al_cuerpo_comun_se_abre_con_el_teclado_dentro_de_cada_golpe(pagina):
@@ -183,8 +175,6 @@ def test_al_cuerpo_comun_se_abre_con_el_teclado_dentro_de_cada_golpe(pagina):
     assert _plegado(pagina, ".comun-cuerpo") == {"abierto": True, "visible": True}
     puntos = pagina.locator(".comun-cuerpo li strong").all_text_contents()
     assert puntos[0] == "Baja con las piernas, no con la cintura ni con el puño." and "Objetivos:" in puntos
-    enlace = pagina.locator(".fuentes-comun a").first
-    assert enlace.text_content().startswith("World Boxing") and enlace.get_attribute("target") == "_blank"
     # Una defensa no tiene ni «Al cuerpo» ni «Mostrar más».
     _ir(pagina, "aprende/rodar")
     assert pagina.locator("#a-cuerpo, .mas-ficha").count() == 0
@@ -263,7 +253,7 @@ def test_a_390_la_barra_con_aprende_cabe_sin_apretar_y_con_48_px_para_el_dedo(pa
                  una_linea: t.height < 1.5 * parseFloat(getComputedStyle(s).fontSize) * 1.45,
                  holgura: Math.min(t.left - c.left, c.right - t.right) };
     })""")
-    assert [p["texto"] for p in pestanas] == ["Entrenar", "Aprende", "Historial", "Perfil"]
+    assert [p["texto"] for p in pestanas] == ["Entrenar", "Aprende", "Historial"]  # Perfil, desde la cabecera de Entrenar
     for p in pestanas:
         assert p["ancho"] >= 48 and p["alto"] >= 48, p
         assert p["letra"] == "12px" and p["una_linea"] and p["holgura"] >= 8, p

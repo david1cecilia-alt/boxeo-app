@@ -14,6 +14,8 @@ import pytest
 
 from herramientas.construir_sitio import construir
 from herramientas.fotos_maniqui import ORIGEN, abrir
+from tests.sin_intro import preparar
+from tests.menu_quieto import esperar_menu_quieto
 
 HAY_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
 pytestmark = pytest.mark.skipif(not HAY_PLAYWRIGHT and not os.environ.get("CI"),
@@ -47,25 +49,33 @@ def sitio(tmp_path_factory):
 @pytest.fixture
 def pagina(sitio):
     with abrir(sitio, VACIA, 390, 844) as (pagina, errores):
+        preparar(pagina)
         pagina.add_init_script(VOZ_FALSA)
         yield pagina
         assert not errores
 
 
-def ir(pagina, propias=(), sesion=None, ruta="#entrenar"):
+def ir(pagina, propias=(), sesion=None, ruta="#entrenar/menu/personalizar"):
     pagina.goto(f"{ORIGEN}/__pagina__.html")
     pagina.wait_for_function("window.listo === true")
-    datos = {"version": 8, "combinacionesPropias": [
+    datos = {"version": 9, "combinacionesPropias": [
         {"id": f"p-{i}", "ids": ids, "creada": "2026-11-04T10:00:00"} for i, ids in enumerate(propias)]}
-    if sesion:
-        datos["perfil"] = {"sesion": sesion}
+    # «Tus combinaciones» es de la Personalizada: con la General no se mezcla nada (D1).
+    datos["perfil"] = {"sesion": {"tipo": "personalizada", **(sesion or {})}}
     pagina.evaluate("(d) => localStorage.setItem('boxeo', d)", json.dumps(datos))
     pagina.goto(f"{ORIGEN}/index.html{ruta}")
-    pagina.wait_for_selector("#mezclas label")
+    pagina.wait_for_selector("#mezclas label", state="attached")
+    if ruta.startswith("#entrenar/menu"):
+        esperar_menu_quieto(pagina)
 
 
 def desactivada(pagina, valor):
     return pagina.eval_on_selector(f'input[name="mezcla"][value="{valor}"]', "(i) => i.matches(':disabled')")
+
+
+def elecciones(pagina):
+    """Las pastillas de «Tu sesión», unidas con « · »."""
+    return " · ".join(pagina.locator("#resumen-elecciones li").all_inner_texts())
 
 
 def guardado(pagina):
@@ -85,7 +95,7 @@ def test_sin_propias_el_selector_esta_desactivado_y_lleva_al_creador(pagina):
     enlace.focus()
     pagina.keyboard.press("Enter")
     pagina.wait_for_selector("#t-creador")
-    assert pagina.evaluate("location.hash") == "#ajustes/mis-combinaciones/nueva"
+    assert pagina.evaluate("location.hash") == "#entrenar/mis-combinaciones/nueva"
 
 
 def test_con_dos_solo_las_mias_esta_desactivada_con_su_motivo_y_lo_demas_se_recuerda(pagina):
@@ -101,11 +111,12 @@ def test_con_dos_solo_las_mias_esta_desactivada_con_su_motivo_y_lo_demas_se_recu
     assert pagina.is_checked('input[name="mezcla"][value="mucho"]')
     pagina.keyboard.press("ArrowRight")
     assert pagina.is_checked('input[name="mezcla"][value="ninguna"]'), "de Mucho vuelve a Ninguna, sin pasar por Solo"
-    pagina.click('input[name="mezcla"][value="mucho"]', force=True)
+    pagina.click('#mezclas label:has(input[value="mucho"])')
     assert guardado(pagina)["perfil"]["sesion"]["mezcla"] == "mucho"
-    assert "Mucho de las tuyas" in pagina.text_content("#resumen-elecciones")
+    assert "Mucho de las tuyas" in elecciones(pagina)
     pagina.reload()
-    pagina.wait_for_selector("#mezclas label")
+    pagina.wait_for_selector("#mezclas label", state="visible")
+    esperar_menu_quieto(pagina)
     assert pagina.is_checked('input[name="mezcla"][value="mucho"]')
 
 
@@ -114,27 +125,27 @@ def test_solo_las_mias_guardada_con_menos_de_tres_se_respeta_y_se_explica(pagina
     assert pagina.is_checked('input[name="mezcla"][value="solo"]') and desactivada(pagina, "solo")
     assert pagina.inner_text("#nota-mezcla").endswith("de momento salen las de la biblioteca.")
     assert not pagina.eval_on_selector("#niveles", "(f) => f.disabled"), "sortea como «Ninguna»: el nivel cuenta"
-    assert pagina.text_content("#resumen-elecciones").startswith("Medio · Constante")
+    assert elecciones(pagina).startswith("Nivel medio · Constante")
 
 
 def test_con_cinco_solo_las_mias_desactiva_el_nivel_y_el_aviso_del_nivel_sin_propias(pagina):
     ir(pagina, CINCO, {"nivel": 2})
     assert not desactivada(pagina, "solo")
     assert pagina.locator("#nota-mezcla").is_hidden()
-    pagina.click('input[name="mezcla"][value="solo"]', force=True)
+    pagina.click('#mezclas label:has(input[value="solo"])')
     assert pagina.eval_on_selector("#niveles", "(f) => f.disabled")
     assert pagina.inner_text("#nota-nivel") == "Con «Solo las mías» no cuenta el nivel: salen todas las tuyas."
     assert pagina.get_attribute("#niveles", "aria-describedby") == "nota-nivel"
-    assert pagina.text_content("#resumen-elecciones").startswith("Solo las tuyas · ")
+    assert elecciones(pagina).startswith("Solo las tuyas · ")
     assert pagina.is_checked('input[name="nivel"][value="2"]'), "el nivel guardado no se pierde"
     # «Mucho» en medio: ninguna propia es de medio.
-    pagina.click('input[name="mezcla"][value="mucho"]', force=True)
+    pagina.click('#mezclas label:has(input[value="mucho"])')
     assert not pagina.eval_on_selector("#niveles", "(f) => f.disabled")
     assert pagina.locator("#nota-nivel").is_hidden()
     assert pagina.inner_text("#nota-mezcla") == "No tienes combinaciones de nivel medio: solo saldrán las de la biblioteca."
-    pagina.click('input[name="nivel"][value="1"]', force=True)
+    pagina.click('#niveles label:has(input[value="1"])')
     assert pagina.locator("#nota-mezcla").is_hidden()
-    assert pagina.text_content("#resumen-elecciones").startswith("Básico · Mucho de las tuyas")
+    assert elecciones(pagina).startswith("Nivel básico · Mucho de las tuyas")
 
 
 def test_solo_las_mias_sin_ninguna_corta_avisa_del_final_del_asalto(pagina):
@@ -142,17 +153,18 @@ def test_solo_las_mias_sin_ninguna_corta_avisa_del_final_del_asalto(pagina):
     assert pagina.inner_text("#nota-mezcla") == "Añade alguna de 2-3 acciones para que el final del asalto sea solo tuyo."
 
 
-def test_crear_una_en_ajustes_activa_el_selector_al_volver(pagina):
+def test_crear_una_en_el_creador_activa_el_selector_al_volver(pagina):
     ir(pagina)
-    pagina.goto(f"{ORIGEN}/index.html#ajustes/mis-combinaciones/nueva")
+    pagina.goto(f"{ORIGEN}/index.html#entrenar/mis-combinaciones/nueva")
     pagina.wait_for_selector("#caja-combo")
     for id_ in ("jab", "directo"):
         pagina.click(f'[data-anadir="{id_}"]')
     pagina.click("#guardar")
     pagina.click('dialog[open] button[value="guardar"]')  # es igual que una de la biblioteca: «Guardar igual»
     pagina.wait_for_selector("#anadir-propia")
-    pagina.goto(f"{ORIGEN}/index.html#entrenar")
-    pagina.wait_for_selector("#vista-entrenar:not([hidden])")
+    pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/personalizar")
+    pagina.wait_for_selector("#mezclas label", state="visible")
+    esperar_menu_quieto(pagina)
     assert not pagina.eval_on_selector("#mezclas", "(f) => f.disabled")
     assert desactivada(pagina, "solo")
     assert "tienes 1" in pagina.inner_text("#nota-mezcla")
@@ -184,7 +196,9 @@ ESPERADO = """async ({ propias, voz }) => {
 def test_sesion_con_solo_las_mias_en_zurdo_dice_solo_propias_y_las_guarda_como_el_resto(pagina):
     tres = CINCO[:3]
     pagina.clock.install()
-    ir(pagina, tres, {"mezcla": "solo", "asalto": "prueba", "zurdo": True, "voz": "ambos", "nivel": 3})
+    # Una Personalizada de 2 × 30 s (lo que era Prueba), para que la sesión sea corta.
+    ir(pagina, tres, {"mezcla": "solo", "tipo": "personalizada", "zurdo": True, "voz": "ambos", "nivel": 3,
+                      "personalizada": {"asaltos": 2, "duracion_asalto": 30, "descanso": 10}}, ruta="#entrenar")
     esperado = pagina.evaluate(ESPERADO, {"propias": tres, "voz": "ambos"})
     textos = {e["texto"] for e in esperado}
     pagina.click("#empezar")
@@ -232,8 +246,8 @@ def abrir_editor(pagina, sesion=None, voz=None):
     if voz:
         perfil["voz"] = voz
     pagina.evaluate("(d) => localStorage.setItem('boxeo', d)",
-                    json.dumps({"version": 8, "combinacionesPropias": [], "perfil": perfil}))
-    pagina.goto(f"{ORIGEN}/index.html#ajustes/mis-combinaciones/nueva")
+                    json.dumps({"version": 9, "combinacionesPropias": [], "perfil": perfil}))
+    pagina.goto(f"{ORIGEN}/index.html#entrenar/mis-combinaciones/nueva")
     pagina.wait_for_selector("#caja-combo #escuchar")
 
 

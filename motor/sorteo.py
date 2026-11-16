@@ -16,7 +16,6 @@ las propias del usuario (las del creador, que guarda el almacén del navegador).
 Todo en ortodoxo; si es zurdo se refleja al final con espejo().
 """
 import json
-import math
 import random
 from dataclasses import dataclass
 
@@ -32,9 +31,12 @@ NUMEROS_CUERPO = frozenset(range(7, 13))  # paso 2: los golpes al cuerpo
 PESO_CUERPO = 2.0  # REVISAR CON ENTRENADOR: el ×2 para que salgan los golpes al cuerpo que falten
 NIVEL_COLETILLA = 1
 ACCIONES_COLETILLA = (2, 3)  # mínimo y máximo
-# "Practicar más": cuánto multiplica cada movimiento elegido ("Un poco más", "Bastante más"). Si
-# una combinación lleva varios elegidos se multiplican, como mucho TOPE_PRACTICAR.
-FACTOR_PRACTICAR = {"poco": 2.0, "bastante": 4.0}
+# "Practicar más" (como mucho 3 movimientos, lo limita la interfaz): cada movimiento elegido
+# multiplica por FACTOR_PRACTICAR las combinaciones que lo llevan. Si una lleva varios elegidos se
+# multiplican, como mucho TOPE_PRACTICAR: con ×3, dos dan ×9 y tres ×27, y se quedan en ×8, así que
+# ninguna combinación pesa más de 8 veces otra. Cifras en docs/revision/rediseno-plan.md (sección 5).
+# REVISAR CON ENTRENADOR: si ×3 en «Practicar más» (la mitad de las combinaciones con el golpe) es buena dosis o demasiado repetitivo para un principiante
+FACTOR_PRACTICAR = 3.0
 TOPE_PRACTICAR = 8.0
 # Mezcla con las propias («Tus combinaciones» en Entrenar): probabilidad de que cada sorteo saque
 # una propia del nivel. "ninguna" no tira moneda (sale lo mismo que sin propias); "solo", solo propias.
@@ -105,12 +107,12 @@ def movimientos() -> list[str]:
 
 
 def peso_practicar(acciones, practicar: list[dict]) -> float:
-    """Cuánto pesa una combinación (ortodoxa) con "Practicar más": [{"movimiento", "cuanto"}].
-    Cada movimiento elegido cuenta una vez aunque salga varias; lo desconocido no cuenta."""
-    factores = {p["movimiento"]: FACTOR_PRACTICAR[p["cuanto"]] for p in practicar
-                if p.get("cuanto") in FACTOR_PRACTICAR}
-    lleva = {movimiento(a) for a in acciones} & factores.keys()
-    return min(TOPE_PRACTICAR, math.prod(factores[m] for m in lleva))
+    """Cuánto pesa una combinación (ortodoxa) con "Practicar más": [{"movimiento"}]. El "cuanto"
+    de los datos viejos ("poco"/"bastante") se ignora: todos pesan FACTOR_PRACTICAR. Cada movimiento
+    elegido cuenta una vez aunque salga varias veces; lo desconocido no cuenta."""
+    elegidos = {p.get("movimiento") for p in practicar}
+    lleva = {movimiento(a) for a in acciones} & elegidos
+    return min(TOPE_PRACTICAR, FACTOR_PRACTICAR ** len(lleva))
 
 
 def numeros(combo: ComboBiblioteca) -> set[int]:

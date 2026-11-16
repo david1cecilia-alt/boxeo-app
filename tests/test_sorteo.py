@@ -6,7 +6,8 @@ from dataclasses import replace
 import pytest
 
 from motor.acciones import acciones_por_ids, biblioteca, espejo_combo, numero
-from motor.sorteo import NUMEROS, NUMEROS_CUERPO, PESO_CUERPO, SIN_REPETIR, SorteoBiblioteca, movimiento, movimientos, peso_practicar
+from motor.sorteo import (FACTOR_PRACTICAR, NUMEROS, NUMEROS_CUERPO, PESO_CUERPO, SIN_REPETIR, TOPE_PRACTICAR,
+                          SorteoBiblioteca, movimiento, movimientos, peso_practicar)
 from motor.temporizador import ConfigSesion, cargar_presets, construir_guion
 
 N = 3000
@@ -91,8 +92,8 @@ def test_zurdo_es_el_espejo_del_ortodoxo(nivel):
 
 # ---------- "Practicar más" ----------
 
-def _practicar(**cuanto):
-    return {"practicar": [{"movimiento": m, "cuanto": c} for m, c in cuanto.items()]}
+def _practicar(*elegidos):
+    return {"practicar": [{"movimiento": m} for m in elegidos]}
 
 
 def test_los_movimientos_de_practicar_mas():
@@ -106,27 +107,41 @@ def test_los_golpes_al_cuerpo_son_cuerpo_en_practicar_mas_aunque_lleven_numero()
                 "uppercut_der_cuerpo"):
         a = acciones_por_ids([id_])[0]
         assert a.numero in range(7, 13) and movimiento(a) == "cuerpo", id_
-    assert _peso(["directo_cuerpo"], cuerpo="bastante") == 4
-    assert _peso(["directo_cuerpo"], **{"8": "bastante"}) == 1  # «8» no es un movimiento
+    assert _peso(["directo_cuerpo"], "cuerpo") == 3
+    assert _peso(["directo_cuerpo"], "8") == 1  # «8» no es un movimiento
 
 
-def _peso(ids, **cuanto):
-    return peso_practicar(acciones_por_ids(ids), _practicar(**cuanto)["practicar"])
+def _peso(ids, *elegidos):
+    return peso_practicar(acciones_por_ids(ids), _practicar(*elegidos)["practicar"])
+
+
+def test_practicar_mas_tiene_un_solo_factor_y_el_tope_de_siempre():
+    assert FACTOR_PRACTICAR == 3.0 and TOPE_PRACTICAR == 8.0
 
 
 def test_peso_de_practicar_mas():
     assert _peso(["jab", "directo"]) == 1
-    assert _peso(["jab", "directo"], **{"2": "poco"}) == 2
-    assert _peso(["jab", "directo"], **{"2": "bastante"}) == 4
-    assert _peso(["jab", "directo"], **{"1": "poco", "2": "poco"}) == 4  # se multiplican
-    assert _peso(["jab", "directo", "bloqueo"], **{"1": "bastante", "2": "poco", "bloqueo": "poco"}) == 8  # tope
-    assert _peso(["jab", "bloqueo"], **{"1": "bastante", "bloqueo": "bastante"}) == 8  # 16, con tope
-    assert _peso(["esquiva_der", "jab", "esquiva_izq"], esquiva="poco") == 2  # dos veces cuenta una
-    assert _peso(["jab", "jab", "directo"], **{"1": "bastante"}) == 4
-    assert _peso(["gancho_izq_cuerpo", "gancho_izq"], cuerpo="poco") == 2
-    assert _peso(["gancho_izq_cuerpo"], **{"3": "bastante"}) == 1  # el 3 es solo a la cara
-    assert _peso(["jab"], salir="poco") == 1  # no lo lleva
-    assert peso_practicar(acciones_por_ids(["jab"]), [{"movimiento": "1", "cuanto": "mucho"}]) == 1
+    assert _peso(["jab", "directo"], "2") == 3
+    assert _peso(["jab", "directo"], "1", "2") == 8  # se multiplican: 9, con tope
+    assert _peso(["jab", "directo", "bloqueo"], "1", "2", "bloqueo") == 8  # los 3 elegidos: 27, con tope
+    assert _peso(["jab", "directo", "bloqueo"], "2", "esquiva", "salir") == 3  # de los 3, solo lleva uno
+    assert _peso(["esquiva_der", "jab", "esquiva_izq"], "esquiva") == 3  # dos veces cuenta una
+    assert _peso(["jab", "jab", "directo"], "1") == 3
+    assert _peso(["jab", "jab", "directo"], "1", "1") == 3  # elegido dos veces, también cuenta una
+    assert _peso(["gancho_izq_cuerpo", "gancho_izq"], "cuerpo") == 3  # el crochet a la cara no es «cuerpo»
+    assert _peso(["gancho_izq_cuerpo", "gancho_izq"], "cuerpo", "3") == 8  # los dos: 9, con tope
+    assert _peso(["gancho_izq_cuerpo"], "3") == 1  # el 3 es solo a la cara
+    assert _peso(["jab"], "salir") == 1  # no lo lleva
+
+
+def test_practicar_mas_ignora_el_cuanto_de_los_datos_viejos():
+    # Antes «Un poco más» era ×2 y «Bastante más» ×4; ahora todos ×3, con «cuanto» o sin él.
+    acciones = acciones_por_ids(["jab", "directo", "bloqueo"])
+    for cuanto in ("poco", "bastante", "mucho", None):
+        elegido = {"movimiento": "2"} if cuanto is None else {"movimiento": "2", "cuanto": cuanto}
+        assert peso_practicar(acciones, [elegido]) == 3, cuanto
+    assert peso_practicar(acciones, [{"movimiento": "1", "cuanto": "poco"}, {"movimiento": "bloqueo", "cuanto": "bastante"}]) == 8
+    assert peso_practicar(acciones, [{"cuanto": "bastante"}]) == 1  # sin movimiento no cuenta
 
 
 def _lleva(combos, mov):
@@ -144,15 +159,14 @@ def _menos_frecuente(nivel):
 def test_practicar_mas_sube_las_que_lo_llevan(nivel):
     mov = _menos_frecuente(nivel)
     uniforme = _lleva(_sortear(nivel, n=6000), mov)
-    poco = _lleva(_sortear(nivel, n=6000, perfil=_practicar(**{mov: "poco"})), mov)
-    bastante = _lleva(_sortear(nivel, n=6000, perfil=_practicar(**{mov: "bastante"})), mov)
-    assert uniforme * 1.4 < poco and poco * 1.25 < bastante, f"{mov}: {uniforme:.1%} {poco:.1%} {bastante:.1%}"
+    elegido = _lleva(_sortear(nivel, n=6000, perfil=_practicar(mov)), mov)
+    assert uniforme * 1.75 < elegido, f"{mov}: {uniforme:.1%} → {elegido:.1%}"
 
 
 @pytest.mark.parametrize("nivel", NIVELES)
 def test_practicar_mas_nunca_excluye_ninguna(nivel):
-    # Con los tres a "Bastante más", también salen las que no llevan ninguno.
-    perfil = _practicar(**{"6": "bastante", "cuerpo": "bastante", "bloqueo": "bastante"})
+    # Con los tres elegidos (el máximo), también salen las que no llevan ninguno.
+    perfil = _practicar("6", "cuerpo", "bloqueo")
     salidas = {tuple(a.id for a in c.acciones) for c in _sortear(nivel, n=20000, perfil=perfil)}
     assert salidas == {k for k, n in _niveles().items() if n == nivel}
 
@@ -161,7 +175,7 @@ def test_practicar_mas_tambien_pesa_en_las_coletillas():
     def primeras(perfil):
         sorteos = (SorteoBiblioteca(1, perfil=perfil, rng=random.Random(s)) for s in range(3000))
         return [s.coletillas()[0] for s in sorteos]
-    assert _lleva(primeras(_practicar(**{"6": "bastante"})), "6") > _lleva(primeras(None), "6") + 0.1
+    assert _lleva(primeras(_practicar("6")), "6") > _lleva(primeras(None), "6") + 0.1
 
 
 # ---------- Ventana de no repetir por identidad ----------

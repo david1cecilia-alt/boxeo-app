@@ -1,14 +1,19 @@
-// «Mis combinaciones» (#ajustes/mis-combinaciones): las combinaciones propias, en el almacén de este
-// navegador. Listado con editar y borrar (con confirmación). Solo presenta: qué se enseña y cómo se
-// dice está en ../creador.js; guardar, en el almacén.
+// «Mis combinaciones» (#entrenar/mis-combinaciones, /nueva y /editar/<id>): las combinaciones propias,
+// en el almacén de este navegador. Listado con editar y borrar (con confirmación). Se pinta dentro de
+// Entrenar (#entrenar-sub; lo monta vistas/entrenar.js); se llega desde el menú (#entrenar/menu/combinaciones) y
+// «← Volver» lleva allí. Las rutas viejas (#ajustes/mis-combinaciones…)
+// las redirige rutas.js antes de que este módulo las vea. Solo presenta: qué se enseña y cómo se dice
+// está en ../creador.js; guardar, en el almacén.
 import {
   GRUPOS, TEXTO_ESCUCHAR_VACIA, anadir, anuncio, baldosas, cambiarCuerpo, combinacionesParaListar, editorNuevo,
   elegirGrupo, escuchar, ficha, hayCambios, puedeCrear, quitar, quitarUltima, resumen, textoBorrar,
 } from "../creador.js";
 import { ACCIONES_POR_NIVEL, MAX_ACCIONES, MAX_PROPIAS, NOMBRE_NIVEL } from "../motor/reglas.js";
-import { $, anunciar, atraparFoco, esc } from "./dom.js";
+import { $, abrirDialogo, anunciar, conectarDialogo, esc } from "./dom.js";
+import { enRutaMenu } from "./menu.js";
 
-export const RUTA = "#ajustes/mis-combinaciones";
+export const RUTA = "#entrenar/mis-combinaciones";
+export const RUTA_VOLVER = "#entrenar/menu/combinaciones";
 
 const ICONO_EDITAR = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4"/></svg>`;
 const ICONO_BORRAR = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>`;
@@ -29,40 +34,6 @@ export function fichasHtml(fichas) {
 // Un botón desactivado con aria-disabled (sigue en el orden del foco y dice por qué): no hace nada.
 export const desactivado = (boton) => boton?.getAttribute("aria-disabled") === "true";
 
-// Abre un <dialog> modal con el foco en `inicial`; al cerrarlo se llama a `alCerrar(lo elegido)`.
-// Se responde en el momento, no en el evento `close`: ese llega después y, si el diálogo se vuelve
-// a abrir enseguida (el «atrás» del navegador), se mezclaría con la respuesta siguiente.
-const respuestas = new WeakMap();
-export function abrirDialogo(dialogo, inicial, alCerrar) {
-  respuestas.set(dialogo, alCerrar);
-  dialogo.showModal();
-  $(inicial, dialogo)?.focus();
-}
-
-function cerrarDialogo(dialogo, valor) {
-  const alCerrar = respuestas.get(dialogo);
-  respuestas.delete(dialogo);
-  dialogo.close(valor);
-  alCerrar?.(valor);
-}
-
-// Los diálogos se cierran con Esc, tocando el velo (sin elegir: «») o con sus botones (value = lo elegido).
-function conectarDialogo(dialogo) {
-  dialogo.addEventListener("keydown", atraparFoco);
-  dialogo.addEventListener("cancel", (e) => {
-    e.preventDefault();
-    cerrarDialogo(dialogo, "");
-  });
-  dialogo.addEventListener("click", (e) => {
-    // En el velo (fuera de la caja; el relleno del diálogo también es `e.target === dialogo`).
-    const r = dialogo.getBoundingClientRect();
-    const fuera = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
-    if (e.target === dialogo && fuera) return cerrarDialogo(dialogo, "");
-    const boton = e.target.closest("button[value]");
-    if (boton) cerrarDialogo(dialogo, boton.value);
-  });
-}
-
 export function iniciarCreador({ almacen, raiz, voz }) {
   const propias = () => almacen.datos.combinacionesPropias;
 
@@ -71,7 +42,7 @@ export function iniciarCreador({ almacen, raiz, voz }) {
     const lista = combinacionesParaListar(propias());
     const crear = puedeCrear(propias());
     raiz.innerHTML = `
-      <p class="volver-sub"><a href="#ajustes" class="volver">← Volver</a></p>
+      <p class="volver-sub"><a href="${RUTA_VOLVER}" class="volver" id="volver-listado">← Volver</a></p>
       <header class="cabecera-sub">
         <h1 id="t-creador" tabindex="-1">Mis <span class="acento">combinaciones</span></h1>
         <p class="nota">${lista.length} de ${MAX_PROPIAS}. ${NOTA_ORTODOXA}</p>
@@ -348,8 +319,9 @@ export function iniciarCreador({ almacen, raiz, voz }) {
   };
   marcarEntrada();
 
-  // Este oyente va antes que el del router (se conecta al iniciar las vistas; el router, después):
-  // si corta el evento, el router no se entera y el editor sigue como estaba.
+  // Este oyente va antes que el del router (se conecta al iniciar Entrenar; el router, después):
+  // si corta el evento, el router no se entera y el editor sigue como estaba. El de las rutas viejas
+  // (rutas.js) va antes que este.
   window.addEventListener("hashchange", (e) => {
     marcarEntrada();
     if (volviendo) {
@@ -402,6 +374,14 @@ export function iniciarCreador({ almacen, raiz, voz }) {
     }
   });
 
+  // «← Volver» del listado: si a esta entrada del historial se llegó desde el menú (marca `desdeMenu`, que
+  // sobrevive a ir al editor y volver), atrás, sin apilar; si no (enlace, recarga), el enlace al menú.
+  raiz.addEventListener("click", (e) => {
+    if (editor || !e.target.closest("#volver-listado") || !history.state?.desdeMenu) return;
+    e.preventDefault();
+    history.back();
+  });
+
   function aListado() {
     history.replaceState(history.state, "", RUTA);
     return mostrar("");
@@ -421,6 +401,7 @@ export function iniciarCreador({ almacen, raiz, voz }) {
     } else if (ruta !== "") {
       return aListado();
     } else {
+      if (enRutaMenu(ultimaRuta ?? "")) history.replaceState({ ...history.state, desdeMenu: true }, "");
       pintarListado();
     }
     window.scrollTo(0, 0);

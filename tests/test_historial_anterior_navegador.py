@@ -8,6 +8,7 @@ import json
 import pytest
 
 from herramientas.fotos_maniqui import ORIGEN, abrir
+from tests.sin_intro import preparar
 from tests.test_historial_navegador import _abrir_historial, pytestmark, sitio  # noqa: F401
 
 # Un almacén v5 escrito tal cual en el localStorage (como lo dejó la app antes de la biblioteca de 150):
@@ -43,6 +44,7 @@ SEMBRAR_V5 = f"""<!doctype html><meta charset="utf-8">
 @pytest.fixture(scope="module")
 def pagina_v5(sitio):
     with abrir(sitio, SEMBRAR_V5, 390, 844, barras=True) as (pagina, errores):
+        preparar(pagina)
         pagina.goto(f"{ORIGEN}/__pagina__.html")
         pagina.wait_for_function("window.listo === true")
         yield pagina

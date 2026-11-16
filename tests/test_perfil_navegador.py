@@ -222,7 +222,17 @@ def _con_identidad(pagina, identidad, zurdo=False, ruta="#perfil"):
     # Recargar, no pasar por __pagina__.html: en este módulo vuelve a sembrar el almacén v6.
     pagina.goto(f"{ORIGEN}/index.html{ruta}")
     pagina.reload()
-    pagina.wait_for_selector("#perfil-contenido #d-cuestionario, #ir-perfil:visible")
+    # Esperar a lo que pinta la app, no a algo que ya está en el HTML de partida (#ir-perfil se ve antes de que
+    # arranque, mientras espera a cargarDatos()): la vista que ha elegido el router y su contenido.
+    vista = ruta[1:].split("/")[0]
+    pagina.wait_for_function(f"document.body.dataset.vista === '{vista}'")
+    if vista == "perfil":
+        titulo = identidad.get("nombre") or "Tu perfil"
+        pagina.wait_for_selector("#perfil-avatar > *", state="attached")
+        pagina.wait_for_selector("#perfil-contenido #d-cuestionario", state="attached")
+        pagina.wait_for_function("(t) => document.getElementById('t-perfil').textContent === t", arg=titulo)
+    else:
+        pagina.wait_for_selector('#tipo-sesion input[name="tipo"]:checked', state="attached")
 
 
 def test_la_identidad_ensena_avatar_nombre_y_solo_la_guardia(pagina):

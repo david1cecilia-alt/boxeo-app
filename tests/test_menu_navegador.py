@@ -7,6 +7,7 @@ velo, «✕», «Atrás» y el historial (entrada propia con la marca `menu: tru
 El menú todavía está vacío (la R4 lo llena). Los datos de prueba solo viven en el localStorage de este
 Chromium. Sin Playwright se salta en local; en CI falla.
 """
+import base64
 import importlib.util
 import mimetypes
 import os
@@ -338,6 +339,36 @@ def test_desplazar_el_panel_en_vertical_no_lo_cierra(abrir_pagina):
     assert pagina.evaluate(ABIERTO) and pagina.evaluate("location.hash") == "#entrenar/menu"
     # La cabecera sigue a la vista (fija arriba): se puede cerrar o arrastrar desde ella.
     assert pagina.locator(".menu-cerrar").bounding_box()["y"] >= 0
+
+
+# Los colores [r, g, b] de unos puntos de una captura de la página, leídos en un canvas (sin Pillow).
+PIXELES = """async ([png, puntos]) => {
+  const img = new Image();
+  img.src = `data:image/png;base64,${png}`;
+  await img.decode();
+  const lienzo = Object.assign(document.createElement('canvas'), { width: img.width, height: img.height });
+  const ctx = lienzo.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+  return puntos.map(([x, y]) => [...ctx.getImageData(x, y, 1, 1).data].slice(0, 3));
+}"""
+
+
+@pytest.mark.parametrize("ancho,alto", [(390, 844), (1440, 900), (1440, 1400)])
+def test_el_velo_del_menu_cubre_toda_la_ventana_con_el_mismo_tono(abrir_pagina, ancho, alto):
+    pagina = abrir_pagina(ancho)
+    pagina.set_viewport_size({"width": ancho, "height": alto})
+    abrir_con_el_asa(pagina)
+    pagina.wait_for_function("getComputedStyle(document.getElementById('menu')).backgroundColor === 'rgba(0, 0, 0, 0.7)'")
+    # El <dialog> (el velo) ocupa la ventana entera y lo que oscurece, el body, también llega abajo del todo:
+    # si acabara con el contenido, por debajo se vería el lienzo (del color del panel) bajo el velo.
+    assert pagina.evaluate("(() => { const r = document.getElementById('menu').getBoundingClientRect();"
+                           " return [r.left, r.top, r.right >= innerWidth - 20, r.bottom]; })()") == [0, 0, True, alto]
+    assert pagina.evaluate("document.body.getBoundingClientRect().bottom") >= alto
+    # Y se ve igual: fuera del panel, arriba y abajo del todo (huecos sin contenido), el mismo gris oscurecido.
+    x = 20 if ancho < 800 else 900
+    png = base64.b64encode(pagina.screenshot()).decode()
+    arriba, abajo = pagina.evaluate(PIXELES, [png, [[x, 5], [x, alto - 5]]])
+    assert arriba == abajo, (arriba, abajo)
 
 
 @pytest.mark.parametrize("ancho", ANCHOS)

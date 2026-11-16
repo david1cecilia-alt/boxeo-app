@@ -95,8 +95,12 @@
    no hace saltar la página al quitarla. Con barras superpuestas (móvil) no ocupa nada. */
 html { -webkit-text-size-adjust: 100%; overflow-x: hidden; scrollbar-gutter: stable; }
 
+/* El body mide como poco la ventana: con el menú abierto el lienzo toma el color del panel (ver
+   html.menu-abierto) y, si el body acabara con el contenido, por debajo el velo oscurecería otro gris. */
 body {
   margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--fondo);
   color: var(--texto);
   font-family: var(--letra-texto);

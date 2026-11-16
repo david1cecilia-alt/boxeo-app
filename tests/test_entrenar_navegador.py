@@ -396,10 +396,10 @@ def test_desde_1024_una_columna_centrada_en_el_orden_del_movil(pagina, ancho, al
     # Uno debajo de otro, en el orden del móvil, del mismo ancho (como mucho 640) y alineados.
     assert all(a["y"] + a["height"] <= b["y"] for a, b in zip(bloques, bloques[1:])), bloques
     assert all(abs(b["x"] - bloques[0]["x"]) <= 1 and abs(b["width"] - bloques[0]["width"]) <= 1 for b in bloques)
-    assert bloques[0]["width"] <= 640
-    # Centrada en el sitio que deja la barra lateral.
+    # Centrada en el sitio que deja la barra lateral, y de 640 px (o todo el sitio, si hay menos).
     main = pagina.evaluate("""() => { const m = document.querySelector('main'), r = m.getBoundingClientRect(),
       s = getComputedStyle(m); return [r.left + parseFloat(s.paddingLeft), r.right - parseFloat(s.paddingRight)]; }""")
+    assert abs(bloques[0]["width"] - min(640, main[1] - main[0])) <= 1, (bloques[0]["width"], main)
     izquierda, derecha = bloques[0]["x"] - main[0], main[1] - (bloques[0]["x"] + bloques[0]["width"])
     assert abs(izquierda - derecha) <= 2, (izquierda, derecha)
     # Nada cortado: ni el estilo de la cabecera («Boxe…») ni el selector, que no se sale de su caja.

@@ -1535,7 +1535,7 @@ dialog.recorte:not([open]) { display: none; }
   /* Entrenar: una sola columna centrada (como mucho 640 px) con la cabecera de perfil, el selector, «Tu sesión»
      y Empezar, en el mismo orden que en el móvil. El asa, fija a la derecha, queda fuera de la columna. */
   #vista-entrenar { padding-top: 40px; }
-  #config { max-width: 640px; margin-inline: auto; }
+  #config { width: 100%; max-width: 640px; margin-inline: auto; }
   .tu-sesion { padding: 24px; }
   .resumen-grande { font-size: 3rem; }
   .niveles label span { min-height: 84px; font-size: 0.875rem; }

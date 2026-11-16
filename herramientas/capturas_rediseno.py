@@ -18,6 +18,11 @@ Fases:
 - r6 (intro y pista del asa): intro-encendida, intro-mitad (9 de 18 letras apagadas), intro-zoom,
   entrenar-tras-intro, pista-asomando, pista-reducida (solo el globo). Cada una en una página nueva con el
   reloj de Playwright parado; el momento de cada animación se fija con getAnimations() (pause + currentTime).
+- r7 (cierre, con el gris neutro): entrenar-general, entrenar-personalizada, entrenar-prueba (con ?prueba),
+  menu-personalizar, menu-combinaciones, menu-ajustes, menu-desplazado (el título fijo), mis-combinaciones,
+  mis-combinaciones-editor, perfil, aprende, aprende-ficha, historial, historial-sesion, historial-borrar (el
+  diálogo de la app), sesion-en-marcha y sesion-descanso (una Prueba de 2 × 30 s con el reloj parado), intro,
+  pista (asomando) y pista-3s (la lengüeta ya recogida y el globo aún a la vista).
 
 Las demás fases usan prefers-reduced-motion y la ayuda sin intro ni pista (tests/sin_intro.py).
 """
@@ -40,7 +45,8 @@ TAMANOS = ((390, 844), (1440, 900))
 VACIA = """<!doctype html><meta charset="utf-8"><script>window.listo = true;</script>"""
 
 # Deja en el localStorage un almacén v9 con esta identidad, «Mi estilo» y guardia (y la pista del asa ya vista).
-SEMBRAR = """async ({ identidad, estilo, zurdo, foto, pista }) => {
+# `sesion`: más campos de perfil.sesion; `sesiones` y `propias`: el Historial y Mis combinaciones.
+SEMBRAR = """async ({ identidad, estilo, zurdo, foto, pista, sesion = {}, sesiones = [], propias = [] }) => {
   localStorage.clear();
   let datosFoto = null;
   if (foto) {
@@ -53,8 +59,9 @@ SEMBRAR = """async ({ identidad, estilo, zurdo, foto, pista }) => {
     x.fillRect(58, 180, 140, 80);
     datosFoto = c.toDataURL('image/jpeg', 0.85);
   }
-  localStorage.setItem('boxeo', JSON.stringify({ version: 9, perfil: {
-    identidad: { ...identidad, foto: datosFoto }, estilo: { mi_estilo: estilo }, sesion: { zurdo }, pistas: { asa: !pista },
+  localStorage.setItem('boxeo', JSON.stringify({ version: 9, sesiones, combinacionesPropias: propias, valoraciones: {}, perfil: {
+    identidad: { ...identidad, foto: datosFoto }, estilo: { mi_estilo: estilo }, sesion: { zurdo, ...sesion },
+    pistas: { asa: !pista },
   } }));
 }"""
 # Las animaciones de la página, acabadas (una cancelada también cuenta). Las infinitas (las luces de la
@@ -105,8 +112,9 @@ CON_FOTO = {"nombre": "Alex", "avatar": {"tipo": "foto"}}
 LARGO = {"nombre": "Maximiliano Fernández-Castillo", "avatar": {"tipo": "predefinido", "id": "chico-barba"}}
 
 
-def almacen(identidad, estilo="no_se", zurdo=False, foto=False, pista=False):
-    return {"identidad": identidad, "estilo": estilo, "zurdo": zurdo, "foto": foto, "pista": pista}
+def almacen(identidad, estilo="no_se", zurdo=False, foto=False, pista=False, sesion=None, sesiones=(), propias=()):
+    return {"identidad": identidad, "estilo": estilo, "zurdo": zurdo, "foto": foto, "pista": pista,
+            "sesion": sesion or {}, "sesiones": list(sesiones), "propias": list(propias)}
 
 
 # ---------- R6: la intro y la pista, con el reloj parado ----------
@@ -141,6 +149,70 @@ def pista_reducida(pagina):
     assert pagina.evaluate("document.querySelector('.pista-panel').hidden")
 
 
+def pista_a_los_3_s(pagina):
+    entrenar(pagina)
+    pagina.wait_for_function("!document.getElementById('pista-asa').hidden")
+    pagina.clock.run_for(3000)
+    assert pagina.evaluate("document.querySelector('.pista-panel').hidden")
+    assert pagina.evaluate("!document.getElementById('pista-asa').hidden")
+    pagina.evaluate(FIJAR_ANIMACIONES, 3000)
+
+
+# ---------- R7: el cierre ----------
+
+def ir(ruta, selector, menu=False):
+    def llegar(pagina):
+        pagina.goto(f"{ORIGEN}/index.html{ruta}")
+        pagina.wait_for_selector(selector, state="visible")
+        if menu:
+            esperar_menu_quieto(pagina)
+    return llegar
+
+
+def entrenar_prueba(pagina):
+    pagina.goto(f"{ORIGEN}/index.html?prueba#entrenar")
+    pagina.wait_for_selector("#ir-perfil", state="visible")
+    pagina.click('#tipo-sesion label:has(input[value="prueba"])')
+
+
+def menu_desplazado(pagina):
+    ir("#entrenar/menu/personalizar", "#t-menu", menu=True)(pagina)
+    pagina.evaluate("document.querySelector('.menu-contenido').scrollTop = 600")
+
+
+def historial_borrar(pagina):
+    ir("#historial/local%3As-1", "#borrar")(pagina)
+    pagina.click("#borrar")
+    pagina.wait_for_selector("#d-confirmar[open]")
+
+
+def en_sesion(segundos, fase):
+    """Una Prueba (2 × 30 s) empezada con el reloj parado y adelantada `segundos`, en la fase `fase`."""
+    def llegar(pagina):
+        entrenar_prueba(pagina)
+        pagina.click("#empezar")
+        pagina.clock.run_for(segundos * 1000)
+        actual = pagina.evaluate("document.getElementById('pantalla').dataset.fase")
+        assert actual == fase, f"a los {segundos} s la sesión está en «{actual}», no en «{fase}»"
+        pagina.evaluate(ANIMACIONES_ACABADAS)
+    return llegar
+
+
+# Unas sesiones de noviembre y dos combinaciones propias, para que Historial y Mis combinaciones no salgan vacíos.
+SESIONES = [{"id": f"s-{i}", "fecha": f"2026-11-{d:02d}T18:00:00", "asaltos": a, "nivel": 2, "zurdo": False,
+             "duracion_asalto": 180, "descanso": 60, "tipo": "personalizada", "num_combinaciones": 2,
+             "combinaciones": [{"asalto": 1, "texto": "uno jab, dos recto", "ids": ["jab", "directo"]},
+                               {"asalto": 2, "texto": "esquiva derecha, tres crochet de izquierda",
+                                "ids": ["esquiva_der", "gancho_izq"]}]}
+            for i, (d, a) in enumerate([(3, 3), (5, 4), (8, 3), (10, 5), (12, 3)], start=1)]
+PROPIAS = [{"id": "p-0", "ids": ["jab", "directo", "esquiva_izq", "gancho_izq"], "creada": "2026-11-04T10:00:00Z"},
+           {"id": "p-1", "ids": ["bloqueo", "directo", "uppercut_izq"], "creada": "2026-11-05T10:00:00Z"}]
+PERSONALIZADA = {"tipo": "personalizada", "nivel": 2, "ritmo": 4, "mezcla": "algunas",
+                 "personalizada": {"asaltos": 4, "duracion_asalto": 120, "descanso": 45}}
+R7 = almacen(GORRA, "boxer", sesion=PERSONALIZADA, sesiones=SESIONES, propias=PROPIAS)
+R7_GENERAL = almacen(GORRA, "boxer", sesion={"tipo": "general"}, sesiones=SESIONES, propias=PROPIAS)
+
+
 FASES = {
     "r5": {
         "entrenar-cabecera-inicial": (almacen(ALEX, "boxer"), entrenar),
@@ -161,6 +233,28 @@ FASES = {
         "entrenar-tras-intro": (almacen(ALEX, "boxer"), tras_la_intro, {"intro": True}),
         "pista-asomando": (almacen(ALEX, "boxer", pista=True), pista_asomando, {"pista": True}),
         "pista-reducida": (almacen(ALEX, "boxer", pista=True), pista_reducida, {"pista": True, "movimiento": False}),
+    },
+    "r7": {
+        "entrenar-general": (R7_GENERAL, entrenar),
+        "entrenar-personalizada": (R7, entrenar),
+        "entrenar-prueba": (R7, entrenar_prueba),
+        "menu-personalizar": (R7, ir("#entrenar/menu/personalizar", "#t-menu", menu=True)),
+        "menu-combinaciones": (R7, ir("#entrenar/menu/combinaciones", "#t-menu", menu=True)),
+        "menu-ajustes": (R7, ir("#entrenar/menu/ajustes", "#identidad #nombre", menu=True)),
+        "menu-desplazado": (R7, menu_desplazado),
+        "mis-combinaciones": (R7, ir("#entrenar/mis-combinaciones", "#t-creador")),
+        "mis-combinaciones-editor": (R7, ir("#entrenar/mis-combinaciones/editar/p-0", "#t-creador")),
+        "perfil": (R7, perfil),
+        "aprende": (R7, ir("#aprende", ".lista-fichas")),
+        "aprende-ficha": (R7, ir("#aprende/jab", ".aprende-ficha")),
+        "historial": (R7, ir("#historial", ".grafico-semanas .barras")),
+        "historial-sesion": (R7, ir("#historial/local%3As-1", "#t-detalle")),
+        "historial-borrar": (R7, historial_borrar),
+        "sesion-en-marcha": (R7, en_sesion(12, "asalto"), {"movimiento": False}),
+        "sesion-descanso": (R7, en_sesion(32, "descanso"), {"movimiento": False}),
+        "intro": (R7, en_el_ms(930), {"intro": True}),
+        "pista": (almacen(GORRA, "boxer", pista=True, sesion=PERSONALIZADA), pista_asomando, {"pista": True}),
+        "pista-3s": (almacen(GORRA, "boxer", pista=True, sesion=PERSONALIZADA), pista_a_los_3_s, {"pista": True}),
     },
 }
 

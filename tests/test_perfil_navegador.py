@@ -354,3 +354,56 @@ def test_desde_1024_identidad_y_estilo_a_la_izquierda_y_los_plegables_a_la_derec
     main = pagina.evaluate("""() => { const m = document.querySelector('main'), r = m.getBoundingClientRect(),
       s = getComputedStyle(m); return [r.left + parseFloat(s.paddingLeft), r.right - parseFloat(s.paddingRight)]; }""")
     assert abs((vista["x"] - main[0]) - (main[1] - vista["x"] - vista["width"])) <= 2  # centrada
+
+
+# El contraste más bajo entre el color del texto y cada píxel de lo que tiene detrás (captura con el texto
+# transparente), con la fórmula WCAG. `png` llega en base64.
+CONTRASTE_MINIMO = """async ([png, texto]) => {
+  const img = new Image();
+  img.src = "data:image/png;base64," + png;
+  await img.decode();
+  const lienzo = document.createElement("canvas");
+  [lienzo.width, lienzo.height] = [img.width, img.height];
+  const ctx = lienzo.getContext("2d");
+  ctx.drawImage(img, 0, 0);
+  const lin = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+  const lum = (r, g, b) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  const lt = lum(...texto);
+  const datos = ctx.getImageData(0, 0, img.width, img.height).data;
+  let minimo = Infinity;
+  for (let i = 0; i < datos.length; i += 4) {
+    const lf = lum(datos[i], datos[i + 1], datos[i + 2]);
+    minimo = Math.min(minimo, (Math.max(lt, lf) + 0.05) / (Math.min(lt, lf) + 0.05));
+  }
+  return minimo;
+}"""
+# Lo que va encima de la foto en el PC y el contraste que pide (AA; el titular es texto grande).
+SOBRE_LA_FOTO = {".volver-perfil a": 4.5, ".perfil-quien .antetitulo": 4.5, ".perfil-quien h1": 3.0,
+                 ".pie-perfil": 4.5}
+
+
+@pytest.mark.parametrize("ancho", [1024, 1440])
+def test_desde_1024_la_foto_ocupa_todo_el_ancho_fundida_y_el_texto_encima_cumple_aa(pagina, ancho):
+    import base64
+    _abrir_perfil(pagina, ancho=ancho)
+    foto, vista = pagina.locator("#vista-perfil .foto-cabecera").bounding_box(), pagina.locator("#vista-perfil").bounding_box()
+    assert foto["x"] <= vista["x"] and foto["x"] + foto["width"] >= vista["x"] + vista["width"]  # detrás de las dos columnas
+    plegables = pagina.locator(".perfil-plegables").bounding_box()
+    assert foto["x"] + foto["width"] >= plegables["x"] + plegables["width"]  # sin corte detrás de los plegables
+    # Fundida por los lados (máscara que empieza y acaba transparente) y por abajo (el velo acaba en el fondo).
+    mascara = pagina.evaluate("getComputedStyle(document.querySelector('#vista-perfil .foto-cabecera')).maskImage")
+    assert mascara.startswith("linear-gradient(90deg, rgba(0, 0, 0, 0)") and mascara.endswith("rgba(0, 0, 0, 0))")
+    velo = pagina.evaluate("getComputedStyle(document.querySelector('#vista-perfil .foto-cabecera'), '::after').backgroundImage")
+    fondo = pagina.evaluate("getComputedStyle(document.body).backgroundColor")
+    assert velo.endswith(f"{fondo} 100%)")
+    colores = {s: pagina.evaluate("(s) => getComputedStyle(document.querySelector(s)).color", s) for s in SOBRE_LA_FOTO}
+    pagina.add_style_tag(content=", ".join(SOBRE_LA_FOTO) +
+                         " { color: transparent !important; text-decoration-color: transparent !important; }")
+    try:
+        for selector, pedido in SOBRE_LA_FOTO.items():
+            png = pagina.locator(selector).screenshot(animations="disabled")
+            rgb = [int(c) for c in colores[selector].removeprefix("rgb(").rstrip(")").split(",")[:3]]
+            minimo = pagina.evaluate(CONTRASTE_MINIMO, [base64.b64encode(png).decode(), rgb])
+            assert minimo >= pedido, f"{selector} a {ancho}: {minimo:.2f} < {pedido}"
+    finally:
+        pagina.reload()

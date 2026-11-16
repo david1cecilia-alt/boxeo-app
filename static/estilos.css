@@ -1625,6 +1625,17 @@ dialog.recorte:not([open]) { display: none; }
   #perfil-contenido > .estilo-recomendado { grid-column: 1; grid-row: 3; }
   .perfil-plegables { grid-column: 2; grid-row: 2 / span 2; gap: 20px; }
   .plegable { padding: 0 24px; }
+  /* La foto, a todo el ancho del contenido (detrás de las dos columnas): la máscara la funde con el fondo por los
+     lados y el velo, por abajo; sin bordes duros. El velo, más denso arriba que en el móvil: el texto va encima. */
+  #vista-perfil .foto-cabecera {
+    left: calc(-1 * var(--hueco)); right: calc(-1 * var(--hueco)); width: auto; height: calc(var(--alto-foto) + 120px);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 20%, #000 80%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 20%, #000 80%, transparent);
+  }
+  #vista-perfil .foto-cabecera::after {
+    background: linear-gradient(90deg, rgb(var(--fondo-rgb) / 0.55) 0%, rgb(var(--fondo-rgb) / 0.55) 48%, rgb(var(--fondo-rgb) / 0) 62%),
+      linear-gradient(180deg, rgb(var(--fondo-rgb) / 0.7) 0%, rgb(var(--fondo-rgb) / 0.55) 45%, var(--fondo) 100%);
+  }
 
   /* Aprende: fichas en tres columnas; la ficha, en dos (qué es, cuándo y cómo a la izquierda;
      errores, ventajas, inconvenientes, notas y «Mostrar más» a la derecha). */

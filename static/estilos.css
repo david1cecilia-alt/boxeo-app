@@ -574,9 +574,10 @@ body.entrenando #vista-entrenar { padding-top: 0; }
 .controles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
 #pausa[aria-pressed="true"] .icono-pausa, #pausa[aria-pressed="false"] .icono-play { display: none; }
 #pantalla[data-fase="reaccion"] .boton.secundario { background: var(--fondo); }
-/* Parar se distingue también sobre el fondo rojo de los últimos 10 s. */
+/* Parar se distingue también sobre el fondo rojo de los últimos 10 s (el mismo rojo cuero que el botón). En el
+   asalto y en la preparación (también en pausa), como siempre: sin borde. */
 #pantalla .boton.peligro { box-shadow: inset 0 0 0 3px var(--texto); }
-#pantalla[data-fase="asalto"] .boton.peligro { box-shadow: none; }
+#pantalla:is([data-fase="asalto"], .preparando) .boton.peligro { box-shadow: none; }
 /* Mismo color que el texto de la fase: se lee en todas. */
 .atajos { margin: 12px 0 0; color: inherit; text-align: center; }
 @media (pointer: coarse) { .atajos { display: none; } }

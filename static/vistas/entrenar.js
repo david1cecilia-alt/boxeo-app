@@ -169,7 +169,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar, avisar = 
     $("#anterior").textContent = "";
     pintarPausa();
     tic();
-    $("#pausa").focus();
+    $("#empezar-ya").focus(); // lo primero que se quiere en la preparación; al saltarla, el foco pasa a Pausa
   }
 
   // Fin de la preparación (a los 10 s o con «Empezar ya»): empieza el guion de verdad, con su reproductor.

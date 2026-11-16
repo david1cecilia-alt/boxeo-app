@@ -204,3 +204,30 @@ def test_el_ring_cubre_toda_la_pantalla(sitio, ancho, alto):
         assert not errores
     finally:
         contexto.__exit__(None, None, None)
+
+
+ESTILO_PARAR = """() => { const e = getComputedStyle(document.getElementById('parar'));
+  return { sombra: e.boxShadow, borde: e.borderColor, fondo: e.backgroundColor, contorno: e.outlineStyle }; }"""
+
+
+@pytest.mark.parametrize("ancho,alto", [(390, 844), (1440, 900)])
+def test_en_la_preparacion_el_foco_va_a_empezar_ya_y_parar_se_ve_como_en_el_asalto(sitio, ancho, alto):
+    contexto, pagina, errores = abrir_app(sitio, ancho=ancho, alto=alto)
+    try:
+        pagina.focus("#empezar")
+        pagina.keyboard.press("Enter")  # con el teclado: el foco se ve (focus-visible)
+        assert pagina.evaluate("document.activeElement.id") == "empezar-ya"
+        en_preparacion = pagina.evaluate(ESTILO_PARAR)
+        assert en_preparacion["sombra"] == "none" and en_preparacion["contorno"] == "none"
+        pagina.click("#pausa")
+        assert fase(pagina) == "pausa" and pagina.evaluate(ESTILO_PARAR)["sombra"] == "none"  # en pausa, igual
+        pagina.click("#pausa")
+        pagina.click("#empezar-ya")
+        assert fase(pagina) == "asalto"
+        en_asalto = pagina.evaluate(ESTILO_PARAR)
+        assert {**en_preparacion, "contorno": None} == {**en_asalto, "contorno": None}
+        pagina.clock.run_for(21_000)  # a falta de 10 s: el fondo rojo, y Parar se distingue con su borde
+        assert fase(pagina) == "final" and "inset" in pagina.evaluate(ESTILO_PARAR)["sombra"]
+        assert not errores
+    finally:
+        contexto.__exit__(None, None, None)

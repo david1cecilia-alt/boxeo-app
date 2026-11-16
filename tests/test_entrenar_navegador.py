@@ -334,6 +334,22 @@ def test_con_prueba_ningun_chip_se_sale_ni_toca_al_de_al_lado(pagina, ancho):
     assert pagina.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
 
 
+@pytest.mark.parametrize("ancho, alto", [(390, 844), (360, 800)])
+def test_en_el_movil_tu_sesion_y_empezar_van_separados_y_la_barra_no_tapa_empezar(pagina, ancho, alto):
+    pagina.set_viewport_size({"width": ancho, "height": alto})
+    preparar(pagina, {})
+    pagina.wait_for_selector("#resumen-elecciones li")
+    pagina.evaluate("document.fonts.ready")
+    # La entrada de la vista (translateY) acabada: medir a medias movería una caja y no la otra.
+    pagina.evaluate("Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {})))")
+    medida = pagina.evaluate("""() => {
+      const [t, e, b] = ['.tu-sesion', '#empezar', '#pestanas'].map((s) => document.querySelector(s).getBoundingClientRect());
+      return { hueco: e.top - t.bottom, sobra: b.top - e.bottom };
+    }""")
+    assert medida["hueco"] >= 16, medida
+    assert medida["sobra"] > 0, medida
+
+
 def test_el_texto_de_prueba_dice_que_es_y_que_se_guarda(pagina):
     preparar(pagina, {}, consulta="?prueba")
     pagina.click('#tipo-sesion label:has(input[value="prueba"])')

@@ -434,6 +434,8 @@ input[type="file"].solo-lectores:focus-visible + *, label.boton:focus-within { o
    texto nunca llega a esa franja (riesgo 3 del plan). En el PC tiene su margen propio. */
 @media (max-width: 1023.98px) { .tu-sesion { padding-right: 56px; } }
 .nota-sesion a { color: var(--texto); font-weight: 600; }
+/* «Tu sesión» y Empezar van en la misma caja: sin su propio gap quedaban pegados en el móvil. */
+.derecha-entrenar { display: grid; gap: 16px; }
 .empezar-caja { display: grid; gap: 12px; }
 .empezar-caja .nota { margin: -4px 0 0; text-align: center; font-size: 0.75rem; }
 .empezar {
@@ -1448,7 +1450,7 @@ dialog::backdrop { background: var(--velo); }
   .cabecera-perfil { grid-column: 1; grid-row: 1; max-width: 520px; }
   #tipo-sesion { grid-column: 1; grid-row: 2; }
   .tu-sesion, .empezar-caja { grid-column: 2; }
-  .derecha-entrenar { grid-column: 2; grid-row: 2 / 4; position: sticky; top: 24px; display: grid; gap: 16px; }
+  .derecha-entrenar { grid-column: 2; grid-row: 2 / 4; position: sticky; top: 24px; }
   .tu-sesion { padding: 24px; }
   .resumen-grande { font-size: 3rem; }
   .niveles label span { min-height: 84px; font-size: 0.875rem; }

@@ -36,7 +36,7 @@
   el toque o la tecla que la salta y al salir lanza `intro-fin` (`esperarIntro()` de `vistas/dom.js`).
 - Preparación: 10 s fijos antes del asalto 1 (`SEGUNDOS_PREPARACION` en `vistas/entrenar.js`), con su propio
   reproductor; el guion del motor no cambia. Fondo: el ring (imagen en el precache; encima, en horizontal, el vídeo
-  `static/video/ring-horizontal.{webm,mp4}`, nunca en el precache; el vertical 9:16, comentado hasta que exista). Los tests que cronometran fases pulsan «Empezar ya».
+  `static/video/ring-horizontal.{webm,mp4}`, que no pasa por la caché de `sw.js`: va directo a la red; el vertical 9:16, comentado hasta que exista). Los tests que cronometran fases pulsan «Empezar ya».
 - Recorte de la foto: `vistas/recorte.js` (diálogo fuera del menú) elige el cuadrado y `foto.js` lo codifica igual
   que siempre (`leerFoto` + `codificarFoto`): el almacén no cambia.
 - El asa del menú: en el móvil, abajo a la derecha encima de la barra (`--asa-abajo`); en el PC, al 42 % de alto.

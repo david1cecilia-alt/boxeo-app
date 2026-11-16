@@ -164,6 +164,22 @@ def test_con_movimiento_reducido_solo_se_ve_la_imagen_y_no_se_pide_el_video(siti
         contexto.__exit__(None, None, None)
 
 
+@pytest.mark.parametrize("fallo", ["sin_red", "404"])
+def test_si_el_video_no_llega_se_ve_la_imagen_y_la_preparacion_sigue(sitio, fallo):
+    contexto, pagina, errores = abrir_app(sitio, ancho=1440, alto=900)
+    try:
+        # sw.js no guarda el vídeo: sin red, la petición falla tal cual (aquí, cortada o 404).
+        pagina.route("**/video/**", lambda r: r.abort("internetdisconnected") if fallo == "sin_red"
+                     else r.fulfill(status=404))
+        pagina.click("#empezar")
+        pagina.wait_for_function("!document.getElementById('video-ring')")  # quitado: se ve lo de debajo
+        assert pagina.is_visible(".fondo-ring img") and fase(pagina) == "preparacion"
+        pagina.clock.run_for(10_100)
+        assert fase(pagina) == "asalto" and not errores
+    finally:
+        contexto.__exit__(None, None, None)
+
+
 def test_en_vertical_sin_ring_vertical_se_ve_la_imagen(sitio):
     contexto, pagina, errores = abrir_app(sitio)  # 390 × 844
     try:

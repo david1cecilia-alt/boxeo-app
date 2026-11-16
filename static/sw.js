@@ -80,7 +80,7 @@ const FICHEROS = [
   "imagenes/cat-pies.webp",
   "imagenes/historial-cabecera.webp",
   "imagenes/perfil-cabecera.webp",
-  // El ring de la preparación (la JPG, de reserva sin WebP). El vídeo, si lo hay, no: se guarda la primera vez.
+  // El ring de la preparación (la JPG, de reserva sin WebP). El vídeo no: va siempre a la red (ver el evento fetch).
   "imagenes/ring-cenital.jpg",
   "imagenes/ring-cenital.webp",
   "iconos/guante.svg",
@@ -112,6 +112,9 @@ self.addEventListener("fetch", (evento) => {
   const url = new URL(evento.request.url);
   // Solo GET de este mismo sitio; la API (si hay servidor) nunca se cachea.
   if (evento.request.method !== "GET" || url.origin !== location.origin || url.pathname.includes("/api/")) return;
+  // El vídeo del ring tampoco: ni precache ni copia al vuelo, directo a la red (pesa ~1 MB y admite peticiones
+  // por rangos). Sin red o si falla, entrenar.js quita el <video> y se ve la imagen.
+  if (url.pathname.includes("/video/")) return;
 
   evento.respondWith((async () => {
     const cache = await caches.open(VERSION);

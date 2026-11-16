@@ -120,6 +120,22 @@ test("el fondo rojo completo es solo de los últimos 10 s", () => {
 const GRISES = ["fondo", "superficie", "superficie-hover", "campo", "barra", "borde", "texto", "suave", "terciario",
   "tenue", "chip-activo", "sobre-chip-activo", "fase-asalto", "fase-pausa", "serie-rpe", "foco", "sobre-acento"];
 
+// El panel del menú es translúcido (con desenfoque): detrás puede haber algo blanco (el chip elegido), bajo el velo
+// del <dialog>. Ahí, y con el brillo de arriba, el texto del panel sigue en AA.
+test("el texto del panel del menú se lee aunque detrás haya blanco", () => {
+  const ratio = (a, b) => {
+    const [l1, l2] = [luminancia(a), luminancia(b)].sort((x, y) => y - x);
+    return (l1 + 0.05) / (l2 + 0.05);
+  };
+  const panel = rgb("panel-cristal", rgb("velo", BLANCO));
+  const conBrillo = rgb("brillo-panel", panel);
+  for (const t of ["texto", "suave", "tenue", "acento"]) {
+    assert.ok(ratio(rgb(t), panel) >= 4.5, `${t} sobre el panel: ${ratio(rgb(t), panel).toFixed(2)}:1`);
+  }
+  assert.ok(ratio(rgb("texto"), conBrillo) >= 4.5); // el título, bajo el brillo
+  assert.ok(ratio(rgb("acento"), conBrillo) >= 3); // su subrayado
+});
+
 test("los tokens grises son neutros (R = G = B)", () => {
   for (const t of GRISES) {
     const valor = tokens[t];

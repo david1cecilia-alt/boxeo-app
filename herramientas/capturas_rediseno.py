@@ -46,7 +46,8 @@ VACIA = """<!doctype html><meta charset="utf-8"><script>window.listo = true;</sc
 
 # Deja en el localStorage un almacén v9 con esta identidad, «Mi estilo» y guardia (y la pista del asa ya vista).
 # `sesion`: más campos de perfil.sesion; `sesiones` y `propias`: el Historial y Mis combinaciones.
-SEMBRAR = """async ({ identidad, estilo, zurdo, foto, pista, sesion = {}, sesiones = [], propias = [] }) => {
+# `respuestas`: las del cuestionario (perfil.estilo sin mi_estilo).
+SEMBRAR = """async ({ identidad, estilo, respuestas = {}, zurdo, foto, pista, sesion = {}, sesiones = [], propias = [] }) => {
   localStorage.clear();
   let datosFoto = null;
   if (foto) {
@@ -60,7 +61,7 @@ SEMBRAR = """async ({ identidad, estilo, zurdo, foto, pista, sesion = {}, sesion
     datosFoto = c.toDataURL('image/jpeg', 0.85);
   }
   localStorage.setItem('boxeo', JSON.stringify({ version: 9, sesiones, combinacionesPropias: propias, valoraciones: {}, perfil: {
-    identidad: { ...identidad, foto: datosFoto }, estilo: { mi_estilo: estilo }, sesion: { zurdo, ...sesion },
+    identidad: { ...identidad, foto: datosFoto }, estilo: { ...respuestas, mi_estilo: estilo }, sesion: { zurdo, ...sesion },
     pistas: { asa: !pista },
   } }));
 }"""
@@ -112,9 +113,16 @@ CON_FOTO = {"nombre": "Alex", "avatar": {"tipo": "foto"}}
 LARGO = {"nombre": "Maximiliano Fernández-Castillo", "avatar": {"tipo": "predefinido", "id": "chico-barba"}}
 
 
-def almacen(identidad, estilo="no_se", zurdo=False, foto=False, pista=False, sesion=None, sesiones=(), propias=()):
-    return {"identidad": identidad, "estilo": estilo, "zurdo": zurdo, "foto": foto, "pista": pista,
-            "sesion": sesion or {}, "sesiones": list(sesiones), "propias": list(propias)}
+# Las 7 preguntas del cuestionario contestadas, apuntando a Boxer: así un Perfil con «Mi estilo» no sale con
+# «0 de 7 preguntas», que no se da si se ha hecho el cuestionario.
+RESPUESTAS_BOXER = {"distancia": "larga", "presion": "salir", "volumen": "pocos_fuertes", "iniciativa": "segun_rival",
+                    "defensa": "pies", "cardio": "bueno", "golpe_favorito": "jab"}
+
+
+def almacen(identidad, estilo="no_se", zurdo=False, foto=False, pista=False, sesion=None, sesiones=(), propias=(),
+            respuestas=None):
+    return {"identidad": identidad, "estilo": estilo, "respuestas": respuestas or {}, "zurdo": zurdo, "foto": foto,
+            "pista": pista, "sesion": sesion or {}, "sesiones": list(sesiones), "propias": list(propias)}
 
 
 # ---------- R6: la intro y la pista, con el reloj parado ----------
@@ -209,8 +217,9 @@ PROPIAS = [{"id": "p-0", "ids": ["jab", "directo", "esquiva_izq", "gancho_izq"],
            {"id": "p-1", "ids": ["bloqueo", "directo", "uppercut_izq"], "creada": "2026-11-05T10:00:00Z"}]
 PERSONALIZADA = {"tipo": "personalizada", "nivel": 2, "ritmo": 4, "mezcla": "algunas",
                  "personalizada": {"asaltos": 4, "duracion_asalto": 120, "descanso": 45}}
-R7 = almacen(GORRA, "boxer", sesion=PERSONALIZADA, sesiones=SESIONES, propias=PROPIAS)
-R7_GENERAL = almacen(GORRA, "boxer", sesion={"tipo": "general"}, sesiones=SESIONES, propias=PROPIAS)
+R7 = almacen(GORRA, "boxer", sesion=PERSONALIZADA, sesiones=SESIONES, propias=PROPIAS, respuestas=RESPUESTAS_BOXER)
+R7_GENERAL = almacen(GORRA, "boxer", sesion={"tipo": "general"}, sesiones=SESIONES, propias=PROPIAS,
+                     respuestas=RESPUESTAS_BOXER)
 
 
 FASES = {
@@ -220,8 +229,9 @@ FASES = {
         "entrenar-cabecera-foto": (almacen(CON_FOTO, "fajador", zurdo=True, foto=True), entrenar),
         "entrenar-nombre-largo": (almacen(LARGO, "contragolpeador"), entrenar),
         "menu-ajustes-identidad": (almacen(CON_FOTO, "boxer", foto=True), menu_ajustes_identidad),
-        "perfil": (almacen(GORRA, "boxer_puncher", zurdo=True), perfil),
-        "perfil-cuestionario-abierto": (almacen(GORRA, "boxer_puncher", zurdo=True),
+        # «Mi estilo» Boxer-puncher con respuestas que apuntan a Boxer: sale «Según tus respuestas: Boxer».
+        "perfil": (almacen(GORRA, "boxer_puncher", zurdo=True, respuestas=RESPUESTAS_BOXER), perfil),
+        "perfil-cuestionario-abierto": (almacen(GORRA, "boxer_puncher", zurdo=True, respuestas=RESPUESTAS_BOXER),
                                         lambda p: perfil(p, abrir_cuestionario=True)),
         "perfil-sin-estilo": (almacen(ALEX), perfil),
     },

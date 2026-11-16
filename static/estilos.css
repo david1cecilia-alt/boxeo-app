@@ -310,7 +310,10 @@ hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
   font-size: 0.75rem; font-weight: 400;
 }
 .niveles b { display: block; margin-bottom: 4px; font-family: var(--letra-titular); font-weight: 400; font-size: 24px; line-height: 1; }
-.niveles label input:checked + span { background: var(--acento-relleno); border-color: var(--acento-relleno); color: var(--sobre-acento); }
+/* Elegido: relleno con texto blanco y, como marca de 3:1 contra el fondo, un borde de 2 px en el rojo de texto. */
+.niveles label input:checked + span {
+  background: var(--acento-relleno); border-color: var(--acento); box-shadow: inset 0 0 0 1px var(--acento); color: var(--sobre-acento);
+}
 
 /* Interruptores (switch): Zurdo y Reacción. */
 .interruptor {
@@ -559,7 +562,7 @@ body.entrenando #vista-entrenar { padding-top: 0; }
   transition: background-color 0.15s, color 0.15s;
 }
 #pestanas a:hover { color: var(--texto); }
-#pestanas a[aria-current="page"] { background: var(--acento-relleno); color: var(--sobre-acento); }
+#pestanas a[aria-current="page"] { background: var(--acento-relleno); box-shadow: inset 0 0 0 2px var(--acento); color: var(--sobre-acento); }
 #pestanas svg {
   width: 20px; height: 20px; fill: none; stroke: currentColor;
   stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;

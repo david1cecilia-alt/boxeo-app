@@ -69,8 +69,9 @@ const COMPONENTES = [
   ["foco", "fondo"], ["foco", "superficie"], ["foco", "campo"], ["foco", "cristal"],
   ["foco", "acento-relleno"], ["foco", "fase-final"], ["foco", "fase-descanso"], ["foco", "fase-pausa"],
   ["fase-reaccion-texto", "fase-reaccion"],
-  ["acento-relleno", "barra"], // pestaña activa de la barra flotante
-  ["acento-relleno", "cristal"], ["acento-relleno", "fondo"], // nivel elegido
+  // Pestaña activa (barra flotante) y nivel elegido (cristal, fondo): la marca de 3:1 es su borde en el rojo
+  // de texto; el relleno lleva el texto blanco (arriba, en TEXTO).
+  ["acento", "barra"], ["acento", "fondo"],
   // Indicadores sin texto, en el rojo de texto: deslizador, interruptor encendido, medidor, borde al pasar
   // por una baldosa (tarjeta) o una ficha (campo); y la bolita clara del interruptor sobre él.
   ["acento", "superficie"], ["acento", "campo"], ["acento", "cristal"], ["texto", "acento"],

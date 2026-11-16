@@ -3,6 +3,7 @@
 Se elige la inicial, uno de los 7 avatares de data/avatares.json o «Tu foto» (solo si hay foto). «Subir una
 foto…» la recorta a 256 × 256 (foto.js) y la elige; «Quitar foto» la borra (si era la elegida, vuelve la
 inicial); elegir otro avatar no la borra. Los rechazos salen en un mensaje con aria-live, nunca en alert().
+El avatar es un cuadrado redondeado (--radio-avatar) sin recortar en Ajustes, en la cabecera de Entrenar y en Perfil.
 Las imágenes de prueba se dibujan en la propia página: nunca fotos de personas. Sin Playwright se salta en
 local; en CI falla.
 """
@@ -190,6 +191,47 @@ def test_quitar_la_foto_elegida_vuelve_a_la_inicial(ajustes):
     pagina.locator("#quitar-foto").click()
     assert _identidad(pagina) == {"nombre": "", "avatar": {"tipo": "inicial"}, "foto": None}
     assert pagina.locator('#identidad input[value="inicial"]').is_checked()
+
+
+# La forma del avatar y si la imagen llena la caja: el radio (las cuatro esquinas), las proporciones de la
+# imagen y de la caja (iguales: con object-fit cover no se recorta nada) y el tamaño de la caja.
+FORMA = """(el) => {
+  const s = getComputedStyle(el);
+  return {
+    radios: [s.borderTopLeftRadius, s.borderTopRightRadius, s.borderBottomRightRadius, s.borderBottomLeftRadius],
+    ajuste: s.objectFit,
+    proporcion: el.naturalWidth ? [el.naturalWidth / el.naturalHeight, el.clientWidth / el.clientHeight] : null,
+    llena: el.naturalWidth ? el.complete && el.clientWidth > 0 : null,
+  };
+}"""
+
+
+def _radio_avatar(pagina):
+    return pagina.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--radio-avatar').trim()")
+
+
+def test_el_avatar_es_un_cuadrado_redondeado_sin_recortar_en_ajustes_entrenar_y_perfil(ajustes):
+    pagina = ajustes
+    radio = _radio_avatar(pagina)
+    assert radio == "28%"
+    a = AVATARES[4]
+    pagina.get_by_role("radio", name=a["alt"]).check()
+    elegido = pagina.locator(f'#identidad input[value="predefinido:{a["id"]}"] + .avatar')
+    # Ajustes: la opción elegida, la caja del radio (de la que cuelga el foco) y la inicial.
+    vistas = {"ajustes": elegido.evaluate(FORMA),
+              "ajustes-opcion": pagina.locator(".avatar-opcion").first.evaluate(FORMA),
+              "ajustes-inicial": pagina.locator(".avatar-opcion .avatar-inicial").evaluate(FORMA)}
+    pagina.goto(f"{ORIGEN}/index.html#entrenar")
+    pagina.wait_for_selector("#ir-perfil img.avatar", state="visible")
+    vistas["entrenar"] = pagina.locator("#ir-perfil img.avatar").evaluate(FORMA)
+    pagina.goto(f"{ORIGEN}/index.html#perfil")
+    pagina.wait_for_selector("#perfil-avatar img.avatar", state="visible")
+    vistas["perfil"] = pagina.locator("#perfil-avatar img.avatar").evaluate(FORMA)
+    for vista, forma in vistas.items():
+        assert forma["radios"] == [radio] * 4, vista
+        if forma["proporcion"] is not None:
+            assert forma["ajuste"] == "cover" and forma["llena"], vista
+            assert forma["proporcion"][0] == pytest.approx(forma["proporcion"][1]), vista
 
 
 # Los datos se fabrican en la prueba, con ids cortos: el id del caso va a una variable de entorno.

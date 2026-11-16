@@ -83,6 +83,7 @@
   --alto-nav: 68px;
   --hueco: 20px;              /* margen lateral en móvil */
   --radio: 22px;
+  --radio-avatar: 28%;        /* avatares: cuadrado redondeado (en un círculo se cortaban orejas y barbillas) */
 
   /* Tipografía: titulares condensados en mayúsculas y texto legible */
   --letra-titular: "Anton", "Impact", "Arial Narrow", sans-serif;
@@ -709,20 +710,21 @@ html.menu-abierto #asa { visibility: hidden; }
 .menu-seccion .hueco-cabecera { align-items: center; }
 .menu-seccion .hueco-cabecera h3 { margin: 0; }
 
-/* ---------- Avatar (vistas/avatar.js): foto, predefinido o inicial, siempre redondo ---------- */
+/* ---------- Avatar (vistas/avatar.js): foto, predefinido o inicial, siempre en cuadrado redondeado ---------- */
 .avatar {
-  display: grid; place-items: center; flex: none; width: 48px; height: 48px; border-radius: 50%;
+  display: grid; place-items: center; flex: none; width: 48px; height: 48px; border-radius: var(--radio-avatar);
   object-fit: cover; background: var(--secundario); color: var(--texto);
   font-size: 1.25rem; font-weight: 700; line-height: 1; overflow: hidden; user-select: none;
 }
 .avatar-inicial svg {
   width: 24px; height: 24px; fill: none; stroke: var(--suave); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
 }
-/* «Nombre y avatar» en Ajustes: radios redondos que se envuelven; el elegido, con anillo claro. */
+/* «Nombre y avatar» en Ajustes: radios con la forma del avatar que se envuelven; el elegido, con anillo claro
+   (el anillo y el foco siguen la misma forma). */
 .identidad { display: grid; gap: 12px; }
 .identidad .campo input { color: var(--texto); }
 .avatares-fila { display: flex; flex-wrap: wrap; gap: 8px; }
-.avatar-opcion { position: relative; display: block; border-radius: 50%; }
+.avatar-opcion { position: relative; display: block; border-radius: var(--radio-avatar); }
 .avatar-opcion input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
 .avatar-opcion .avatar { width: 52px; height: 52px; border: 3px solid transparent; box-sizing: border-box; }
 .avatar-opcion input:checked + .avatar { border-color: var(--chip-activo); }

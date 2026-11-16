@@ -61,20 +61,20 @@
 
       <section id="pantalla" data-fase="asalto" hidden aria-label="Sesión en curso">
         <!-- El ring: fondo solo de la preparación (10 s antes del asalto 1), con un velo encima. Decorativo.
-             El vídeo, cuando existan sus ficheros: quitar el comentario. entrenar.js lo reproduce una vez (se queda
-             en el último fotograma), lo quita con prefers-reduced-motion y, si falla, se ve la imagen.
-             No va al precache de sw.js: se guarda en caché la primera vez que se pide.
-        <video id="video-ring" muted playsinline preload="none" poster="imagenes/ring-cenital.jpg">
-          <source src="video/ring-vertical.mp4" type="video/mp4" media="(orientation: portrait)">
-          <source src="video/ring-horizontal.webm" type="video/webm" media="(orientation: landscape)">
-          <source src="video/ring-horizontal.mp4" type="video/mp4" media="(orientation: landscape)">
-        </video>
-             (el ring-vertical, 9:16, solo cuando exista; sin él, en vertical se ve la imagen). -->
+             El vídeo va encima de la imagen: entrenar.js lo reproduce una vez (se queda en el último fotograma), lo
+             quita con prefers-reduced-motion y, si falla o no hay red, se ve la imagen. No pasa por la caché de
+             sw.js (ni precache ni en tiempo de ejecución): se pide siempre a la red. -->
         <div class="fondo-ring" aria-hidden="true">
           <picture>
             <source srcset="imagenes/ring-cenital.webp" type="image/webp">
             <img src="imagenes/ring-cenital.jpg" alt="" width="1080" height="1080">
           </picture>
+          <video id="video-ring" muted playsinline preload="none" poster="imagenes/ring-cenital.jpg">
+            <!-- El vertical (9:16), solo cuando exista; sin él, en vertical se ve la imagen:
+            <source src="video/ring-vertical.mp4" type="video/mp4" media="(orientation: portrait)"> -->
+            <source src="video/ring-horizontal.webm" type="video/webm" media="(orientation: landscape)">
+            <source src="video/ring-horizontal.mp4" type="video/mp4" media="(orientation: landscape)">
+          </video>
         </div>
         <span id="marca-asalto" class="marca-agua" aria-hidden="true">R1</span>
         <div class="marcador">

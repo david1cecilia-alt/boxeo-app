@@ -1,6 +1,6 @@
 """La preparación de 10 s antes del asalto 1 (V2), en Chromium headless con el reloj de Playwright: la cuenta atrás,
-«Empezar ya», Pausa y Parar (sin guardar nada) y el fondo del ring (imagen; el vídeo, fuera con movimiento reducido o
-si falla). Los datos de prueba solo viven en el localStorage de este Chromium. Sin Playwright se salta en local.
+«Empezar ya», Pausa y Parar (sin guardar nada) y el fondo del ring (el vídeo en horizontal; la imagen en vertical, con movimiento
+reducido o si falla). Los datos de prueba solo viven en el localStorage de este Chromium. Sin Playwright se salta en local.
 """
 import importlib.util
 import json
@@ -26,11 +26,6 @@ VOZ_FALSA = """(() => {
   };
   Object.defineProperty(window, "speechSynthesis", { value: falsa, configurable: true });
 })();"""
-# Un <video> como el del comentario de index.html (sin ficheros: no carga).
-CON_VIDEO = """() => document.querySelector('.fondo-ring').insertAdjacentHTML('afterbegin',
-  '<video id="video-ring" muted playsinline preload="none"><source src="video/no-esta.mp4" type="video/mp4"></video>')"""
-
-
 @pytest.fixture(scope="module")
 def sitio(tmp_path_factory):
     assert HAY_PLAYWRIGHT, "Estas pruebas necesitan Playwright (pip install -r requirements.txt)"
@@ -134,18 +129,48 @@ def test_la_preparacion_no_tiene_ajuste_en_el_menu(app):
     assert "prepara" not in app.inner_text("#menu").lower()
 
 
-@pytest.mark.parametrize("movimiento", [False, True])
-def test_sin_video_que_cargue_o_con_movimiento_reducido_se_ve_la_imagen_y_la_preparacion_sigue(sitio, movimiento):
-    contexto, pagina, errores = abrir_app(sitio, movimiento=movimiento)
+ESTADO_VIDEO = """() => { const v = document.getElementById('video-ring');
+  return { bucle: v.loop, parado: v.paused, falta: v.duration - v.currentTime, fuente: v.currentSrc, ancho: v.videoWidth }; }"""
+
+
+def test_en_horizontal_el_video_sale_una_vez_y_se_queda_en_el_ultimo_fotograma(sitio):
+    contexto, pagina, errores = abrir_app(sitio, ancho=1440, alto=900)
     try:
-        pagina.evaluate(CON_VIDEO)
         pagina.click("#empezar")
-        pagina.wait_for_function("!document.getElementById('video-ring')")  # quitado (reducido o sin fichero)
-        assert pagina.is_visible(".fondo-ring img")
-        assert fase(pagina) == "preparacion"
+        assert pagina.is_visible("#video-ring")
+        pagina.wait_for_function("document.getElementById('video-ring').ended", timeout=20_000)
+        estado = pagina.evaluate(ESTADO_VIDEO)
+        assert not estado["bucle"] and estado["parado"] and estado["falta"] < 0.05
+        # El Chromium de Playwright no trae H.264: coge el WebM, que va primero.
+        assert estado["fuente"].endswith("video/ring-horizontal.webm") and estado["ancho"] == 1280
+        assert pagina.is_visible("#video-ring") and fase(pagina) == "preparacion"  # sigue ahí, quieto
+        assert not errores
+    finally:
+        contexto.__exit__(None, None, None)
+
+
+def test_con_movimiento_reducido_solo_se_ve_la_imagen_y_no_se_pide_el_video(sitio):
+    contexto, pagina, errores = abrir_app(sitio, movimiento=False, ancho=1440, alto=900)
+    try:
+        pedidos = []
+        pagina.on("request", lambda r: "/video/" in r.url and pedidos.append(r.url))
+        pagina.click("#empezar")
+        assert pagina.locator("#video-ring").count() == 0
+        assert pagina.is_visible(".fondo-ring img") and fase(pagina) == "preparacion"
         pagina.clock.run_for(10_100)
         assert fase(pagina) == "asalto"
-        assert not errores
+        assert pedidos == [] and not errores
+    finally:
+        contexto.__exit__(None, None, None)
+
+
+def test_en_vertical_sin_ring_vertical_se_ve_la_imagen(sitio):
+    contexto, pagina, errores = abrir_app(sitio)  # 390 × 844
+    try:
+        pagina.click("#empezar")
+        assert not pagina.is_visible("#video-ring") and pagina.is_visible(".fondo-ring img")
+        pagina.clock.run_for(10_100)
+        assert fase(pagina) == "asalto" and not errores
     finally:
         contexto.__exit__(None, None, None)
 

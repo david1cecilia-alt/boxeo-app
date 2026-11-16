@@ -19,8 +19,10 @@ def _precache(sitio) -> list[str]:
     return re.findall(r'"([^"]+)"', lista)
 
 
-# Se publican pero no se precachean: data/revisar.json (las dudas para el entrenador) no lo usa la app.
-SIN_PRECACHE = {"sw.js", "data/revisar.json"}
+# Se publican pero no se precachean: data/revisar.json (las dudas para el entrenador) no lo usa la app, y el
+# vídeo del ring se pide siempre a la red (sin él, la imagen).
+VIDEOS = {"video/ring-horizontal.mp4", "video/ring-horizontal.webm"}
+SIN_PRECACHE = {"sw.js", "data/revisar.json"} | VIDEOS
 
 
 def test_el_service_worker_precachea_todos_los_ficheros_del_sitio(sitio):
@@ -75,3 +77,10 @@ def test_el_maniqui_3d_pesa_menos_de_1_mb():
     ficheros = [RAIZ / "static" / "vendor" / "three" / "three.module.min.js",
                 *(RAIZ / "static" / "maniqui").glob("*.js"), RAIZ / "data" / "posturas.json"]
     assert sum(f.stat().st_size for f in ficheros) < 1_000_000
+
+
+def test_el_video_del_ring_se_publica_en_torno_a_1_mb_y_fuera_del_precache(sitio):
+    for video in VIDEOS:
+        assert 500_000 < (sitio / video).stat().st_size < 1_500_000, video
+        assert video not in _precache(sitio)
+    assert not (sitio / "imagenes" / "originales").exists()  # el original, sin recortar, no se publica

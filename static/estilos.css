@@ -503,6 +503,8 @@ body.entrenando #vista-entrenar { padding-top: 0; }
 .empezar-ya svg { width: 20px; height: 20px; }
 /* En vertical, la imagen: el vídeo horizontal no. Quitar esta regla al activar el ring vertical (9:16). */
 @media (orientation: portrait) { #video-ring { display: none; } }
+/* Con movimiento reducido, solo la imagen (entrenar.js además lo quita antes de que cargue nada). */
+@media (prefers-reduced-motion: reduce) { #video-ring { display: none; } }
 
 .marcador { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 #asalto { font-size: 22px; letter-spacing: 0.04em; }

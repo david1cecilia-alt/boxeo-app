@@ -217,13 +217,14 @@ de los tests y para el enlace «Crea la primera» si queda alguno.
   enlace del menú.
 - **Pista de la primera vez** (decidida en la R6, D15): si `perfil.pistas.asa` es `false`, la primera vez que se
   ve Entrenar con el menú cerrado y fuera de una sesión, siempre **después** de la intro (`esperarIntro()`), asoma
-  una lengüeta de 64 px con el aspecto del panel durante unos 1,2 s, con el globo «Desliza o toca para
-  personalizar tu sesión» (`role="note"`), y se recoge. **No abre el `<dialog>`** (nada de `showModal()`, nada
+  una lengüeta de 64 px con el aspecto del panel durante unos 1,2 s (1,7 s con la entrada y la salida) y se recoge;
+  el globo «Desliza o toca para personalizar tu sesión» (`role="note"`) se queda 4 s (R7). Un toque o una tecla en
+  cualquier sitio lo retiran antes (y siguen su camino). **No abre el `<dialog>`** (nada de `showModal()`, nada
   inerte): lengüeta y globo llevan `pointer-events: none`, así que un toque en «Empezar» durante la pista
   funciona. Si se arranca en `#historial`, `#aprende` o `#perfil`, sale al llegar a Entrenar. Se guarda
   `pistas.asa = true` en cuanto se enseña o se abre el menú (si se abre antes, ya no sale). Se retira al momento
   si se sale de Entrenar, se abre el menú o empieza la sesión. Con `prefers-reduced-motion` no hay movimiento:
-  solo el globo unos 4 s.
+  solo el globo, quieto, los mismos 4 s.
 - **Solo en Entrenar**: el asa está dentro de `#vista-entrenar`, y se oculta durante la sesión
   (`body.entrenando`) y en Mis combinaciones.
 
@@ -246,6 +247,9 @@ de los tests y para el enlace «Crea la primera» si queda alguno.
   para que no pulse lo de debajo.
 - Con `prefers-reduced-motion: reduce` no se muestra. Una vez por arranque en frío: `sessionStorage['boxeo.intro']`,
   con try/catch; si falla, se muestra (D13).
+- **Tampoco al arrancar en el menú** (R7): `#entrenar/menu`, `#entrenar/menu/…` o una ruta vieja que `rutas.js`
+  lleva allí (`#ajustes`, `#ajustes/…`, salvo `#ajustes/mis-combinaciones…`). Se marca vista igual. Como `intro.js`
+  no puede importar, la regla está copiada de `rutaNueva()`; un test de `test_intro_navegador.py` las une.
 
 ### 3.7 Avatar y foto
 
@@ -487,8 +491,8 @@ los ficheros nuevos al precache).
 | **R3. Menú (vacío)** | `menu.js`: asa, panel, toque, arrastre, teclado, foco, Esc, «Atrás», borde; tests de 6.2. Todavía sin contenido. | 2 |
 | **R4. Entrenar nuevo** | Cabecera, selector General / Personalizada, «Tu sesión», Empezar; las tres secciones dentro del menú; fuera `#vista-ajustes`, el engranaje y Perfil/Ajustes de la barra. Tests de Entrenar, mezcla y Ajustes adaptados. | 3-4 |
 | **R5. Perfil, nombre y avatar** | Cuestionario detrás de «Repetir»; nombre y avatar/foto (`avatar.js`, `foto.js`) en Ajustes; cabecera y Perfil los enseñan; foto en la copia. | 2-3 |
-| **R6. Intro y pista** | Hueco de la intro y pista del asa, con `prefers-reduced-motion`. | 1-2 |
-| **R7. Gris neutro y cierre** | Tokens en gris + test de contraste; limpieza de CSS sin uso; herramientas de capturas; `CLAUDE.md`; capturas «después» a 390, 768 y 1440 en `.playwright-mcp/capturas/rediseno/despues/`. | 2-3 |
+| **R6. Intro y pista** ✔ | Hueco de la intro y pista del asa, con `prefers-reduced-motion`. **Hecha (15-11-2026).** | 1-2 |
+| **R7. Gris neutro y cierre** ✔ | Tokens en gris + test de contraste; limpieza de CSS sin uso; herramientas de capturas; diálogos de la app en vez de `alert()`/`confirm()`; título del menú, chip y texto de Prueba; pista y arranque en el menú; `CLAUDE.md`; capturas finales a 390 y 1440 en `.playwright-mcp/capturas/rediseno/r7/` (sin 768). **Hecha (16-11-2026)**: 10 commits, ver 7.2. | 2-3 |
 
 R0 y R1 no cambian nada visible, así que se pueden revisar y unir antes de tocar la interfaz.
 
@@ -502,14 +506,36 @@ R0 y R1 no cambian nada visible, así que se pueden revisar y unir antes de toca
   identidad y «Cambiar» (abre Ajustes en el menú y vuelve con el foco en «Cambiar»), el cuestionario plegado
   («Hacer el cuestionario» hasta completarlo; después, «Repetir el cuestionario») y «← Volver» (`history.back()` desde Entrenar; si no, `replace("#entrenar")`).
   Formato de la identidad en 4.1.
-- **R7**: CSS que ya no usa nadie (`.presets`, `.resumen-presets`, `.config-tarjeta`, `.avanzados`,
-  `.config-titulo`, `.con-foto` de Entrenar) e `imagenes/entrenar-cabecera.webp` (sigue en el precache).
-- **R7**: con el panel del menú desplazado, la cabecera fija deja «Menú» muy pegado arriba.
-- **R7**: las herramientas de capturas (además de `capturas_rediseno.py`) usan la ayuda sin intro
-  (`tests/sin_intro.py`).
+- ~~**R7**: CSS que ya no usa nadie (`.presets`, `.resumen-presets`, `.config-tarjeta`, `.avanzados`,
+  `.config-titulo`, `.con-foto` de Entrenar) e `imagenes/entrenar-cabecera.webp` (sigue en el precache).~~
+  **Hecho (R7)**: fuera `.marca-movil`, `.marca-agua.vertical`, `.fila-chips`, `.presets`, `.resumen-presets`,
+  `.interruptores` y `.volver-movil` (`.config-*` ya no estaban; `.avanzados` y `.con-foto` los usan Aprende,
+  Historial y Perfil), y la foto con su línea del precache y de `CREDITOS.md`.
+- ~~**R7**: con el panel del menú desplazado, la cabecera fija deja «Menú» muy pegado arriba.~~ **Hecho (R7)**:
+  la cabecera va con `top: 0` y lleva ella el relleno de arriba; el título ya no se corta.
+- ~~**R7**: las herramientas de capturas (además de `capturas_rediseno.py`) usan la ayuda sin intro
+  (`tests/sin_intro.py`).~~ **Hecho (R7)**: todas; `capturas_numeros` ya no copia sus PNG a `docs/revision/`.
 - **Fase visual**: menú fluido con inercia y aspecto glossy.
 - Cada sesión nueva guarda su `tipo` (General, Personalizada o Prueba) y el Historial la nombra por él; las de
   antes se siguen deduciendo por la duración (por eso `presets.json` conserva «Amateur 3×3»).
+
+### 7.2 Lo que deja la R7 (16-11-2026)
+
+- **Gris neutro** (D6): `--fondo` / `--fase-asalto` / `--sobre-chip-activo` `#121212`, `--campo` `#161616`,
+  `--superficie` `#1a1a1a`, `--superficie-hover` / `--fase-pausa` `#202020`; textos `#f2f2f2`, `#d4d4d4`, `#a3a3a3`,
+  `#8f8f8f`; `--borde` `#757575`; `--serie-rpe` `#e5e5e5`; `--fondo-rgb: 18 18 18` para los degradados; `theme-color`
+  y el manifest, `#121212`. Dos cambios sobre la tabla del diagnóstico, decididos por David porque el test de
+  contraste no pasaba: `--barra` `rgba(26, 26, 26, 0.97)` (con 0,95 la pestaña activa daba 2,95:1 sobre una foto
+  blanca) y `--acento-tenue` al 8 % (con el 14 %, el rojo de la pastilla de RPE daba 4,26:1).
+- Las fotos WebP del maniquí sin WebGL no se versionan: salen con el gris nuevo al montar el sitio.
+- El PNG original de la foto de Entrenar se movió a `static/imagenes/originales/retiradas/` (fuera de git): en
+  `originales/` hacía fallar `test_pwa` en local y `convertir_imagenes.py` volvía a crear la WebP.
+- `atraparFoco` ya estaba en `vistas/dom.js`; se movió `abrirDialogo` (con `conectarDialogo`).
+- Texto de Prueba (David): «Sesión corta de prueba: 2 asaltos de 30 s con lo de tu Personalizada. Se guarda en el
+  Historial como "Prueba".»
+- Visto en las capturas y sin tocar: la foto de Historial a 1440 deja ver su borde izquierdo (ya pasaba con el
+  negro; es de la imagen) y en el descanso queda una franja de unos 20 px del fondo encima de la pantalla de fase
+  (no es del gris: el color de fase lo pinta `#pantalla`; falta mirar qué la deja).
 
 ---
 

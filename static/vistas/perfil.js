@@ -2,9 +2,9 @@
 // navegador). Arriba, la identidad: avatar, nombre, la guardia («Diestro» o «Zurdo») y «Cambiar», que abre
 // Ajustes en el menú de Entrenar (allí se editan nombre, avatar y guardia) y, al cerrarlo, vuelve aquí con el
 // foco en «Cambiar». Debajo, el rectángulo con su estilo: el de «Mi estilo» si lo ha elegido (manda siempre) o
-// el recomendado según sus respuestas (data/estilos.json). Después, plegables: el cuestionario («Hacer el
-// cuestionario» hasta completarlo; después, «Repetir…»), «Mi estilo» y «Sobre ti» (fecha y medidas). Se guarda al
-// cambiar cada campo. Lo que cambia el entreno (voz, guardia, «Practicar más»…) está en el menú de Entrenar.
+// el recomendado según sus respuestas (data/estilos.json). Después, plegables: «Cuestionario» (con cuántas
+// preguntas lleva), «Cambiar mi estilo» y «Sobre ti» (fecha y medidas). Desde 1024 px, la identidad y el estilo a
+// la izquierda y los plegables a la derecha. Se guarda al cambiar cada campo. Lo que cambia el entreno (voz, guardia, «Practicar más»…) está en el menú de Entrenar.
 //
 // Historial del navegador: la cabecera de Entrenar marca su entrada #perfil con `desdeEntrenar` («← Volver»
 // hace history.back(); si se llegó de otro sitio, location.replace("#entrenar")). «Cambiar» marca la entrada
@@ -109,17 +109,14 @@ export function iniciarPerfil({ almacen }) {
     pintarResumen();
   }
 
-  // Tarjeta de estilo y resúmenes de las secciones: cambian al responder sin repintar todo. El cuestionario
-  // dice «Repetir» solo si está completo (ya da recomendación); si no, «Hacer», aunque haya un estilo elegido
-  // en «Mi estilo».
+  // Tarjeta de estilo y resúmenes de las secciones: cambian al responder sin repintar todo. «Cambiar mi estilo»
+  // no repite el estilo elegido (ya lo dice la tarjeta «Tu estilo»): solo «Sin elegir» si no lo hay.
   function pintarResumen() {
     const p = almacen.datos.perfil;
     $("#resumen-cuestionario").textContent = `${respondidas(p.estilo)} de ${Object.keys(ESTILO).length} preguntas`;
-    $("#resumen-mi-estilo").textContent = NOMBRES_ESTILO[p.estilo.mi_estilo] ?? "Sin elegir";
+    $("#resumen-mi-estilo").textContent = NOMBRES_ESTILO[p.estilo.mi_estilo] ? "" : "Sin elegir";
     $("#resumen-sobre-ti").textContent = `${puestos(p.basicos)} de ${CAMPOS_SOBRE_TI.length} datos`;
     const t = estilos ? tarjetaEstilo(p, estilos) : null;
-    const completo = Boolean(t && !t.faltan);
-    $("#t-cuestionario").textContent = completo ? "Repetir el cuestionario" : "Hacer el cuestionario";
     if (!t) return; // la tarjeta se pinta al cargar la tabla
     $("#t-estilo").textContent = t.titulo;
     $("#estilo-resumen").innerHTML = t.html;
@@ -144,8 +141,9 @@ export function iniciarPerfil({ almacen }) {
         <div id="estilo-resumen" aria-live="polite"><p>Cargando…</p></div>
       </section>
 
+      <div class="perfil-plegables">
       <details class="tarjeta plegable" id="d-cuestionario">
-        <summary><span class="titulo-plegable" id="t-cuestionario">Hacer el cuestionario</span>
+        <summary><span class="titulo-plegable" id="t-cuestionario">Cuestionario</span>
           <span class="resumen-plegable" id="resumen-cuestionario"></span></summary>
         <div class="cuerpo-plegable">
           <form class="grupos-estilo" id="f-estilo" aria-label="Cómo boxeas">
@@ -155,7 +153,7 @@ export function iniciarPerfil({ almacen }) {
       </details>
 
       <details class="tarjeta plegable" id="d-mi-estilo">
-        <summary><span class="titulo-plegable" id="t-mi-estilo">Mi estilo</span>
+        <summary><span class="titulo-plegable" id="t-mi-estilo">Cambiar mi estilo</span>
           <span class="resumen-plegable" id="resumen-mi-estilo"></span></summary>
         <div class="cuerpo-plegable">
           <form id="f-mi-estilo" aria-labelledby="t-mi-estilo">
@@ -182,7 +180,8 @@ export function iniciarPerfil({ almacen }) {
         </div>
       </details>
 
-      <p class="nota pie-perfil">Tus datos se guardan solo en este dispositivo. <span id="guardado-perfil"></span></p>`;
+      <p class="nota pie-perfil">Tus datos se guardan solo en este dispositivo. <span id="guardado-perfil"></span></p>
+      </div>`;
     pintarResumen();
     cargarEstilos();
     conectarCampos(raiz, guardar);

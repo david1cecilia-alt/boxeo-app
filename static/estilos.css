@@ -971,6 +971,8 @@ html.menu-abierto #asa { visibility: hidden; }
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden;
 }
 #cambiar-identidad { grid-area: cambiar; justify-self: start; }
+/* El nombre, tal como lo escribió el usuario (los titulares van en mayúsculas). */
+#vista-perfil .perfil-quien h1 { text-transform: none; letter-spacing: 0; }
 
 .resumen-historial { display: grid; gap: 18px; min-width: 0; }
 
@@ -1161,7 +1163,8 @@ button.volver {
 .col-detalle > p { margin: 0; }
 
 /* ---------- Perfil ---------- */
-#perfil-contenido { display: grid; gap: 16px; align-content: start; min-width: 0; }
+#perfil-contenido, .perfil-plegables { display: grid; gap: 16px; align-content: start; min-width: 0; }
+#perfil-contenido .titulo-plegable { white-space: nowrap; } /* «Cuestionario» en una línea */
 /* Tarjeta roja con el estilo recomendado (o el elegido y, si las respuestas apuntan a otro, una línea
    pequeña y neutra «Según tus respuestas: …»). */
 .tarjeta.estilo-recomendado {
@@ -1583,8 +1586,17 @@ dialog.recorte:not([open]) { display: none; }
     .baldosas-golpe { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
 
-  /* Perfil: una sola columna (rectángulo, Sobre ti, Mi estilo), del ancho de una lectura cómoda. */
-  #perfil-contenido { max-width: 760px; gap: 20px; }
+  /* Perfil: dos columnas, como mucho 1040 px y centradas. A la izquierda, la identidad y «Tu estilo»; a la
+     derecha, los plegables (y el pie). #perfil-contenido no pinta caja: sus hijos van a la rejilla de la vista. */
+  #vista-perfil {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); column-gap: 40px; row-gap: 20px; align-items: start;
+    max-width: 1040px; margin-inline: auto;
+  }
+  #perfil-contenido { display: contents; }
+  .volver-perfil { grid-column: 1 / -1; }
+  #vista-perfil .cabecera { grid-column: 1; grid-row: 2; }
+  #perfil-contenido > .estilo-recomendado { grid-column: 1; grid-row: 3; }
+  .perfil-plegables { grid-column: 2; grid-row: 2 / span 2; gap: 20px; }
   .plegable { padding: 0 24px; }
 
   /* Aprende: fichas en tres columnas; la ficha, en dos (qué es, cuándo y cómo a la izquierda;

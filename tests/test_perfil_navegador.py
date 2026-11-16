@@ -105,7 +105,8 @@ def test_el_almacen_v6_se_migra_sin_notas_ni_revisiones_y_la_guardia_pasa_a_ajus
 
 def test_orden_estilo_cuestionario_mi_estilo_y_sobre_ti_con_las_preguntas_en_su_orden(pagina):
     _abrir_perfil(pagina)
-    hijos = pagina.eval_on_selector_all("#perfil-contenido > *", "els => els.map(e => e.id || e.className)")
+    hijos = pagina.eval_on_selector_all("#perfil-contenido > *, .perfil-plegables > *",
+                                        "els => els.filter(e => !e.classList.contains('perfil-plegables')).map(e => e.id || e.className)")
     assert hijos == ["tarjeta estilo-recomendado", "d-cuestionario", "d-mi-estilo", "d-sobre-ti", "nota pie-perfil"]
     preguntas = pagina.eval_on_selector_all("#d-cuestionario #f-estilo legend", "els => els.map(e => e.textContent)")
     assert preguntas == ["Distancia cómoda", "Qué hago bajo presión", "Volumen", "Iniciativa", "Tipo de defensa",
@@ -117,44 +118,44 @@ def test_orden_estilo_cuestionario_mi_estilo_y_sobre_ti_con_las_preguntas_en_su_
     assert pagina.locator("#d-sobre-ti [data-grupo='estilo']").count() == 0
 
 
-def test_el_cuestionario_solo_se_ve_al_abrirlo_y_dice_hacer_o_repetir(pagina):
+def test_el_cuestionario_solo_se_ve_al_abrirlo_y_se_llama_cuestionario(pagina):
     _abrir_perfil(pagina, {"distancia": "larga", "presion": "salir", "volumen": "pocos_fuertes"})
-    # Faltan respuestas: «Hacer el cuestionario», cerrado.
-    assert pagina.locator("#t-cuestionario").text_content() == "Hacer el cuestionario"
+    # Faltan respuestas: «Cuestionario», cerrado, con lo que lleva a la derecha.
+    assert pagina.locator("#t-cuestionario").text_content() == "Cuestionario"
     assert pagina.locator("#resumen-cuestionario").inner_text() == "3 de 7 preguntas"
     assert not pagina.locator("#d-cuestionario").evaluate("d => d.open")
     assert not pagina.locator("#f-estilo").is_visible()
     pagina.locator("#d-cuestionario > summary").click()
     assert pagina.locator("#f-estilo").is_visible()
-    # Completo (da recomendación): «Repetir el cuestionario», y también cerrado.
+    # Completo (da recomendación): sigue siendo «Cuestionario», y también cerrado.
     _abrir_perfil(pagina, BOXER)
-    assert pagina.locator("#t-cuestionario").text_content() == "Repetir el cuestionario"
+    assert pagina.locator("#t-cuestionario").text_content() == "Cuestionario"
     assert not pagina.locator("#d-cuestionario").evaluate("d => d.open")
     assert not pagina.locator("#f-estilo").is_visible()
     assert pagina.locator("#estilo-resumen .titular").inner_text().lower() == "boxer"
-    # Completo y con «Mi estilo» elegido (la tarjeta dice el elegido): «Repetir».
+    # Completo y con «Mi estilo» elegido (la tarjeta dice el elegido).
     _abrir_perfil(pagina, {**BOXER, "mi_estilo": "fajador"})
-    assert pagina.locator("#t-cuestionario").text_content() == "Repetir el cuestionario"
+    assert pagina.locator("#t-cuestionario").text_content() == "Cuestionario"
     assert pagina.locator("#estilo-resumen .titular").inner_text().lower() == "fajador"
     # 0 de 7 con «Mi estilo» elegido: la tarjeta dice el estilo, pero el cuestionario sigue por hacer.
     _abrir_perfil(pagina, {"mi_estilo": "fajador"})
     assert pagina.locator("#resumen-cuestionario").inner_text() == "0 de 7 preguntas"
     assert pagina.locator("#t-estilo").inner_text().lower() == "tu estilo"
     assert pagina.locator("#estilo-resumen .titular").inner_text().lower() == "fajador"
-    assert pagina.locator("#t-cuestionario").text_content() == "Hacer el cuestionario"
-    # A medias con «Mi estilo» elegido: también «Hacer».
+    assert pagina.locator("#t-cuestionario").text_content() == "Cuestionario"
+    # A medias con «Mi estilo» elegido.
     _abrir_perfil(pagina, {"distancia": "larga", "presion": "salir", "mi_estilo": "boxer"})
-    assert pagina.locator("#t-cuestionario").text_content() == "Hacer el cuestionario"
+    assert pagina.locator("#resumen-cuestionario").inner_text() == "2 de 7 preguntas"
     assert not pagina.locator("#d-sobre-ti").evaluate("d => d.open")
     assert not pagina.locator("#d-mi-estilo").evaluate("d => d.open")
     assert pagina.locator("#resumen-sobre-ti").inner_text() == "1 de 4 datos"  # la altura del almacén v6
 
 
-def test_responder_la_ultima_pregunta_que_faltaba_cambia_hacer_por_repetir(pagina):
+def test_responder_una_pregunta_cambia_la_cuenta_del_cuestionario(pagina):
     _abrir_perfil(pagina, {"distancia": "larga", "presion": "salir", "volumen": "pocos_fuertes"})
     pagina.locator("#d-cuestionario > summary").click()
     pagina.locator('input[name="estilo-iniciativa"][value="segun_rival"]').check(force=True)
-    pagina.wait_for_function("document.querySelector('#t-cuestionario').textContent === 'Repetir el cuestionario'")
+    pagina.wait_for_function("document.querySelector('#resumen-cuestionario').textContent === '4 de 7 preguntas'")
     assert pagina.locator("#d-cuestionario").evaluate("d => d.open")  # se queda abierto mientras responde
 
 
@@ -178,7 +179,8 @@ def test_mi_estilo_manda_y_solo_se_dice_otro_si_las_respuestas_apuntan_a_otro(pa
     assert pagina.locator("#t-estilo").inner_text().lower() == "tu estilo"
     assert pagina.locator("#estilo-resumen .titular").inner_text().lower() == "boxer"
     assert pagina.locator("#estilo-resumen .segun").count() == 0
-    assert pagina.locator("#resumen-mi-estilo").inner_text() == "Boxer"
+    assert pagina.locator("#t-mi-estilo").text_content() == "Cambiar mi estilo"
+    assert pagina.locator("#resumen-mi-estilo").inner_text() == ""  # la tarjeta ya dice «Boxer»
     _abrir_perfil(pagina, {**BOXER, "mi_estilo": "fajador"})
     assert pagina.locator("#estilo-resumen .titular").inner_text().lower() == "fajador"
     assert pagina.locator("#estilo-resumen .segun").inner_text() == "Según tus respuestas: Boxer"
@@ -319,3 +321,36 @@ def test_cambiar_abre_ajustes_en_el_menu_y_al_cerrar_vuelve_a_perfil_con_el_foco
     assert not pagina.evaluate("history.state?.focoCambiar")
     pagina.click("#volver-perfil")
     pagina.wait_for_function("location.hash === '#entrenar'")
+
+
+def _con_nombre(pagina, nombre):
+    pagina.evaluate("""(n) => { const d = JSON.parse(localStorage.getItem('boxeo'));
+      d.perfil.identidad = { ...d.perfil.identidad, nombre: n }; localStorage.setItem('boxeo', JSON.stringify(d)); }""", nombre)
+    pagina.reload()
+    pagina.wait_for_function("(n) => document.getElementById('t-perfil').textContent === n", arg=nombre)
+
+
+def test_el_nombre_sale_tal_cual_y_cuestionario_cabe_en_una_linea_a_390(pagina):
+    _abrir_perfil(pagina, {**BOXER, "mi_estilo": "boxer"})
+    _con_nombre(pagina, "Alex de la Vega")
+    assert pagina.locator("#t-perfil").inner_text() == "Alex de la Vega"  # sin mayúsculas forzadas
+    titulo = pagina.locator("#t-cuestionario")
+    alto_linea = titulo.evaluate("(e) => parseFloat(getComputedStyle(e).lineHeight) || e.getBoundingClientRect().height")
+    assert titulo.bounding_box()["height"] <= alto_linea * 1.5  # una sola línea, con «4 de 7 preguntas» al lado
+    resumen = pagina.locator("#resumen-cuestionario").bounding_box()
+    assert resumen["x"] > titulo.bounding_box()["x"] + titulo.bounding_box()["width"]
+
+
+@pytest.mark.parametrize("ancho", [1024, 1440])
+def test_desde_1024_identidad_y_estilo_a_la_izquierda_y_los_plegables_a_la_derecha(pagina, ancho):
+    _abrir_perfil(pagina, {**BOXER, "mi_estilo": "boxer"}, ancho=ancho)
+    caja = lambda s: pagina.locator(s).bounding_box()  # noqa: E731
+    identidad, estilo, plegables = caja(".identidad-perfil"), caja(".estilo-recomendado"), caja(".perfil-plegables")
+    assert identidad["y"] < estilo["y"] and abs(identidad["x"] - estilo["x"]) <= 1
+    assert plegables["x"] >= estilo["x"] + estilo["width"] + 24  # a la derecha, con su hueco
+    assert plegables["y"] <= estilo["y"]
+    vista = caja("#vista-perfil")
+    assert vista["width"] <= 1040
+    main = pagina.evaluate("""() => { const m = document.querySelector('main'), r = m.getBoundingClientRect(),
+      s = getComputedStyle(m); return [r.left + parseFloat(s.paddingLeft), r.right - parseFloat(s.paddingRight)]; }""")
+    assert abs((vista["x"] - main[0]) - (main[1] - vista["x"] - vista["width"])) <= 2  # centrada

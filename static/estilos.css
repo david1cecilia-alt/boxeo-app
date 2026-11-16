@@ -460,9 +460,11 @@ body.entrenando main { padding: 0; max-width: none; }
    franja del fondo encima y la página se desplazaba ese tanto). La zona segura la lleva #pantalla. */
 body.entrenando #vista-entrenar { padding-top: 0; }
 
+/* La sesión mide justo la ventana: el reloj encoge si hace falta y, como último recurso, la tarjeta de la
+   combinación se desplaza por dentro. Pausa y Parar quedan siempre abajo, a la vista y sin tapar nada. */
 #pantalla {
   position: relative; isolation: isolate; overflow: hidden;
-  min-height: 100dvh;
+  height: 100dvh;
   display: flex; flex-direction: column;
   padding: calc(20px + env(safe-area-inset-top, 0px)) var(--hueco) calc(20px + env(safe-area-inset-bottom));
   background: var(--fase-asalto);
@@ -517,7 +519,7 @@ body.entrenando #vista-entrenar { padding-top: 0; }
 #pantalla:not([data-fase="asalto"]) .progreso b { background: currentColor; }
 #pantalla[data-fase="reaccion"] .progreso i { background: rgba(0, 0, 0, 0.15); }
 
-.reloj { flex: 1; display: grid; place-content: center; text-align: center; gap: 4px; padding: 12px 0; }
+.reloj { flex: 1 1 0; min-height: 0; overflow: hidden; display: grid; place-content: center; text-align: center; gap: 4px; padding: 12px 0; }
 #tiempo {
   /* Inter y no Anton: Anton no tiene cifras tabulares y el reloj bailaría cada segundo. */
   font-size: min(31vw, 22vh);
@@ -529,7 +531,10 @@ body.entrenando #vista-entrenar { padding-top: 0; }
 #despues { margin: 0; min-height: 1.4em; color: var(--suave); font-size: 0.8125rem; letter-spacing: 0.08em; text-transform: uppercase; }
 
 /* Sin desenfoque: el fondo de la sesión es liso y el saturate() avivaría el rojo de los últimos 10 s. */
-.tarjeta.tarjeta-combo { display: grid; gap: 10px; padding: 18px 18px 16px; border-radius: 24px; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.tarjeta.tarjeta-combo {
+  flex: 0 1 auto; min-height: 0; overflow-y: auto;
+  display: grid; gap: 10px; padding: 18px 18px 16px; border-radius: 24px; -webkit-backdrop-filter: none; backdrop-filter: none;
+}
 .tarjeta-combo .antetitulo { margin: 0; font-size: 0.75rem; }
 #combo { min-height: 2.2em; }
 .combo-texto, .pasos li {
@@ -556,6 +561,10 @@ body.entrenando #vista-entrenar { padding-top: 0; }
 .leyenda[hidden] { display: none; }
 .leyenda li { display: inline-flex; align-items: center; gap: 6px; }
 .leyenda i { width: 10px; height: 10px; }
+/* Combinaciones largas (6 acciones o más, hasta 10): letra y reloj más pequeños para que todo quepa sin desplazar. */
+#pantalla:has(.pasos li:nth-child(6)) #tiempo { font-size: min(26vw, 17vh); }
+#pantalla:has(.pasos li:nth-child(6)) .pasos { gap: 6px; }
+#pantalla:has(.pasos li:nth-child(6)) .pasos li { font-size: clamp(1.4rem, 6.2vw, 2rem); }
 
 #anterior { margin: 12px 0 0; min-height: 1.4em; color: var(--suave); font-size: 0.8125rem; text-align: center; }
 
@@ -1524,6 +1533,10 @@ dialog.recorte:not([open]) { display: none; }
   .tarjeta-combo { padding: 26px 28px 22px; }
   .pasos li { font-size: clamp(2.6rem, 3.6vw, 3.4rem); gap: 16px; }
   .pasos i { width: 36px; height: 36px; font-size: 1rem; }
+  /* Largas: en dos columnas (1-5 a la izquierda, en orden), con el reloj más bajo. */
+  #pantalla:has(.pasos li:nth-child(6)) #tiempo { font-size: min(12vw, 18vh); }
+  #pantalla:has(.pasos li:nth-child(6)) .pasos { display: block; columns: 2; column-gap: 32px; }
+  #pantalla:has(.pasos li:nth-child(6)) .pasos li { font-size: clamp(2rem, 2.8vw, 3rem); break-inside: avoid; margin-bottom: 12px; }
   .combo-texto { font-size: clamp(3rem, 5vw, 5rem); }
   #anterior { font-size: 1rem; }
 

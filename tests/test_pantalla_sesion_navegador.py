@@ -5,11 +5,12 @@ Antes, el relleno de arriba de Entrenar seguía puesto durante la sesión: queda
 la pantalla de fase (se veía en el descanso, que es verde) y la página se desplazaba ese tanto.
 
 Una Prueba (2 × 30 s) con el reloj de Playwright parado y una semilla fija, para que salga siempre la misma
-combinación. Con una combinación muy larga, a 900 px de alto el reloj y la tarjeta de la combinación aún no caben
-y Pausa / Parar quedan por debajo: eso es de la fase visual (7.2 del plan del rediseño), no de esta franja.
+combinación. Y con combinaciones de 10 acciones (las propias más largas, con «Solo las mías»), Pausa y Parar se ven
+enteros sin desplazar y no tapan la última acción, del móvil (360 × 800) al PC (1440 × 900).
 Sin Playwright se salta en local; en CI falla.
 """
 import importlib.util
+import json
 import os
 
 import pytest
@@ -58,4 +59,53 @@ def test_la_pantalla_de_la_sesion_empieza_arriba_y_la_pagina_no_se_desplaza(siti
         assert pagina.evaluate("document.documentElement.scrollHeight") <= alto
         # Pausa y Parar, enteros a la vista.
         assert pagina.evaluate("document.querySelector('#pantalla .controles').getBoundingClientRect().bottom") <= alto
+        assert not errores
+
+
+# Tres combinaciones propias de 10 acciones, de nombres largos (golpes al cuerpo, pasos laterales).
+DIEZ = ["gancho_der_cuerpo", "uppercut_izq_cuerpo", "directo_cuerpo", "gancho_izq_cuerpo", "uppercut_der_cuerpo",
+        "jab_cuerpo", "paso_lateral_izq", "rodar_der", "esquiva_izq", "paso_lateral_der"]
+PROPIAS_DIEZ = [{"id": f"p-{i}", "ids": DIEZ[i:] + DIEZ[:i], "creada": "2026-11-01T10:00:00Z"} for i in range(3)]
+CON_DIEZ = {"version": 9, "combinacionesPropias": PROPIAS_DIEZ, "perfil": {
+    "pistas": {"asa": True},
+    "sesion": {"tipo": "personalizada", "mezcla": "solo", "voz": "ambos",
+               "personalizada": {"asaltos": 1, "duracion_asalto": 120, "descanso": 0}}}}
+MEDIR_DIEZ = """() => {
+  const caja = (e) => e.getBoundingClientRect();
+  const lis = [...document.querySelectorAll('#combo .pasos li')];
+  const controles = caja(document.querySelector('#pantalla .controles'));
+  const tarjeta = document.querySelector('.tarjeta-combo');
+  tarjeta.scrollTop = tarjeta.scrollHeight; // si la tarjeta se desplaza por dentro, al final
+  return { acciones: lis.length, ultima: caja(lis.at(-1)).bottom, controlesArriba: controles.top,
+    controlesAbajo: controles.bottom, pagina: document.documentElement.scrollHeight,
+    desplazaTarjeta: tarjeta.scrollHeight > tarjeta.clientHeight + 1 };
+}"""
+
+
+@pytest.mark.parametrize("ancho,alto", [(390, 844), (360, 800), (1024, 768), (1440, 900)])
+def test_con_10_acciones_pausa_y_parar_se_ven_sin_desplazar_y_no_tapan_la_ultima(sitio, ancho, alto):
+    with abrir(sitio, VACIA, ancho, alto, barras=ancho > 800) as (pagina, errores):
+        preparar(pagina)
+        pagina.add_init_script(SEMILLA)
+        pagina.emulate_media(reduced_motion="reduce")
+        pagina.clock.install(time=INICIO)
+        pagina.clock.pause_at(INICIO)
+        pagina.goto(f"{ORIGEN}/__pagina__.html")
+        pagina.wait_for_function("window.listo === true")
+        pagina.evaluate("(d) => localStorage.setItem('boxeo', d)", json.dumps(CON_DIEZ))
+        pagina.goto(f"{ORIGEN}/index.html#entrenar")
+        pagina.wait_for_selector("#tipo-sesion input:checked", state="attached")
+        pagina.click("#empezar")
+        pagina.click("#empezar-ya")
+        for _ in range(40):
+            pagina.clock.run_for(500)
+            if pagina.locator("#combo .pasos li").count() == 10:
+                break
+        pagina.evaluate("document.fonts.ready")
+        m = pagina.evaluate(MEDIR_DIEZ)
+        assert m["acciones"] == 10, m
+        assert m["controlesAbajo"] <= alto and m["pagina"] <= alto, m
+        assert m["ultima"] <= m["controlesArriba"], m
+        if ancho >= 1024:
+            assert not m["desplazaTarjeta"], m  # en el PC cabe todo, sin desplazar ni dentro de la tarjeta
         assert not errores

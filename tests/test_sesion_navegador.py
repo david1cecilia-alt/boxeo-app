@@ -54,6 +54,7 @@ def medidas(tmp_path_factory):
         pagina.wait_for_function("window.listo === true")
         pagina.goto(f"{ORIGEN}/index.html#entrenar")
         pagina.click("#empezar")
+        pagina.click("#empezar-ya")  # sin los 10 s de preparación
         pagina.wait_for_selector(".tarjeta-combo", state="visible")
         pagina.click("#pausa")  # que el dictado no pise lo que se pinta
         resultado = pagina.evaluate(MEDIR)
@@ -95,6 +96,7 @@ def numeros(tmp_path_factory):
         pagina.wait_for_function("window.listo === true")
         pagina.goto(f"{ORIGEN}/index.html#entrenar")
         pagina.click("#empezar")
+        pagina.click("#empezar-ya")  # sin los 10 s de preparación
         pagina.wait_for_selector(".tarjeta-combo", state="visible")
         pagina.click("#pausa")
         resultado = pagina.evaluate(MEDIR_NUMEROS)

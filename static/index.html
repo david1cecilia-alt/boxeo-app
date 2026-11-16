@@ -60,12 +60,35 @@
       </form>
 
       <section id="pantalla" data-fase="asalto" hidden aria-label="Sesión en curso">
+        <!-- El ring: fondo solo de la preparación (10 s antes del asalto 1), con un velo encima. Decorativo.
+             El vídeo, cuando existan sus ficheros: quitar el comentario. entrenar.js lo reproduce una vez (se queda
+             en el último fotograma), lo quita con prefers-reduced-motion y, si falla, se ve la imagen.
+             No va al precache de sw.js: se guarda en caché la primera vez que se pide.
+        <video id="video-ring" muted playsinline preload="none" poster="imagenes/ring-cenital.jpg">
+          <source src="video/ring-vertical.mp4" type="video/mp4" media="(orientation: portrait)">
+          <source src="video/ring-horizontal.webm" type="video/webm" media="(orientation: landscape)">
+          <source src="video/ring-horizontal.mp4" type="video/mp4" media="(orientation: landscape)">
+        </video>
+             (el ring-vertical, 9:16, solo cuando exista; sin él, en vertical se ve la imagen). -->
+        <div class="fondo-ring" aria-hidden="true">
+          <picture>
+            <source srcset="imagenes/ring-cenital.webp" type="image/webp">
+            <img src="imagenes/ring-cenital.jpg" alt="" width="1080" height="1080">
+          </picture>
+        </div>
         <span id="marca-asalto" class="marca-agua" aria-hidden="true">R1</span>
         <div class="marcador">
           <span id="asalto" class="titular">Asalto 1/1</span>
           <span id="fase" class="pastilla">Asalto</span>
         </div>
         <div id="progreso" class="progreso" aria-hidden="true"></div>
+        <!-- Preparación: 10 s fijos antes del asalto 1, con su cuenta atrás. «Empezar ya» la salta. -->
+        <div class="preparacion" id="preparacion" hidden>
+          <p class="antetitulo">Prepárate</p>
+          <div id="cuenta-atras" class="cuenta-atras" role="timer" aria-live="off" aria-label="Cuenta atrás">10</div>
+          <button id="empezar-ya" type="button" class="boton principal empezar-ya">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>Empezar ya</button>
+        </div>
         <div class="reloj">
           <div id="tiempo" role="timer" aria-live="off">0:00</div>
           <p id="despues"></p>

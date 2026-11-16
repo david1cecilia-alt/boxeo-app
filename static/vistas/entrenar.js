@@ -24,13 +24,16 @@ import { iniciarPersonalizar } from "./personalizar.js";
 import { combinacionesParaVer, pasosCombo } from "./pasos.js";
 
 const SEGUNDOS_FINAL = 10;
+// Preparación antes del asalto 1: fija, no se configura. Su reloj es otro reproductor (pausa incluida);
+// el guion del motor no cambia: empieza a contar al acabar la preparación (o con «Empezar ya»).
+export const SEGUNDOS_PREPARACION = 10;
 // Qué es la sesión elegida, debajo de sus pastillas (la Personalizada lleva el enlace a Personalizar).
 const NOTA_SESION = {
   general: "General: ritmo, nivel y combinaciones fijos. Voz y guardia, las de Ajustes.",
   prueba: 'Sesión corta de prueba: 2 asaltos de 30 s con lo de tu Personalizada. Se guarda en el Historial como "Prueba".',
 };
 const TEXTO_FASE = {
-  asalto: "En asalto", final: "Últimos 10 s", descanso: "Descanso", reaccion: "¡Reacción!", pausa: "En pausa",
+  preparacion: "Prepárate", asalto: "En asalto", final: "Últimos 10 s", descanso: "Descanso", reaccion: "¡Reacción!", pausa: "En pausa",
 };
 
 // `avisar(texto)`: el aviso de arriba de la app (#aviso-almacen, el de app.js).
@@ -140,25 +143,26 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar, avisar = 
     estado = {
       config,
       repetibles: repetirColetillas(config, almacen.datos.combinacionesPropias),
-      fase: "asalto",
+      fase: "preparacion",
       finFase: 0,
       reaccionHasta: -1,
       asalto: 0,
       asaltosCompletados: 0,
+      dictado: null, // hasta que acaba la preparación
     };
     // Las combinaciones no van a hora fija: las dicta el dictado, que espera a que la voz termine.
     estado.combos = eventos.filter((e) => COMBINACIONES.includes(e.tipo));
     estado.fijos = eventos.filter((e) => !COMBINACIONES.includes(e.tipo));
-    estado.reproductor = crearReproductor(estado.fijos, { alLanzar: lanzar });
-    estado.dictado = crearDictado({
-      reproductor: estado.reproductor, voz, config,
-      alDecir: (c) => mostrarCombo(c.texto, c.ids),
-    });
+    // La preparación: un reproductor con un solo evento, el de arrancar el asalto 1. Pausa y Parar le valen igual.
+    estado.reproductor = crearReproductor([{ t: SEGUNDOS_PREPARACION, tipo: "fin_preparacion" }], { alLanzar: arrancar });
     estado.temporizador = setInterval(tic, 100);
     pantalla.encender();
     menu.retirarPista();
     document.body.classList.add("entrenando");
     $("#pantalla").hidden = false;
+    $("#pantalla").classList.add("preparando");
+    $("#preparacion").hidden = false;
+    reproducirRing();
     $("#progreso").innerHTML = "<i><b></b></i>".repeat(config.asaltos);
     $("#asalto").innerHTML = `Asalto <span class="acento">1</span>/${config.asaltos}`;
     mostrarTexto("Prepárate");
@@ -168,9 +172,49 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar, avisar = 
     $("#pausa").focus();
   }
 
+  // Fin de la preparación (a los 10 s o con «Empezar ya»): empieza el guion de verdad, con su reproductor.
+  function arrancar() {
+    if (!estado || estado.dictado) return; // sin sesión, o ya arrancada
+    const enfocado = document.activeElement === $("#empezar-ya");
+    estado.reproductor.detener();
+    estado.reproductor = crearReproductor(estado.fijos, { alLanzar: lanzar });
+    estado.dictado = crearDictado({
+      reproductor: estado.reproductor, voz, config: estado.config,
+      alDecir: (c) => mostrarCombo(c.texto, c.ids),
+    });
+    $("#pantalla").classList.remove("preparando");
+    $("#preparacion").hidden = true;
+    pararRing();
+    pintarPausa();
+    if (enfocado) $("#pausa").focus(); // el botón desaparece: el foco no se pierde
+    estado.reproductor.tic(); // el inicio del asalto 1 (t = 0), ya: sin esperar al tic siguiente
+  }
+
+  // El vídeo del ring (si está en la página): una vez, sin bucle, y se queda en el último fotograma. Con
+  // prefers-reduced-motion, o si falla, solo la imagen de debajo.
+  function reproducirRing() {
+    const video = $("#video-ring");
+    if (!video) return;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      video.remove();
+      return;
+    }
+    // Si fallan todas las fuentes, el error llega al último <source>, no al <video>.
+    const quitar = () => video.remove();
+    video.addEventListener("error", quitar, { once: true });
+    [...video.querySelectorAll("source")].at(-1)?.addEventListener("error", quitar, { once: true });
+    video.currentTime = 0;
+    video.play()?.catch(() => video.remove());
+  }
+
+  function pararRing() {
+    $("#video-ring")?.pause();
+  }
+
   function tic() {
     estado.reproductor.tic();
     if (!estado) return; // fin_sesion lo ha terminado
+    if (!estado.dictado) return ticPreparacion();
     const ahora = estado.reproductor.tiempo();
     const restante = Math.max(0, estado.finFase - ahora);
     $("#tiempo").textContent = minutos(Math.ceil(restante));
@@ -182,6 +226,16 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar, avisar = 
     $("#fase").textContent = TEXTO_FASE[fase];
     pintarProgreso(restante);
     $("#despues").textContent = despues();
+  }
+
+  // La cuenta atrás de la preparación: de 10 a 1 (en pausa se queda quieta).
+  function ticPreparacion() {
+    const restante = SEGUNDOS_PREPARACION - estado.reproductor.tiempo();
+    $("#cuenta-atras").textContent = String(Math.min(SEGUNDOS_PREPARACION, Math.max(1, Math.ceil(restante))));
+    const fase = estado.reproductor.pausado ? "pausa" : "preparacion";
+    $("#pantalla").dataset.fase = fase;
+    $("#fase").textContent = TEXTO_FASE[fase];
+    pintarProgreso(0);
   }
 
   // Una barra por asalto: los pasados llenos y el actual según el tiempo que lleva.
@@ -321,14 +375,18 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar, avisar = 
     const sesion = estado;
     estado = null;
     clearInterval(sesion.temporizador);
-    sesion.dictado.cortar();
+    sesion.dictado?.cortar();
     sesion.reproductor.detener();
     dejarDormir();
+    pararRing();
     document.body.classList.remove("entrenando");
     $("#pantalla").hidden = true;
+    $("#pantalla").classList.remove("preparando");
+    $("#preparacion").hidden = true;
     pantalla.apagar();
     $("#empezar").focus();
-    const dichas = sesion.dictado.dichas; // solo lo que se dijo: nunca las reservas sin usar
+    // Solo lo que se dijo: nunca las reservas sin usar. Parada en la preparación, nada (no se guarda).
+    const dichas = sesion.dictado?.dichas ?? [];
     if (!dichas.length) return;
     const datosSesion = {
       asaltos: sesion.asaltosCompletados,
@@ -354,6 +412,12 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar, avisar = 
 
   $("#pausa").addEventListener("click", pausarOReanudar);
   $("#parar").addEventListener("click", parar);
+  // «Empezar ya»: salta lo que quede de preparación (también en pausa) y el asalto 1 empieza al momento.
+  $("#empezar-ya").addEventListener("click", () => {
+    if (!estado || estado.dictado) return;
+    arrancar();
+    tic();
+  });
 
 
   // La voz que de verdad se usa (cambia al cargar las voces o al elegir otra en Ajustes).

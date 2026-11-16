@@ -103,6 +103,7 @@ def capturar(sitio: Path) -> list[Path]:
         pagina.goto(f"{ORIGEN}/index.html#entrenar")
         pagina.wait_for_selector("#tipo-sesion input:checked", state="attached")
         pagina.click("#empezar")
+        pagina.click("#empezar-ya")  # sin los 10 s de preparación
         # Un golpe al cuerpo (uno de los elegidos). Con el factor de la R0 la semilla ya no da justo el crochet.
         pagina.wait_for_selector("#combo li:has-text('abajo')", timeout=90_000)
         pagina.wait_for_timeout(300)

@@ -79,6 +79,7 @@ def capturar(sitio: Path) -> list[Path]:
             pagina.goto(f"{ORIGEN}/index.html#entrenar")
             pagina.wait_for_selector("#tipo-sesion input:checked", state="attached")
             pagina.click("#empezar")
+            pagina.click("#empezar-ya")  # sin los 10 s de preparación
             pagina.wait_for_function(CON_CUERPO, timeout=180_000, polling=100)
             pagina.click("#pausa")
             pagina.wait_for_timeout(300)

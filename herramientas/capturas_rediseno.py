@@ -199,6 +199,7 @@ def en_sesion(segundos, fase):
     def llegar(pagina):
         entrenar_prueba(pagina)
         pagina.click("#empezar")
+        pagina.click("#empezar-ya")  # sin los 10 s de preparación
         pagina.clock.run_for(segundos * 1000)
         actual = pagina.evaluate("document.getElementById('pantalla').dataset.fase")
         assert actual == fase, f"a los {segundos} s la sesión está en «{actual}», no en «{fase}»"

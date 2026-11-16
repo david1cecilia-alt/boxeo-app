@@ -51,6 +51,7 @@ def test_la_pantalla_de_la_sesion_empieza_arriba_y_la_pagina_no_se_desplaza(siti
         pagina.wait_for_selector("#tipo-sesion input:checked", state="attached")
         pagina.click('#tipo-sesion label:has(input[value="prueba"])')
         pagina.click("#empezar")
+        pagina.click("#empezar-ya")  # sin los 10 s de preparación
         pagina.clock.run_for(segundos * 1000)
         assert pagina.evaluate("document.getElementById('pantalla').dataset.fase") == fase
         assert pagina.evaluate("document.getElementById('pantalla').getBoundingClientRect().top") == 0

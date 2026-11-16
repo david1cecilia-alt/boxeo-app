@@ -1,5 +1,6 @@
 // La foto propia del avatar, sin DOM: de un fichero que elige el usuario (cámara o galería) a un
-// data:image/jpeg;base64 de 256 × 256, con el recorte cuadrado centrado. Nunca sale del navegador.
+// data:image/jpeg;base64 de 256 × 256, con el recorte cuadrado que se elige en vistas/recorte.js (o el centrado).
+// Nunca sale del navegador.
 // - Orientación: createImageBitmap con imageOrientation "from-image" aplica la del EXIF (las fotos del
 //   móvil no salen giradas); el recorte se calcula sobre la imagen ya girada.
 // - Lienzo: OffscreenCanvas si lo hay (y da contexto 2D); si no, un <canvas>.
@@ -70,28 +71,38 @@ function lienzoPorDefecto(lado) {
 }
 
 /**
- * De un File/Blob de imagen al data URL JPEG del avatar. Lanza ErrorFoto (con su texto para el usuario)
- * si no es una imagen, pesa demasiado, no se puede leer o no cabe. `decodificar` y `crearLienzo` se
- * inyectan en los tests.
+ * De un File/Blob a la imagen ya girada según su EXIF (ImageBitmap), para recortarla. Lanza ErrorFoto (con su
+ * texto para el usuario) si no es una imagen, pesa demasiado o no se puede leer. Quien la recibe la cierra
+ * (codificarFoto lo hace). `decodificar` se inyecta en los tests.
  */
-export async function prepararFoto(archivo, { decodificar = decodificarPorDefecto, crearLienzo = lienzoPorDefecto } = {}) {
+export async function leerFoto(archivo, { decodificar = decodificarPorDefecto } = {}) {
   // Sin tipo es lo normal con HEIC en Windows: se intenta igualmente.
   if (archivo?.type && !archivo.type.startsWith("image/")) throw new ErrorFoto("noImagen");
   if (!archivo?.size) throw new ErrorFoto("ilegible");
   if (archivo.size > MAX_ENTRADA) throw new ErrorFoto("grande");
-
   let imagen;
   try {
     imagen = await decodificar(archivo);
   } catch {
     throw new ErrorFoto("ilegible");
   }
+  if (!imagen?.width || !imagen?.height) {
+    imagen?.close?.();
+    throw new ErrorFoto("ilegible");
+  }
+  return imagen;
+}
+
+/**
+ * El cuadrado `recorte` ({ x, y, lado }, en píxeles de la imagen; por defecto, el centrado) de `imagen`, al data
+ * URL JPEG de LADO_FOTO × LADO_FOTO del avatar. Cierra la imagen. Lanza ErrorFoto si no hay lienzo o no cabe.
+ */
+export async function codificarFoto(imagen, recorte = null, { crearLienzo = lienzoPorDefecto } = {}) {
   try {
-    if (!imagen?.width || !imagen?.height) throw new ErrorFoto("ilegible");
     const lienzo = crearLienzo(LADO_FOTO);
     if (!lienzo) throw new ErrorFoto("sinLienzo");
     const { contexto } = lienzo;
-    const { x, y, lado } = recorteCentrado(imagen.width, imagen.height);
+    const { x, y, lado } = recorte ?? recorteCentrado(imagen.width, imagen.height);
     // Fondo blanco: lo transparente de un PNG saldría negro en JPEG.
     contexto.fillStyle = "#fff";
     contexto.fillRect(0, 0, LADO_FOTO, LADO_FOTO);
@@ -106,4 +117,12 @@ export async function prepararFoto(archivo, { decodificar = decodificarPorDefect
   } finally {
     imagen?.close?.();
   }
+}
+
+/**
+ * De un File/Blob de imagen al data URL JPEG del avatar, con el recorte centrado (leerFoto + codificarFoto).
+ * `decodificar` y `crearLienzo` se inyectan en los tests.
+ */
+export async function prepararFoto(archivo, { decodificar = decodificarPorDefecto, crearLienzo = lienzoPorDefecto } = {}) {
+  return codificarFoto(await leerFoto(archivo, { decodificar }), null, { crearLienzo });
 }

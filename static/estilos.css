@@ -1367,6 +1367,28 @@ dialog {
   background: var(--superficie); color: var(--texto);
 }
 dialog::backdrop { background: var(--velo); }
+
+/* Recorte de la foto (vistas/recorte.js): la vista previa cuadrada con la máscara del avatar (fuera de ella,
+   el velo), el zoom entre − y +, y Cancelar / Guardar. */
+dialog.recorte { width: min(400px, calc(100vw - 24px)); display: grid; gap: 14px; }
+dialog.recorte:not([open]) { display: none; }
+.recorte h2 { margin: 0; }
+.recorte .nota { margin: 0; }
+.recorte-vista {
+  position: relative; width: 100%; aspect-ratio: 1; overflow: hidden; border-radius: 12px;
+  background: var(--campo); cursor: grab; touch-action: none; user-select: none;
+}
+.recorte-vista:active { cursor: grabbing; }
+.recorte-vista:focus-visible { outline: 3px solid var(--foco); outline-offset: 3px; }
+.recorte-vista canvas { display: block; width: 100%; height: 100%; }
+.recorte-mascara {
+  position: absolute; inset: 0; border-radius: var(--radio-avatar); pointer-events: none;
+  box-shadow: 0 0 0 200px var(--velo); outline: 2px solid var(--acento); outline-offset: -1px;
+}
+.recorte-zoom { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; }
+.recorte-zoom .boton-icono { font-size: 1.5rem; line-height: 1; }
+.recorte-zoom input[type="range"] { accent-color: var(--acento); min-height: 44px; }
+.recorte .acciones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0; }
 .chips { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
 .chips legend { grid-column: 1 / -1; }
 .chip { position: relative; }

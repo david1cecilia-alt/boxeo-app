@@ -84,8 +84,12 @@ def _png(pagina, ancho=800, alto=600):
     return base64.b64decode(pagina.evaluate(DEGRADADO, [ancho, alto]))
 
 
-def _subir(pagina, nombre, tipo, datos, entrada="subir-foto"):
+def _subir(pagina, nombre, tipo, datos, entrada="subir-foto", guardar=True):
+    """Elige el fichero y, si `guardar`, acepta el recorte tal como sale (zoom 1×, centrado)."""
     pagina.locator(f"#{entrada}").set_input_files({"name": nombre, "mimeType": tipo, "buffer": datos})
+    if guardar:
+        pagina.wait_for_selector("#d-recorte[open]")
+        pagina.locator("#d-recorte").get_by_role("button", name="Guardar").click()
 
 
 def _opciones(pagina):
@@ -196,6 +200,67 @@ def test_subir_una_foto_la_recorta_a_256_y_la_elige(ajustes):
     assert pagina.locator(".avatar-opcion img[src^='data:image/jpeg']").count() == 1
 
 
+# Un PNG de 800 × 400: mitad izquierda roja y derecha azul (base64 sin cabecera).
+MITADES = """() => {
+  const c = document.createElement('canvas'); c.width = 800; c.height = 400;
+  const x = c.getContext('2d');
+  x.fillStyle = '#ff0000'; x.fillRect(0, 0, 400, 400); x.fillStyle = '#0000ff'; x.fillRect(400, 0, 400, 400);
+  return c.toDataURL('image/png').split(',')[1];
+}"""
+# El color del centro de la foto guardada.
+CENTRO_FOTO = """async () => {
+  const { foto } = JSON.parse(localStorage.getItem('boxeo')).perfil.identidad;
+  const img = new Image(); img.src = foto; await img.decode();
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+  return [...x.getImageData(128, 128, 1, 1).data.slice(0, 3)];
+}"""
+
+
+def test_el_recorte_se_mueve_y_acerca_con_el_teclado_y_guarda_ese_cuadrado_a_256(ajustes):
+    pagina = ajustes
+    pagina.locator("#subir-foto").set_input_files(
+        {"name": "mitades.png", "mimeType": "image/png", "buffer": base64.b64decode(pagina.evaluate(MITADES))})
+    recorte = pagina.locator("#d-recorte")
+    recorte.wait_for()
+    vista = recorte.locator(".recorte-vista")
+    assert pagina.evaluate("document.activeElement.classList.contains('recorte-vista')")  # el foco, en el encuadre
+    assert recorte.get_by_role("slider", name="Zoom").input_value() == "1"
+    for _ in range(10):
+        vista.press("+")
+    assert float(recorte.get_by_role("slider", name="Zoom").input_value()) == pytest.approx(2)
+    recorte.get_by_role("button", name="Acercar").click()
+    for _ in range(40):
+        vista.press("ArrowRight")  # la foto a la derecha: se ve su mitad izquierda (roja)
+    recorte.get_by_role("button", name="Guardar").click()
+    pagina.wait_for_selector('#identidad input[value="foto"]')
+    ancho, alto, _, cabecera = pagina.evaluate(TAMANO_FOTO)
+    assert (ancho, alto, cabecera) == (256, 256, "data:image/jpeg;base64,")
+    r, g, b = pagina.evaluate(CENTRO_FOTO)
+    assert r > 200 and b < 60, (r, g, b)
+    assert pagina.locator("#mensaje-foto").inner_text() == "Foto guardada. Ya es tu avatar."
+
+
+def test_cancelar_el_recorte_no_cambia_nada(ajustes):
+    pagina = ajustes
+    antes = _identidad(pagina)
+    pagina.locator("#subir-foto").set_input_files({"name": "d.png", "mimeType": "image/png", "buffer": _png(pagina)})
+    recorte = pagina.locator("#d-recorte")
+    recorte.wait_for()
+    recorte.get_by_role("button", name="Cancelar").click()
+    assert not pagina.locator("#d-recorte[open]").count()
+    assert _identidad(pagina) == antes
+    assert pagina.locator('#identidad input[value="foto"]').count() == 0
+    assert pagina.locator("#mensaje-foto").inner_text() == "Foto sin cambiar."
+    # Esc también cancela.
+    pagina.locator("#subir-foto").set_input_files({"name": "d.png", "mimeType": "image/png", "buffer": _png(pagina)})
+    recorte.wait_for()
+    pagina.keyboard.press("Escape")
+    assert not pagina.locator("#d-recorte[open]").count()
+    assert _identidad(pagina) == antes
+    assert pagina.locator("#menu[open]").count() == 1  # el menú sigue abierto debajo
+
+
 def test_elegir_otro_avatar_no_borra_la_foto_y_quitarla_la_borra(ajustes):
     pagina = ajustes
     _subir(pagina, "degradado.png", "image/png", _png(pagina))
@@ -277,7 +342,8 @@ def test_un_rechazo_sale_en_el_mensaje_sin_alert_y_no_cambia_nada(ajustes, caso)
     pagina = ajustes
     nombre, tipo, datos, texto = RECHAZOS[caso]
     antes = _identidad(pagina)
-    _subir(pagina, nombre, tipo, datos())
+    _subir(pagina, nombre, tipo, datos(), guardar=False)
+    assert not pagina.locator("#d-recorte[open]").count()  # un rechazo no llega al recorte
     mensaje = pagina.locator("#mensaje-foto.aviso")
     mensaje.wait_for()
     assert texto in mensaje.inner_text()

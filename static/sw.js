@@ -40,6 +40,7 @@ const FICHEROS = [
   "vistas/perfil.js",
   "vistas/personalizar.js",
   "vistas/postsesion.js",
+  "vistas/recorte.js",
   "vistas/resumen.js",
   "maniqui/escena.js",
   "maniqui/maniqui.js",

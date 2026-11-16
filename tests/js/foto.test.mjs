@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { MAX_FOTO } from "../../static/almacen.js";
-import { CALIDADES, ErrorFoto, LADO_FOTO, MAX_ENTRADA, TEXTOS_FOTO, prepararFoto, recorteCentrado } from "../../static/foto.js";
+import {
+  CALIDADES, ErrorFoto, LADO_FOTO, MAX_ENTRADA, TEXTOS_FOTO, codificarFoto, leerFoto, prepararFoto, recorteCentrado,
+} from "../../static/foto.js";
 
 // Un fichero falso: solo importan el tipo y el tamaño (la decodificación también es falsa).
 const fichero = (type = "image/jpeg", size = 1000) => ({ type, size });
@@ -90,4 +92,24 @@ test("sin lienzo 2D se dice que el navegador no puede", async () => {
   const img = imagen(10, 10);
   await rechaza(prepararFoto(fichero(), { decodificar: async () => img, crearLienzo: () => null }), "sinLienzo");
   assert.ok(img.cerrada);
+});
+
+test("con un recorte elegido se dibuja ese cuadrado a 256 × 256 y la imagen se cierra", async () => {
+  const lienzo = lienzoFalso();
+  const img = imagen(800, 600);
+  const datos = await codificarFoto(img, { x: 300, y: 150, lado: 200 }, { crearLienzo: lienzo.crear });
+  assert.equal(datos, "data:image/jpeg;base64,AAAA");
+  assert.equal(lienzo.llamadas.lado, LADO_FOTO);
+  assert.deepEqual(lienzo.llamadas.dibujos, [[300, 150, 200, 200, 0, 0, LADO_FOTO, LADO_FOTO]]);
+  assert.ok(img.cerrada);
+});
+
+test("leerFoto devuelve la imagen sin cerrarla (es para el recorte) y rechaza igual que prepararFoto", async () => {
+  const img = imagen(40, 30);
+  assert.equal(await leerFoto(fichero(), { decodificar: async () => img }), img);
+  assert.ok(!img.cerrada);
+  await rechaza(leerFoto(fichero("text/plain"), { decodificar: async () => img }), "noImagen");
+  const vacia = imagen(0, 0);
+  await rechaza(leerFoto(fichero(), { decodificar: async () => vacia }), "ilegible");
+  assert.ok(vacia.cerrada);
 });

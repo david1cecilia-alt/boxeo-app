@@ -4,9 +4,10 @@
 // - iniciarIdentidad(): el bloque «Nombre y avatar» de la sección Ajustes del menú (hueco #identidad).
 // La foto es un data URL del usuario: se pinta siempre con img.src, nunca con innerHTML.
 import { MAX_NOMBRE, nombreValido } from "../almacen.js";
-import { ErrorFoto, TEXTOS_FOTO, prepararFoto } from "../foto.js";
+import { ErrorFoto, TEXTOS_FOTO, codificarFoto, leerFoto } from "../foto.js";
 import { datos } from "../motor/datos.js";
 import { $, esc } from "./dom.js";
+import { abrirRecorte } from "./recorte.js";
 
 export const SIN_NOMBRE = "Tu perfil"; // lo que se lee sin nombre
 export const ALT_FOTO = "Tu foto de perfil";
@@ -57,11 +58,12 @@ export function crearAvatar(identidad, { decorativo = false, avatar = identidad.
  * «Nombre y avatar» en Ajustes. La foto llega por dos inputs ocultos, cada uno con su botón: «Hacer una foto»
  * (capture="user": en Android, el selector de fotos del sistema no ofrece la cámara) y «Elegir de la galería»;
  * con ratón y sin pantalla táctil, capture no hace nada y solo sale el segundo, como «Subir una foto…» (CSS
- * .solo-tactil / .solo-raton). Los dos pasan por la misma preparación (foto.js). `pintar(contenedor)` lo dibuja en el hueco #identidad; cada cambio se guarda
- * al momento y llama a `alGuardar()` (Ajustes dice «Guardado» y Entrenar repinta la cabecera).
+ * .solo-tactil / .solo-raton). Los dos pasan por el mismo recorte (vistas/recorte.js) y la misma preparación
+ * (foto.js); con «Cancelar» en el recorte no cambia nada. `pintar(contenedor)` lo dibuja en el hueco #identidad;
+ * cada cambio se guarda al momento y llama a `alGuardar()` (Ajustes dice «Guardado» y Entrenar repinta la cabecera).
  * Elegir otro avatar no borra la foto: solo «Quitar foto» la borra.
  */
-export function iniciarIdentidad({ almacen, alGuardar, preparar = prepararFoto }) {
+export function iniciarIdentidad({ almacen, alGuardar, leer = leerFoto, recortar = abrirRecorte }) {
   let raiz = null;
   const identidad = () => almacen.datos.perfil.identidad;
 
@@ -134,11 +136,26 @@ export function iniciarIdentidad({ almacen, alGuardar, preparar = prepararFoto }
     input.value = ""; // para poder volver a elegir la misma
     if (!archivo) return;
     mensaje("Preparando la foto…");
+    const fallo = (e) => mensaje(e instanceof ErrorFoto ? e.message : TEXTOS_FOTO.ilegible, true);
+    let imagen;
+    try {
+      imagen = await leer(archivo);
+    } catch (e) {
+      fallo(e);
+      return;
+    }
+    mensaje("");
+    const recorte = await recortar(imagen);
+    if (!recorte) {
+      imagen.close?.();
+      mensaje("Foto sin cambiar.");
+      return;
+    }
     let foto;
     try {
-      foto = await preparar(archivo);
+      foto = await codificarFoto(imagen, recorte); // la cierra
     } catch (e) {
-      mensaje(e instanceof ErrorFoto ? e.message : TEXTOS_FOTO.ilegible, true);
+      fallo(e);
       return;
     }
     guardar({ foto, avatar: { tipo: "foto" } });

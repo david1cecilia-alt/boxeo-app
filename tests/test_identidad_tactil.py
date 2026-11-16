@@ -64,7 +64,7 @@ def test_una_foto_de_la_camara_o_de_la_galeria_acaba_en_la_identidad(ajustes_tac
 
 def test_un_rechazo_por_la_camara_sale_en_el_mismo_mensaje(ajustes_tactil):
     pagina = ajustes_tactil
-    _subir(pagina, "notas.txt", "text/plain", b"hola", "hacer-foto")
+    _subir(pagina, "notas.txt", "text/plain", b"hola", "hacer-foto", guardar=False)
     mensaje = pagina.locator("#mensaje-foto.aviso")
     mensaje.wait_for()
     assert "Eso no es una imagen" in mensaje.inner_text()

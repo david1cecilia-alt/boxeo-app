@@ -67,6 +67,7 @@
   --velo: rgba(0, 0, 0, 0.7);
   --resalte: rgba(255, 255, 255, 0.06);
   --resplandor: rgba(224, 100, 90, 0.32); /* halo rojo detrás del maniquí */
+  --neon: #d03e3f;            /* rojo neón decorativo (sin contraste que cumplir): letras de la intro, halo y humo del maniquí */
 
   /* Fases de la sesión: fondo y texto */
   --fase-asalto: #121212;
@@ -1560,7 +1561,6 @@ dialog::backdrop { background: var(--velo); }
    mientras la capa se desvanece, y la vista de debajo se acerca (1,04 → 1). La letra apagada es el propio
    texto, rojo muy oscuro; la encendida, un ::after encima con el neón que se funde a opacidad 0. */
 #intro {
-  --neon: #d03e3f;
   --neon-brillo: rgba(208, 62, 63, 0.75);
   --apagada: #2e100f;
   position: fixed; inset: 0; z-index: 100; overflow: hidden;

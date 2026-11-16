@@ -168,7 +168,7 @@ export function crearEscena(lienzo, datos) {
   const esqueleto = datos.esqueleto;
   const fondo = new THREE.Color(token("--fondo", "#121212"));
   const acento = new THREE.Color(token("--acento", "#e0645a"));
-  const rojoHalo = new THREE.Color(token("--acento-relleno", "#9e2a2b"));
+  const rojoHalo = new THREE.Color(token("--neon", "#d03e3f"));
 
   const renderer = new THREE.WebGLRenderer({ canvas: lienzo, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));

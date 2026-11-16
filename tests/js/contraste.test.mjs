@@ -70,7 +70,10 @@ const COMPONENTES = [
   ["foco", "acento-relleno"], ["foco", "fase-final"], ["foco", "fase-descanso"], ["foco", "fase-pausa"],
   ["fase-reaccion-texto", "fase-reaccion"],
   ["acento-relleno", "barra"], // pestaña activa de la barra flotante
-  ["acento-relleno", "cristal"], ["acento-relleno", "fondo"], // nivel elegido, interruptor encendido
+  ["acento-relleno", "cristal"], ["acento-relleno", "fondo"], // nivel elegido
+  // Indicadores sin texto, en el rojo de texto: deslizador, interruptor encendido, medidor, borde al pasar
+  // por una baldosa (tarjeta) o una ficha (campo); y la bolita clara del interruptor sobre él.
+  ["acento", "superficie"], ["acento", "campo"], ["acento", "cristal"], ["texto", "acento"],
   ["chip-activo", "fondo"], ["chip-activo", "cristal"], // chip seleccionado
   ["acento", "fondo"], // barra de progreso de los asaltos
   ["serie-asaltos", "superficie"], ["serie-rpe", "superficie"], ["serie-barra", "superficie"],

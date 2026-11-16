@@ -229,7 +229,7 @@ select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23a8a29e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 16px center; background-size: 12px 8px;
 }
-input[type="checkbox"], input[type="radio"] { width: auto; min-height: 0; accent-color: var(--acento-relleno); }
+input[type="checkbox"], input[type="radio"] { width: auto; min-height: 0; accent-color: var(--acento); }
 fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 legend { color: var(--suave); font-size: 0.95rem; padding: 0; margin-bottom: 8px; }
 legend small { display: block; font-size: 0.85rem; }
@@ -284,21 +284,21 @@ hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
 }
 .ritmo input[type="range"]::-webkit-slider-runnable-track {
   height: 6px; border-radius: 3px;
-  background: linear-gradient(to right, var(--acento-relleno) var(--lleno), rgba(255, 255, 255, 0.14) var(--lleno));
+  background: linear-gradient(to right, var(--acento) var(--lleno), rgba(255, 255, 255, 0.14) var(--lleno));
 }
 .ritmo input[type="range"]::-moz-range-track { height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.14); }
-.ritmo input[type="range"]::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--acento-relleno); }
+.ritmo input[type="range"]::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--acento); }
 /* La bolita se toca en un cuadrado de 48 × 48 px (más de los 44 que pide un dedo) pero se dibuja
    como un círculo de 28 px: el resto es transparente. Sin border-radius, para que las esquinas
    también cuenten. */
 .ritmo input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none; width: 48px; height: 48px; margin-top: -21px; border: 0; border-radius: 0;
-  background: radial-gradient(circle, var(--texto) 0 10px, var(--acento-relleno) 10.5px 14px, transparent 14.5px);
+  background: radial-gradient(circle, var(--texto) 0 10px, var(--acento) 10.5px 14px, transparent 14.5px);
   pointer-events: auto; cursor: grab;
 }
 .ritmo input[type="range"]::-moz-range-thumb {
   width: 48px; height: 48px; border: 0; border-radius: 0;
-  background: radial-gradient(circle, var(--texto) 0 10px, var(--acento-relleno) 10.5px 14px, transparent 14.5px);
+  background: radial-gradient(circle, var(--texto) 0 10px, var(--acento) 10.5px 14px, transparent 14.5px);
   pointer-events: auto; cursor: grab;
 }
 .ritmo input[type="range"]:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; border-radius: 8px; }
@@ -329,7 +329,7 @@ hr { border: 0; height: 1px; margin: 0; background: var(--linea); }
   content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
   border-radius: 50%; background: var(--texto); transition: transform 0.15s;
 }
-.interruptor input:checked { background: var(--acento-relleno); }
+.interruptor input:checked { background: var(--acento); }
 .interruptor input:checked::before { transform: translateX(16px); }
 
 .check { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; cursor: pointer; }
@@ -823,7 +823,7 @@ html.menu-abierto #asa { visibility: hidden; }
 .zona { display: grid; gap: 6px; min-width: 0; }
 .segmentos { display: grid; grid-template-columns: repeat(var(--segmentos), minmax(0, 1fr)); gap: 3px; }
 .segmentos span { height: 6px; border-radius: 3px; background: var(--linea-chip); }
-.segmentos .lleno { background: var(--acento-relleno); }
+.segmentos .lleno { background: var(--acento); }
 .zona-nombre { color: var(--suave); font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.2; }
 .zona-nombre { white-space: nowrap; }
 .zona:last-child .zona-nombre { justify-self: end; }
@@ -872,7 +872,7 @@ html.menu-abierto #asa { visibility: hidden; }
   content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
   background: var(--texto); transition: transform 0.18s cubic-bezier(0.23, 1, 0.32, 1);
 }
-.interruptor[aria-checked="true"] .pista { background: var(--acento-relleno); }
+.interruptor[aria-checked="true"] .pista { background: var(--acento); }
 .interruptor[aria-checked="true"] .pista::after { transform: translateX(22px); }
 /* Baldosas: los golpes con su número enorme en rojo; defensas y salidas con su círculo. */
 .baldosas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -884,7 +884,7 @@ html.menu-abierto #asa { visibility: hidden; }
   transition: background-color 0.15s, border-color 0.15s, transform 0.14s;
 }
 .baldosa span { min-width: 0; overflow-wrap: break-word; }
-.baldosa:hover:not([aria-disabled="true"]) { border-color: var(--acento-relleno); }
+.baldosa:hover:not([aria-disabled="true"]) { border-color: var(--acento); }
 .baldosa-golpe { min-height: 72px; }
 .baldosa b {
   flex: none; min-width: 1ch; font-family: var(--letra-titular); font-weight: 400; font-size: 2.75rem;
@@ -1257,7 +1257,7 @@ dialog.hoja { padding: 0; }
   background: var(--campo); border: 1px solid var(--linea-chip); border-radius: 14px;
 }
 .fichas.numeros .ficha { min-height: 56px; }
-.ficha:hover:not([aria-disabled="true"]) { border-color: var(--acento-relleno); }
+.ficha:hover:not([aria-disabled="true"]) { border-color: var(--acento); }
 .ficha[aria-disabled="true"] { cursor: not-allowed; color: var(--suave); border-style: dashed; }
 .marca-elegido { flex: none; color: var(--acento); font-weight: 700; }
 @media (max-width: 719.98px) {

@@ -1,7 +1,7 @@
 """El asa y el menú lateral de Entrenar (#entrenar/menu[/<seccion>]) en un navegador de verdad (Chromium
 headless con Playwright), a 390 y 1440 px, con ratón y con toque emulado.
 
-Toque, arrastre (umbral del 30 %, gesto rápido, menos de 8 px = toque), pointercancel, teclado, foco, Esc,
+Toque, arrastre (más de la mitad a la vista al soltar despacio, el sentido de un gesto rápido, menos de 8 px = toque), pointercancel, teclado, foco, Esc,
 velo, «✕», «Atrás» y el historial (entrada propia con la marca `menu: true` → history.back(); llegada directa
 → location.replace). Solo en Entrenar, a ≥ 24 px de los bordes y sin animación con prefers-reduced-motion.
 El menú todavía está vacío (la R4 lo llena). Los datos de prueba solo viven en el localStorage de este
@@ -28,7 +28,7 @@ SEMBRAR = """<!doctype html><meta charset="utf-8">
 <script>localStorage.clear(); window.listo = true;</script>"""
 ANCHOS = [390, 1440]
 ALTO = {390: 844, 1440: 900}
-DURACION = 0.22  # s de la transición del panel (vistas/menu.js)
+DURACION = 0.3  # s de la transición del panel (vistas/menu.js)
 INICIO = 1_800_000_000_000  # ms: la hora del reloj de prueba de la pista (da igual cuál)
 ABIERTO = "document.getElementById('menu').open"
 ESTA_ABIERTO = ("() => { const m = document.getElementById('menu'); return m.open && m.classList.contains('visible')"
@@ -226,18 +226,18 @@ def test_arrastrar_el_asa_abre_un_arrastre_corto_no_y_el_panel_a_la_derecha_cier
     assert pagina.evaluate("location.hash") == "#entrenar"
     assert largo(pagina) == largo_antes
     assert pagina.is_visible("#asa")
-    # 200 px a la izquierda: se abre.
-    dedo.arrastrar("#asa", -200, pasos=10, pausa=16, espera=150)
+    # 260 px a la izquierda (más de la mitad del panel también a 1440, de 420 px): se abre.
+    dedo.arrastrar("#asa", -260, pasos=10, pausa=16, espera=150)
     pagina.wait_for_function(ESTA_ABIERTO)
     assert pagina.evaluate(FOCO) == "t-menu"
     esperar_menu_quieto(pagina)
-    # El panel 200 px a la derecha (desde su franja): se cierra.
-    dedo.arrastrar(".asa-panel", 200, pasos=10, pausa=16, espera=150)
+    # El panel 260 px a la derecha (desde su franja): se cierra.
+    dedo.arrastrar(".asa-panel", 260, pasos=10, pausa=16, espera=150)
     esperar_cerrado(pagina)
     assert pagina.evaluate(FOCO) == "asa"
     # Y desde la cabecera, igual.
     abrir_con_el_asa(pagina)
-    dedo.arrastrar("#t-menu", 200, pasos=10, pausa=16, espera=150)
+    dedo.arrastrar("#t-menu", 260, pasos=10, pausa=16, espera=150)
     esperar_cerrado(pagina)
 
 
@@ -246,11 +246,11 @@ def test_mientras_se_arrastra_el_panel_sigue_al_dedo(abrir_pagina, ancho):
     pagina = abrir_pagina(ancho)
     dedo = Dedo(pagina, "mouse")
     dedo.bajar(*centro(pagina, "#asa"))
-    dedo.mover(-160, pasos=8)
+    dedo.mover(-240, pasos=8)
     # Cuánto asoma desde el borde derecho del <dialog> (su contenedor; con scrollbar-gutter, clientWidth no lo es).
     asoma = pagina.evaluate("""() => { const p = document.querySelector('.menu-panel').getBoundingClientRect();
       return Math.round(document.getElementById('menu').getBoundingClientRect().right - p.left); }""")
-    assert 155 <= asoma <= 165  # pasa del 30 % también a 1440 (126 px de 420)
+    assert 235 <= asoma <= 245  # 1:1 con el dedo; más de la mitad también a 1440 (210 px de 420)
     assert pagina.evaluate("document.getElementById('menu').classList.contains('arrastrando')")
     pagina.wait_for_timeout(150)
     dedo.subir()
@@ -258,7 +258,7 @@ def test_mientras_se_arrastra_el_panel_sigue_al_dedo(abrir_pagina, ancho):
 
 
 def test_un_gesto_rapido_aunque_corto_abre_y_cierra(abrir_pagina):
-    # Con el dedo y su reloj: 20 px cada 16 ms (1,25 px/ms), lejos del 30 % del ancho (103 px a 390).
+    # Con el dedo y su reloj: 20 px cada 16 ms (1,25 px/ms), lejos de la mitad del ancho (171 px a 390).
     pagina = abrir_pagina(toque=True)
     dedo = Dedo(pagina, "touch")
     dedo.arrastrar("#asa", -60, pasos=3)
@@ -421,7 +421,7 @@ def test_el_foco_vuelve_al_asa_al_cerrar_por_x_esc_velo_y_arrastre(abrir_pagina,
         "x": lambda: pagina.click(".menu-cerrar"),
         "esc": lambda: pagina.keyboard.press("Escape"),
         "velo": lambda: pagina.mouse.click(10, ALTO[ancho] / 2),
-        "arrastre": lambda: Dedo(pagina, "mouse").arrastrar(".asa-panel", 200, pausa=16, espera=150),
+        "arrastre": lambda: Dedo(pagina, "mouse").arrastrar(".asa-panel", 260, pausa=16, espera=150),
     }
     for nombre, cerrar in cierres.items():
         abrir_con_el_asa(pagina)
@@ -789,3 +789,42 @@ def test_el_globo_de_la_pista_no_tapa_empezar(abrir_pagina, ancho):
     assert g["y"] + g["height"] <= e["y"] or e["y"] + e["height"] <= g["y"] \
         or g["x"] + g["width"] <= e["x"] or e["x"] + e["width"] <= g["x"]
     assert g["x"] >= 0 and g["x"] + g["width"] <= ancho
+
+
+# Cuánto del panel se ve (0-1) mientras se arrastra.
+A_LA_VISTA = """() => { const p = document.querySelector('.menu-panel').getBoundingClientRect();
+  return (document.getElementById('menu').getBoundingClientRect().right - p.left) / p.width; }"""
+
+
+def test_al_soltar_despacio_decide_la_mitad_y_rapido_el_sentido_del_gesto(abrir_pagina):
+    pagina = abrir_pagina()  # 390: el panel mide 343 px
+    dedo = Dedo(pagina, "mouse")
+    # Despacio al 60 % a la vista: se abre.
+    dedo.bajar(*centro(pagina, "#asa"))
+    dedo.mover(-206, pasos=10)
+    assert 0.55 < pagina.evaluate(A_LA_VISTA) < 0.65
+    pagina.wait_for_timeout(150)
+    dedo.subir()
+    pagina.wait_for_function(ESTA_ABIERTO)
+    esperar_menu_quieto(pagina)
+    # Desde abierto, despacio hasta dejar el 40 % a la vista: se cierra.
+    dedo.bajar(*centro(pagina, ".asa-panel"))
+    dedo.mover(206, pasos=10)
+    pagina.wait_for_timeout(150)
+    dedo.subir()
+    esperar_cerrado(pagina)
+    # Más de la mitad abierto pero con un gesto rápido hacia la derecha: se cierra (manda el sentido).
+    dedo.bajar(*centro(pagina, "#asa"))
+    dedo.mover(-260, pasos=10, pausa=30)
+    pagina.wait_for_timeout(150)
+    dedo.mover(60, pasos=3)  # 20 px en un instante: muy por encima de 0,5 px/ms
+    dedo.subir()
+    pagina.wait_for_function(ESTA_CERRADO)
+    pagina.wait_for_timeout(DURACION * 1000 + 50)
+    assert pagina.evaluate("location.hash") == "#entrenar"
+
+
+def test_al_soltar_va_a_su_sitio_con_la_curva_de_muelle_de_300_ms(abrir_pagina):
+    pagina = abrir_pagina()
+    transicion = pagina.eval_on_selector(".menu-panel", "(p) => [getComputedStyle(p).transitionDuration, getComputedStyle(p).transitionTimingFunction]")
+    assert transicion == ["0.3s", "cubic-bezier(0.22, 1, 0.36, 1)"]

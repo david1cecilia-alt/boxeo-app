@@ -13,10 +13,10 @@ import { $, $$, atraparFoco, esperarIntro } from "./dom.js";
 export const RUTA_MENU = "#entrenar/menu";
 export const SECCIONES = ["personalizar", "combinaciones", "ajustes"];
 const TOQUE = 8;          // px: menos es un toque, no un arrastre
-const FRACCION = 0.3;     // del ancho del panel para abrir o cerrar al soltar
-const VELOCIDAD = 0.5;    // px/ms: un gesto rápido abre o cierra aunque sea corto
+const MITAD = 0.5;        // al soltar despacio: más de la mitad del panel a la vista = abierto
+const VELOCIDAD = 0.5;    // px/ms: más rápido que esto, manda el sentido del gesto (a la izquierda abre)
 const VENTANA = 100;      // ms de movimiento con los que se mide la velocidad al soltar
-const DURACION = 220;     // ms de la transición del panel (la del CSS)
+const DURACION = 300;     // ms de la transición del panel, tipo muelle (la del CSS)
 const LENGUETA = 1700;    // ms de la lengüeta de la pista: entra, ~1,2 s quieta y se recoge (pista-asomar en el CSS)
 const GLOBO = 4000;       // ms del globo de la pista, con o sin movimiento (pista-globo en el CSS)
 
@@ -91,7 +91,7 @@ export function iniciarMenu({ pistaVista = () => true, marcarPista = () => {} } 
     window.addEventListener("keydown", retirarPista, true);
   }
 
-  // El panel sigue al dedo: x = cuánto asoma fuera por la derecha (0 = abierto del todo).
+  // El panel sigue al dedo 1:1: x = cuánto queda fuera por la derecha (0 = abierto del todo).
   function seguir(x, ancho) {
     if (x == null) {
       panel.style.transform = "";
@@ -245,7 +245,14 @@ export function iniciarMenu({ pistaVista = () => true, marcarPista = () => {} } 
     return tiempo > 0 ? (ultima.x - primera.x) / tiempo : 0;
   }
 
-  // Soltar. `cancelado` (pointercancel, lostpointercapture): como soltar sin llegar al umbral.
+  // Al soltar: si el gesto va rápido (más de VELOCIDAD), manda su sentido; si no, la posición (más de la mitad a
+  // la vista, abierto). Da igual desde dónde empezó: el asa o el panel.
+  function quedaAbierto(x, ancho, v) {
+    if (Math.abs(v) > VELOCIDAD) return v < 0;
+    return 1 - x / ancho > MITAD;
+  }
+
+  // Soltar. `cancelado` (pointercancel, lostpointercapture): vuelve a como estaba.
   function soltar(e, cancelado) {
     if (!arrastre || e.pointerId !== arrastre.id) return;
     const a = arrastre;
@@ -255,14 +262,15 @@ export function iniciarMenu({ pistaVista = () => true, marcarPista = () => {} } 
     setTimeout(() => (tragarClic = false), 0);
     if (!cancelado) a.muestras.push({ t: e.timeStamp, x: e.clientX });
     const dx = a.x - a.x0;
-    const v = cancelado ? 0 : velocidad(a.muestras, e.timeStamp);
+    const x = Math.min(Math.max(a.desde === "asa" ? a.ancho + dx : dx, 0), a.ancho);
+    const abrir = cancelado ? a.desde === "panel" : quedaAbierto(x, a.ancho, velocidad(a.muestras, e.timeStamp));
     if (a.desde === "asa") {
-      if (!cancelado && (-dx >= FRACCION * a.ancho || -v > VELOCIDAD)) pedirApertura();
+      if (abrir) pedirApertura();
       else retirar();
-    } else if (!cancelado && (dx >= FRACCION * a.ancho || v > VELOCIDAD)) {
-      pedirCierre();
-    } else {
+    } else if (abrir) {
       asentarAbierto();
+    } else {
+      pedirCierre();
     }
   }
 

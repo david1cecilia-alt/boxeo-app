@@ -28,8 +28,10 @@
 
 /* Todos los colores y letras de la app viven aquí (tokens). Gris oscuro neutro (R = G = B) + rojo como único
    acento. La intro «Que empiece el asalto» lleva sus colores propios, de su diseño.
-   El fondo rojo completo se reserva para los últimos 10 s (--fase-final): en el resto de la
-   app el rojo va en texto, botones, pestaña activa y chips destacados.
+   Dos rojos: el cuero (--acento-relleno) solo como relleno con texto blanco encima; el claro (--acento) para el
+   texto rojo y para todo indicador sin texto que tiene que llegar a 3:1 (foco, bordes de seleccionado,
+   deslizador, barras). El cuero sobre el fondo no llega a 3:1: nunca como marca suelta.
+   El fondo rojo completo se reserva para los últimos 10 s (--fase-final).
    Contraste comprobado en tests/js/contraste.test.mjs. */
 :root {
   color-scheme: dark;
@@ -49,9 +51,9 @@
   --suave: #a3a3a3;           /* texto secundario */
   --terciario: #d4d4d4;
   --tenue: #8f8f8f;           /* días y meses futuros: más apagado que --suave, aún 4,5:1 */
-  --acento: #ff3b30;          /* rojo de texto: palabra roja, contexto, cifras */
-  --acento-relleno: #d7192a;  /* rojo de relleno: botones, pestaña activa, chip destacado (texto blanco) */
-  --acento-relleno-hover: #b81424;
+  --acento: #e0645a;          /* rojo claro: texto rojo e indicadores sin texto */
+  --acento-relleno: #9e2a2b;  /* cuero: botones, pestaña activa, chip destacado (solo con texto blanco encima) */
+  --acento-relleno-hover: #b23435;
   --sobre-acento: #ffffff;
   --chip-activo: #f2f2f2;     /* chip seleccionado */
   --sobre-chip-activo: #121212;
@@ -64,21 +66,21 @@
   --aviso-fondo: #3d2e06;
   --velo: rgba(0, 0, 0, 0.7);
   --resalte: rgba(255, 255, 255, 0.06);
-  --resplandor: rgba(255, 59, 48, 0.32); /* halo rojo detrás del maniquí */
+  --resplandor: rgba(224, 100, 90, 0.32); /* halo rojo detrás del maniquí */
 
   /* Fases de la sesión: fondo y texto */
   --fase-asalto: #121212;
-  --fase-final: #d7192a;
+  --fase-final: #9e2a2b;
   --fase-descanso: #0b3b34;
   --fase-reaccion: #ffb703;
   --fase-reaccion-texto: #0a0a0a;
   --fase-pausa: #202020;
 
   /* Series de los gráficos (validadas sobre --superficie) */
-  --serie-asaltos: #ff3b30;   /* semana actual */
+  --serie-asaltos: #e0645a;   /* semana actual */
   --serie-barra: rgba(255, 255, 255, 0.34);  /* resto de semanas */
   --serie-rpe: #e5e5e5;
-  --acento-tenue: rgba(255, 59, 48, 0.08);   /* fondo de la pastilla de RPE */
+  --acento-tenue: rgba(224, 100, 90, 0.08);  /* fondo de la pastilla de RPE */
 
   --alto-nav: 68px;
   --hueco: 20px;              /* margen lateral en móvil */

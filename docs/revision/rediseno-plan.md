@@ -542,6 +542,13 @@ R0 y R1 no cambian nada visible, así que se pueden revisar y unir antes de toca
 - **Fase visual**: a 1440 × 900, con una combinación larga (o con el pie de pasos), el reloj y la tarjeta de la
   combinación no caben y Pausa / Parar quedan medio por debajo del borde (la pantalla llega a ~1020 px). No es la
   franja: es el alto del contenido; hace falta que reloj y tarjeta se ajusten a la altura de la ventana.
+- **Pendiente: un test intermitente**, `test_perfil_navegador.py::test_la_identidad_ensena_avatar_nombre_y_solo_la_guardia`
+  (falló una vez en la suite entera de la R7, hacia el nº 797, y 1 de 3 veces suelto; 3 pasadas seguidas de los de
+  navegador, limpias). Causa probable: tras el `reload()`, `_con_identidad` espera a
+  `"#perfil-contenido #d-cuestionario, #ir-perfil:visible"`, y `#ir-perfil` ya se ve en el HTML de partida (Entrenar no
+  lleva `hidden`) antes de que la app arranque (`await cargarDatos()`); si el `fetch` tarda, la espera acaba sin
+  pintar y `#t-perfil` aún dice «Tu perfil». Arreglo propuesto (sin hacer): esperar a lo de la ruta pedida
+  (`body[data-vista]` y su contenido), no a un selector que ya cumple el HTML estático.
 
 ---
 

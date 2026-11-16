@@ -192,6 +192,9 @@ a { color: var(--texto); text-decoration-color: var(--acento); text-underline-of
   position: absolute; width: 1px; height: 1px; overflow: hidden;
   clip: rect(0 0 0 0); white-space: nowrap;
 }
+/* El aviso para lectores va al final de <body>: sin top, quedaba debajo de todo y alargaba la página 1 px
+   (con la sesión a pantalla completa, salía la barra de desplazamiento). */
+#estado { top: 0; left: 0; }
 
 .aviso {
   background: var(--aviso-fondo); color: var(--aviso); border-radius: 10px; padding: 10px 14px; margin: 0;
@@ -442,12 +445,15 @@ input[type="file"].solo-lectores:focus-visible + *, label.boton:focus-within { o
 /* ---------- Sesión en curso ---------- */
 body.entrenando #vista-entrenar > :not(#pantalla), body.entrenando #pestanas { display: none; }
 body.entrenando main { padding: 0; max-width: none; }
+/* Sin el relleno de arriba de Entrenar: #pantalla mide la ventana y empieza en y = 0 (si no, quedaba una
+   franja del fondo encima y la página se desplazaba ese tanto). La zona segura la lleva #pantalla. */
+body.entrenando #vista-entrenar { padding-top: 0; }
 
 #pantalla {
   position: relative; isolation: isolate; overflow: hidden;
   min-height: 100dvh;
   display: flex; flex-direction: column;
-  padding: 20px var(--hueco) calc(20px + env(safe-area-inset-bottom));
+  padding: calc(20px + env(safe-area-inset-top, 0px)) var(--hueco) calc(20px + env(safe-area-inset-bottom));
   background: var(--fase-asalto);
   transition: background-color 0.2s;
 }

@@ -534,8 +534,14 @@ R0 y R1 no cambian nada visible, así que se pueden revisar y unir antes de toca
 - Texto de Prueba (David): «Sesión corta de prueba: 2 asaltos de 30 s con lo de tu Personalizada. Se guarda en el
   Historial como "Prueba".»
 - Visto en las capturas y sin tocar: la foto de Historial a 1440 deja ver su borde izquierdo (ya pasaba con el
-  negro; es de la imagen) y en el descanso queda una franja de unos 20 px del fondo encima de la pantalla de fase
-  (no es del gris: el color de fase lo pinta `#pantalla`; falta mirar qué la deja).
+  negro; es de la imagen).
+- Arreglado tras revisar las capturas: el velo del menú se cortaba donde acababa el contenido (el `body` solo medía
+  eso y debajo se veía el lienzo, del color del panel); ahora el `body` mide como poco la ventana. Y la franja
+  encima de la sesión (16 px a 390, 40 px a 1440) era el relleno de arriba de Entrenar, que seguía puesto: la
+  página se desplazaba ese tanto (y 1 px más por `#estado`, que quedaba debajo de todo).
+- **Fase visual**: a 1440 × 900, con una combinación larga (o con el pie de pasos), el reloj y la tarjeta de la
+  combinación no caben y Pausa / Parar quedan medio por debajo del borde (la pantalla llega a ~1020 px). No es la
+  franja: es el alto del contenido; hace falta que reloj y tarjeta se ajusten a la altura de la ventana.
 
 ---
 

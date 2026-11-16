@@ -497,3 +497,9 @@ def test_el_asa_no_tapa_empezar_ni_los_controles_ni_el_texto(pagina, ancho, alto
             assert not cruzan(c["asa"], c["empezar"]), (seccion, y)
             for nombre, caja in c["controles"]:
                 assert not cruzan(c["asa"], caja), (seccion, y, nombre)
+
+
+def test_la_cabecera_de_perfil_lleva_el_radio_de_las_tarjetas(pagina):
+    preparar(pagina, {})
+    radio = lambda s: pagina.eval_on_selector(s, "(e) => getComputedStyle(e).borderTopLeftRadius")  # noqa: E731
+    assert radio(".cabecera-perfil") == radio(".tu-sesion") == "22px"

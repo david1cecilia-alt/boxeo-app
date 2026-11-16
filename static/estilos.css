@@ -399,7 +399,8 @@ input[type="file"].solo-lectores:focus-visible + *, label.boton:focus-within { o
 .cabecera-perfil {
   display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 8px 12px 8px 8px;
   color: var(--texto); text-decoration: none;
-  background: var(--superficie); border: 1px solid var(--linea); border-radius: 32px;
+  /* Radio de tarjeta (como «Tu sesión»): concéntrico con el avatar de dentro (≈ 13 px de radio a 8 px del borde). */
+  background: var(--superficie); border: 1px solid var(--linea); border-radius: var(--radio);
 }
 .cabecera-perfil:hover { background: var(--superficie-hover); }
 .cabecera-avatar { display: contents; }

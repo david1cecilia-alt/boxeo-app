@@ -516,18 +516,19 @@ body.entrenando #vista-entrenar { padding-top: 0; }
 .combo-texto { font-size: clamp(2.2rem, 10vw, 4rem); text-wrap: balance; }
 .pasos { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .pasos li { display: flex; align-items: center; gap: 12px; font-size: clamp(1.75rem, 8.7vw, 2.6rem); }
-/* Círculo numerado: relleno rojo = golpe, borde = defensa, borde discontinuo = pies. */
+/* Círculo numerado: relleno rojo = golpe, borde = defensa, borde discontinuo = pies. El del golpe lleva cifra
+   blanca sobre el cuero y, para verse contra la tarjeta (3:1), un aro de 2 px en el rojo claro. */
 .pasos i, .leyenda i {
   flex: none; display: grid; place-items: center; border-radius: 50%;
   font-family: var(--letra-texto); font-style: normal; font-size: 0.8125rem; font-weight: 800; letter-spacing: 0;
 }
 .pasos i { width: 28px; height: 28px; }
-.paso-golpe i { background: var(--acento-relleno); color: var(--sobre-acento); }
+.paso-golpe i { background: var(--acento-relleno); color: var(--sobre-acento); box-shadow: 0 0 0 2px var(--acento); }
 .paso-defensa i { border: 1.5px solid currentColor; }
 .paso-movimiento i { border: 1.5px dashed var(--suave); color: var(--suave); }
 .pasos .paso-movimiento { color: var(--terciario); }
 #pantalla:not([data-fase="asalto"]) :is(.pasos, .leyenda) :is(.paso-movimiento, .paso-movimiento i) { color: inherit; border-color: currentColor; }
-#pantalla[data-fase="final"] .paso-golpe i { background: var(--texto); color: var(--fase-final); }
+#pantalla[data-fase="final"] .paso-golpe i { background: var(--texto); color: var(--fase-final); box-shadow: none; }
 .leyenda { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 4px 0 0; padding: 0; list-style: none; color: var(--suave); font-size: 0.75rem; }
 .leyenda[hidden] { display: none; }
 .leyenda li { display: inline-flex; align-items: center; gap: 6px; }

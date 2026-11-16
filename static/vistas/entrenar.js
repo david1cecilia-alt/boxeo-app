@@ -33,7 +33,8 @@ const TEXTO_FASE = {
   asalto: "En asalto", final: "Últimos 10 s", descanso: "Descanso", reaccion: "¡Reacción!", pausa: "En pausa",
 };
 
-export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
+// `avisar(texto)`: el aviso de arriba de la app (#aviso-almacen, el de app.js).
+export function iniciarEntrenar({ almacen, historial, voz, alTerminar, avisar = () => {} }) {
   const form = $("#config");
   const presets = datos().presets.presets;
   let estado = null;        // sesión en curso, o null
@@ -129,10 +130,11 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
     activarSonido(); // tiene que ser dentro del clic
     const config = leerConfig();
     const errores = validarConfig(config);
-    if (errores.length) {
-      alert("Configuración no válida:\n" + errores.join("\n"));
-      return;
-    }
+    // Con la interfaz de ahora casi no puede pasar: se dice bajo Empezar, sin bloquear la página.
+    const mensaje = $("#mensaje-empezar");
+    mensaje.textContent = errores.length ? `Configuración no válida: ${errores.join(" ")}` : "";
+    mensaje.hidden = !errores.length;
+    if (errores.length) return;
     const eventos = nuevoGuion(config, almacen.datos.perfil, crearAzar(semillaAleatoria()),
       almacen.datos.combinacionesPropias);
     estado = {
@@ -346,7 +348,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar }) {
       // En la valoración, como en el Historial: con los números en cifra («1 jab»).
       alTerminar({ id, combinaciones: combinacionesParaVer(datosSesion, dichas) });
     } catch (e) {
-      alert(`No se pudo guardar la sesión: ${e.message}`);
+      avisar(`No se pudo guardar la sesión: ${e.message}`);
     }
   }
 

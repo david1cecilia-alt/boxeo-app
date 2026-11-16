@@ -158,14 +158,18 @@ def test_prueba_solo_con_el_parametro_y_nunca_se_guarda(pagina):
 def _importar(pagina, tmp_path, copia):
     fichero = tmp_path / "copia.json"
     fichero.write_text(json.dumps(copia), encoding="utf-8")
-    dialogos = []
+    dialogos = []  # nativos: no tiene que haber ninguno
 
     def responder(d):
         dialogos.append((d.type, d.message))
-        d.accept()
+        d.dismiss()
 
     pagina.on("dialog", responder)
     pagina.set_input_files("#importar", str(fichero))
+    # Se confirma en el diálogo de la app (vistas/confirmar.js), no en un confirm() nativo.
+    pagina.wait_for_selector("#d-confirmar[open]")
+    assert pagina.text_content("#t-confirmar") == "¿Importar la copia?"
+    pagina.click('#d-confirmar button[value="si"]')
     pagina.wait_for_function("""() => { const d = JSON.parse(localStorage.getItem('boxeo') ?? '{}');
       return d.version === 9 && d.sesiones?.length === 1; }""")
     return dialogos
@@ -178,7 +182,7 @@ def test_importar_una_copia_v8_la_deja_en_v9(pagina, tmp_path):
     datos["sesiones"] = [{"id": "s-1", "fecha": "2026-11-08T18:00:00", "asaltos": 3, "nivel": 3, "zurdo": False,
                           "duracion_asalto": 180, "descanso": 60, "num_combinaciones": 0, "combinaciones": []}]
     dialogos = _importar(pagina, tmp_path, {"app": "boxeo", "version": 8, "exportado": "2026-11-09", "datos": datos})
-    assert [t for t, _ in dialogos] == ["confirm"]  # sin avisos: no había nada mal formado
+    assert dialogos == []  # ni confirm() ni alert() nativos
     assert pagina.is_hidden("#aviso-almacen")
     nuevo = guardado(pagina)
     assert nuevo["perfil"]["sesion"]["tipo"] == "personalizada"
@@ -211,7 +215,7 @@ def test_importar_una_copia_con_una_foto_mala_la_quita_y_avisa(pagina, tmp_path)
     aviso.wait_for(state="visible")
     assert aviso.inner_text() == "La foto de tu avatar no era válida y se ha quitado."
     assert aviso.get_attribute("role") == "alert"
-    assert [t for t, _ in dialogos] == ["confirm"]  # solo «¿Seguir?»: ningún alert
+    assert dialogos == []  # ningún diálogo nativo
     assert guardado(pagina)["perfil"]["identidad"] == {"nombre": "Alex", "avatar": {"tipo": "inicial"}, "foto": None}
 
 

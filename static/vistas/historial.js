@@ -8,6 +8,7 @@
 // muestra solo la galería o, si hay una sesión elegida, solo su detalle.
 import { ErrorAlmacen } from "../almacen.js";
 import { datos } from "../motor/datos.js";
+import { confirmar } from "./confirmar.js";
 import { $, aFecha, anunciar, esc, fechaLarga, hoyIso, minutos, palabra, plural } from "./dom.js";
 import {
   alCambiarDeNivel, diaDeLaVista, diasDeSemana, escribirRuta, etiquetaFila, leerRuta, mesesDelAno, rutaDeArriba,
@@ -123,6 +124,7 @@ export function iniciarHistorial({ almacen, historial, valoracion, avisar }) {
           <label class="boton secundario" for="importar">Importar copia…</label>
           <input type="file" id="importar" accept="application/json,.json" class="solo-lectores">
         </div>
+        <p class="aviso mensaje-error" id="mensaje-copia" role="alert" hidden></p>
       </section>
       </div>
       <div class="col-detalle" id="historial-detalle">
@@ -378,23 +380,35 @@ export function iniciarHistorial({ almacen, historial, valoracion, avisar }) {
 
       <div class="acciones">
         <button type="button" id="borrar" class="boton peligro">Borrar sesión</button>
-      </div>`;
+      </div>
+      <p class="aviso mensaje-error" id="mensaje-borrar" role="alert" hidden></p>`;
     $("#t-detalle").focus();
     panel.querySelector("[data-subir]").addEventListener("click", subir);
     $("#valorar").addEventListener("click", async () => {
       if (await valoracion.abrir({ clave, combinaciones, titulo: "Valoración de la sesión" })) pintar();
     });
     $("#borrar").addEventListener("click", async () => {
-      if (!confirm("¿Borrar esta sesión y su valoración? No se puede deshacer.")) return;
+      mensaje("#mensaje-borrar", "");
+      if (!await confirmar({ titulo: "¿Borrar esta sesión?", texto: "Se borra también su valoración. No se puede deshacer.",
+        si: "Borrar" })) return;
       try {
         const arriba = rutaDeArriba(vista, sesiones);
         await historial.borrar(s.id);
         anunciar("Sesión borrada");
         navegar(arriba, { reemplazar: true }); // atrás ya no lleva a la sesión borrada
       } catch (e) {
-        alert(e.message);
+        mensaje("#mensaje-borrar", `No se pudo borrar la sesión: ${e.message}`);
       }
     });
+  }
+
+  // Un error junto a los botones que lo han causado (role="alert": se anuncia), sin bloquear la página.
+  // Con texto vacío se esconde.
+  function mensaje(selector, texto) {
+    const p = $(selector);
+    if (!p) return;
+    p.textContent = texto;
+    p.hidden = !texto;
   }
 
   async function exportar() {
@@ -416,26 +430,28 @@ export function iniciarHistorial({ almacen, historial, valoracion, avisar }) {
     const fichero = e.target.files[0];
     e.target.value = "";
     if (!fichero) return;
+    mensaje("#mensaje-copia", "");
     let copia;
     try {
       copia = JSON.parse(await fichero.text());
     } catch {
-      alert("El fichero no es un JSON válido.");
+      mensaje("#mensaje-copia", "El fichero no es una copia válida (no es un JSON).");
       return;
     }
     const aviso = historial.origen === "servidor"
-      ? "\n\nLas sesiones del servidor (SQLite) no se tocan: solo se sustituyen las valoraciones, el perfil y las notas."
+      ? " Las sesiones del servidor (SQLite) no se tocan: solo se sustituyen las valoraciones, el perfil y las notas."
       : "";
-    if (!confirm(`Importar sustituye TODOS tus datos de este navegador por los de la copia.${aviso}\n\n¿Seguir?`)) return;
+    if (!await confirmar({ titulo: "¿Importar la copia?",
+      texto: `Importar sustituye todos tus datos de este navegador por los de la copia.${aviso}`, si: "Importar" })) return;
     try {
       const guardado = almacen.importar(copia);
       anunciar(guardado ? "Copia importada" : "Copia importada solo en memoria");
       pintar();
       // Lo que se ha quitado de la copia por estar mal formado (una foto que no es JPEG o WebP): en el
-      // aviso de arriba, sin alert() que bloquee la página.
+      // aviso de arriba, sin un diálogo nativo que bloquee la página.
       if (almacen.avisos.length) avisar(almacen.avisos.join(" "));
     } catch (error) {
-      alert(error instanceof ErrorAlmacen ? error.message : `No se pudo importar: ${error.message}`);
+      mensaje("#mensaje-copia", error instanceof ErrorAlmacen ? error.message : `No se pudo importar: ${error.message}`);
     }
   }
 

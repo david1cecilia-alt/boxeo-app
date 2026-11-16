@@ -31,7 +31,7 @@ async function arrancar() {
   const valoracion = crearValoracion({ almacen });
 
   const entrenar = iniciarEntrenar({
-    almacen, historial, voz,
+    almacen, historial, voz, avisar,
     // Al terminar o parar: formulario post-sesión (se puede saltar y rellenar desde el historial).
     alTerminar: ({ id, combinaciones }) =>
       valoracion.abrir({ clave: claveSesion(historial.origen, id), combinaciones }),

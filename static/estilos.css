@@ -193,6 +193,8 @@ a { color: var(--texto); text-decoration-color: var(--acento); text-underline-of
   background: var(--aviso-fondo); color: var(--aviso); border-radius: 10px; padding: 10px 14px; margin: 0;
 }
 .aviso.fijo { position: sticky; top: 0; z-index: 20; border-radius: 0; text-align: center; }
+/* Un error junto a los botones que lo han causado (Historial, Empezar), en vez de un diálogo nativo. */
+.aviso.mensaje-error { margin: 12px 0 0; padding: 10px 14px; }
 
 /* ---------- Foco visible en todo lo interactivo ---------- */
 :focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }

@@ -416,6 +416,34 @@ def test_desde_1024_una_columna_centrada_en_el_orden_del_movil(pagina, ancho, al
 
 # ---------- El asa no tapa nada (geometría) ----------
 
+# La caja visible del asa y las de lo que no debe tapar en Entrenar.
+CAJAS_MOVIL = """() => {
+  const r = (s) => document.querySelector(s).getBoundingClientRect().toJSON();
+  return { asa: r('#asa .asa-puntos'), boton: r('#asa'), ancho: document.documentElement.clientWidth,
+    otras: ['.cabecera-perfil', '#tipo-sesion', '.tu-sesion', '#empezar', '#info-voz', '#pestanas'].map((s) => [s, r(s)]) };
+}"""
+
+
+@pytest.mark.parametrize("ancho, alto", [(390, 844), (360, 800), (390, 667)])
+def test_en_el_movil_el_asa_va_en_el_hueco_bajo_empezar_sin_tapar_nada(pagina, ancho, alto):
+    pagina.set_viewport_size({"width": ancho, "height": alto})
+    preparar(pagina, {"perfil": {"sesion": {"tipo": "personalizada", "zurdo": True, "reaccion": True, **PERSONALIZADA},
+                                 "practicar": [{"movimiento": "3"}]}})
+    pagina.evaluate("document.fonts.ready")
+    for abajo in (False, True):  # arriba del todo y al final de la página
+        if abajo:
+            pagina.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)")
+        c = pagina.evaluate(CAJAS_MOVIL)
+        for nombre, caja in c["otras"]:
+            assert not cruzan(c["asa"], caja), (nombre, abajo, c["asa"], caja)
+        assert c["boton"]["right"] <= c["ancho"] - 16  # sin pegarse al borde (el gesto «Atrás»)
+    # Sigue siendo un botón: con el teclado abre el menú.
+    pagina.focus("#asa")
+    pagina.keyboard.press("Enter")
+    pagina.wait_for_function("document.getElementById('menu').open")
+
+
+
 # Cajas que no deben cruzarse con la visible del asa. `visible` recorta Empezar a lo que no tapa el panel
 # (con el menú abierto el panel opaco lo cubre; así se comprobó en el boceto, 2.1).
 CAJAS = """({ abierto }) => {

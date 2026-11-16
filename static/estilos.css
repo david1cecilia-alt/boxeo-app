@@ -438,9 +438,6 @@ input[type="file"].solo-lectores:focus-visible + *, label.boton:focus-within { o
   padding: 4px 10px; border-radius: 999px; background: var(--secundario); font-size: 0.8125rem; color: var(--texto);
 }
 .nota-sesion { margin: 4px 0 0; font-size: 0.8125rem; }
-/* En el móvil el asa (fija, a 28 px del borde) puede caer sobre el borde derecho de «Tu sesión» (D5): el
-   texto nunca llega a esa franja (riesgo 3 del plan). En el PC tiene su margen propio. */
-@media (max-width: 1023.98px) { .tu-sesion { padding-right: 56px; } }
 .nota-sesion a { color: var(--texto); font-weight: 600; }
 /* «Tu sesión» y Empezar van en la misma caja: sin su propio gap quedaban pegados en el móvil. */
 .derecha-entrenar { display: grid; gap: 16px; }
@@ -701,6 +698,16 @@ html.menu-abierto #asa { visibility: hidden; }
 #menu.arrastrando, #menu.arrastrando .menu-panel { transition: none; }
 /* La franja propia del asa, a la izquierda del panel y a la misma altura que el asa de fuera. */
 .asa-panel { position: absolute; left: 0; top: 42%; justify-content: center; }
+/* En el móvil el asa va abajo a la derecha: en el hueco libre bajo Empezar, con su pastilla a 4 px de la barra y a
+   28 px del borde (fuera de la franja del gesto «Atrás»), así no tapa nada aunque la pantalla sea baja (390 × 667).
+   Los 8 px transparentes de abajo del botón quedan bajo la barra, que va encima. En el PC, al 42 % de alto. Su
+   globo, encima de ella; la del panel, a la misma altura. Entrenar deja sitio debajo: al final tampoco tapa nada. */
+@media (max-width: 1023.98px) {
+  :root { --asa-abajo: calc(var(--alto-nav) + 14px + env(safe-area-inset-bottom)); }
+  #asa, .asa-panel { top: auto; bottom: var(--asa-abajo); }
+  .globo-asa { top: auto; bottom: calc(var(--asa-abajo) + 72px + 12px); transform: none; }
+  body:not(.entrenando) #vista-entrenar:not([data-sub]) { padding-bottom: 84px; }
+}
 .menu-contenido {
   height: 100%; overflow-y: auto; overscroll-behavior: contain;
   /* Sin relleno arriba: lo lleva la cabecera fija, así se ve igual pegada que sin pegar (también con notch). */

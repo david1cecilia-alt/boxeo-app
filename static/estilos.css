@@ -1548,7 +1548,7 @@ dialog.recorte:not([open]) { display: none; }
 
   /* Sesión: reloj y combinación centrados a pantalla completa. */
   #pantalla { padding: 32px 48px; align-items: center; }
-  #pantalla > :not(.marca-agua) { width: min(100%, 820px); }
+  #pantalla > :not(.marca-agua, .fondo-ring) { width: min(100%, 820px); }
   #pantalla .marca-agua { font-size: 26rem; left: -30px; bottom: 60px; }
   #asalto { font-size: 30px; }
   #tiempo { font-size: min(16vw, 30vh); }

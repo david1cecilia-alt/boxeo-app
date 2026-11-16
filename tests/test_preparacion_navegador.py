@@ -37,9 +37,9 @@ def sitio(tmp_path_factory):
     return construir(tmp_path_factory.mktemp("sitio") / "_site", "prueba", fotos=False)
 
 
-def abrir_app(sitio, movimiento=True):
+def abrir_app(sitio, movimiento=True, ancho=390, alto=844):
     """Contexto con la app abierta en Entrenar (una Personalizada de 2 × 30 s), con el reloj parado."""
-    contexto = abrir(sitio, VACIA, 390, 844)
+    contexto = abrir(sitio, VACIA, ancho, alto, barras=ancho > 800)
     pagina, errores = contexto.__enter__()
     sin_intro(pagina)
     pagina.add_init_script(VOZ_FALSA)
@@ -145,6 +145,21 @@ def test_sin_video_que_cargue_o_con_movimiento_reducido_se_ve_la_imagen_y_la_pre
         assert fase(pagina) == "preparacion"
         pagina.clock.run_for(10_100)
         assert fase(pagina) == "asalto"
+        assert not errores
+    finally:
+        contexto.__exit__(None, None, None)
+
+
+@pytest.mark.parametrize("ancho,alto", [(390, 844), (1440, 900)])
+def test_el_ring_cubre_toda_la_pantalla(sitio, ancho, alto):
+    contexto, pagina, errores = abrir_app(sitio, ancho=ancho, alto=alto)
+    try:
+        pagina.click("#empezar")
+        ring, pantalla = pagina.locator(".fondo-ring").bounding_box(), pagina.locator("#pantalla").bounding_box()
+        assert (ring["x"], ring["y"], ring["width"], ring["height"]) == (
+            pantalla["x"], pantalla["y"], pantalla["width"], pantalla["height"])
+        img = pagina.locator(".fondo-ring img").bounding_box()
+        assert img["width"] == ring["width"] and img["height"] == ring["height"]
         assert not errores
     finally:
         contexto.__exit__(None, None, None)

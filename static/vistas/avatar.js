@@ -113,22 +113,24 @@ export function iniciarIdentidad({ almacen, alGuardar, leer = leerFoto, recortar
       <fieldset class="avatares">
         <legend>Avatar</legend>
         <div class="avatares-fila"></div>
+        ${foto ? `<div class="foto-actual">
+          <button type="button" id="quitar-foto" class="boton secundario">Quitar foto</button></div>` : ""}
+        <div class="fila-foto identidad-foto">
+          <button type="button" id="boton-camara" class="boton secundario solo-tactil" aria-controls="hacer-foto"
+            aria-describedby="mensaje-foto">Hacer una foto</button>
+          <input type="file" id="hacer-foto" accept="image/*" capture="user" hidden>
+          <button type="button" id="boton-galeria" class="boton secundario" aria-controls="subir-foto"
+            aria-describedby="mensaje-foto"><span class="solo-tactil">Elegir de la galería</span><span
+            class="solo-raton">Subir una foto…</span></button>
+          <input type="file" id="subir-foto" accept="image/*" hidden>
+        </div>
       </fieldset>
-      <div class="acciones identidad-foto">
-        <button type="button" id="boton-camara" class="boton secundario solo-tactil" aria-controls="hacer-foto"
-          aria-describedby="mensaje-foto">Hacer una foto</button>
-        <input type="file" id="hacer-foto" accept="image/*" capture="user" hidden>
-        <button type="button" id="boton-galeria" class="boton secundario" aria-controls="subir-foto"
-          aria-describedby="mensaje-foto"><span class="solo-tactil">Elegir de la galería</span><span
-          class="solo-raton">Subir una foto…</span></button>
-        <input type="file" id="subir-foto" accept="image/*" hidden>
-        ${foto ? '<button type="button" id="quitar-foto" class="boton secundario">Quitar foto</button>' : ""}
-      </div>
       <p class="nota" id="mensaje-foto" aria-live="polite"></p>`;
     const fila = $(".avatares-fila", raiz);
     fila.append(opcion("inicial", { tipo: "inicial" }, "Inicial"));
     for (const a of avatares()) fila.append(opcion(`predefinido:${a.id}`, { tipo: "predefinido", id: a.id }));
-    if (foto) fila.append(opcion("foto", { tipo: "foto" }, "Tu foto"));
+    // «Tu foto» (el mismo grupo de radios) va con «Quitar foto», bajo la rejilla: no se queda suelta en otra fila.
+    if (foto) $(".foto-actual", raiz).prepend(opcion("foto", { tipo: "foto" }, "Tu foto"));
   }
 
   async function subir(input) {

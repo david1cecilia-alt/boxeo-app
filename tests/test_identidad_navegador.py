@@ -350,3 +350,33 @@ def test_un_rechazo_sale_en_el_mensaje_sin_alert_y_no_cambia_nada(ajustes, caso)
     assert mensaje.get_attribute("aria-live") == "polite"
     assert _identidad(pagina) == antes
     assert pagina.dialogos == []
+
+
+REJILLA = """() => {
+  const cajas = [...document.querySelectorAll('#identidad .avatares-fila .avatar-opcion')].map((e) => e.getBoundingClientRect());
+  const filas = [...new Set(cajas.map((c) => Math.round(c.top)))];
+  const visibles = (s) => [...document.querySelectorAll(s)].filter((e) => e.getClientRects().length)
+    .map((e) => e.getBoundingClientRect());
+  const foto = visibles('#identidad :is(.foto-actual, .fila-foto) > *');
+  const botones = visibles('#identidad .fila-foto > .boton');
+  const avatares = document.querySelector('#identidad .avatares-fila').getBoundingClientRect();
+  return { n: cajas.length, filas: filas.length, porFila: cajas.filter((c) => Math.round(c.top) === filas[0]).length,
+    mayor: Math.max(...cajas.map((c) => c.width)), cuadrados: cajas.every((c) => Math.abs(c.width - c.height) < 1),
+    fotoDebajo: foto.every((c) => c.top >= avatares.bottom), botonesEnFila: new Set(botones.map((c) => Math.round(c.top))).size,
+    fotoAcompanada: foto.length > 0 && new Set(foto.map((c) => Math.round(c.top + c.height / 2))).size < foto.length };
+}"""
+
+
+@pytest.mark.parametrize("ancho", [390, 1440])
+def test_los_avatares_van_en_4_columnas_sin_crecer_y_la_foto_en_una_fila_debajo(ajustes, ancho):
+    pagina = ajustes
+    pagina.set_viewport_size({"width": ancho, "height": 900})
+    _subir(pagina, "degradado.png", "image/png", _png(pagina))  # con foto: «Tu foto» y «Quitar foto»
+    pagina.wait_for_selector('#identidad input[value="foto"]')
+    esperar_menu_quieto(pagina)
+    r = pagina.evaluate(REJILLA)
+    assert (r["n"], r["filas"], r["porFila"]) == (8, 2, 4), r
+    assert r["mayor"] <= 80 and r["cuadrados"], r
+    assert r["fotoDebajo"] and r["botonesEnFila"] == 1, r  # los botones de la foto, en una fila
+    assert r["fotoAcompanada"], r  # «Tu foto» comparte fila con «Quitar foto»: no va suelta
+    pagina.set_viewport_size({"width": 390, "height": 844})

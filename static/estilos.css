@@ -768,17 +768,23 @@ html.menu-abierto #asa { visibility: hidden; }
 .avatar-inicial svg {
   width: 24px; height: 24px; fill: none; stroke: var(--suave); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
 }
-/* «Nombre y avatar» en Ajustes: radios con la forma del avatar que se envuelven; el elegido, con anillo claro
-   (el anillo y el foco siguen la misma forma). */
+/* «Nombre y avatar» en Ajustes: los 8 avatares en una rejilla de 4 columnas en todos los anchos (como mucho 80 px
+   cada uno, para que no crezcan en el PC); el elegido, con anillo claro (el anillo y el foco siguen su forma).
+   Debajo, «Tu foto» con «Quitar foto» (si la hay) y la fila de botones para hacer o elegir una, a partes iguales. */
 .identidad { display: grid; gap: 12px; }
 .identidad .campo input { color: var(--texto); }
-.avatares-fila { display: flex; flex-wrap: wrap; gap: 8px; }
+.avatares { display: grid; gap: 12px; }
+.avatares-fila { display: grid; grid-template-columns: repeat(4, minmax(0, 80px)); gap: 12px; }
 .avatar-opcion { position: relative; display: block; border-radius: var(--radio-avatar); }
 .avatar-opcion input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-.avatar-opcion .avatar { width: 52px; height: 52px; border: 3px solid transparent; box-sizing: border-box; }
+.avatar-opcion .avatar { width: 100%; height: auto; aspect-ratio: 1; border: 3px solid transparent; box-sizing: border-box; }
+.avatares-fila .avatar-inicial { font-size: 1.5rem; }
 .avatar-opcion input:checked + .avatar { border-color: var(--chip-activo); }
 .avatar-opcion input:focus-visible + .avatar { outline: 3px solid var(--foco); outline-offset: 2px; }
-.identidad-foto .boton { flex: 1 1 auto; white-space: nowrap; }
+.foto-actual { display: flex; align-items: center; gap: 12px; }
+.foto-actual .avatar-opcion { flex: none; width: 56px; }
+.fila-foto { display: flex; gap: 10px; margin: 0; }
+.fila-foto .boton { flex: 1 1 0; min-width: 0; padding-inline: 12px; }
 /* Con ratón y sin pantalla táctil, capture no abre la cámara: fuera «Hacer una foto» y la galería se llama
    «Subir una foto…». Sin @media anidado, (not (any-pointer: coarse)) no lo entienden los navegadores viejos. */
 .solo-raton { display: none; }

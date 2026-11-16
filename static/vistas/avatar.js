@@ -54,7 +54,10 @@ export function crearAvatar(identidad, { decorativo = false, avatar = identidad.
 }
 
 /**
- * «Nombre y avatar» en Ajustes. `pintar(contenedor)` lo dibuja en el hueco #identidad; cada cambio se guarda
+ * «Nombre y avatar» en Ajustes. La foto llega por dos inputs ocultos, cada uno con su botón: «Hacer una foto»
+ * (capture="user": en Android, el selector de fotos del sistema no ofrece la cámara) y «Elegir de la galería»;
+ * con ratón y sin pantalla táctil, capture no hace nada y solo sale el segundo, como «Subir una foto…» (CSS
+ * .solo-tactil / .solo-raton). Los dos pasan por la misma preparación (foto.js). `pintar(contenedor)` lo dibuja en el hueco #identidad; cada cambio se guarda
  * al momento y llama a `alGuardar()` (Ajustes dice «Guardado» y Entrenar repinta la cabecera).
  * Elegir otro avatar no borra la foto: solo «Quitar foto» la borra.
  */
@@ -110,8 +113,13 @@ export function iniciarIdentidad({ almacen, alGuardar, preparar = prepararFoto }
         <div class="avatares-fila"></div>
       </fieldset>
       <div class="acciones identidad-foto">
-        <label class="boton secundario" for="subir-foto">Subir una foto…</label>
-        <input type="file" id="subir-foto" accept="image/*" class="solo-lectores" aria-describedby="mensaje-foto">
+        <button type="button" id="boton-camara" class="boton secundario solo-tactil" aria-controls="hacer-foto"
+          aria-describedby="mensaje-foto">Hacer una foto</button>
+        <input type="file" id="hacer-foto" accept="image/*" capture="user" hidden>
+        <button type="button" id="boton-galeria" class="boton secundario" aria-controls="subir-foto"
+          aria-describedby="mensaje-foto"><span class="solo-tactil">Elegir de la galería</span><span
+          class="solo-raton">Subir una foto…</span></button>
+        <input type="file" id="subir-foto" accept="image/*" hidden>
         ${foto ? '<button type="button" id="quitar-foto" class="boton secundario">Quitar foto</button>' : ""}
       </div>
       <p class="nota" id="mensaje-foto" aria-live="polite"></p>`;
@@ -150,18 +158,24 @@ export function iniciarIdentidad({ almacen, alGuardar, preparar = prepararFoto }
     } else if (el.name === "avatar") {
       const [tipo, id] = el.value.split(":");
       guardar({ avatar: id ? { tipo, id } : { tipo } });
-    } else if (el.id === "subir-foto") {
+    } else if (el.id === "subir-foto" || el.id === "hacer-foto") {
       subir(el);
     }
   }
 
   function alPulsar(e) {
+    // «Hacer una foto» y «Elegir de la galería» abren su input oculto (aria-controls).
+    const abre = e.target.closest("#boton-camara, #boton-galeria");
+    if (abre) {
+      $(`#${abre.getAttribute("aria-controls")}`, raiz).click();
+      return;
+    }
     if (!e.target.closest("#quitar-foto")) return;
     const { avatar } = identidad();
     guardar({ foto: null, avatar: avatar.tipo === "foto" ? { tipo: "inicial" } : avatar });
     pintar();
     mensaje("Foto quitada.");
-    $("#subir-foto", raiz).focus();
+    $("#boton-galeria", raiz).focus();
   }
 
   return { pintar };

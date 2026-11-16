@@ -255,7 +255,11 @@ de los tests y para el enlace «Crea la primera» si queda alguno.
 
 - **Predefinidos**: los 7 de `data/avatares.json` (WebP de 256 px), pintados con `img.src` y su `alt`. Sin
   avatar elegido ni foto, la inicial del nombre.
-- **Foto propia**: `<input type="file" accept="image/*">` (en el móvil ofrece cámara o galería), recorte
+- **Foto propia**: dos `<input type="file" accept="image/*">` ocultos, cada uno con su botón: «Hacer una foto»
+  (`capture="user"`, cámara frontal) y «Elegir de la galería». Hacen falta los dos porque en Android 13/14+ Chrome
+  abre para un input de solo imágenes el selector de fotos del sistema, que no ofrece la cámara (16-11-2026). Con
+  ratón y sin pantalla táctil (`pointer: fine` y no `any-pointer: coarse`), `capture` no hace nada: solo sale el
+  de la galería, como «Subir una foto…». Recorte
   cuadrado centrado, 256 × 256, JPEG 0,85 → `data:image/jpeg;base64,…`. Nunca sale del navegador. Rechazo
   claro si no es una imagen o no se puede leer (HEIC en algunos navegadores de escritorio).
 - **En la copia de seguridad**: entra sola, porque `exportar()` copia todo `datos`. Al importar,
@@ -545,6 +549,11 @@ R0 y R1 no cambian nada visible, así que se pueden revisar y unir antes de toca
 - ~~Pendiente: un test intermitente~~ **Arreglado**: `test_perfil_navegador.py` (`_con_identidad`) esperaba tras
   recargar a `#ir-perfil`, que ya se ve en el HTML de partida antes de que arranque la app; ahora espera a la vista
   que elige el router y a lo que pinta la app (avatar, cuestionario y el nombre en el título).
+
+### 7.3 Para después de unir a main
+
+- **Ajustar el recorte de la foto**: una vista previa antes de guardar para mover la foto y hacer zoom (con el
+  dedo y con ratón/teclado). Hoy `foto.js` recorta siempre el cuadrado del centro.
 
 ---
 

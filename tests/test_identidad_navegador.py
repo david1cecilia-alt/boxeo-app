@@ -1,8 +1,9 @@
 """Nombre y avatar o foto en la sección Ajustes del menú de Entrenar (hueco #identidad), en Chromium headless.
 
-Se elige la inicial, uno de los 7 avatares de data/avatares.json o «Tu foto» (solo si hay foto). «Subir una
-foto…» la recorta a 256 × 256 (foto.js) y la elige; «Quitar foto» la borra (si era la elegida, vuelve la
-inicial); elegir otro avatar no la borra. Los rechazos salen en un mensaje con aria-live, nunca en alert().
+Se elige la inicial, uno de los 7 avatares de data/avatares.json o «Tu foto» (solo si hay foto). La foto llega
+por «Hacer una foto» (capture="user", solo con pantalla táctil) o por «Elegir de la galería» (con ratón y sin
+táctil, «Subir una foto…»; con táctil, test_identidad_tactil.py); los dos la recortan a 256 × 256 (foto.js) y
+la eligen; «Quitar foto» la borra (si era la elegida, vuelve la inicial); elegir otro avatar no la borra. Los rechazos salen en un mensaje con aria-live, nunca en alert().
 El avatar es un cuadrado redondeado (--radio-avatar) sin recortar en Ajustes, en la cabecera de Entrenar y en Perfil.
 Las imágenes de prueba se dibujan en la propia página: nunca fotos de personas. Sin Playwright se salta en
 local; en CI falla.
@@ -60,15 +61,19 @@ def pagina(tmp_path_factory):
         assert dialogos == [], "nada de alert() ni confirm()"
 
 
-@pytest.fixture
-def ajustes(pagina):
-    """El menú abierto en Ajustes, con el almacén vacío (pasa antes por la página que lo borra)."""
+def _abrir_ajustes(pagina):
     pagina.goto(f"{ORIGEN}/__pagina__.html")
     pagina.wait_for_function("window.listo === true")
     pagina.goto(f"{ORIGEN}/index.html#entrenar/menu/ajustes")
     pagina.wait_for_selector("#identidad #nombre", state="visible")
     esperar_menu_quieto(pagina)
     return pagina
+
+
+@pytest.fixture
+def ajustes(pagina):
+    """El menú abierto en Ajustes, con el almacén vacío (pasa antes por la página que lo borra)."""
+    return _abrir_ajustes(pagina)
 
 
 def _identidad(pagina):
@@ -79,8 +84,8 @@ def _png(pagina, ancho=800, alto=600):
     return base64.b64decode(pagina.evaluate(DEGRADADO, [ancho, alto]))
 
 
-def _subir(pagina, nombre, tipo, datos):
-    pagina.locator("#subir-foto").set_input_files({"name": nombre, "mimeType": tipo, "buffer": datos})
+def _subir(pagina, nombre, tipo, datos, entrada="subir-foto"):
+    pagina.locator(f"#{entrada}").set_input_files({"name": nombre, "mimeType": tipo, "buffer": datos})
 
 
 def _opciones(pagina):
@@ -99,10 +104,34 @@ def test_el_hueco_tiene_nombre_inicial_los_7_avatares_y_subir_foto_sin_foto_que_
     assert pagina.get_by_role("radio", name="Inicial").count() == 1
     for a in AVATARES:
         assert pagina.get_by_role("radio", name=a["alt"]).count() == 1, a["id"]
-    assert pagina.locator('#identidad label[for="subir-foto"]').inner_text() == "Subir una foto…"
-    assert pagina.locator("#subir-foto").get_attribute("accept") == "image/*"
+    # Con ratón y sin táctil (el Chromium de las pruebas), un solo botón: «Subir una foto…».
+    assert pagina.get_by_role("button", name="Subir una foto…").is_visible()
+    assert not pagina.locator("#boton-camara").is_visible()
+    assert pagina.get_by_role("button", name="Hacer una foto").count() == 0
+    assert pagina.get_by_role("button", name="Elegir de la galería").count() == 0
     assert pagina.locator("#quitar-foto").count() == 0
     assert pagina.locator("#mensaje-foto").get_attribute("aria-live") == "polite"
+
+
+def test_los_dos_inputs_ocultos_con_sus_atributos(ajustes):
+    pagina = ajustes
+    camara, galeria = pagina.locator("#hacer-foto"), pagina.locator("#subir-foto")
+    for entrada in (camara, galeria):
+        assert entrada.get_attribute("type") == "file"
+        assert entrada.get_attribute("accept") == "image/*"
+        assert entrada.get_attribute("hidden") is not None
+        assert entrada.get_attribute("multiple") is None
+    assert camara.get_attribute("capture") == "user"
+    assert galeria.get_attribute("capture") is None
+    # Cada botón (de verdad) dice qué input abre y lleva el mensaje de la foto como descripción.
+    for boton, entrada in (("#boton-camara", "hacer-foto"), ("#boton-galeria", "subir-foto")):
+        assert pagina.locator(boton).evaluate("(b) => b.tagName + ':' + b.type") == "BUTTON:button"
+        assert pagina.locator(boton).get_attribute("aria-controls") == entrada
+        assert pagina.locator(boton).get_attribute("aria-describedby") == "mensaje-foto"
+    # «Subir una foto…» abre el selector de la galería.
+    with pagina.expect_file_chooser() as elegir:
+        pagina.get_by_role("button", name="Subir una foto…").click()
+    assert elegir.value.element.get_attribute("id") == "subir-foto"
 
 
 def test_elegir_un_predefinido_lo_guarda_y_sigue_al_volver(ajustes):
@@ -181,7 +210,7 @@ def test_elegir_otro_avatar_no_borra_la_foto_y_quitarla_la_borra(ajustes):
     assert "foto" not in _opciones(pagina)
     assert pagina.locator("#quitar-foto").count() == 0
     assert pagina.locator("#mensaje-foto").inner_text() == "Foto quitada."
-    assert pagina.evaluate("document.activeElement.id") == "subir-foto"
+    assert pagina.evaluate("document.activeElement.id") == "boton-galeria"
 
 
 def test_quitar_la_foto_elegida_vuelve_a_la_inicial(ajustes):

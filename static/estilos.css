@@ -730,6 +730,15 @@ html.menu-abierto #asa { visibility: hidden; }
 .avatar-opcion input:checked + .avatar { border-color: var(--chip-activo); }
 .avatar-opcion input:focus-visible + .avatar { outline: 3px solid var(--foco); outline-offset: 2px; }
 .identidad-foto .boton { flex: 1 1 auto; white-space: nowrap; }
+/* Con ratón y sin pantalla táctil, capture no abre la cámara: fuera «Hacer una foto» y la galería se llama
+   «Subir una foto…». Sin @media anidado, (not (any-pointer: coarse)) no lo entienden los navegadores viejos. */
+.solo-raton { display: none; }
+@media (pointer: fine) {
+  @media not all and (any-pointer: coarse) {
+    .solo-tactil { display: none; }
+    .solo-raton { display: inline; }
+  }
+}
 #mensaje-foto:empty { display: none; }
 #mensaje-foto.aviso { padding: 10px 14px; }
 

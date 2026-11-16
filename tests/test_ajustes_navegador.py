@@ -443,7 +443,9 @@ def test_la_seccion_ajustes_cabe_en_el_panel(ajustes, ancho):
         assert pagina.evaluate(CABE_EN_EL_PANEL)
         chips = [c.bounding_box() for c in pagina.locator(".velocidades .chip-opcion").all()]
         assert len({round(c["y"]) for c in chips}) == 1
+        # Los que se ven: con ratón y sin táctil, «Hacer una foto» está oculto (no sirve en un PC).
         for control in pagina.locator("#menu-ajustes :is(label:has(input[type=radio]), select, button)").all():
-            assert control.bounding_box()["height"] >= 44
+            if control.is_visible():
+                assert control.bounding_box()["height"] >= 44
     finally:
         pagina.set_viewport_size({"width": 390, "height": 844})

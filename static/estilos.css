@@ -1500,19 +1500,10 @@ dialog.recorte:not([open]) { display: none; }
   #vista-perfil .cabecera { padding-top: 24px; min-height: 0; }
   #vista-perfil .perfil-quien h1 { font-size: 3.5rem; }
 
-  /* Entrenar: a la izquierda la cabecera de perfil y el selector; a la derecha «Tu sesión» y Empezar, fijos
-     al bajar (sticky). A la derecha de todo queda el margen de 112 px del asa (2.1): main llega al borde de
-     la ventana hasta ~1450 px y lleva 48 de relleno; #config deja otros 64. Más ancho, main se centra y el
-     margen crece solo. */
+  /* Entrenar: una sola columna centrada (como mucho 640 px) con la cabecera de perfil, el selector, «Tu sesión»
+     y Empezar, en el mismo orden que en el móvil. El asa, fija a la derecha, queda fuera de la columna. */
   #vista-entrenar { padding-top: 40px; }
-  #config {
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 428px); grid-template-rows: auto auto 1fr;
-    gap: 32px 32px; align-items: start; margin-right: 64px;
-  }
-  .cabecera-perfil { grid-column: 1; grid-row: 1; max-width: 520px; }
-  #tipo-sesion { grid-column: 1; grid-row: 2; }
-  .tu-sesion, .empezar-caja { grid-column: 2; }
-  .derecha-entrenar { grid-column: 2; grid-row: 2 / 4; position: sticky; top: 24px; }
+  #config { max-width: 640px; margin-inline: auto; }
   .tu-sesion { padding: 24px; }
   .resumen-grande { font-size: 3rem; }
   .niveles label span { min-height: 84px; font-size: 0.875rem; }

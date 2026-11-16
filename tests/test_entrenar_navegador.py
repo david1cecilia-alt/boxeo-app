@@ -386,20 +386,32 @@ def test_la_guardia_de_ajustes_cambia_la_general_y_su_sesion_sale_con_lo_de_d1(p
         "general", True, 180, 60, 1, False, 3)
 
 
-def test_a_1440_dos_columnas_tu_sesion_fija_y_el_margen_del_asa(pagina):
-    pagina.set_viewport_size({"width": 1440, "height": 900})
-    preparar(pagina, {})
+@pytest.mark.parametrize("ancho, alto", [(1024, 768), (1440, 900)])
+def test_desde_1024_una_columna_centrada_en_el_orden_del_movil(pagina, ancho, alto):
+    pagina.set_viewport_size({"width": ancho, "height": alto})
+    preparar(pagina, {"perfil": {"estilo": {"mi_estilo": "contragolpeador"}}})
+    pagina.evaluate("document.fonts.ready")
     caja = lambda s: pagina.locator(s).bounding_box()  # noqa: E731
-    cabecera, selector, sesion, empezar = caja(".cabecera-perfil"), caja("#tipo-sesion"), caja(".tu-sesion"), caja("#empezar")
-    assert sesion["x"] > selector["x"] + selector["width"]  # «Tu sesión» a la derecha del selector
-    assert abs(sesion["y"] - selector["y"]) <= 1 and cabecera["y"] < selector["y"]
-    assert empezar["y"] > sesion["y"] + sesion["height"] and abs(empezar["x"] - sesion["x"]) <= 1
-    assert pagina.eval_on_selector(".derecha-entrenar", "(e) => getComputedStyle(e).position") == "sticky"
-    # Margen de 112 px a la derecha de la columna (desde el borde de la zona visible, la del asa fija).
-    borde = pagina.evaluate("document.documentElement.clientWidth")
-    assert borde - (sesion["x"] + sesion["width"]) >= 112
+    bloques = [caja(s) for s in (".cabecera-perfil", "#tipo-sesion", ".tu-sesion", "#empezar")]
+    # Uno debajo de otro, en el orden del móvil, del mismo ancho (como mucho 640) y alineados.
+    assert all(a["y"] + a["height"] <= b["y"] for a, b in zip(bloques, bloques[1:])), bloques
+    assert all(abs(b["x"] - bloques[0]["x"]) <= 1 and abs(b["width"] - bloques[0]["width"]) <= 1 for b in bloques)
+    assert bloques[0]["width"] <= 640
+    # Centrada en el sitio que deja la barra lateral.
+    main = pagina.evaluate("""() => { const m = document.querySelector('main'), r = m.getBoundingClientRect(),
+      s = getComputedStyle(m); return [r.left + parseFloat(s.paddingLeft), r.right - parseFloat(s.paddingRight)]; }""")
+    izquierda, derecha = bloques[0]["x"] - main[0], main[1] - (bloques[0]["x"] + bloques[0]["width"])
+    assert abs(izquierda - derecha) <= 2, (izquierda, derecha)
+    # Nada cortado: ni el estilo de la cabecera («Boxe…») ni el selector, que no se sale de su caja.
+    assert pagina.eval_on_selector("#cabecera-estilo", "(e) => e.scrollWidth <= e.clientWidth")
+    assert pagina.inner_text("#cabecera-estilo") == "Contragolpeador · Diestro"
+    selector = caja("#tipo-sesion")
+    for chip in pagina.locator("#tipo-sesion span").all():
+        c = chip.bounding_box()
+        assert selector["x"] <= c["x"] and c["x"] + c["width"] <= selector["x"] + selector["width"] + 0.5
+    # El asa, fuera de la columna.
     asa = caja("#asa .asa-puntos")
-    assert asa["x"] - (empezar["x"] + empezar["width"]) >= 36  # 36 px libres hasta Empezar (2.1)
+    assert asa["x"] >= bloques[0]["x"] + bloques[0]["width"] + 16
 
 
 # ---------- El asa no tapa nada (geometría) ----------

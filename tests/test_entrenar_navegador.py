@@ -309,6 +309,38 @@ def test_el_selector_tiene_general_y_personalizada_y_prueba_solo_con_el_parametr
     assert pagina.locator("#tipo-sesion label").all_inner_texts() == ["General", "Personalizada", "Prueba 2×30 s"]
 
 
+# Cuánto se sale el texto de cada chip de su caja, y si dos cajas de chip se cruzan.
+CHIPS = """() => {
+  const cajas = [...document.querySelectorAll('#tipo-sesion span')].map((s) => {
+    const rango = document.createRange();
+    rango.selectNodeContents(s);
+    return [s.textContent, s.getBoundingClientRect(), rango.getBoundingClientRect()];
+  });
+  const sale = cajas.map(([t, c, r]) => [t, Math.max(c.left - r.left, r.right - c.right, c.top - r.top, r.bottom - c.bottom)]);
+  const cruzan = cajas.slice(1).some(([, c], i) => c.left < cajas[i][1].right);
+  return { sale, cruzan };
+}"""
+
+
+@pytest.mark.parametrize("ancho", [320, 390])
+def test_con_prueba_ningun_chip_se_sale_ni_toca_al_de_al_lado(pagina, ancho):
+    pagina.set_viewport_size({"width": ancho, "height": 844})
+    preparar(pagina, {}, consulta="?prueba")
+    pagina.evaluate("document.fonts.ready")
+    medida = pagina.evaluate(CHIPS)
+    assert [t for t, _ in medida["sale"]] == ["General", "Personalizada", "Prueba 2×30 s"]
+    assert all(s <= 0.5 for _, s in medida["sale"]), medida["sale"]
+    assert not medida["cruzan"]
+    assert pagina.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+
+
+def test_el_texto_de_prueba_dice_que_es_y_que_se_guarda(pagina):
+    preparar(pagina, {}, consulta="?prueba")
+    pagina.click('#tipo-sesion label:has(input[value="prueba"])')
+    assert pagina.inner_text("#nota-sesion") == (
+        'Sesión corta de prueba: 2 asaltos de 30 s con lo de tu Personalizada. Se guarda en el Historial como "Prueba".')
+
+
 def test_la_barra_trae_entrenar_aprende_e_historial_y_entrenar_ya_no_tiene_foto(pagina, sitio):
     assert not (sitio / "imagenes" / "entrenar-cabecera.webp").exists()  # ni se publica su foto
     preparar(pagina, {})

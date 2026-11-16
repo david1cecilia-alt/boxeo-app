@@ -396,8 +396,10 @@ input[type="file"].solo-lectores:focus-visible + *, label.boton:focus-within { o
 .cabecera-perfil-nombre { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cabecera-perfil-estilo { font-size: 0.8125rem; color: var(--suave); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* General | Personalizada (| Prueba): segmentado a todo el ancho; el elegido, en claro. */
+/* Cada chip, como poco del ancho de su palabra más larga: «Personalizada» no se encoge hasta tocar el de al
+   lado y «Prueba 2×30 s» parte en dos líneas. */
 .segmentado-tipo {
-  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px;
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(min-content, 1fr); gap: 4px;
   margin: 0; padding: 4px; border: 0; border-radius: 28px; background: var(--secundario);
 }
 .segmentado-tipo label { position: relative; display: grid; }
@@ -648,13 +650,16 @@ html.menu-abierto #asa { visibility: hidden; }
 .asa-panel { position: absolute; left: 0; top: 42%; justify-content: center; }
 .menu-contenido {
   height: 100%; overflow-y: auto; overscroll-behavior: contain;
-  padding: max(16px, env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px)) 24px 56px;
+  /* Sin relleno arriba: lo lleva la cabecera fija, así se ve igual pegada que sin pegar (también con notch). */
+  padding: 0 calc(16px + env(safe-area-inset-right, 0px)) 24px 56px;
 }
 .menu-cabecera {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  min-height: 56px; margin-bottom: 8px; touch-action: none; cursor: grab;
-  /* Fija arriba al desplazar el panel: «✕» y el arrastre de cierre siempre a mano. */
-  position: sticky; top: calc(-1 * max(16px, env(safe-area-inset-top, 0px))); z-index: 1;
+  box-sizing: content-box; min-height: 56px; margin-bottom: 8px; padding-top: max(16px, env(safe-area-inset-top, 0px));
+  touch-action: none; cursor: grab;
+  /* Fija arriba al desplazar el panel: «✕» y el arrastre de cierre siempre a mano. Con top: 0 y el relleno
+     dentro, el título nunca queda por encima del borde del panel (antes, con top negativo, se cortaba). */
+  position: sticky; top: 0; z-index: 1;
   background: var(--superficie);
 }
 .menu-cabecera h2 { font-size: 2rem; }
@@ -663,7 +668,7 @@ html.menu-abierto #asa { visibility: hidden; }
   background: var(--secundario); color: var(--texto); font-size: 1.25rem; cursor: pointer;
 }
 .menu-cerrar:hover { background: var(--secundario-hover); }
-.menu-contenido details { border-top: 1px solid var(--linea); padding: 4px 0; scroll-margin-top: 64px; } /* bajo la cabecera fija */
+.menu-contenido details { border-top: 1px solid var(--linea); padding: 4px 0; scroll-margin-top: calc(72px + max(16px, env(safe-area-inset-top, 0px))); } /* bajo la cabecera fija */
 .menu-contenido details > .nota { margin: 0 0 12px; }
 .menu-contenido summary { min-height: 48px; display: flex; align-items: center; font-weight: 600; cursor: pointer; }
 /* Cada sección: sus campos uno debajo de otro, al ancho del panel (min(88vw, 420px) menos la franja). */

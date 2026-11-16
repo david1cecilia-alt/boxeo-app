@@ -27,7 +27,7 @@ const SEGUNDOS_FINAL = 10;
 // Qué es la sesión elegida, debajo de sus pastillas (la Personalizada lleva el enlace a Personalizar).
 const NOTA_SESION = {
   general: "General: ritmo, nivel y combinaciones fijos. Voz y guardia, las de Ajustes.",
-  prueba: "Prueba: para probar, con lo de tu Personalizada. No se guarda.",
+  prueba: 'Sesión corta de prueba: 2 asaltos de 30 s con lo de tu Personalizada. Se guarda en el Historial como "Prueba".',
 };
 const TEXTO_FASE = {
   asalto: "En asalto", final: "Últimos 10 s", descanso: "Descanso", reaccion: "¡Reacción!", pausa: "En pausa",

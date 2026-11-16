@@ -340,6 +340,22 @@ def test_desplazar_el_panel_en_vertical_no_lo_cierra(abrir_pagina):
     assert pagina.locator(".menu-cerrar").bounding_box()["y"] >= 0
 
 
+@pytest.mark.parametrize("ancho", ANCHOS)
+def test_con_el_panel_desplazado_el_titulo_se_ve_entero(abrir_pagina, ancho):
+    pagina = abrir_pagina(ancho)
+    abrir_con_el_asa(pagina)
+    esperar_menu_quieto(pagina)
+    antes = pagina.locator("#t-menu").bounding_box()
+    pagina.evaluate("document.querySelector('.menu-contenido').scrollTop = 600")
+    pagina.wait_for_function("document.querySelector('.menu-contenido').scrollTop > 0")
+    titulo = pagina.locator("#t-menu").bounding_box()
+    contenido = pagina.locator(".menu-contenido").bounding_box()
+    # Dentro del panel (antes, con top negativo, la parte de arriba de «MENÚ» quedaba fuera y se cortaba)
+    # y en el mismo sitio que sin desplazar.
+    assert titulo["y"] >= contenido["y"] >= 0
+    assert abs(titulo["y"] - antes["y"]) < 1
+
+
 # ---------- Teclado y foco ----------
 
 @pytest.mark.parametrize("ancho", ANCHOS)

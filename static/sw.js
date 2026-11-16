@@ -79,6 +79,9 @@ const FICHEROS = [
   "imagenes/cat-pies.webp",
   "imagenes/historial-cabecera.webp",
   "imagenes/perfil-cabecera.webp",
+  // El ring de la preparación (la JPG, de reserva sin WebP). El vídeo, si lo hay, no: se guarda la primera vez.
+  "imagenes/ring-cenital.jpg",
+  "imagenes/ring-cenital.webp",
   "iconos/guante.svg",
   "iconos/icono-192.png",
   "iconos/icono-512.png",

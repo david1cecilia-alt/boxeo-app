@@ -732,8 +732,11 @@ html.menu-abierto #asa { visibility: hidden; }
 }
 @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
   .menu-panel { background: var(--panel-cristal); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
-  /* La cabecera desenfoca lo que pasa por debajo al desplazar, con el brillo arriba. */
+  /* La cabecera desenfoca lo que pasa por debajo al desplazar, con el brillo arriba. Ocupa todo el ancho del
+     panel (sale del relleno del contenido): si no, su fondo dejaba un rectángulo más claro que no llegaba al borde. */
   .menu-cabecera {
+    margin-left: -56px; margin-right: calc(-16px - env(safe-area-inset-right, 0px));
+    padding-left: 56px; padding-right: calc(16px + env(safe-area-inset-right, 0px));
     background: linear-gradient(180deg, var(--brillo-panel), transparent), var(--panel-cristal);
     -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
   }

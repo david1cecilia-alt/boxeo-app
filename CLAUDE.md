@@ -34,6 +34,12 @@
   arranque en frío (`sessionStorage['boxeo.intro']`); no sale con `prefers-reduced-motion` ni al arrancar en el menú
   (`#entrenar/menu…` o una ruta vieja que `rutaNueva()` lleva allí: la regla está copiada, la une un test). Se traga
   el toque o la tecla que la salta y al salir lanza `intro-fin` (`esperarIntro()` de `vistas/dom.js`).
+- Preparación: 10 s fijos antes del asalto 1 (`SEGUNDOS_PREPARACION` en `vistas/entrenar.js`), con su propio
+  reproductor; el guion del motor no cambia. Fondo: el ring (imagen en el precache; el vídeo, comentado en
+  `index.html` hasta que existan sus ficheros, nunca en el precache). Los tests que cronometran fases pulsan «Empezar ya».
+- Recorte de la foto: `vistas/recorte.js` (diálogo fuera del menú) elige el cuadrado y `foto.js` lo codifica igual
+  que siempre (`leerFoto` + `codificarFoto`): el almacén no cambia.
+- El asa del menú: en el móvil, abajo a la derecha encima de la barra (`--asa-abajo`); en el PC, al 42 % de alto.
 - Pista del asa: `perfil.pistas.asa` en el almacén. No abre el `<dialog>` y lleva `pointer-events: none`; la lengüeta
   se recoge en ~1,7 s y el globo se queda 4 s (se va antes con un toque, una tecla, el menú, otra vista o la sesión).
 - Identidad (`perfil.identidad`): `{ nombre, avatar, foto }`, formato en la 4.1 de `docs/revision/rediseno-plan.md`.

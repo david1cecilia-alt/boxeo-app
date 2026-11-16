@@ -43,6 +43,10 @@ RAIZ = Path(__file__).resolve().parent.parent
 SALIDA = RAIZ / ".playwright-mcp" / "capturas" / "rediseno"
 TAMANOS = ((390, 844), (1440, 900))
 VACIA = """<!doctype html><meta charset="utf-8"><script>window.listo = true;</script>"""
+# Semilla fija para la sesión (la de semillaAleatoria() de motor/azar.js): cada captura saca la misma combinación.
+# Solo en esta página de Playwright; la app no cambia.
+SEMILLA = """(() => { const _g = crypto.getRandomValues.bind(crypto);
+  crypto.getRandomValues = (a) => (a instanceof Uint32Array && a.length === 1 ? (a[0] = 7, a) : _g(a)); })();"""
 
 # Deja en el localStorage un almacén v9 con esta identidad, «Mi estilo» y guardia (y la pista del asa ya vista).
 # `sesion`: más campos de perfil.sesion; `sesiones` y `propias`: el Historial y Mis combinaciones.
@@ -274,6 +278,7 @@ def capturar_una(sitio, ancho, alto, estado, llegar, opciones, ruta):
     """Una captura en una página nueva (sessionStorage limpio) con el reloj parado antes de cargar."""
     with abrir(sitio, VACIA, ancho, alto, barras=ancho > 800) as (pagina, errores):
         preparar(pagina, intro=opciones.get("intro", False), pista=opciones.get("pista", False))
+        pagina.add_init_script(SEMILLA)
         pagina.emulate_media(reduced_motion="no-preference" if opciones.get("movimiento", True) else "reduce")
         pagina.clock.install(time=INICIO)
         pagina.clock.pause_at(INICIO)
@@ -302,6 +307,7 @@ def capturar(sitio: Path, fase: str, nombres=None) -> list[Path]:
             continue
         with abrir(sitio, VACIA, ancho, alto, barras=ancho > 800) as (pagina, errores):
             preparar(pagina)  # sin la intro ni la pista del asa
+            pagina.add_init_script(SEMILLA)
             pagina.emulate_media(reduced_motion="reduce")
             for nombre in nombres_juntos:
                 estado, llegar = capturas[nombre]

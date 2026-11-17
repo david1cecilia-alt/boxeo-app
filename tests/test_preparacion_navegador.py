@@ -32,7 +32,7 @@ def sitio(tmp_path_factory):
     return construir(tmp_path_factory.mktemp("sitio") / "_site", "prueba", fotos=False)
 
 
-def abrir_app(sitio, movimiento=True, ancho=390, alto=844):
+def abrir_app(sitio, movimiento=True, ancho=390, alto=844, reaccion=False):
     """Contexto con la app abierta en Entrenar (una Personalizada de 2 × 30 s), con el reloj parado."""
     contexto = abrir(sitio, VACIA, ancho, alto, barras=ancho > 800)
     pagina, errores = contexto.__enter__()
@@ -43,6 +43,7 @@ def abrir_app(sitio, movimiento=True, ancho=390, alto=844):
     pagina.goto(f"{ORIGEN}/__pagina__.html")
     pagina.wait_for_function("window.listo === true")
     datos = {"version": 9, "perfil": {"sesion": {"tipo": "personalizada",
+                                                "reaccion": reaccion,
                                                 "personalizada": {"asaltos": 2, "duracion_asalto": 30, "descanso": 10}},
                                       "pistas": {"asa": True}}}
     pagina.evaluate("(d) => localStorage.setItem('boxeo', d)", json.dumps(datos))
@@ -242,6 +243,37 @@ def test_en_la_preparacion_el_foco_va_a_empezar_ya_y_parar_se_ve_como_en_el_asal
         assert {**en_preparacion, "contorno": None} == {**en_asalto, "contorno": None}
         pagina.clock.run_for(21_000)  # a falta de 10 s: el fondo rojo, y Parar se distingue con su borde
         assert fase(pagina) == "final" and "inset" in pagina.evaluate(ESTILO_PARAR)["sombra"]
+        assert not errores
+    finally:
+        contexto.__exit__(None, None, None)
+
+
+@pytest.mark.parametrize("ancho,alto", [(390, 844), (1440, 900)])
+def test_parar_lleva_borde_blanco_solo_en_los_ultimos_10_s_del_asalto(sitio, ancho, alto):
+    contexto, pagina, errores = abrir_app(sitio, ancho=ancho, alto=alto, reaccion=True)
+    try:
+        def con_borde():
+            return "inset" in pagina.evaluate(ESTILO_PARAR)["sombra"]
+        vistas = {}
+        pagina.click("#empezar")
+        vistas[fase(pagina)] = con_borde()  # preparación
+        pagina.click("#pausa")
+        vistas["pausa en la preparación"] = con_borde()
+        pagina.click("#pausa")
+        pagina.click("#empezar-ya")
+        for paso in range(360):  # la sesión entera (30 + 10 + 30 s), de 200 en 200 ms
+            if pagina.is_hidden("#pantalla"):
+                break
+            if paso in (25, 225):  # una pausa en cada asalto
+                pagina.click("#pausa")
+                vistas.setdefault(fase(pagina), set()).add(con_borde())
+                pagina.click("#pausa")
+            vistas.setdefault(fase(pagina), set()).add(con_borde())
+            pagina.clock.run_for(200)
+        assert vistas.pop("preparacion") is False and vistas.pop("pausa en la preparación") is False
+        assert set(vistas) == {"asalto", "reaccion", "final", "descanso", "pausa"}, vistas
+        assert vistas.pop("final") == {True}
+        assert all(v == {False} for v in vistas.values()), vistas
         assert not errores
     finally:
         contexto.__exit__(None, None, None)

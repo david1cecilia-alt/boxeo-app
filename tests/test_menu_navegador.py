@@ -118,21 +118,37 @@ class Dedo:
     """Arrastra con el ratón o con un dedo (toques de verdad por CDP: Chromium los convierte en eventos
     de puntero de tipo touch, con su touch-action). Los toques llevan su propia marca de tiempo (un paso =
     al menos 16 ms, como un móvil a 60 Hz), así que la velocidad al soltar no depende de lo que tarde
-    Playwright en mandar cada evento."""
+    Playwright en mandar cada evento. Con `marcas_fijas`, el ratón igual: sus eventos van por CDP con su marca de
+    tiempo y `quieto(ms)` cuenta una espera sin depender de lo que tarde el equipo."""
 
-    def __init__(self, pagina, puntero):
+    def __init__(self, pagina, puntero, marcas_fijas=False):
         self.pagina, self.puntero = pagina, puntero
-        self.cdp = pagina.context.new_cdp_session(pagina) if puntero == "touch" else None
+        self.raton_fijo = puntero == "mouse" and marcas_fijas
+        self.cdp = pagina.context.new_cdp_session(pagina) if puntero == "touch" or self.raton_fijo else None
 
     def _toque(self, tipo, x=None, y=None, ms=0):
         self.reloj += ms / 1000
+        if self.raton_fijo:  # mousePressed, mouseMoved o mouseReleased, con el botón izquierdo pulsado
+            self.cdp.send("Input.dispatchMouseEvent", {
+                "type": tipo, "x": self.x, "y": self.y, "button": "left", "clickCount": 1,
+                "buttons": 0 if tipo == "mouseReleased" else 1, "timestamp": self.reloj})
+            return
         puntos = [] if x is None else [{"x": x, "y": y}]
         self.cdp.send("Input.dispatchTouchEvent", {"type": tipo, "touchPoints": puntos, "timestamp": self.reloj})
+
+    def quieto(self, ms):
+        """El dedo quieto `ms` (también en las marcas de tiempo, si las lleva)."""
+        if self.cdp:
+            self.reloj += ms / 1000
+        self.pagina.wait_for_timeout(ms)
 
     def bajar(self, x, y):
         self.x, self.y = x, y
         self.reloj = time.time()
-        if self.cdp:
+        if self.raton_fijo:
+            self._toque("mouseMoved")
+            self._toque("mousePressed", ms=1)
+        elif self.cdp:
             self._toque("touchStart", x, y)
         else:
             self.pagina.mouse.move(x, y)
@@ -143,7 +159,7 @@ class Dedo:
         for i in range(1, pasos + 1):
             self.x = x0 + dx * i / pasos
             if self.cdp:
-                self._toque("touchMove", self.x, self.y, ms=max(pausa, 16))
+                self._toque("mouseMoved" if self.raton_fijo else "touchMove", self.x, self.y, ms=max(pausa, 16))
             else:
                 self.pagina.mouse.move(self.x, self.y)
             if pausa:
@@ -151,7 +167,7 @@ class Dedo:
 
     def subir(self, espera=0):
         if self.cdp:
-            self._toque("touchEnd", ms=max(espera, 1))
+            self._toque("mouseReleased" if self.raton_fijo else "touchEnd", ms=max(espera, 1))
         else:
             self.pagina.mouse.up()
 
@@ -797,27 +813,29 @@ A_LA_VISTA = """() => { const p = document.querySelector('.menu-panel').getBound
 
 
 def test_al_soltar_despacio_decide_la_mitad_y_rapido_el_sentido_del_gesto(abrir_pagina):
+    # Con marcas de tiempo fijas: la velocidad al soltar no depende de lo que tarde Playwright en mandar los eventos
+    # (antes, con el equipo cargado, el gesto rápido llegaba lento y el menú se abría).
     pagina = abrir_pagina()  # 390: el panel mide 343 px
-    dedo = Dedo(pagina, "mouse")
+    dedo = Dedo(pagina, "mouse", marcas_fijas=True)
     # Despacio al 60 % a la vista: se abre.
     dedo.bajar(*centro(pagina, "#asa"))
     dedo.mover(-206, pasos=10)
     assert 0.55 < pagina.evaluate(A_LA_VISTA) < 0.65
-    pagina.wait_for_timeout(150)
+    dedo.quieto(150)
     dedo.subir()
     pagina.wait_for_function(ESTA_ABIERTO)
     esperar_menu_quieto(pagina)
     # Desde abierto, despacio hasta dejar el 40 % a la vista: se cierra.
     dedo.bajar(*centro(pagina, ".asa-panel"))
     dedo.mover(206, pasos=10)
-    pagina.wait_for_timeout(150)
+    dedo.quieto(150)
     dedo.subir()
     esperar_cerrado(pagina)
     # Más de la mitad abierto pero con un gesto rápido hacia la derecha: se cierra (manda el sentido).
     dedo.bajar(*centro(pagina, "#asa"))
     dedo.mover(-260, pasos=10, pausa=30)
-    pagina.wait_for_timeout(150)
-    dedo.mover(60, pasos=3)  # 20 px en un instante: muy por encima de 0,5 px/ms
+    dedo.quieto(150)
+    dedo.mover(60, pasos=3)  # 20 px cada 16 ms: 1,25 px/ms, muy por encima de 0,5
     dedo.subir()
     pagina.wait_for_function(ESTA_CERRADO)
     pagina.wait_for_timeout(DURACION * 1000 + 50)

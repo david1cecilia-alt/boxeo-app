@@ -46,7 +46,8 @@ async function pedir(sw, ruta) {
   return respondida;
 }
 
-for (const ruta of ["video/ring-horizontal.mp4", "video/ring-horizontal.webm", "video/ring-vertical.mp4"]) {
+for (const ruta of ["video/ring-horizontal.mp4", "video/ring-horizontal.webm", "video/ring-vertical.mp4",
+  "video/ring-vertical.webm"]) {
   test(`${ruta} no pasa por la caché: el navegador lo pide directo a la red`, async () => {
     const sw = cargarSW();
     assert.equal(await pedir(sw, ruta), false); // sin respondWith: ni se busca ni se guarda

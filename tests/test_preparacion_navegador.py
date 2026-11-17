@@ -1,5 +1,5 @@
 """La preparación de 10 s antes del asalto 1 (V2), en Chromium headless con el reloj de Playwright: la cuenta atrás,
-«Empezar ya», Pausa y Parar (sin guardar nada) y el fondo del ring (el vídeo en horizontal; la imagen en vertical, con movimiento
+«Empezar ya», Pausa y Parar (sin guardar nada) y el fondo del ring (el vídeo de su orientación; la imagen con movimiento
 reducido o si falla). Los datos de prueba solo viven en el localStorage de este Chromium. Sin Playwright se salta en local.
 """
 import importlib.util
@@ -149,8 +149,9 @@ def test_en_horizontal_el_video_sale_una_vez_y_se_queda_en_el_ultimo_fotograma(s
         contexto.__exit__(None, None, None)
 
 
-def test_con_movimiento_reducido_solo_se_ve_la_imagen_y_no_se_pide_el_video(sitio):
-    contexto, pagina, errores = abrir_app(sitio, movimiento=False, ancho=1440, alto=900)
+@pytest.mark.parametrize("ancho,alto", [(390, 844), (1440, 900)])
+def test_con_movimiento_reducido_solo_se_ve_la_imagen_y_no_se_pide_el_video(sitio, ancho, alto):
+    contexto, pagina, errores = abrir_app(sitio, movimiento=False, ancho=ancho, alto=alto)
     try:
         pedidos = []
         pagina.on("request", lambda r: "/video/" in r.url and pedidos.append(r.url))
@@ -180,13 +181,26 @@ def test_si_el_video_no_llega_se_ve_la_imagen_y_la_preparacion_sigue(sitio, fall
         contexto.__exit__(None, None, None)
 
 
-def test_en_vertical_sin_ring_vertical_se_ve_la_imagen(sitio):
-    contexto, pagina, errores = abrir_app(sitio)  # 390 × 844
+@pytest.mark.parametrize("ancho,alto,pedido,otro,medidas", [
+    (390, 844, "ring-vertical", "ring-horizontal", (720, 1254)),
+    (1440, 900, "ring-horizontal", "ring-vertical", (1280, 720)),
+])
+def test_cada_orientacion_pide_solo_su_video(sitio, ancho, alto, pedido, otro, medidas):
+    contexto, pagina, errores = abrir_app(sitio, ancho=ancho, alto=alto)
     try:
+        pedidos = []
+        pagina.on("request", lambda r: "/video/" in r.url and pedidos.append(r.url))
         pagina.click("#empezar")
-        assert not pagina.is_visible("#video-ring") and pagina.is_visible(".fondo-ring img")
-        pagina.clock.run_for(10_100)
-        assert fase(pagina) == "asalto" and not errores
+        assert pagina.is_visible("#video-ring")
+        pagina.wait_for_function("document.getElementById('video-ring').ended", timeout=20_000)
+        estado = pagina.evaluate(ESTADO_VIDEO)
+        assert not estado["bucle"] and estado["parado"] and estado["falta"] < 0.05  # quieto en el último fotograma
+        assert estado["fuente"].endswith(f"video/{pedido}.webm")
+        assert (estado["ancho"], pagina.evaluate("document.getElementById('video-ring').videoHeight")) == medidas
+        assert pedidos and all(pedido in u for u in pedidos) and not any(otro in u for u in pedidos)
+        assert pagina.get_attribute("#video-ring", "poster") == "imagenes/ring-cenital.jpg"
+        assert pagina.is_visible("#video-ring") and fase(pagina) == "preparacion"
+        assert not errores
     finally:
         contexto.__exit__(None, None, None)
 

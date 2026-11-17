@@ -70,8 +70,9 @@
             <img src="imagenes/ring-cenital.jpg" alt="" width="1080" height="1080">
           </picture>
           <video id="video-ring" muted playsinline preload="none" poster="imagenes/ring-cenital.jpg">
-            <!-- El vertical (9:16), solo cuando exista; sin él, en vertical se ve la imagen:
-            <source src="video/ring-vertical.mp4" type="video/mp4" media="(orientation: portrait)"> -->
+            <!-- En vertical, el vídeo vertical (720×1254); en horizontal, el de siempre. El WebM primero en cada uno. -->
+            <source src="video/ring-vertical.webm" type="video/webm" media="(orientation: portrait)">
+            <source src="video/ring-vertical.mp4" type="video/mp4" media="(orientation: portrait)">
             <source src="video/ring-horizontal.webm" type="video/webm" media="(orientation: landscape)">
             <source src="video/ring-horizontal.mp4" type="video/mp4" media="(orientation: landscape)">
           </video>

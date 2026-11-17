@@ -117,6 +117,8 @@ self.addEventListener("fetch", (evento) => {
   // El vídeo del ring tampoco: ni precache ni copia al vuelo, directo a la red (pesa ~1 MB y admite peticiones
   // por rangos). Sin red o si falla, entrenar.js quita el <video> y se ve la imagen.
   if (url.pathname.includes("/video/")) return;
+  // La página de prueba de audio con cascos (prueba-audio.html y su JS) tampoco: siempre la última versión.
+  if (url.pathname.includes("/prueba-audio.")) return;
 
   evento.respondWith((async () => {
     const cache = await caches.open(VERSION);

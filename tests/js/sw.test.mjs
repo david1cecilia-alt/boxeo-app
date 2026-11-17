@@ -56,6 +56,14 @@ for (const ruta of ["video/ring-horizontal.mp4", "video/ring-horizontal.webm", "
   });
 }
 
+for (const ruta of ["prueba-audio.html", "prueba-audio.js"]) {
+  test(`${ruta} (la prueba de audio con cascos) no pasa por la caché: siempre la última versión`, async () => {
+    const sw = cargarSW();
+    assert.equal(await pedir(sw, ruta), false);
+    assert.deepEqual(sw.registro.guardadas, []);
+  });
+}
+
 test("el vídeo no está en el precache", () => {
   const sw = readFileSync(new URL("../../static/sw.js", import.meta.url), "utf-8");
   const lista = sw.match(/const FICHEROS = \[([\s\S]*?)\];/)[1];

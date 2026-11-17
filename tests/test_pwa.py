@@ -19,10 +19,13 @@ def _precache(sitio) -> list[str]:
     return re.findall(r'"([^"]+)"', lista)
 
 
-# Se publican pero no se precachean: data/revisar.json (las dudas para el entrenador) no lo usa la app, y el
-# vídeo del ring se pide siempre a la red (sin él, la imagen).
+# Se publican pero no se precachean: data/revisar.json (las dudas para el entrenador) no lo usa la app; el
+# vídeo del ring se pide siempre a la red (sin él, la imagen), y la página de prueba de audio con cascos
+# (prueba-audio.html y su JS) es una herramienta suelta para probar en el móvil: no la enlaza la app y sw.js
+# la deja ir a la red para que siempre se abra la última versión.
 VIDEOS = {f"video/ring-{orientacion}.{formato}" for orientacion in ("horizontal", "vertical") for formato in ("mp4", "webm")}
-SIN_PRECACHE = {"sw.js", "data/revisar.json"} | VIDEOS
+PRUEBA_AUDIO = {"prueba-audio.html", "prueba-audio.js"}
+SIN_PRECACHE = {"sw.js", "data/revisar.json"} | VIDEOS | PRUEBA_AUDIO
 
 
 def test_el_service_worker_precachea_todos_los_ficheros_del_sitio(sitio):
@@ -84,3 +87,10 @@ def test_el_video_del_ring_se_publica_en_torno_a_1_mb_y_fuera_del_precache(sitio
         assert 500_000 < (sitio / video).stat().st_size < 1_500_000, video
         assert video not in _precache(sitio)
     assert not (sitio / "imagenes" / "originales").exists()  # el original, sin recortar, no se publica
+
+
+def test_la_prueba_de_audio_se_publica_fuera_del_precache_y_la_app_no_la_enlaza(sitio):
+    for fichero in PRUEBA_AUDIO:
+        assert (sitio / fichero).is_file() and fichero not in _precache(sitio)
+    for pagina in (sitio / "index.html", *(p for p in sitio.rglob("*.js") if p.name not in PRUEBA_AUDIO | {"sw.js"})):
+        assert "prueba-audio" not in pagina.read_text(encoding="utf-8"), pagina.name

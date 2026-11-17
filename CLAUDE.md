@@ -25,7 +25,9 @@
   `dictado.js` dicta las combinaciones: la pausa cuenta desde el `onend`/`onerror` real de la voz (la
   estimación del motor + 3 s es solo el tope si no llega); avisos y señales también esperan a su voz.
 - Todo fichero nuevo de `static/` o `data/` va al precache de `static/sw.js` (lo comprueba `tests/test_pwa.py`),
-  salvo `data/revisar.json`, que se publica pero la app no usa.
+  salvo `data/revisar.json`, que se publica pero la app no usa, y la página de prueba de audio con cascos
+  (`static/prueba-audio.html` + `.js`): suelta, sin enlace desde la app, sin almacén (solo `sessionStorage`) y `sw.js`
+  la manda a la red para que siempre sea la última versión.
 - Sin WebGL el maniquí muestra fotos WebP que pinta `herramientas/fotos_maniqui.py` con la propia escena 3D al
   montar el sitio (Playwright). No se versionan ni se dibujan aparte: cambian solas con `posturas.json`.
 - Si cambia un `# REVISAR CON ENTRENADOR`, regenera `data/revisar.json` con `herramientas/extraer_revisar.py`.

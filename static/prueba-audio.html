@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <title>Prueba de audio con cascos</title>
+  <!-- Página de prueba suelta: no enlaza la app, no toca el almacén y no va a la precache de sw.js. -->
+  <link rel="stylesheet" href="estilos.css">
+  <style>
+    main { padding-top: 20px; padding-bottom: 40px; display: grid; gap: 16px; }
+    h1 { font-size: 2.25rem; }
+    h2 { margin: 0 0 6px; font-size: 1.5rem; }
+    .dato { margin: 4px 0; overflow-wrap: anywhere; font-size: 0.875rem; color: var(--suave); }
+    .dato b { color: var(--texto); font-weight: 600; }
+    .campo { display: grid; gap: 6px; margin-top: 14px; }
+    .campo label { font-weight: 600; }
+    .campo input[type="range"] { accent-color: var(--acento); min-height: 44px; width: 100%; }
+    #variantes { display: grid; gap: 16px; }
+    .variante p { margin: 0; }
+    .variante .acciones { margin-top: 14px; }
+    .variante.en-marcha { border-color: var(--acento); }
+    .veredicto { margin-top: 10px; font-weight: 600; }
+    .boton.secundario[aria-pressed="true"], .boton.secundario[aria-pressed="true"]:hover {
+      background: var(--chip-activo); color: var(--sobre-chip-activo); }
+    #resumen { width: 100%; min-height: 200px; box-sizing: border-box; font: 0.8125rem/1.4 ui-monospace, monospace;
+      background: var(--campo); color: var(--texto); border: 1px solid var(--borde); border-radius: 10px; padding: 10px; }
+    #frase { min-height: 1.45em; margin: 8px 0 0; font-weight: 600; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Prueba de audio</h1>
+    <p class="nota">Con los cascos puestos: prueba cada variante y marca si se come el principio de las combinaciones.
+      Cada prueba dura 60 s. Lo que marques solo se guarda en esta pestaña.</p>
+  </header>
+
+  <section class="tarjeta" aria-labelledby="titulo-equipo">
+    <h2 id="titulo-equipo">Equipo</h2>
+    <p class="dato">Navegador: <b id="agente"></b></p>
+    <p class="dato">Voz: <b id="voz">cargando…</b></p>
+    <p class="dato">Audio: <b id="estado-audio">sin activar</b></p>
+    <div class="acciones"><button type="button" class="boton principal" id="activar">Activar audio</button></div>
+    <div class="campo">
+      <label for="hueco">Hueco entre frases</label>
+      <select id="hueco">
+        <option value="2">2 s</option>
+        <option value="4" selected>4 s</option>
+        <option value="7">7 s</option>
+        <option value="10">10 s</option>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="nivel">Nivel del zumbido (variantes 1, 4 y 5): <output id="nivel-valor" for="nivel"></output></label>
+      <input type="range" id="nivel" min="-70" max="-30" step="1" value="-50">
+    </div>
+  </section>
+
+  <section class="tarjeta" aria-labelledby="titulo-prueba" aria-live="polite">
+    <h2 id="titulo-prueba">En marcha</h2>
+    <p class="dato" id="estado">Ninguna prueba en marcha.</p>
+    <p id="frase"></p>
+    <div class="acciones"><button type="button" class="boton peligro" id="parar" disabled>Parar</button></div>
+  </section>
+
+  <div id="variantes"></div>
+
+  <section class="tarjeta" aria-labelledby="titulo-resumen">
+    <h2 id="titulo-resumen">Resumen</h2>
+    <label class="nota" for="resumen">Cópialo y pégalo tal cual.</label>
+    <textarea id="resumen" readonly></textarea>
+    <div class="acciones"><button type="button" class="boton secundario" id="copiar">Copiar resumen</button></div>
+    <p class="nota" id="copiado" role="status"></p>
+  </section>
+</main>
+<script type="module" src="prueba-audio.js"></script>
+</body>
+</html>

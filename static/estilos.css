@@ -66,6 +66,7 @@
   --aviso-fondo: #3d2e06;
   --velo: rgba(0, 0, 0, 0.7);
   --velo-ring: rgba(18, 18, 18, 0.72);
+  --velo-texto: rgba(18, 18, 18, 0.6); /* degradado local detrás de un texto sobre el ring borroso: 4,5:1 con --suave y --acento */
   --panel-cristal: rgba(26, 26, 26, 0.92);   /* panel del menú con desenfoque: el texto, 4,5:1 hasta con blanco detrás */
   --brillo-panel: rgba(255, 255, 255, 0.05); /* brillo sutil arriba del panel */
   --borde-panel: rgba(255, 255, 255, 0.08); /* sobre el ring de la preparación: la cuenta atrás, 4,5:1 hasta sobre blanco */
@@ -475,6 +476,22 @@ body.entrenando #vista-entrenar { padding-top: 0; }
 #pantalla[data-fase="final"] { background: var(--fase-final); }
 #pantalla[data-fase="descanso"] { background: var(--fase-descanso); }
 #pantalla[data-fase="pausa"] { background: var(--fase-pausa); }
+/* Asalto y descanso: el ring borroso de fondo (desenfocado en el fichero, sin filter: blur) y sin velo. Los últimos
+   10 s («final»), la pausa y la reacción llevan su color liso de siempre; en el resumen #pantalla ya no se ve. */
+#pantalla:is([data-fase="asalto"], [data-fase="descanso"]) {
+  background: var(--fase-asalto) url("imagenes/ring-cenital-borroso.webp") center / cover no-repeat;
+}
+/* Sobre el ring, en el asalto, el gris de «Después…» y de la leyenda y el rojo de «Asalto N/M» no llegan a 4,5:1
+   (test_ring_sesion_navegador.py los mide con los píxeles reales): un degradado solo detrás de esos textos, liso
+   bajo las letras y que se funde por los bordes. En el descanso el texto es claro y no hace falta. */
+#pantalla[data-fase="asalto"] :is(#asalto, #despues:not(:empty), .leyenda) { position: relative; isolation: isolate; }
+#pantalla[data-fase="asalto"] :is(#asalto, #despues:not(:empty), .leyenda)::before {
+  /* 0,3em más arriba y abajo: Anton (en «Asalto N/M») pinta más alto que su interlineado de 0,98. */
+  content: ""; position: absolute; inset: calc(-0.3em - 8px) -28px; z-index: -1; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--velo-texto) 28px, var(--velo-texto) calc(100% - 28px), transparent);
+  -webkit-mask-image: linear-gradient(transparent, #000 8px, #000 calc(100% - 8px), transparent);
+  mask-image: linear-gradient(transparent, #000 8px, #000 calc(100% - 8px), transparent);
+}
 #pantalla[data-fase="reaccion"] {
   background: var(--fase-reaccion); color: var(--fase-reaccion-texto);
   --foco: var(--fase-reaccion-texto); /* el foco claro no se vería sobre ámbar */
@@ -485,7 +502,7 @@ body.entrenando #vista-entrenar { padding-top: 0; }
 #pantalla .marca-agua { top: auto; right: auto; left: -20px; bottom: 150px; font-size: 190px; opacity: 0.04; }
 
 /* Preparación (10 s antes del asalto 1): el ring de fondo con un velo, la cuenta atrás y «Empezar ya». En el
-   asalto no hay ring. El vídeo según la orientación (vertical u horizontal); sin vídeo, la imagen cuadrada. */
+   asalto y el descanso, el ring borroso (más arriba). El vídeo según la orientación (vertical u horizontal); sin vídeo, la imagen cuadrada. */
 .fondo-ring, .preparacion { display: none; }
 #pantalla.preparando .fondo-ring { display: block; position: absolute; inset: 0; z-index: -1; overflow: hidden; }
 .fondo-ring :is(img, video) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }

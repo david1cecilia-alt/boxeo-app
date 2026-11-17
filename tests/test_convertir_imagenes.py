@@ -36,3 +36,21 @@ def test_cada_webp_tiene_el_tamano_que_le_daria_el_script():
     for png in sorted(ORIGINALES.glob("*.png")):
         esperado = tamano_destino(*tamano_png(png), MAX_LADO.get(png.stem))
         assert tamano_webp(IMAGENES / f"{png.stem}.webp") == esperado, png.name
+
+
+def test_el_ring_borroso_se_deriva_del_ring_y_relanzar_no_lo_cambia():
+    from PIL import Image, ImageChops, ImageFilter, ImageStat
+
+    from herramientas.convertir_imagenes import LADO_BORROSO, RING, RING_BORROSO, ring_borroso
+
+    publicado = Image.open(RING_BORROSO).convert("RGB")
+    assert max(publicado.size) <= LADO_BORROSO and publicado.size == Image.open(RING).size
+    assert RING_BORROSO.stat().st_size < 20_000  # ligero: en el precache de sw.js
+    # Lo mismo que daría el script hoy (sin comparar bytes: el codificador WebP puede cambiar entre versiones).
+    diferencia = ImageStat.Stat(ImageChops.difference(publicado, ring_borroso())).mean
+    assert max(diferencia) < 2, diferencia
+
+    # Borroso de verdad: casi sin bordes, frente a los del ring nítido.
+    def bordes(imagen):
+        return sum(ImageStat.Stat(imagen.convert("L").filter(ImageFilter.FIND_EDGES)).mean)
+    assert bordes(publicado) < bordes(Image.open(RING)) / 5  # hoy, unas 7,7 veces menos

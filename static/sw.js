@@ -83,6 +83,8 @@ const FICHEROS = [
   // El ring de la preparación (la JPG, de reserva sin WebP). El vídeo no: va siempre a la red (ver el evento fetch).
   "imagenes/ring-cenital.jpg",
   "imagenes/ring-cenital.webp",
+  // El ring borroso, de fondo en los asaltos y los descansos.
+  "imagenes/ring-cenital-borroso.webp",
   "iconos/guante.svg",
   "iconos/icono-192.png",
   "iconos/icono-512.png",

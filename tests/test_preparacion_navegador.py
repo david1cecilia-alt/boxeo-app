@@ -83,7 +83,7 @@ def test_al_empezar_sale_la_preparacion_de_10_s_y_luego_el_asalto_1(app):
     assert fase(app) == "preparacion" and cuenta(app) == "1"
     app.clock.run_for(1000)
     assert fase(app) == "asalto"
-    assert app.is_hidden("#preparacion") and app.is_hidden(".fondo-ring")  # en el asalto no hay ring
+    assert app.is_hidden("#preparacion") and app.is_hidden(".fondo-ring")  # el ring nítido se va (queda el borroso, de fondo)
     assert app.inner_text("#tiempo") in ("0:30", "0:29")
 
 

@@ -77,6 +77,7 @@ def abrir_app(sitio, movimiento=True, ancho=390, alto=844, reaccion=False, veloc
 @pytest.fixture
 def app(sitio):
     contexto, pagina, errores = abrir_app(sitio)
+    parar_reloj(pagina)  # la barra y las fases, al décimo: el reloj solo avanza con run_for
     yield pagina
     assert not errores
     contexto.__exit__(None, None, None)
@@ -121,9 +122,9 @@ def test_al_empezar_sale_la_preparacion_de_10_s_y_luego_el_asalto_1(app):
     assert app.text_content("#fase") == "Prepárate"  # la pastilla de arriba se queda
     app.clock.run_for(5000)
     assert 0.48 <= barra(app) <= 0.52
-    app.clock.run_for(4500)
-    assert fase(app) == "preparacion" and barra(app) >= 0.94
-    app.clock.run_for(600)
+    app.clock.run_for(4800)
+    assert fase(app) == "preparacion" and barra(app) >= 0.97
+    app.clock.run_for(300)
     assert fase(app) == "asalto"
     assert app.is_hidden("#preparacion") and app.is_hidden(".fondo-ring")  # el ring nítido se va: queda el borroso
     assert app.inner_text("#tiempo") in ("0:30", "0:29")
@@ -171,6 +172,21 @@ TEXTO_PREPARACION = """() => [...document.querySelectorAll('#preparacion *')].fi
     n.nodeType === 3 && n.textContent.trim())).map((e) => e.textContent.trim())"""
 
 
+# El texto que se ve en toda la pantalla de la sesión: nodos de texto visibles que ocupan más de 1 × 1 px.
+TEXTO_EN_PANTALLA = """() => { const textos = [];
+  const recorrido = document.createTreeWalker(document.getElementById('pantalla'), NodeFilter.SHOW_TEXT);
+  for (let n = recorrido.nextNode(); n; n = recorrido.nextNode()) {
+    if (!n.textContent.trim() || !n.parentElement.checkVisibility({ visibilityProperty: true })) continue;
+    const rango = document.createRange();
+    rango.selectNodeContents(n);
+    const r = rango.getBoundingClientRect();
+    const recorte = n.parentElement.closest('.solo-lectores, #asalto, .atajos');
+    const visible = !recorte || recorte.getBoundingClientRect().width > 1;
+    if (r.width > 1 && r.height > 1 && visible) textos.push(n.textContent.trim());
+  }
+  return textos; }"""
+
+
 @pytest.mark.parametrize("ancho,alto", [(390, 844), (1440, 900)])
 def test_en_la_preparacion_no_hay_texto_en_pantalla_salvo_empezar_ya(sitio, ancho, alto):
     contexto, pagina, errores = abrir_app(sitio, ancho=ancho, alto=alto)
@@ -178,7 +194,14 @@ def test_en_la_preparacion_no_hay_texto_en_pantalla_salvo_empezar_ya(sitio, anch
         pagina.click("#empezar")
         assert pagina.locator("#cuenta-atras").count() == 0
         assert pagina.evaluate(TEXTO_PREPARACION) == ["Empezar ya"]  # ni número ni «Prepárate»
-        assert pagina.is_visible("#pausa") and pagina.is_visible("#parar")
+        # En toda la pantalla, solo la pastilla y los tres botones (lo de .solo-lectores mide 1 px).
+        assert sorted(pagina.evaluate(TEXTO_EN_PANTALLA)) == ["Empezar ya", "Parar", "Pausa", "Prepárate"]
+        assert not pagina.is_visible(".progreso") and pagina.is_visible("#barra-preparacion")
+        # «Asalto 1/2» y el teclado siguen para el lector de pantalla, y la pastilla, a la derecha.
+        assert pagina.locator("#asalto").get_attribute("aria-hidden") is None
+        assert pagina.text_content("#asalto") == "Asalto 1/2" and "Teclado" in pagina.text_content(".atajos")
+        fase_caja, pantalla_caja = pagina.locator("#fase").bounding_box(), pagina.locator("#pantalla").bounding_box()
+        assert fase_caja["x"] + fase_caja["width"] > pantalla_caja["x"] + pantalla_caja["width"] * 0.7
         # Para el lector de pantalla sí se anuncia como preparación.
         assert "Preparación" in pagina.text_content("#preparacion .solo-lectores")
         pagina.clock.run_for(200)

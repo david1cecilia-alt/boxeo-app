@@ -502,6 +502,14 @@ body.entrenando #vista-entrenar { padding-top: 0; }
 .fondo-ring :is(img, video) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .fondo-ring::after { content: ""; position: absolute; inset: 0; background: var(--velo-ring); }
 #pantalla.preparando :is(.reloj, .tarjeta-combo, #anterior, .marca-agua) { display: none; }
+/* En pantalla, solo el ring, la pastilla de estado, la barra, «Empezar ya», Pausa y Parar. «Asalto 1/2» y el texto del
+   teclado salen de la vista pero no del lector de pantalla (como .solo-lectores); las barras de los asaltos
+   (decorativas) se ocultan sin mover nada y la pastilla sigue a la derecha. */
+#pantalla.preparando :is(#asalto, .atajos) {
+  position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+#pantalla.preparando .marcador { justify-content: flex-end; }
+#pantalla.preparando .progreso { visibility: hidden; }
 #pantalla.preparando .preparacion:not([hidden]) {
   flex: 1; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 12px 0; text-align: center;
 }

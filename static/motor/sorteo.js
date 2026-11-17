@@ -16,7 +16,7 @@
 //   nivel (PROBABILIDAD_PROPIAS) o una de la biblioteca. «Solo las mías»: todas las propias, sin
 //   mirar el nivel ni la cobertura.
 // Todo en ortodoxo; si es zurdo se refleja al final con espejo().
-import { accionesPorIds, biblioteca, catalogo, espejoCombo, numero, textoHablado } from "./acciones.js";
+import { accionesPorIds, biblioteca, catalogo, espejoCombo, numero, retiradas, textoHablado } from "./acciones.js";
 import { datos } from "./datos.js";
 import { MAX_ACCIONES, nivelDe } from "./reglas.js";
 
@@ -53,8 +53,9 @@ export function movimiento(accion) {
   return accion.familia;
 }
 
-// Los que se pueden elegir en "Practicar más", en el orden del catálogo.
-export const movimientos = () => [...new Set([...catalogo().values()].map(movimiento))];
+// Los que se pueden elegir en "Practicar más", en el orden del catálogo (sin las acciones retiradas).
+export const movimientos = () =>
+  [...new Set([...catalogo().values()].filter((a) => !retiradas().has(a.id)).map(movimiento))];
 
 // Cuánto pesa una combinación (ortodoxa) con "Practicar más": [{ movimiento }]. El `cuanto` de los
 // datos viejos ("poco"/"bastante") se ignora: todos pesan FACTOR_PRACTICAR. Cada movimiento elegido

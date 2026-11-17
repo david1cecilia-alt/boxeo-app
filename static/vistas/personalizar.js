@@ -22,10 +22,12 @@ const ICONO_CERRAR = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l
 
 // Los movimientos de «Practicar más» con su nombre y su grupo. Los golpes llevan su número y la
 // mano de la guardia de Ajustes («3 crochet de izquierda»; al zurdo, «de derecha»).
-function movimientosPracticar(zurdo) {
+// `todos`: también los de acciones retiradas, que ya no se eligen pero pueden seguir guardados (su hueco
+// dice su nombre).
+function movimientosPracticar(zurdo, { todos = false } = {}) {
   const primera = new Map();
   for (const a of catalogo().values()) if (!primera.has(movimiento(a))) primera.set(movimiento(a), a);
-  return movimientos().map((m) => {
+  return (todos ? [...primera.keys()] : movimientos()).map((m) => {
     const a = primera.get(m);
     const nombre = m === "cuerpo" ? "golpes al cuerpo"
       : a.numero ? `${a.numero} ${nombreHablado(zurdo ? espejo(a) : a)}` : a.orden || a.plantilla.replace(" {lado}", "");
@@ -219,8 +221,9 @@ export function iniciarPersonalizar({ almacen, tipoElegido, alCambiar }) {
   // vacío abre el panel para elegir; uno lleno dice el movimiento y se puede quitar.
   function pintarPracticar() {
     const elegidos = almacen.datos.perfil.practicar;
-    const lista = movimientosPracticar(preferencias(almacen.datos.perfil).zurdo);
-    const nombre = new Map(lista.map((m) => [m.movimiento, m.nombre]));
+    const { zurdo } = preferencias(almacen.datos.perfil);
+    const lista = movimientosPracticar(zurdo);
+    const nombre = new Map(movimientosPracticar(zurdo, { todos: true }).map((m) => [m.movimiento, m.nombre]));
     const huecos = Array.from({ length: MAX_PRACTICAR }, (_, i) => elegidos[i]);
     $("#f-practicar", raiz).innerHTML = `
       <div>

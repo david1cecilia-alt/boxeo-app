@@ -54,9 +54,13 @@ MIN_CUERPO_NIVEL = 3     # combinaciones de cada nivel que llevan cada golpe al 
 MIN_DEFENSA = 12         # veces de cada tipo de defensa, en total
 MAX_DIFERENCIA_LADO = 20  # % entre derecha e izquierda de cada defensa con lado
 MIN_SALIDA = 6           # veces de cada salida, en total
+MAX_DIFERENCIA_SALIDAS = 1  # entre la salida que más sale y la que menos (pivote y paso lateral a cada lado)
 MAX_DOS_GANCHOS = 5      # combinaciones de cada nivel con 5-6 o 6-5 seguidos (a la cara o al cuerpo)
 DEFENSAS = ["esquiva", "rodar", "ballesteo", "flexion", "bloqueo", "parada", "paso_atras"]
-SALIDAS = ["pivote", "paso_lateral_izq", "paso_lateral_der", "salir"]
+SALIDAS = ["pivote", "paso_lateral_izq", "paso_lateral_der"]
+# Retiradas: siguen en data/acciones.json (el historial viejo y las propias guardadas las usan) pero la biblioteca ya
+# no las lleva. «salir» (cambio de ángulo) se repartió entre las tres salidas.
+RETIRADAS = ["salir"]
 
 # Familias: (id, nombre, idea, miembros). Cada miembro: (clave, papel, origen, notación, nombre).
 # papel: base | crece (de origen, del nivel anterior) | variante (de origen, del mismo nivel).
@@ -67,7 +71,7 @@ FAMILIAS = [
         ("F1-Bb", "variante", "F1-B", "1-3-AI", "jab-crochet y rueda izquierda"),
         ("F1-M", "crece", "F1-B", "{F1-B}-6-4", "jab-crochet, rueda y gancho-crochet"),
         ("F1-Mb", "variante", "F1-M", "1-3-AD-4-2", "jab-crochet, rueda y crochet-recto"),
-        ("F1-A", "crece", "F1-M", "{F1-M}-CA-3", "jab-crochet, rueda, cambio de ángulo y crochet"),
+        ("F1-A", "crece", "F1-M", "{F1-M}-LI-3", "jab-crochet, rueda, paso lateral y crochet"),
         ("F1-Ab", "variante", "F1-A", "{F1-M}-PI-3", "jab-crochet, rueda, pivote y crochet"),
     ]),
     ("F2", "Jab-recto", "La base de todo, a la que se le añaden esquivas y contras.", [
@@ -174,16 +178,16 @@ FAMILIAS = [
         ("F14-Bb", "variante", "F14-B", "P-1-2c", "parada, jab y recto al cuerpo"),
         ("F14-M", "crece", "F14-B", "{F14-B}-AI-6-3", "parada, recto al cuerpo, gancho, rueda y gancho-crochet"),
         ("F14-Mb", "variante", "F14-M", "{F14-Bb}-BA-4", "parada, jab, recto al cuerpo, ballesteo y crochet"),
-        ("F14-A", "crece", "F14-M", "{F14-M}-ED-1-CA", "parada, rueda, esquiva, jab y cambio de ángulo"),
+        ("F14-A", "crece", "F14-M", "{F14-M}-ED-1-LD", "parada, rueda, esquiva, jab y paso lateral"),
         ("F14-Ab", "variante", "F14-A", "{F14-Mb}-B-1-2-PI", "parada, ballesteo, bloqueo, jab-recto y pivote"),
     ]),
-    ("F15", "Cambio de ángulo", "Se suelta, se cambia de ángulo y se ataca desde el nuevo sitio.", [
-        ("F15-B", "base", None, "1-2-CA", "jab-recto y cambio de ángulo"),
-        ("F15-Bb", "variante", "F15-B", "4-3-CA", "doble crochet y cambio de ángulo"),
-        ("F15-M", "crece", "F15-B", "{F15-B}-5-EI-6", "jab-recto, cambio de ángulo, gancho, esquiva y gancho"),
-        ("F15-Mb", "variante", "F15-M", "{F15-Bb}-5-PA", "doble crochet, cambio de ángulo, gancho y paso atrás"),
-        ("F15-A", "crece", "F15-M", "{F15-M}-B-4-5", "jab-recto, cambio de ángulo, esquiva, bloqueo y crochet-gancho"),
-        ("F15-Ab", "variante", "F15-A", "{F15-Mb}-1-AD-4-LI", "doble crochet, cambio de ángulo, paso atrás, rueda y paso lateral"),
+    ("F15", "Paso lateral", "Se suelta, se sale con un paso lateral y se ataca desde el nuevo sitio.", [
+        ("F15-B", "base", None, "1-2-LI", "jab-recto y paso lateral izquierda"),
+        ("F15-Bb", "variante", "F15-B", "4-3-LD", "doble crochet y paso lateral derecha"),
+        ("F15-M", "crece", "F15-B", "{F15-B}-5-EI-6", "jab-recto, paso lateral, gancho, esquiva y gancho"),
+        ("F15-Mb", "variante", "F15-M", "{F15-Bb}-5-PA", "doble crochet, paso lateral, gancho y paso atrás"),
+        ("F15-A", "crece", "F15-M", "{F15-M}-B-4-5", "jab-recto, paso lateral, esquiva, bloqueo y crochet-gancho"),
+        ("F15-Ab", "variante", "F15-A", "{F15-Mb}-1-AD-4-LI", "doble crochet, paso lateral, paso atrás, rueda y paso lateral"),
     ]),
     ("F16", "Pivote", "Se suelta y se pivota para no quedarse delante.", [
         ("F16-B", "base", None, "6-3-PI", "gancho-crochet y pivote"),
@@ -238,7 +242,7 @@ SUELTAS = [
     # Avanzado
     ("1-2-3-6-ED-6-3-LI", "jab-recto-crochet-gancho, esquiva, gancho-crochet y paso lateral"),
     ("1-4c-2-3-5-4-B", "jab, crochet al cuerpo, recto-crochet, gancho-crochet y bloqueo"),
-    ("1-2-4-AI-5c-3-2-CA", "jab-recto-crochet, rueda, gancho al cuerpo y cambio de ángulo"),
+    ("1-2-4-AI-5c-3-2-LI", "jab-recto-crochet, rueda, gancho al cuerpo y paso lateral"),
     ("1-2-ED-4-3-AI-5-PA-2", "jab-recto, esquiva, rueda, gancho, paso atrás y recto"),
     ("B-1-2-F-3c-1-EI-6", "bloqueo, jab-recto, flexión, crochet al cuerpo, jab, esquiva y gancho"),
     ("P-1-2-3-BA-2-AD-4-LD", "parada, jab-recto-crochet, ballesteo, rueda y paso lateral"),
@@ -246,14 +250,14 @@ SUELTAS = [
     ("ED-2-3-F-1c-6-PA-1-LD", "esquiva, flexión con jab al cuerpo, paso atrás, jab y paso lateral"),
     ("1c-2-B-6-AI-3-1-BA", "jab al cuerpo, bloqueo, gancho, rueda, crochet-jab y ballesteo"),
     ("1-1-EI-2-5-B-5c-4-AD", "doble jab, esquiva, bloqueo, gancho al cuerpo y rueda"),
-    ("ED-2-EI-3-AD-4-AI-5-CA", "esquiva y recto, esquiva y crochet, dos ruedas y cambio de ángulo"),
+    ("ED-2-EI-3-AD-4-AI-5-LI", "esquiva y recto, esquiva y crochet, dos ruedas y paso lateral"),
     ("1-B-5-F-2c-BA-6-PA", "jab, bloqueo, gancho, flexión, ballesteo y paso atrás"),  # REVISAR CON ENTRENADOR: tras el bloqueo, gancho y no recto
     ("P-1-ED-2-AI-3-AD-4-BA-4", "parada, jab, esquiva, recto, ruedas, ballesteo y crochet"),
     ("B-1-B-5-EI-5-F-3c", "dos bloqueos, esquiva, gancho, flexión y crochet al cuerpo"),  # REVISAR CON ENTRENADOR: tras el bloqueo, gancho y no recto
     ("AI-3-ED-4-PA-1c-6-BA", "rueda, esquiva, paso atrás, jab al cuerpo, gancho y ballesteo"),
     ("1-EI-4c-2-AD-3-F-5-B", "jab, esquiva, rueda, flexión, gancho y bloqueo"),
     ("BA-2-ED-6c-3-AI-4-PA-1", "ballesteo, esquiva, rueda y paso atrás con jab"),
-    ("F-5c-B-4-EI-3-AD-6-CA", "flexión, gancho al cuerpo, bloqueo, crochet, esquiva y cambio de ángulo"),
+    ("F-5c-B-4-EI-3-AD-6-LD", "flexión, gancho al cuerpo, bloqueo, crochet, esquiva y paso lateral"),
 ]
 
 # Al cuerpo (fase N): 6 por nivel para que cada golpe al cuerpo (7-12) esté al menos en 3 combinaciones de cada
@@ -513,6 +517,9 @@ def problemas(combos):
         if diferencia(der, izq) > MAX_DIFERENCIA_LADO:
             malos.append(f"{f}: {der} a la derecha y {izq} a la izquierda ({diferencia(der, izq):.0f} %)")
     malos += [f"salida {s}: {usos[s]} veces (mínimo {MIN_SALIDA})" for s in SALIDAS if usos[s] < MIN_SALIDA]
+    if max(usos[s] for s in SALIDAS) - min(usos[s] for s in SALIDAS) > MAX_DIFERENCIA_SALIDAS:
+        malos.append("salidas desigualadas: " + ", ".join(f"{s} {usos[s]}" for s in SALIDAS))
+    malos += [f"{i} está retirada y sale {usos[i]} veces" for i in RETIRADAS if usos[i]]
     for nivel in (1, 2, 3):
         seguidos = [c["n"] for c in combos if c["nivel"] == nivel and dos_ganchos_seguidos(c["acciones"])]
         if len(seguidos) > MAX_DOS_GANCHOS:
@@ -619,8 +626,9 @@ def documento(combos):
     w("  dice la app («rueda derecha»).")
     w("- **Nivel** = número total de acciones (golpes + defensas + salidas), calculado con `motor.reglas.nivel_de`:")
     w("  básico 2-4, medio 5-6, avanzado 7-10.")
-    w("- **Defensa** = esquiva, rueda, ballesteo, flexión, bloqueo, parada y paso atrás. Pivote, paso lateral y")
-    w("  cambio de ángulo son **salidas**: no cuentan como defensa, pero sí como acción.")
+    w("- **Defensa** = esquiva, rueda, ballesteo, flexión, bloqueo, parada y paso atrás. Pivote y paso lateral son")
+    w("  **salidas**: no cuentan como defensa, pero sí como acción. El cambio de ángulo ya no está en la biblioteca: se")
+    w("  repartió entre el pivote y el paso lateral a cada lado.")
     w("- **Defensa en**: inicio (antes del primer golpe), entre golpes, o final (después del último golpe).")
     w("- **Papel**: *base* de la familia; *crece de #n* (la del nivel anterior más acciones, en el mismo orden);")
     w("  *variante de #n* (mismo nivel, cambia un lado, un golpe o la salida).")
@@ -763,7 +771,6 @@ def resumen_vocabulario(w, combos):
     w(f"| paso lateral | {usos['paso_lateral_der'] + usos['paso_lateral_izq']} | {usos['paso_lateral_der']} "
       f"| {usos['paso_lateral_izq']} |")
     w(f"| pivote | {usos['pivote']} | — | — |")
-    w(f"| cambio de ángulo | {usos['salir']} | — | — |")
 
 
 def marcas():

@@ -39,6 +39,10 @@ export const catalogo = segunDatos(
 
 export const palabrasNumero = segunDatos((d) => d.acciones.palabras_numero);
 
+// Los ids marcados «retirada» en data/acciones.json: siguen en el catálogo (historial viejo, propias guardadas)
+// pero ya no se eligen en el creador ni en «Practicar más» y la biblioteca no los lleva.
+export const retiradas = segunDatos((d) => new Set(d.acciones.acciones.filter((a) => a.retirada).map((a) => a.id)));
+
 export function accionesPorIds(ids) {
   const cat = catalogo();
   return ids.map((i) => cat.get(i));

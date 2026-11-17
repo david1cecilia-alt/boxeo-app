@@ -67,6 +67,13 @@ def catalogo() -> dict[str, Accion]:
 
 
 @lru_cache
+def retiradas() -> frozenset[str]:
+    """Los ids marcados «retirada» en data/acciones.json: siguen en el catálogo (historial viejo, propias
+    guardadas) pero ya no se eligen en el creador ni en «Practicar más» y la biblioteca no los lleva."""
+    return frozenset(d["id"] for d in _leer_json()["acciones"] if d.get("retirada"))
+
+
+@lru_cache
 def palabras_numero() -> dict[int, str]:
     return {int(n): palabra for n, palabra in _leer_json()["palabras_numero"].items()}
 

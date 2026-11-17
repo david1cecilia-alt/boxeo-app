@@ -5,7 +5,7 @@ from dataclasses import replace
 
 import pytest
 
-from motor.acciones import acciones_por_ids, biblioteca, espejo_combo, numero
+from motor.acciones import acciones_por_ids, biblioteca, catalogo, espejo_combo, numero, retiradas
 from motor.sorteo import (FACTOR_PRACTICAR, NUMEROS, NUMEROS_CUERPO, PESO_CUERPO, SIN_REPETIR, TOPE_PRACTICAR,
                           SorteoBiblioteca, movimiento, movimientos, peso_practicar)
 from motor.temporizador import ConfigSesion, cargar_presets, construir_guion
@@ -97,8 +97,15 @@ def _practicar(*elegidos):
 
 
 def test_los_movimientos_de_practicar_mas():
+    # «salir» (cambio de ángulo) está retirada: ya no se elige, pero una propia guardada que la lleve pesa igual.
     assert movimientos() == ["1", "2", "3", "4", "5", "6", "cuerpo", "esquiva", "rodar", "paso_atras",
-                             "bloqueo", "parada", "ballesteo", "flexion", "paso_lateral", "pivote", "salir"]
+                             "bloqueo", "parada", "ballesteo", "flexion", "paso_lateral", "pivote"]
+    assert _peso(["jab", "salir"], "salir") == 3
+
+
+def test_la_biblioteca_ya_no_lleva_el_cambio_de_angulo_pero_sigue_en_el_catalogo():
+    assert retiradas() >= {"salir"} and "salir" in catalogo()
+    assert not [c.n for c in biblioteca() if any(a.id == "salir" for a in c.acciones)]
 
 
 def test_los_golpes_al_cuerpo_son_cuerpo_en_practicar_mas_aunque_lleven_numero():

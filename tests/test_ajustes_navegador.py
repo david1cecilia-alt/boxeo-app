@@ -144,10 +144,10 @@ def test_tres_huecos_vacios_iguales_y_el_panel_tiene_6_mas_1_7_y_3(ajustes):
     assert pagina.locator("#panel-golpe .fichas.numeros [data-elegir]").count() == 6
     assert pagina.locator("#panel-golpe .fichas.aparte [data-elegir]").all_inner_texts() == ["golpes al cuerpo"]
     assert pagina.locator("#panel-defensa .fichas.lista [data-elegir]").count() == 7
-    assert pagina.locator("#panel-movimiento .fichas.lista [data-elegir]").count() == 3
+    assert pagina.locator("#panel-movimiento .fichas.lista [data-elegir]").count() == 2  # sin el cambio de ángulo
     assert pagina.locator("[data-elegir][aria-disabled]").count() == 0
     # Ninguna ficha sola en su fila: todas las filas de cada lista, igual de llenas.
-    assert _filas(pagina) == [[2, 2, 2], [1], [1] * 7, [1] * 3]
+    assert _filas(pagina) == [[2, 2, 2], [1], [1] * 7, [1] * 2]
     # Las fichas de una lista, del mismo tamaño; «golpes al cuerpo», a todo el ancho y aparte.
     anchos = pagina.evaluate("""() => [...document.querySelectorAll('#panel-golpe [data-elegir]')]
       .map((b) => [Math.round(b.getBoundingClientRect().width), Math.round(b.getBoundingClientRect().height)])""")
@@ -264,7 +264,7 @@ CABE_EN_EL_PANEL = "(() => { const c = document.querySelector('.menu-contenido')
 
 def test_nada_se_sale_del_panel_a_390(ajustes):
     pagina = ajustes
-    for movimiento, pestana in (("3", "golpe"), ("paso_atras", "defensa"), ("salir", "movimiento")):
+    for movimiento, pestana in (("3", "golpe"), ("paso_atras", "defensa"), ("paso_lateral", "movimiento")):
         _elegir(pagina, movimiento, pestana)
     ancho = pagina.evaluate("document.documentElement.clientWidth")
     assert pagina.evaluate("document.documentElement.scrollWidth") <= ancho
@@ -324,7 +324,7 @@ def test_a_1024_huecos_uno_debajo_de_otro_en_el_panel_y_la_hoja_centrada(ajustes
         assert len({round(c["top"]) for c in cajas}) == 3
         assert len({(round(c["width"]), round(c["height"])) for c in cajas}) == 1
         _abrir_panel(pagina)
-        assert _filas(pagina) == [[3, 3], [1], [1] * 7, [1] * 3]
+        assert _filas(pagina) == [[3, 3], [1], [1] * 7, [1] * 2]
         assert _pestanas_quietas(pagina)["defensa"]["bajo"] <= 24
         hoja = pagina.evaluate("() => document.querySelector('#elegir-practicar').getBoundingClientRect().toJSON()")
         assert hoja["width"] <= 560 and hoja["bottom"] < 768

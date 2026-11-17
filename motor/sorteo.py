@@ -23,7 +23,7 @@ import random
 from dataclasses import dataclass
 
 from motor.acciones import (RUTA_DATOS, Accion, ComboBiblioteca, acciones_por_ids, biblioteca, catalogo,
-                            espejo_combo, numero, texto_hablado)
+                            espejo_combo, numero, retiradas, texto_hablado)
 from motor.reglas import MAX_ACCIONES, nivel_de
 
 SIN_REPETIR = 5
@@ -105,8 +105,8 @@ def movimiento(accion: Accion) -> str:
 
 
 def movimientos() -> list[str]:
-    """Los que se pueden elegir en "Practicar más", en el orden del catálogo."""
-    return list(dict.fromkeys(movimiento(a) for a in catalogo().values()))
+    """Los que se pueden elegir en "Practicar más", en el orden del catálogo (sin las acciones retiradas)."""
+    return list(dict.fromkeys(movimiento(a) for a in catalogo().values() if a.id not in retiradas()))
 
 
 def peso_practicar(acciones, practicar: list[dict]) -> float:

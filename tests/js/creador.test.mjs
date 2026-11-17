@@ -24,7 +24,8 @@ test("las baldosas salen de data/acciones.json: golpes 1-6, al cuerpo 7-12, defe
   assert.deepEqual(golpes.map((b) => b.numero), [1, 2, 3, 4, 5, 6]);
   assert.deepEqual(baldosas("golpe", true).map((b) => b.numero), [7, 8, 9, 10, 11, 12]);
   for (const grupo of Object.keys(GRUPOS)) {
-    const delJson = datos.acciones.acciones.filter((a) => a.tipo === grupo && (grupo !== "golpe" || a.objetivo !== "cuerpo"));
+    const delJson = datos.acciones.acciones.filter((a) => a.tipo === grupo && !a.retirada
+      && (grupo !== "golpe" || a.objetivo !== "cuerpo"));
     const vistas = baldosas(grupo);
     assert.deepEqual(vistas.map((b) => b.id), delJson.map((a) => a.id));
     for (const b of vistas) assert.equal(b.texto, cortoDelJson(b.id));
@@ -32,6 +33,13 @@ test("las baldosas salen de data/acciones.json: golpes 1-6, al cuerpo 7-12, defe
   assert.equal(baldosas("defensa").every((b) => b.numero === null), true);
   assert.equal(ficha("directo_cuerpo").texto, "recto abajo");
   assert.equal(ficha("gancho_der_cuerpo").texto, "croch. dcha. abajo");
+});
+
+test("las retiradas (cambio de ángulo) no salen para elegir, pero una propia que la lleve se sigue viendo y editando", () => {
+  assert.ok(!baldosas("movimiento").some((b) => b.id === "salir"));
+  assert.deepEqual(baldosas("movimiento").map((b) => b.id), ["paso_lateral_izq", "paso_lateral_der", "pivote"]);
+  assert.equal(ficha("salir").texto, "cambio de ángulo");
+  assert.deepEqual(anadir(editorNuevo(["jab", "salir"]), "directo").ids, ["jab", "salir", "directo"]);
 });
 
 test("añadir va al final, como mucho 10, y «Al cuerpo» se apaga solo tras cada golpe", () => {

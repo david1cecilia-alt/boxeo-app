@@ -3,7 +3,7 @@
 // espejo en la sesión). Los textos de baldosas y fichas salen del catálogo (data/acciones.json), los
 // avisos y si se puede guardar, de motor/reglas.js. Aquí solo se decide qué se enseña y cómo se dice.
 import { opcionesVoz } from "./ajustes.js";
-import { accionesPorIds, catalogo, nombreCorto, numero, textoHablado } from "./motor/acciones.js";
+import { accionesPorIds, catalogo, nombreCorto, numero, retiradas, textoHablado } from "./motor/acciones.js";
 import { ACCIONES_POR_NIVEL, MAX_ACCIONES, MAX_PROPIAS, NOMBRE_NIVEL, avisosCreador, nivelDe } from "./motor/reglas.js";
 
 export const MIN_ACCIONES = ACCIONES_POR_NIVEL[1][0];
@@ -27,10 +27,11 @@ export function ficha(id) {
 }
 
 // Las baldosas de un grupo, en el orden de data/acciones.json. En Golpes, las seis a la cara o, con
-// «Al cuerpo», las seis al cuerpo.
+// «Al cuerpo», las seis al cuerpo. Las retiradas no salen (las propias que ya las llevan se siguen viendo y
+// editando: ficha() las conoce).
 export function baldosas(grupo, alCuerpo = false) {
   return [...catalogo().values()]
-    .filter((a) => a.tipo === grupo && (grupo !== "golpe" || (a.objetivo === "cuerpo") === alCuerpo))
+    .filter((a) => a.tipo === grupo && !retiradas().has(a.id) && (grupo !== "golpe" || (a.objetivo === "cuerpo") === alCuerpo))
     .map((a) => ficha(a.id));
 }
 

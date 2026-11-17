@@ -75,11 +75,22 @@ def test_las_dudas_de_tecnica_estan_en_los_datos_y_en_revisar_json(crudo):
         assert c["revisar"].split("REVISAR CON ENTRENADOR:", 1)[1].strip() in textos, c["n"]
 
 
+# Lo que se repartió después a propósito: el cambio de ángulo entre las salidas y el bloqueo en tres. Para la huella
+# cuentan igual (y los nombres, que cambian con ellos, no cuentan).
+SALIDAS = {"salir", "pivote", "paso_lateral_izq", "paso_lateral_der"}
+BLOQUEOS = {"bloqueo", "bloqueo_arriba", "bloqueo_abajo", "bloqueo_cerrado"}
+
+
+def _normal(id_):
+    return "salida" if id_ in SALIDAS else "bloqueo" if id_ in BLOQUEOS else id_
+
+
 def test_las_150_de_antes_no_cambian_ni_de_numero(crudo):
-    # Las 18 al cuerpo (fase N) van detrás: n, ids, nivel y nombre de las 150 de antes, iguales.
-    primeras = [[c["n"], c["ids"], c["nivel"], c["nombre"]] for c in crudo["combinaciones"][:150]]
+    # Las 18 al cuerpo (fase N) van detrás: n, ids y nivel de las 150 de antes, iguales salvo qué salida o qué
+    # bloqueo lleva cada una.
+    primeras = [[c["n"], [_normal(i) for i in c["ids"]], c["nivel"]] for c in crudo["combinaciones"][:150]]
     huella = hashlib.sha1(json.dumps(primeras, ensure_ascii=False).encode()).hexdigest()
-    assert huella == "1cda7805e69d30e354208ca6d51072d307c40e75"
+    assert huella == "7d3603639a5c08a91e3f932ce28a9bcc3dd010a9"
     assert [c["n"] for c in crudo["combinaciones"]] == list(range(1, 169))
     assert [c["nivel"] for c in crudo["combinaciones"][150:]] == [1] * 6 + [2] * 6 + [3] * 6
 

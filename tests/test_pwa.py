@@ -21,7 +21,7 @@ def _precache(sitio) -> list[str]:
 
 # Se publican pero no se precachean: data/revisar.json (las dudas para el entrenador) no lo usa la app, y el
 # vídeo del ring se pide siempre a la red (sin él, la imagen).
-VIDEOS = {"video/ring-horizontal.mp4", "video/ring-horizontal.webm"}
+VIDEOS = {f"video/ring-{orientacion}.{formato}" for orientacion in ("horizontal", "vertical") for formato in ("mp4", "webm")}
 SIN_PRECACHE = {"sw.js", "data/revisar.json"} | VIDEOS
 
 

@@ -75,9 +75,12 @@ def luminancia(r, g, b):
 
 
 def leer_color(css):
-    partes = css[css.index("(") + 1:-1].replace("/", ",").replace(" ", ",").split(",")
+    """rgb()/rgba() (0-255) o color(srgb …) (0-1, lo que da color-mix) → ([r, g, b] de 0 a 255, alfa)."""
+    srgb = css.startswith("color(srgb")
+    partes = css[css.index("(") + 1:-1].replace("srgb", "").replace("/", ",").replace(" ", ",").split(",")
     valores = [float(p) for p in partes if p]
-    return valores[:3], (valores[3] if len(valores) > 3 else 1.0)
+    rgb = [v * 255 for v in valores[:3]] if srgb else valores[:3]
+    return rgb, (valores[3] if len(valores) > 3 else 1.0)
 
 
 def contraste_minimo(captura, caja):

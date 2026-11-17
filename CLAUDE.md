@@ -39,9 +39,10 @@
   voz, en cola y solo si caben antes de los 10 s; una barra sin texto marca lo que falta. Fondo: el ring (imagen en el
   precache; encima, el vídeo de su orientación, `static/video/ring-{vertical,horizontal}.{webm,mp4}`, que no pasa por
   la caché de `sw.js`: va directo a la red). En asalto y descanso, `ring-cenital-borroso.webp` (lo deriva
-  `herramientas/convertir_imagenes.py` con Pillow, sin `filter: blur`); si un texto encima no llega al contraste, un
-  degradado local detrás de él (`tests/test_ring_sesion_navegador.py` lo mide con píxeles reales), no un velo. Los
-  tests que cronometran fases pulsan «Empezar ya».
+  `herramientas/convertir_imagenes.py` con Pillow, sin `filter: blur`); si un texto encima no llega al contraste, se
+  aclara ese texto con un token (`--terciario`, `--acento-sobre-ring`) y, si ni así, una `text-shadow` suave; nunca un
+  velo ni una banda (`tests/test_ring_sesion_navegador.py` lo mide con píxeles reales). Los tests que cronometran fases
+  pulsan «Empezar ya».
 - Recorte de la foto: `vistas/recorte.js` (diálogo fuera del menú) elige el cuadrado y `foto.js` lo codifica igual
   que siempre (`leerFoto` + `codificarFoto`): el almacén no cambia.
 - El asa del menú: en el móvil, abajo a la derecha encima de la barra (`--asa-abajo`); en el PC, al 42 % de alto.

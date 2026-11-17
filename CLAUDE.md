@@ -76,7 +76,7 @@
   situacional. Si un combo clásico no las pasa, **avisar**, no cambiar la regla.
 - El nivel de una combinación lo da solo su número de acciones: `motor.reglas.nivel_de` (2-4 básico, 5-6 medio,
   7-10 avanzado, máximo 10; `None` fuera). Es la única función de nivel: la usarán la biblioteca y el futuro creador.
-- Lo dudoso técnicamente se marca con `# REVISAR CON ENTRENADOR`; no inventar.
+- Ya no se añaden marcas `REVISAR CON ENTRENADOR`; las que existen se dejan como están. No inventar.
 
 ## Tests
 - `.venv\Scripts\python -m pytest -q` debe pasar antes de cada commit.

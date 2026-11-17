@@ -71,7 +71,8 @@ def test_las_defensas_se_dicen_como_orden_corta_con_su_lado():
             assert {palabra_hablada(a, m) for m in MODOS_VOZ} == {{
                 "esquiva_der": "esquiva derecha", "esquiva_izq": "esquiva izquierda",
                 "rodar_der": "rueda derecha", "rodar_izq": "rueda izquierda",
-                "paso_atras": "paso atrás", "bloqueo": "bloqueo", "parada": "parada",
+                "paso_atras": "paso atrás", "bloqueo": "bloqueo", "bloqueo_arriba": "bloqueo arriba",
+                "bloqueo_abajo": "bloqueo abajo", "bloqueo_cerrado": "bloqueo cerrado", "parada": "parada",
                 "ballesteo": "ballesteo", "flexion": "flexión"}[a.id]}, a.id
 
 

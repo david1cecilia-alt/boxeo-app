@@ -36,7 +36,7 @@ FICHA = {
     "1c": "jab_cuerpo", "2c": "directo_cuerpo", "3c": "gancho_izq_cuerpo", "4c": "gancho_der_cuerpo",
     "5c": "uppercut_izq_cuerpo", "6c": "uppercut_der_cuerpo",
     "ED": "esquiva_der", "EI": "esquiva_izq", "AD": "rodar_der", "AI": "rodar_izq",
-    "B": "bloqueo", "P": "parada", "PA": "paso_atras", "BA": "ballesteo", "F": "flexion",
+    "BAR": "bloqueo_arriba", "BAB": "bloqueo_abajo", "BCE": "bloqueo_cerrado", "B": "bloqueo", "P": "parada", "PA": "paso_atras", "BA": "ballesteo", "F": "flexion",
     "PI": "pivote", "LD": "paso_lateral_der", "LI": "paso_lateral_izq", "CA": "salir",
 }
 NIVEL = {1: "básico", 2: "medio", 3: "avanzado"}
@@ -57,10 +57,13 @@ MIN_SALIDA = 6           # veces de cada salida, en total
 MAX_DIFERENCIA_SALIDAS = 1  # entre la salida que más sale y la que menos (pivote y paso lateral a cada lado)
 MAX_DOS_GANCHOS = 5      # combinaciones de cada nivel con 5-6 o 6-5 seguidos (a la cara o al cuerpo)
 DEFENSAS = ["esquiva", "rodar", "ballesteo", "flexion", "bloqueo", "parada", "paso_atras"]
+# El bloqueo va en tres (arriba, abajo y cerrado): para el mínimo de cada defensa y los nombres cuentan juntos.
+BLOQUEOS = ["bloqueo_arriba", "bloqueo_abajo", "bloqueo_cerrado"]
 SALIDAS = ["pivote", "paso_lateral_izq", "paso_lateral_der"]
 # Retiradas: siguen en data/acciones.json (el historial viejo y las propias guardadas las usan) pero la biblioteca ya
-# no las lleva. «salir» (cambio de ángulo) se repartió entre las tres salidas.
-RETIRADAS = ["salir"]
+# no las lleva. «salir» (cambio de ángulo) se repartió entre las tres salidas y «bloqueo», entre los tres bloqueos
+# (docs/revision/bloqueos.md).
+RETIRADAS = ["salir", "bloqueo"]
 
 # Familias: (id, nombre, idea, miembros). Cada miembro: (clave, papel, origen, notación, nombre).
 # papel: base | crece (de origen, del nivel anterior) | variante (de origen, del mismo nivel).
@@ -80,7 +83,7 @@ FAMILIAS = [
         ("F2-M", "crece", "F2-B", "{F2-B}-EI-5-4", "jab-recto, esquiva y gancho-crochet"),
         ("F2-Mb", "variante", "F2-M", "{F2-Bb}-ED-6", "doble jab-recto, esquiva y gancho"),
         ("F2-A", "crece", "F2-M", "{F2-M}-AD-1-LI", "jab-recto con esquiva, rueda, jab y paso lateral"),
-        ("F2-Ab", "variante", "F2-A", "{F2-Mb}-3-B-6", "doble jab-recto, esquiva, gancho-crochet, bloqueo y gancho"),
+        ("F2-Ab", "variante", "F2-A", "{F2-Mb}-3-BAR-6", "doble jab-recto, esquiva, gancho-crochet, bloqueo y gancho"),
     ]),
     ("F3", "Ballesteo y contra", "Se saca la cara hacia atrás y se contesta.", [
         ("F3-B", "base", None, "BA-2", "ballesteo y recto"),
@@ -92,10 +95,10 @@ FAMILIAS = [
     ]),
     ("F4", "Parada y contra", "Se para el jab con la derecha y se contesta.", [
         ("F4-B", "base", None, "P-1-2", "parada y jab-recto"),
-        ("F4-Bb", "variante", "F4-B", "P-6-3-B", "parada, gancho-crochet y bloqueo"),
+        ("F4-Bb", "variante", "F4-B", "P-6-3-BAR", "parada, gancho-crochet y bloqueo"),
         ("F4-M", "crece", "F4-B", "{F4-B}-ED-4-3", "parada, jab-recto, esquiva y doble crochet"),
         ("F4-Mb", "variante", "F4-M", "{F4-Bb}-1-6", "parada, bloqueo, jab y gancho"),
-        ("F4-A", "crece", "F4-M", "{F4-M}-5-B-6", "parada, esquiva, gancho, bloqueo y gancho"),
+        ("F4-A", "crece", "F4-M", "{F4-M}-5-BAR-6", "parada, esquiva, gancho, bloqueo y gancho"),
         ("F4-Ab", "variante", "F4-A", "{F4-M}-PA-1-2-LI", "parada, esquiva, paso atrás, jab-recto y paso lateral"),
     ]),
     ("F5", "Abajo y arriba", "Golpes al cuerpo para bajar la guardia del rival y subir a la cara.", [
@@ -104,20 +107,20 @@ FAMILIAS = [
         ("F5-M", "crece", "F5-B", "{F5-B}-F-3c-3", "jab al cuerpo, recto, flexión y crochet abajo y arriba"),
         ("F5-Mb", "variante", "F5-M", "{F5-Bb}-F-1-6", "gancho, crochet abajo y arriba, flexión y jab-gancho"),
         ("F5-A", "crece", "F5-M", "{F5-M}-AD-4c-6", "jab al cuerpo, flexión, crochet abajo y arriba, rueda y gancho"),
-        ("F5-Ab", "variante", "F5-A", "{F5-Mb}-B-6", "gancho, crochet abajo y arriba, flexión, bloqueo y gancho"),
+        ("F5-Ab", "variante", "F5-A", "{F5-Mb}-BAR-6", "gancho, crochet abajo y arriba, flexión, bloqueo y gancho"),
     ]),
     ("F6", "Esquiva a los dos lados", "Esquiva lateral, se suelta y se vuelve a esquivar.", [
         ("F6-B", "base", None, "ED-6-5-EI", "esquiva derecha, dos ganchos y esquiva izquierda"),
         ("F6-Bb", "variante", "F6-B", "EI-5-4-ED", "esquiva izquierda, gancho-crochet y esquiva derecha"),
         ("F6-M", "crece", "F6-B", "{F6-B}-1-2", "esquiva derecha, dos ganchos, esquiva izquierda y jab-recto"),
-        ("F6-Mb", "variante", "F6-M", "{F6-Bb}-6-B", "esquivas a los dos lados, gancho y bloqueo"),
+        ("F6-Mb", "variante", "F6-M", "{F6-Bb}-6-BAR", "esquivas a los dos lados, gancho y bloqueo"),
         ("F6-A", "crece", "F6-M", "{F6-M}-AD-4-5", "esquivas a los dos lados, rueda y crochet-gancho"),
         ("F6-Ab", "variante", "F6-A", "{F6-Mb}-5-2-PI", "esquivas, bloqueo, gancho-recto y pivote"),
     ]),
     ("F7", "Bloqueo", "Bloquear, devolver y, si toca, volver a bloquear.", [
-        ("F7-B", "base", None, "B-3-2", "bloqueo y crochet-recto"),
-        ("F7-Bb", "variante", "F7-B", "B-5-6-B", "bloqueo, dos ganchos y bloqueo"),  # REVISAR CON ENTRENADOR: dos ganchos seguidos
-        ("F7-Bc", "variante", "F7-B", "1-6-B", "jab-gancho y bloqueo"),  # REVISAR CON ENTRENADOR: jab y gancho trasero
+        ("F7-B", "base", None, "BAR-3-2", "bloqueo y crochet-recto"),
+        ("F7-Bb", "variante", "F7-B", "BAR-5-6-BAR", "bloqueo, dos ganchos y bloqueo"),  # REVISAR CON ENTRENADOR: dos ganchos seguidos
+        ("F7-Bc", "variante", "F7-B", "1-6-BAR", "jab-gancho y bloqueo"),  # REVISAR CON ENTRENADOR: jab y gancho trasero
         ("F7-M", "crece", "F7-B", "1-{F7-B}-PA-2", "jab, bloqueo, crochet-recto, paso atrás y recto"),
         ("F7-Mb", "variante", "F7-M", "{F7-Bb}-1-4", "dos bloqueos, jab y crochet"),
         ("F7-A", "crece", "F7-M", "{F7-M}-ED-4-LD", "jab, bloqueo, paso atrás, esquiva, crochet y paso lateral"),
@@ -145,12 +148,12 @@ FAMILIAS = [
         ("F10-M", "crece", "F10-B", "{F10-B}-EI-4", "doble jab, gancho, esquiva y crochet"),
         ("F10-Mb", "variante", "F10-M", "{F10-Bb}-BA-2", "doble jab, dos ganchos, ballesteo y recto"),
         ("F10-A", "crece", "F10-M", "{F10-M}-1-AD-4-5", "doble jab, esquiva, jab, rueda y crochet-gancho"),
-        ("F10-Ab", "variante", "F10-A", "{F10-Mb}-B-1-6", "doble jab, ballesteo, bloqueo y jab-gancho"),
+        ("F10-Ab", "variante", "F10-A", "{F10-Mb}-BAR-1-6", "doble jab, ballesteo, bloqueo y jab-gancho"),
     ]),
     ("F11", "Flexión y cuerpo", "Se baja con flexión y se ataca al cuerpo.", [
         ("F11-B", "base", None, "F-3c-5", "flexión, crochet al cuerpo y gancho"),
         ("F11-Bb", "variante", "F11-B", "F-6c-5", "flexión y gancho abajo y arriba"),
-        ("F11-M", "crece", "F11-B", "{F11-B}-4-B", "flexión, crochet al cuerpo, gancho-crochet y bloqueo"),
+        ("F11-M", "crece", "F11-B", "{F11-B}-4-BAR", "flexión, crochet al cuerpo, gancho-crochet y bloqueo"),
         ("F11-Mb", "variante", "F11-M", "{F11-Bb}-AD-1-2", "flexión, gancho abajo y arriba, rueda y jab-recto"),
         ("F11-A", "crece", "F11-M", "{F11-M}-6c-3-EI", "flexión, bloqueo, gancho al cuerpo, crochet y esquiva"),
         ("F11-Ab", "variante", "F11-A", "{F11-Mb}-F-1c-2", "flexión, gancho abajo y arriba, rueda, flexión y recto"),
@@ -169,7 +172,7 @@ FAMILIAS = [
         ("F13-Bb", "variante", "F13-B", "1c-1-4", "jab abajo, jab arriba y crochet"),  # REVISAR CON ENTRENADOR: crochet trasero tras dos jabs
         ("F13-M", "crece", "F13-B", "{F13-B}-ED-2", "jab arriba y abajo, gancho, esquiva y recto"),
         ("F13-Mb", "variante", "F13-M", "{F13-Bb}-PA-6", "jab abajo y arriba, crochet, paso atrás y gancho"),
-        ("F13-A", "crece", "F13-M", "{F13-M}-1-B-4c-4", "jab arriba y abajo, esquiva, jab, bloqueo y crochet abajo y arriba"),
+        ("F13-A", "crece", "F13-M", "{F13-M}-1-BAB-4c-4", "jab arriba y abajo, esquiva, jab, bloqueo y crochet abajo y arriba"),
         ("F13-Ab", "variante", "F13-A", "{F13-Mb}-F-3c-6-LI",
          "jab abajo y arriba, paso atrás, flexión, crochet al cuerpo, gancho y paso lateral"),
     ]),
@@ -179,20 +182,20 @@ FAMILIAS = [
         ("F14-M", "crece", "F14-B", "{F14-B}-AI-6-3", "parada, recto al cuerpo, gancho, rueda y gancho-crochet"),
         ("F14-Mb", "variante", "F14-M", "{F14-Bb}-BA-4", "parada, jab, recto al cuerpo, ballesteo y crochet"),
         ("F14-A", "crece", "F14-M", "{F14-M}-ED-1-LD", "parada, rueda, esquiva, jab y paso lateral"),
-        ("F14-Ab", "variante", "F14-A", "{F14-Mb}-B-1-2-PI", "parada, ballesteo, bloqueo, jab-recto y pivote"),
+        ("F14-Ab", "variante", "F14-A", "{F14-Mb}-BAR-1-2-PI", "parada, ballesteo, bloqueo, jab-recto y pivote"),
     ]),
     ("F15", "Paso lateral", "Se suelta, se sale con un paso lateral y se ataca desde el nuevo sitio.", [
         ("F15-B", "base", None, "1-2-LI", "jab-recto y paso lateral izquierda"),
         ("F15-Bb", "variante", "F15-B", "4-3-LD", "doble crochet y paso lateral derecha"),
         ("F15-M", "crece", "F15-B", "{F15-B}-5-EI-6", "jab-recto, paso lateral, gancho, esquiva y gancho"),
         ("F15-Mb", "variante", "F15-M", "{F15-Bb}-5-PA", "doble crochet, paso lateral, gancho y paso atrás"),
-        ("F15-A", "crece", "F15-M", "{F15-M}-B-4-5", "jab-recto, paso lateral, esquiva, bloqueo y crochet-gancho"),
+        ("F15-A", "crece", "F15-M", "{F15-M}-BAR-4-5", "jab-recto, paso lateral, esquiva, bloqueo y crochet-gancho"),
         ("F15-Ab", "variante", "F15-A", "{F15-Mb}-1-AD-4-LI", "doble crochet, paso lateral, paso atrás, rueda y paso lateral"),
     ]),
     ("F16", "Pivote", "Se suelta y se pivota para no quedarse delante.", [
         ("F16-B", "base", None, "6-3-PI", "gancho-crochet y pivote"),
         ("F16-Bb", "variante", "F16-B", "4-3-PI", "doble crochet y pivote"),
-        ("F16-M", "crece", "F16-B", "B-{F16-B}-1", "bloqueo, gancho-crochet, pivote y jab"),
+        ("F16-M", "crece", "F16-B", "BAR-{F16-B}-1", "bloqueo, gancho-crochet, pivote y jab"),
         ("F16-Mb", "variante", "F16-M", "{F16-Bb}-AD-6", "doble crochet, pivote, rueda y gancho"),
         ("F16-A", "crece", "F16-M", "{F16-M}-EI-1-BA-6", "bloqueo, pivote, esquiva, jab, ballesteo y gancho"),
         ("F16-Ab", "variante", "F16-A", "{F16-Mb}-3-F-6c-ED", "doble crochet, pivote, rueda, flexión y esquiva"),
@@ -210,12 +213,12 @@ SUELTAS = [
     ("1-2-3", "jab-recto-crochet"),
     # Básico con defensa
     ("EI-5-4", "esquiva izquierda y gancho-crochet"),
-    ("1-5c-4-B", "jab, gancho al cuerpo, crochet y bloqueo"),
+    ("1-5c-4-BAR", "jab, gancho al cuerpo, crochet y bloqueo"),
     ("ED-6-3", "esquiva derecha y gancho-crochet"),
     ("1-ED-6-BA", "jab, esquiva, gancho y ballesteo"),
-    ("PA-1-6-B", "paso atrás, jab-gancho y bloqueo"),
+    ("PA-1-6-BAR", "paso atrás, jab-gancho y bloqueo"),
     ("ED-4-EI-5", "esquiva y crochet, esquiva y gancho"),
-    ("F-5c-4-B", "flexión, gancho al cuerpo, crochet y bloqueo"),
+    ("F-5c-4-BAR", "flexión, gancho al cuerpo, crochet y bloqueo"),
     ("P-1-AD", "parada, jab y rueda"),
     ("AI-4c-5-PA", "rueda, crochet al cuerpo, gancho y paso atrás"),
     ("1-BA-6-F", "jab, ballesteo, gancho y flexión"),  # REVISAR CON ENTRENADOR: tras el ballesteo, gancho y no recto
@@ -223,41 +226,41 @@ SUELTAS = [
     # Medio
     ("1-2-4-3-EI", "jab-recto, doble crochet y esquiva"),
     ("ED-4-5-AI-1-PI", "esquiva, crochet-gancho, rueda, jab y pivote"),
-    ("1-2-B-6-3-EI", "jab-recto, bloqueo, gancho-crochet y esquiva"),
+    ("1-2-BAR-6-3-EI", "jab-recto, bloqueo, gancho-crochet y esquiva"),
     ("F-2c-3-4-PA", "flexión, recto al cuerpo, doble crochet y paso atrás"),
     ("P-1-AI-5-2", "parada, jab, rueda y gancho-recto"),
     ("BA-2-3-AI-6", "ballesteo, recto-crochet, rueda y gancho"),
-    ("1c-2-B-4-ED", "jab al cuerpo, recto, bloqueo, crochet y esquiva"),
+    ("1c-2-BAR-4-ED", "jab al cuerpo, recto, bloqueo, crochet y esquiva"),
     ("PA-2-5-F-3c", "paso atrás, recto-gancho, flexión y crochet al cuerpo"),
     ("EI-5c-3-BA-1", "esquiva, gancho al cuerpo, crochet, ballesteo y jab"),
-    ("1-AI-3-5-B-LD", "jab, rueda, crochet-gancho, bloqueo y paso lateral"),
-    ("B-4-B-3-ED-6", "dos bloqueos con crochet, esquiva y gancho"),
+    ("1-AI-3-5-BAR-LD", "jab, rueda, crochet-gancho, bloqueo y paso lateral"),
+    ("BAR-4-BAR-3-ED-6", "dos bloqueos con crochet, esquiva y gancho"),
     ("EI-5-AD-4-BA-6", "esquiva, gancho, rueda, crochet, ballesteo y gancho"),
     ("1-ED-6-EI-5-AI", "jab, esquiva, gancho, esquiva, gancho y rueda"),
-    ("F-1-2-AI-5-B", "flexión, jab-recto, rueda, gancho y bloqueo"),
+    ("F-1-2-AI-5-BAR", "flexión, jab-recto, rueda, gancho y bloqueo"),
     ("P-1-PA-2-F-4c", "parada, jab, paso atrás, recto, flexión y crochet al cuerpo"),
-    ("AI-6c-3-ED-B-4", "rueda, gancho al cuerpo, crochet, esquiva, bloqueo y crochet"),
+    ("AI-6c-3-ED-BAR-4", "rueda, gancho al cuerpo, crochet, esquiva, bloqueo y crochet"),
     ("BA-2-F-2c-AI-3", "ballesteo, recto, flexión, recto al cuerpo, rueda y crochet"),
-    ("PA-1-ED-4-B-6", "paso atrás, jab, esquiva, crochet, bloqueo y gancho"),
+    ("PA-1-ED-4-BAR-6", "paso atrás, jab, esquiva, crochet, bloqueo y gancho"),
     # Avanzado
     ("1-2-3-6-ED-6-3-LI", "jab-recto-crochet-gancho, esquiva, gancho-crochet y paso lateral"),
-    ("1-4c-2-3-5-4-B", "jab, crochet al cuerpo, recto-crochet, gancho-crochet y bloqueo"),
+    ("1-4c-2-3-5-4-BAR", "jab, crochet al cuerpo, recto-crochet, gancho-crochet y bloqueo"),
     ("1-2-4-AI-5c-3-2-LI", "jab-recto-crochet, rueda, gancho al cuerpo y paso lateral"),
     ("1-2-ED-4-3-AI-5-PA-2", "jab-recto, esquiva, rueda, gancho, paso atrás y recto"),
-    ("B-1-2-F-3c-1-EI-6", "bloqueo, jab-recto, flexión, crochet al cuerpo, jab, esquiva y gancho"),
+    ("BAR-1-2-F-3c-1-EI-6", "bloqueo, jab-recto, flexión, crochet al cuerpo, jab, esquiva y gancho"),
     ("P-1-2-3-BA-2-AD-4-LD", "parada, jab-recto-crochet, ballesteo, rueda y paso lateral"),
-    ("1-6c-3-AI-3-B-5-EI-LI", "jab, gancho al cuerpo, rueda, bloqueo, esquiva y paso lateral"),
+    ("1-6c-3-AI-3-BAR-5-EI-LI", "jab, gancho al cuerpo, rueda, bloqueo, esquiva y paso lateral"),
     ("ED-2-3-F-1c-6-PA-1-LD", "esquiva, flexión con jab al cuerpo, paso atrás, jab y paso lateral"),
-    ("1c-2-B-6-AI-3-1-BA", "jab al cuerpo, bloqueo, gancho, rueda, crochet-jab y ballesteo"),
-    ("1-1-EI-2-5-B-5c-4-AD", "doble jab, esquiva, bloqueo, gancho al cuerpo y rueda"),
+    ("1c-2-BAR-6-AI-3-1-BA", "jab al cuerpo, bloqueo, gancho, rueda, crochet-jab y ballesteo"),
+    ("1-1-EI-2-5-BAB-5c-4-AD", "doble jab, esquiva, bloqueo, gancho al cuerpo y rueda"),
     ("ED-2-EI-3-AD-4-AI-5-LI", "esquiva y recto, esquiva y crochet, dos ruedas y paso lateral"),
-    ("1-B-5-F-2c-BA-6-PA", "jab, bloqueo, gancho, flexión, ballesteo y paso atrás"),  # REVISAR CON ENTRENADOR: tras el bloqueo, gancho y no recto
+    ("1-BAR-5-F-2c-BA-6-PA", "jab, bloqueo, gancho, flexión, ballesteo y paso atrás"),  # REVISAR CON ENTRENADOR: tras el bloqueo, gancho y no recto
     ("P-1-ED-2-AI-3-AD-4-BA-4", "parada, jab, esquiva, recto, ruedas, ballesteo y crochet"),
-    ("B-1-B-5-EI-5-F-3c", "dos bloqueos, esquiva, gancho, flexión y crochet al cuerpo"),  # REVISAR CON ENTRENADOR: tras el bloqueo, gancho y no recto
+    ("BAR-1-BAR-5-EI-5-F-3c", "dos bloqueos, esquiva, gancho, flexión y crochet al cuerpo"),  # REVISAR CON ENTRENADOR: tras el bloqueo, gancho y no recto
     ("AI-3-ED-4-PA-1c-6-BA", "rueda, esquiva, paso atrás, jab al cuerpo, gancho y ballesteo"),
-    ("1-EI-4c-2-AD-3-F-5-B", "jab, esquiva, rueda, flexión, gancho y bloqueo"),
+    ("1-EI-4c-2-AD-3-F-5-BAR", "jab, esquiva, rueda, flexión, gancho y bloqueo"),
     ("BA-2-ED-6c-3-AI-4-PA-1", "ballesteo, esquiva, rueda y paso atrás con jab"),
-    ("F-5c-B-4-EI-3-AD-6-LD", "flexión, gancho al cuerpo, bloqueo, crochet, esquiva y paso lateral"),
+    ("F-5c-BAB-4-EI-3-AD-6-LD", "flexión, gancho al cuerpo, bloqueo, crochet, esquiva y paso lateral"),
 ]
 
 # Al cuerpo (fase N): 6 por nivel para que cada golpe al cuerpo (7-12) esté al menos en 3 combinaciones de cada
@@ -267,22 +270,22 @@ AL_CUERPO = [
     ("2c-4", "recto al cuerpo y crochet"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
     ("1-4c-5", "jab, crochet al cuerpo y gancho"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
     ("ED-4c-6", "esquiva, crochet al cuerpo y gancho"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
-    ("1-3c-B", "jab, crochet al cuerpo y bloqueo"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
-    ("EI-5c-4-B", "esquiva, gancho al cuerpo, crochet y bloqueo"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("1-3c-BAB", "jab, crochet al cuerpo y bloqueo"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("EI-5c-4-BAR", "esquiva, gancho al cuerpo, crochet y bloqueo"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
     ("PA-6c-3-ED", "paso atrás, gancho al cuerpo, crochet y esquiva"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
     # Medio
     ("1-4c-5-AD-3", "jab, crochet al cuerpo, gancho, rueda y crochet"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
-    ("1-5c-3-B-6", "jab, gancho al cuerpo, crochet, bloqueo y gancho"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("1-5c-3-BAR-6", "jab, gancho al cuerpo, crochet, bloqueo y gancho"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
     ("ED-4c-5-EI-1", "esquiva, crochet al cuerpo, gancho, esquiva y jab"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
     ("1-6c-3-F-5-PA", "jab, gancho al cuerpo, crochet, flexión, gancho y paso atrás"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
     ("BA-5c-3-AI-5", "ballesteo, gancho al cuerpo, crochet, rueda y gancho"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
-    ("P-1-2c-AD-6-B", "parada, jab, recto al cuerpo, rueda, gancho y bloqueo"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("P-1-2c-AD-6-BAR", "parada, jab, recto al cuerpo, rueda, gancho y bloqueo"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
     # Avanzado
     ("1-2c-3-4-AD-5-4", "jab, recto al cuerpo, doble crochet, rueda, gancho y crochet"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
-    ("1-3c-4-ED-6-3-B", "jab, crochet al cuerpo y crochet, esquiva, gancho-crochet y bloqueo"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("1-3c-4-ED-6-3-BAR", "jab, crochet al cuerpo y crochet, esquiva, gancho-crochet y bloqueo"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
     ("ED-5c-4-1-4c-5-AI-6", "esquiva, gancho al cuerpo, crochet-jab, crochet al cuerpo y rueda"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
     ("1-1c-6-ED-4-F-5-PA", "jab arriba y abajo, gancho, esquiva, flexión y paso atrás"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
-    ("B-4c-6-AD-1-5-EI-4-LD", "bloqueo, crochet al cuerpo, gancho, rueda, esquiva y paso lateral"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
+    ("BAB-4c-6-AD-1-5-EI-4-LD", "bloqueo, crochet al cuerpo, gancho, rueda, esquiva y paso lateral"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
     ("P-1-3c-ED-6-AI-5-BA-4", "parada, jab, crochet al cuerpo, esquiva, rueda y ballesteo"),  # REVISAR CON ENTRENADOR: nueva para los golpes al cuerpo (técnica y nombre)
 ]
 
@@ -329,9 +332,14 @@ def menciones(nombre):
     return piezas
 
 
+def grupo(familia):
+    """La familia como cuenta en los nombres y en el mínimo de cada defensa: los tres bloqueos, «bloqueo»."""
+    return "bloqueo" if familia in BLOQUEOS else familia
+
+
 def _encaja(pieza, a):
     familia, objetivo, lado, _ = pieza
-    return a.familia == familia and objetivo in (None, a.objetivo) and lado in (None, a.lado)
+    return grupo(a.familia) == familia and objetivo in (None, a.objetivo) and lado in (None, a.lado)
 
 
 def nombre_cuadra(nombre, acciones):
@@ -510,7 +518,7 @@ def problemas(combos):
             if veces < MIN_CUERPO_NIVEL:
                 malos.append(f"{texto(acciones_por_ids([i]))} en {NIVEL[nivel]}: en {veces} combinaciones "
                              f"(mínimo {MIN_CUERPO_NIVEL})")
-    por_familia = Counter(a.familia for c in combos for a in c["acciones"])
+    por_familia = Counter(grupo(a.familia) for c in combos for a in c["acciones"])
     malos += [f"defensa {f}: {por_familia[f]} veces (mínimo {MIN_DEFENSA})"
               for f in DEFENSAS if por_familia[f] < MIN_DEFENSA]
     for f, (der, izq) in lados(combos).items():
@@ -761,13 +769,16 @@ def resumen_vocabulario(w, combos):
     w("")
     w("| Acción | Veces | Derecha | Izquierda |")
     w("|---|---|---|---|")
-    por_familia = Counter(a.familia for c in combos for a in c["acciones"])
+    por_familia = Counter(grupo(a.familia) for c in combos for a in c["acciones"])
     con_lado = lados(combos)
     nombres_def = {"esquiva": "esquiva", "rodar": "rueda", "ballesteo": "ballesteo", "flexion": "flexión",
                    "bloqueo": "bloqueo", "parada": "parada", "paso_atras": "paso atrás"}
     for f in DEFENSAS:
         der, izq = con_lado.get(nombres_def[f], ("—", "—"))
         w(f"| {nombres_def[f]} | {por_familia[f]} | {der} | {izq} |")
+        if f == "bloqueo":
+            for b in BLOQUEOS:
+                w(f"| — {palabra_hablada(catalogo()[b])} | {usos[b]} | — | — |")
     w(f"| paso lateral | {usos['paso_lateral_der'] + usos['paso_lateral_izq']} | {usos['paso_lateral_der']} "
       f"| {usos['paso_lateral_izq']} |")
     w(f"| pivote | {usos['pivote']} | — | — |")

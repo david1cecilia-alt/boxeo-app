@@ -147,7 +147,8 @@ def anadir(pagina, *ids):
 GOLPES = {"jab", "directo", "gancho_izq", "gancho_der", "uppercut_izq", "uppercut_der",
           "jab_cuerpo", "directo_cuerpo", "gancho_izq_cuerpo", "gancho_der_cuerpo", "uppercut_izq_cuerpo",
           "uppercut_der_cuerpo"}
-DEFENSAS = {"esquiva_der", "esquiva_izq", "rodar_der", "rodar_izq", "paso_atras", "bloqueo", "parada", "ballesteo",
+DEFENSAS = {"esquiva_der", "esquiva_izq", "rodar_der", "rodar_izq", "paso_atras", "bloqueo_arriba", "bloqueo_abajo",
+            "bloqueo_cerrado", "parada", "ballesteo",
             "flexion"}
 
 
@@ -324,7 +325,7 @@ def test_menu_mis_combinaciones_editor_con_cambios_y_atras(limpia):
     limpia.click("#anadir-propia")
     limpia.wait_for_selector("#caja-combo")
     largo = _largo_historial(limpia)
-    anadir(limpia, "jab", "bloqueo")
+    anadir(limpia, "jab", "bloqueo_arriba")
     # 1.º atrás: pregunta, y «Seguir editando» deja el editor como estaba.
     limpia.go_back()
     limpia.wait_for_selector("#d-descartar[open]")
@@ -458,7 +459,7 @@ def test_crear_con_el_teclado_al_cuerpo_se_apaga_solo_y_guardar_vuelve_al_listad
 
 def test_quitar_una_ficha_o_la_ultima_y_el_foco_va_a_la_siguiente(pagina):
     ir(pagina, f"{RUTA}/nueva")
-    anadir(pagina, "jab", "directo", "bloqueo", "gancho_izq")
+    anadir(pagina, "jab", "directo", "bloqueo_arriba", "gancho_izq")
     assert pagina.get_attribute('[data-quitar="1"]', "aria-label") == "Quitar recto, acción 2"
     pagina.click('[data-quitar="1"]')
     assert fichas(pagina) == ["0", "1", "2"]
@@ -487,14 +488,14 @@ def test_con_10_acciones_la_paleta_no_anade_mas_y_dice_por_que(pagina):
     baldosa.focus()
     pagina.keyboard.press("Enter")
     pagina.click('[data-grupo="defensa"]')
-    pagina.click('[data-anadir="bloqueo"]', force=True)
+    pagina.click('[data-anadir="bloqueo_arriba"]', force=True)
     assert len(fichas(pagina)) == 10
     assert pagina.get_attribute("#guardar", "aria-disabled") is None
 
 
 def test_avisos_al_guardar_volver_a_editar_no_guarda_y_guardar_igual_si(pagina):
-    ir(pagina, f"{RUTA}/nueva", [["bloqueo", "parada"]])
-    anadir(pagina, "bloqueo", "parada")
+    ir(pagina, f"{RUTA}/nueva", [["bloqueo_arriba", "parada"]])
+    anadir(pagina, "bloqueo_arriba", "parada")
     pagina.click("#guardar")
     assert pagina.get_attribute("#d-avisos", "open") is not None
     assert pagina.locator(".lista-avisos li").all_inner_texts() == [
@@ -511,11 +512,11 @@ def test_avisos_al_guardar_volver_a_editar_no_guarda_y_guardar_igual_si(pagina):
     assert foco(pagina) == "guardar" and pagina.get_attribute("#d-avisos", "open") is None
     pagina.click("#guardar")
     pagina.click('#d-avisos button[value=""]')
-    assert guardadas(pagina) == [["bloqueo", "parada"]]
+    assert guardadas(pagina) == [["bloqueo_arriba", "parada"]]
     pagina.click("#guardar")
     pagina.click('#d-avisos button[value="guardar"]')
     pagina.wait_for_selector(".lista-propias")
-    assert guardadas(pagina) == [["bloqueo", "parada"]] * 2
+    assert guardadas(pagina) == [["bloqueo_arriba", "parada"]] * 2
 
 
 def test_igual_que_una_de_la_biblioteca_dice_su_nivel_y_no_se_compara_consigo_misma(pagina):
@@ -566,7 +567,7 @@ def test_atras_del_navegador_con_cambios_vuelve_al_editor_y_pregunta_sin_bucles(
     limpia.click("#anadir-propia")
     limpia.wait_for_selector("#caja-combo")
     largo = _largo_historial(limpia)
-    anadir(limpia, "jab", "bloqueo")
+    anadir(limpia, "jab", "bloqueo_arriba")
     limpia.go_back()
     limpia.wait_for_selector("#d-descartar[open]")
     limpia.wait_for_function(f"location.hash === '{RUTA}/nueva'")

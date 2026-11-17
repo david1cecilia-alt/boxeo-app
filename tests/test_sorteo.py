@@ -97,15 +97,26 @@ def _practicar(*elegidos):
 
 
 def test_los_movimientos_de_practicar_mas():
-    # «salir» (cambio de ángulo) está retirada: ya no se elige, pero una propia guardada que la lleve pesa igual.
+    # «salir» (cambio de ángulo) y «bloqueo» están retiradas: ya no se eligen (el bloqueo, en sus tres), pero una
+    # propia guardada que las lleve pesa igual.
     assert movimientos() == ["1", "2", "3", "4", "5", "6", "cuerpo", "esquiva", "rodar", "paso_atras",
-                             "bloqueo", "parada", "ballesteo", "flexion", "paso_lateral", "pivote"]
+                             "bloqueo_arriba", "bloqueo_abajo", "bloqueo_cerrado", "parada", "ballesteo", "flexion",
+                             "paso_lateral", "pivote"]
+    assert _peso(["jab", "bloqueo"], "bloqueo") == 3
     assert _peso(["jab", "salir"], "salir") == 3
 
 
-def test_la_biblioteca_ya_no_lleva_el_cambio_de_angulo_pero_sigue_en_el_catalogo():
-    assert retiradas() >= {"salir"} and "salir" in catalogo()
-    assert not [c.n for c in biblioteca() if any(a.id == "salir" for a in c.acciones)]
+def test_la_biblioteca_ya_no_lleva_el_cambio_de_angulo_ni_el_bloqueo_pero_siguen_en_el_catalogo():
+    assert retiradas() == {"salir", "bloqueo"} and {"salir", "bloqueo"} <= set(catalogo())
+    assert not [c.n for c in biblioteca() if any(a.id in retiradas() for a in c.acciones)]
+
+
+def test_el_bloqueo_en_tres_se_dice_y_se_lee_corto():
+    for id_, texto in (("bloqueo_arriba", "bloqueo arriba"), ("bloqueo_abajo", "bloqueo abajo"),
+                       ("bloqueo_cerrado", "bloqueo cerrado")):
+        a = catalogo()[id_]
+        assert a.tipo == "defensa" and a.nombre_hablado == a.nombre_corto == a.orden == texto
+        assert len(a.nombre_corto) <= 18 and movimiento(a) == id_
 
 
 def test_los_golpes_al_cuerpo_son_cuerpo_en_practicar_mas_aunque_lleven_numero():

@@ -874,7 +874,10 @@
       "id": "bloqueo",
       "categoria": "defensas",
       "acciones": [
-        "bloqueo"
+        "bloqueo",
+        "bloqueo_arriba",
+        "bloqueo_abajo",
+        "bloqueo_cerrado"
       ],
       "titulo": "Bloqueo",
       "en_ingles": "block, cover",

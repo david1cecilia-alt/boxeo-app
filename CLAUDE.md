@@ -70,6 +70,9 @@
 - Los textos de cada familia (`hablado`, `corto`, `orden`) están una sola vez en el bloque `textos` de
   `data/acciones.json`; `hablado` es una plantilla (`{mano}`, `{lado}`) que se rellena a partir de mano/lado.
   Los ids no cambian aunque cambie el nombre (`gancho_*` es el crochet; `uppercut_*`, el gancho).
+- Una acción con `"retirada": true` (hoy `salir` y `bloqueo`) sigue en el catálogo para el historial viejo y las
+  propias guardadas, pero la biblioteca no la lleva y no sale en el creador ni en «Practicar más» (`retiradas()`).
+  El bloqueo va en tres: `bloqueo_arriba`, `bloqueo_abajo` y `bloqueo_cerrado` (reparto en `docs/revision/bloqueos.md`).
 
 ## Reglas de boxeo
 - Las reglas están en `motor/reglas.py` (`validar`) y son solo estructurales (al menos un golpe): el boxeo es

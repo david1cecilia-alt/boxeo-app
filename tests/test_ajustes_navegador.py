@@ -133,7 +133,7 @@ def _altos(pagina):
       .map((li) => Math.round(li.getBoundingClientRect().height))""")
 
 
-def test_tres_huecos_vacios_iguales_y_el_panel_tiene_6_mas_1_7_y_3(ajustes):
+def test_tres_huecos_vacios_iguales_y_el_panel_tiene_6_mas_1_9_y_2(ajustes):
     pagina = ajustes
     assert pagina.locator(".huecos-practicar > li").count() == 3
     assert [" ".join(t.split()) for t in pagina.locator(".hueco.vacio").all_inner_texts()] == ["+ Añadir movimiento"] * 3
@@ -143,11 +143,11 @@ def test_tres_huecos_vacios_iguales_y_el_panel_tiene_6_mas_1_7_y_3(ajustes):
     assert _foco(pagina)["id"] == "pestana-golpe"
     assert pagina.locator("#panel-golpe .fichas.numeros [data-elegir]").count() == 6
     assert pagina.locator("#panel-golpe .fichas.aparte [data-elegir]").all_inner_texts() == ["golpes al cuerpo"]
-    assert pagina.locator("#panel-defensa .fichas.lista [data-elegir]").count() == 7
+    assert pagina.locator("#panel-defensa .fichas.lista [data-elegir]").count() == 9  # el bloqueo, en tres
     assert pagina.locator("#panel-movimiento .fichas.lista [data-elegir]").count() == 2  # sin el cambio de ángulo
     assert pagina.locator("[data-elegir][aria-disabled]").count() == 0
     # Ninguna ficha sola en su fila: todas las filas de cada lista, igual de llenas.
-    assert _filas(pagina) == [[2, 2, 2], [1], [1] * 7, [1] * 2]
+    assert _filas(pagina) == [[2, 2, 2], [1], [1] * 9, [1] * 2]
     # Las fichas de una lista, del mismo tamaño; «golpes al cuerpo», a todo el ancho y aparte.
     anchos = pagina.evaluate("""() => [...document.querySelectorAll('#panel-golpe [data-elegir]')]
       .map((b) => [Math.round(b.getBoundingClientRect().width), Math.round(b.getBoundingClientRect().height)])""")
@@ -317,14 +317,14 @@ def test_a_1024_huecos_uno_debajo_de_otro_en_el_panel_y_la_hoja_centrada(ajustes
     pagina.set_viewport_size({"width": 1024, "height": 768})
     try:
         _elegir(pagina, "4")
-        _elegir(pagina, "bloqueo", "defensa")
+        _elegir(pagina, "bloqueo_cerrado", "defensa")
         # El panel mide 420 px a cualquier ancho: un hueco por fila, del mismo ancho y alto.
         cajas = pagina.evaluate("""() => [...document.querySelectorAll('.huecos-practicar > li')]
           .map((li) => li.getBoundingClientRect().toJSON())""")
         assert len({round(c["top"]) for c in cajas}) == 3
         assert len({(round(c["width"]), round(c["height"])) for c in cajas}) == 1
         _abrir_panel(pagina)
-        assert _filas(pagina) == [[3, 3], [1], [1] * 7, [1] * 2]
+        assert _filas(pagina) == [[3, 3], [1], [1] * 9, [1] * 2]
         assert _pestanas_quietas(pagina)["defensa"]["bajo"] <= 24
         hoja = pagina.evaluate("() => document.querySelector('#elegir-practicar').getBoundingClientRect().toJSON()")
         assert hoja["width"] <= 560 and hoja["bottom"] < 768
@@ -469,3 +469,19 @@ def test_la_seccion_ajustes_cabe_en_el_panel(ajustes, ancho):
                 assert control.bounding_box()["height"] >= 44
     finally:
         pagina.set_viewport_size({"width": 390, "height": 844})
+
+
+def test_un_movimiento_retirado_guardado_sigue_con_su_nombre_y_no_se_puede_elegir(ajustes):
+    # «salir» (cambio de ángulo) y «bloqueo» ya no se eligen, pero quien los tenía guardados ve su nombre y los quita.
+    pagina = ajustes
+    pagina.evaluate("""() => { const d = JSON.parse(localStorage.getItem('boxeo'));
+      d.perfil.practicar = [{ movimiento: 'salir' }, { movimiento: 'bloqueo' }];
+      localStorage.setItem('boxeo', JSON.stringify(d)); }""")
+    pagina.reload()
+    pagina.wait_for_selector("#t-practicar", state="visible")
+    esperar_menu_quieto(pagina)
+    assert [" ".join(t.split()) for t in pagina.locator(".hueco.lleno h3").all_inner_texts()] == ["cambio de ángulo", "bloqueo"]
+    _abrir_panel(pagina)
+    assert pagina.locator('[data-elegir="salir"], [data-elegir="bloqueo"]').count() == 0
+    assert pagina.locator('[data-elegir^="bloqueo_"]').count() == 3
+    _cerrar(pagina, lambda: pagina.keyboard.press("Escape"))

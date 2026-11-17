@@ -69,7 +69,7 @@
   --velo-texto: rgba(18, 18, 18, 0.6); /* degradado local detrás de un texto sobre el ring borroso: 4,5:1 con --suave y --acento */
   --panel-cristal: rgba(26, 26, 26, 0.92);   /* panel del menú con desenfoque: el texto, 4,5:1 hasta con blanco detrás */
   --brillo-panel: rgba(255, 255, 255, 0.05); /* brillo sutil arriba del panel */
-  --borde-panel: rgba(255, 255, 255, 0.08); /* sobre el ring de la preparación: la cuenta atrás, 4,5:1 hasta sobre blanco */
+  --borde-panel: rgba(255, 255, 255, 0.08);
   --resalte: rgba(255, 255, 255, 0.06);
   --resplandor: rgba(208, 62, 63, 0.32);  /* halo rojo detrás del maniquí: el neón al 32 % */
   --brillo-pista: rgba(224, 100, 90, 0.32); /* brillo de la lengüeta y el globo de la pista del asa */
@@ -508,7 +508,7 @@ body.entrenando #vista-entrenar { padding-top: 0; }
 #pantalla:not([data-fase="asalto"]) :is(.antetitulo, .acento, #despues, #anterior, .leyenda) { color: inherit; }
 #pantalla .marca-agua { top: auto; right: auto; left: -20px; bottom: 150px; font-size: 190px; opacity: 0.04; }
 
-/* Preparación (10 s antes del asalto 1): el ring de fondo con un velo, la cuenta atrás y «Empezar ya». En el
+/* Preparación (10 s antes del asalto 1): el ring de fondo con un velo, la barra y «Empezar ya». En el
    asalto y el descanso, el ring borroso (más arriba). El vídeo según la orientación (vertical u horizontal); sin vídeo, la imagen cuadrada. */
 .fondo-ring, .preparacion { display: none; }
 #pantalla.preparando .fondo-ring { display: block; position: absolute; inset: 0; z-index: -1; overflow: hidden; }
@@ -518,10 +518,10 @@ body.entrenando #vista-entrenar { padding-top: 0; }
 #pantalla.preparando .preparacion:not([hidden]) {
   flex: 1; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 12px 0; text-align: center;
 }
-.preparacion .antetitulo { margin: 0; color: var(--texto); font-size: 0.875rem; }
-.cuenta-atras {
-  font-size: min(40vw, 30vh); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.035em;
-}
+/* La barra de la preparación, encima de «Empezar ya»: se llena de 0 a 10 s. */
+.barra-preparacion { width: min(100%, 320px); height: 6px; margin-bottom: 8px; border-radius: 3px;
+  background: rgba(255, 255, 255, 0.16); overflow: hidden; }
+.barra-preparacion b { display: block; width: 0; height: 100%; background: var(--acento); }
 .empezar-ya { min-height: 56px; padding: 0 28px; gap: 10px; font-family: var(--letra-titular); font-weight: 400;
   font-size: 22px; letter-spacing: 0.06em; text-transform: uppercase; }
 .empezar-ya svg { width: 20px; height: 20px; }

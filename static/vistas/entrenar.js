@@ -9,6 +9,7 @@ import { crearAzar, semillaAleatoria } from "../motor/azar.js";
 import { datos } from "../motor/datos.js";
 import { COMBINACIONES, PREPARACION, validarConfig } from "../motor/temporizador.js";
 import { PARA_REACCIONAR, crearDictado } from "../dictado.js";
+import { segundosHabla } from "../motor/ritmo.js";
 import { crearPantallaEncendida } from "../pantalla.js";
 import { crearReproductor } from "../reproductor.js";
 import { activarSonido, campana, dejarDormir, mantenerDespierto, pitido, tablillas } from "../sonido.js";
@@ -27,6 +28,9 @@ const SEGUNDOS_FINAL = 10;
 // Preparación antes del asalto 1: fija, no se configura. Su reloj es otro reproductor (pausa incluida);
 // el guion del motor no cambia: empieza a contar al acabar la preparación (o con «Empezar ya»).
 export const SEGUNDOS_PREPARACION = 10;
+// Lo que se dice en la preparación, solo por voz (en pantalla no sale nada): [segundo, frase]. Al acabar, el anuncio
+// de siempre del asalto 1.
+export const FRASES_PREPARACION = Object.freeze([[0, "Ponte los guantes"], [4, "Ve preparándote"], [7, "Sube la guardia"]]);
 // Qué es la sesión elegida, debajo de sus pastillas (la Personalizada lleva el enlace a Personalizar).
 const NOTA_SESION = {
   general: "General: ritmo, nivel y combinaciones fijos. Voz y guardia, las de Ajustes.",
@@ -153,8 +157,14 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar, avisar = 
     // Las combinaciones no van a hora fija: las dicta el dictado, que espera a que la voz termine.
     estado.combos = eventos.filter((e) => COMBINACIONES.includes(e.tipo));
     estado.fijos = eventos.filter((e) => !COMBINACIONES.includes(e.tipo));
-    // La preparación: un reproductor con un solo evento, el de arrancar el asalto 1. Pausa y Parar le valen igual.
-    estado.reproductor = crearReproductor([{ t: SEGUNDOS_PREPARACION, tipo: "fin_preparacion" }], { alLanzar: arrancar });
+    // La preparación: un reproductor con sus frases y, a los 10 s, el evento de arrancar el asalto 1. Pausa y Parar
+    // le valen igual. Las frases las dice su propio dictado (a la velocidad de Ajustes), una detrás de otra.
+    estado.reproductor = crearReproductor([
+      ...FRASES_PREPARACION.map(([t, texto]) => ({ t, tipo: "frase_preparacion", texto })),
+      { t: SEGUNDOS_PREPARACION, tipo: "fin_preparacion" },
+    ], { alLanzar: lanzarPreparacion });
+    estado.vozPreparacion = crearDictado({ reproductor: estado.reproductor, voz, config });
+    estado.colaPreparacion = Promise.resolve();
     estado.temporizador = setInterval(tic, 100);
     pantalla.encender();
     menu.retirarPista();
@@ -167,14 +177,33 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar, avisar = 
     $("#asalto").innerHTML = `Asalto <span class="acento">1</span>/${config.asaltos}`;
     mostrarTexto("Prepárate");
     $("#anterior").textContent = "";
+    anunciar(`Preparación: el asalto 1 empieza en ${SEGUNDOS_PREPARACION} segundos`); // en pantalla no hay texto
     pintarPausa();
     tic();
     $("#empezar-ya").focus(); // lo primero que se quiere en la preparación; al saltarla, el foco pasa a Pausa
   }
 
+  function lanzarPreparacion(e) {
+    if (e.tipo === "fin_preparacion") arrancar();
+    else decirEnPreparacion(e.texto);
+  }
+
+  // Cada frase espera a que calle la anterior y solo se dice si cabe antes de que acabe la preparación (con la
+  // estimación a la velocidad de Ajustes): ninguna pisa a la siguiente ni al anuncio del asalto. En pausa, nada.
+  function decirEnPreparacion(texto) {
+    const sesion = estado;
+    sesion.colaPreparacion = sesion.colaPreparacion.then(() => {
+      const r = sesion.reproductor;
+      if (estado !== sesion || sesion.dictado || r.pausado) return; // parada, ya en el asalto o en pausa
+      if (r.tiempo() + segundosHabla(texto, sesion.config.velocidad) > SEGUNDOS_PREPARACION) return;
+      return sesion.vozPreparacion.hablar(texto);
+    });
+  }
+
   // Fin de la preparación (a los 10 s o con «Empezar ya»): empieza el guion de verdad, con su reproductor.
   function arrancar() {
     if (!estado || estado.dictado) return; // sin sesión, o ya arrancada
+    if (estado.vozPreparacion.hablando) voz.callar(); // «Empezar ya» a mitad de una frase: se corta
     const enfocado = document.activeElement === $("#empezar-ya");
     estado.reproductor.detener();
     estado.reproductor = crearReproductor(estado.fijos, { alLanzar: lanzar });
@@ -228,10 +257,10 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar, avisar = 
     $("#despues").textContent = despues();
   }
 
-  // La cuenta atrás de la preparación: de 10 a 1 (en pausa se queda quieta).
+  // La barra de la preparación: se llena de 0 a 10 s (en pausa se queda quieta).
   function ticPreparacion() {
-    const restante = SEGUNDOS_PREPARACION - estado.reproductor.tiempo();
-    $("#cuenta-atras").textContent = String(Math.min(SEGUNDOS_PREPARACION, Math.max(1, Math.ceil(restante))));
+    const hecho = Math.min(1, Math.max(0, estado.reproductor.tiempo() / SEGUNDOS_PREPARACION));
+    $("#barra-preparacion b").style.width = `${(hecho * 100).toFixed(1)}%`;
     const fase = estado.reproductor.pausado ? "pausa" : "preparacion";
     $("#pantalla").dataset.fase = fase;
     $("#fase").textContent = TEXTO_FASE[fase];

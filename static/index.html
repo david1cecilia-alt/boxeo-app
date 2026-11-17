@@ -84,10 +84,11 @@
           <span id="fase" class="pastilla">Asalto</span>
         </div>
         <div id="progreso" class="progreso" aria-hidden="true"></div>
-        <!-- Preparación: 10 s fijos antes del asalto 1, con su cuenta atrás. «Empezar ya» la salta. -->
+        <!-- Preparación: 10 s fijos antes del asalto 1. Sin texto en pantalla: las frases van solo por voz y una barra
+             (sin texto) dice cuánto falta. «Empezar ya» la salta. -->
         <div class="preparacion" id="preparacion" hidden>
-          <p class="antetitulo">Prepárate</p>
-          <div id="cuenta-atras" class="cuenta-atras" role="timer" aria-live="off" aria-label="Cuenta atrás">10</div>
+          <p class="solo-lectores">Preparación: 10 segundos antes del asalto 1</p>
+          <div id="barra-preparacion" class="barra-preparacion" aria-hidden="true"><b></b></div>
           <button id="empezar-ya" type="button" class="boton principal empezar-ya">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>Empezar ya</button>
         </div>

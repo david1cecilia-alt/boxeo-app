@@ -1,5 +1,6 @@
-"""La preparación de 10 s antes del asalto 1 (V2), en Chromium headless con el reloj de Playwright: la cuenta atrás,
-«Empezar ya», Pausa y Parar (sin guardar nada) y el fondo del ring (el vídeo de su orientación; la imagen con movimiento
+"""La preparación de 10 s antes del asalto 1 (V2), en Chromium headless con el reloj de Playwright: sin texto en
+pantalla (las frases van solo por voz, a su hora y sin pisarse; una barra dice cuánto falta), «Empezar ya» (corta la
+voz), Pausa y Parar (sin guardar nada) y el fondo del ring (el vídeo de su orientación; la imagen con movimiento
 reducido o si falla). Los datos de prueba solo viven en el localStorage de este Chromium. Sin Playwright se salta en local.
 """
 import importlib.util
@@ -17,22 +18,43 @@ pytestmark = pytest.mark.skipif(not HAY_PLAYWRIGHT and not os.environ.get("CI"),
                                 reason="Playwright no está instalado")
 
 VACIA = """<!doctype html><meta charset="utf-8"><script>localStorage.clear(); window.listo = true;</script>"""
-# Una voz que no suena y acaba a los 400 ms (el dictado espera a que termine cada frase).
+# Una voz que no suena y acaba a los 400 ms (o a los `window.duracionVoz` ms); el dictado espera a que termine cada
+# frase. Apunta en window.registroVoz qué se dice, cuándo (ms del reloj de Playwright) y a qué velocidad, qué frase se
+# corta (cancel() con algo sonando) y si alguna empieza con otra sonando (solapes).
 VOZ_FALSA = """(() => {
+  const registro = { dichas: [], cortadas: [], solapes: 0 };
+  let actual = null;
+  let reloj = null;
+  const acabar = (frase, evento) => {
+    clearTimeout(reloj);
+    if (actual !== frase) return;
+    actual = null;
+    falsa.speaking = false;
+    frase[evento]?.({});
+  };
   const falsa = {
     speaking: false, pending: false, onvoiceschanged: null,
-    getVoices: () => [], addEventListener() {}, removeEventListener() {}, cancel() {},
-    speak(frase) { setTimeout(() => frase.onend?.(), 400); },
+    getVoices: () => [], addEventListener() {}, removeEventListener() {},
+    cancel() { if (actual) { registro.cortadas.push(actual.text); acabar(actual, "onerror"); } },
+    speak(frase) {
+      if (actual) registro.solapes++;
+      registro.dichas.push({ texto: frase.text, t: Date.now(), velocidad: frase.rate });
+      actual = frase;
+      falsa.speaking = true;
+      reloj = setTimeout(() => acabar(frase, "onend"), window.duracionVoz ?? 400);
+    },
   };
+  window.registroVoz = registro;
   Object.defineProperty(window, "speechSynthesis", { value: falsa, configurable: true });
 })();"""
+FRASES = ["Ponte los guantes", "Ve preparándote", "Sube la guardia"]
 @pytest.fixture(scope="module")
 def sitio(tmp_path_factory):
     assert HAY_PLAYWRIGHT, "Estas pruebas necesitan Playwright (pip install -r requirements.txt)"
     return construir(tmp_path_factory.mktemp("sitio") / "_site", "prueba", fotos=False)
 
 
-def abrir_app(sitio, movimiento=True, ancho=390, alto=844, reaccion=False):
+def abrir_app(sitio, movimiento=True, ancho=390, alto=844, reaccion=False, velocidad="normal"):
     """Contexto con la app abierta en Entrenar (una Personalizada de 2 × 30 s), con el reloj parado."""
     contexto = abrir(sitio, VACIA, ancho, alto, barras=ancho > 800)
     pagina, errores = contexto.__enter__()
@@ -45,7 +67,7 @@ def abrir_app(sitio, movimiento=True, ancho=390, alto=844, reaccion=False):
     datos = {"version": 9, "perfil": {"sesion": {"tipo": "personalizada",
                                                 "reaccion": reaccion,
                                                 "personalizada": {"asaltos": 2, "duracion_asalto": 30, "descanso": 10}},
-                                      "pistas": {"asa": True}}}
+                                      "voz": {"velocidad": velocidad}, "pistas": {"asa": True}}}
     pagina.evaluate("(d) => localStorage.setItem('boxeo', d)", json.dumps(datos))
     pagina.goto(f"{ORIGEN}/index.html#entrenar")
     pagina.wait_for_selector("#tipo-sesion input:checked", state="attached")
@@ -64,8 +86,26 @@ def fase(pagina):
     return pagina.evaluate("document.getElementById('pantalla').dataset.fase")
 
 
-def cuenta(pagina):
-    return pagina.inner_text("#cuenta-atras")
+def barra(pagina):
+    """Lo lleno de la barra de la preparación, de 0 a 1."""
+    return pagina.evaluate("""() => { const b = document.querySelector('#barra-preparacion');
+      return b.firstElementChild.getBoundingClientRect().width / b.getBoundingClientRect().width; }""")
+
+
+def registro(pagina):
+    return pagina.evaluate("window.registroVoz")
+
+
+def parar_reloj(pagina):
+    """Para el reloj de Playwright: desde aquí solo avanza con run_for, tarde lo que tarde el equipo."""
+    pagina.clock.pause_at(pagina.evaluate("Date.now()") + 1000)
+
+
+def empezar_y_marcar(pagina):
+    """Pulsa Empezar y devuelve el instante (ms del reloj de Playwright) en el que empieza la preparación."""
+    inicio = pagina.evaluate("Date.now()")
+    pagina.click("#empezar")
+    return inicio
 
 
 def sesiones(pagina):
@@ -74,17 +114,18 @@ def sesiones(pagina):
 
 def test_al_empezar_sale_la_preparacion_de_10_s_y_luego_el_asalto_1(app):
     app.click("#empezar")
-    assert fase(app) == "preparacion" and cuenta(app) == "10"
+    assert fase(app) == "preparacion" and barra(app) < 0.02
     assert app.is_visible("#preparacion") and app.is_visible("#empezar-ya") and app.is_visible(".fondo-ring img")
+    assert app.is_visible("#barra-preparacion")
     assert app.is_hidden("#tiempo") and app.is_hidden(".tarjeta-combo")
-    assert app.text_content("#fase") == "Prepárate"
-    app.clock.run_for(4100)
-    assert cuenta(app) == "6"
+    assert app.text_content("#fase") == "Prepárate"  # la pastilla de arriba se queda
     app.clock.run_for(5000)
-    assert fase(app) == "preparacion" and cuenta(app) == "1"
-    app.clock.run_for(1000)
+    assert 0.48 <= barra(app) <= 0.52
+    app.clock.run_for(4500)
+    assert fase(app) == "preparacion" and barra(app) >= 0.94
+    app.clock.run_for(600)
     assert fase(app) == "asalto"
-    assert app.is_hidden("#preparacion") and app.is_hidden(".fondo-ring")  # el ring nítido se va (queda el borroso, de fondo)
+    assert app.is_hidden("#preparacion") and app.is_hidden(".fondo-ring")  # el ring nítido se va: queda el borroso
     assert app.inner_text("#tiempo") in ("0:30", "0:29")
 
 
@@ -98,15 +139,15 @@ def test_empezar_ya_salta_al_asalto_1_al_momento(app):
     assert app.inner_text("#tiempo") == "0:20"  # el asalto no espera a los 10 s de la preparación
 
 
-def test_la_pausa_para_la_cuenta_atras(app):
+def test_la_pausa_para_la_barra(app):
     app.click("#empezar")
     app.clock.run_for(3000)
     app.click("#pausa")
     assert fase(app) == "pausa" and app.is_visible("#preparacion")
     app.clock.run_for(20_000)
-    assert cuenta(app) == "7"
+    assert 0.29 <= barra(app) <= 0.31
     app.click("#pausa")
-    assert cuenta(app) == "7"  # sigue donde se quedó
+    assert 0.29 <= barra(app) <= 0.31  # sigue donde se quedó
     app.clock.run_for(6500)
     assert fase(app) == "preparacion"
     app.clock.run_for(1500)  # el tic es cada 100 ms: margen de sobra
@@ -122,6 +163,107 @@ def test_parar_en_la_preparacion_no_guarda_nada_en_el_historial(app):
     app.clock.run_for(15_000)  # la preparación no sigue por detrás
     assert sesiones(app) == []
     assert app.is_hidden("#postsesion")
+
+
+# El texto que se ve dentro de la preparación (sin lo oculto para el lector de pantalla).
+TEXTO_PREPARACION = """() => [...document.querySelectorAll('#preparacion *')].filter((e) =>
+  e.checkVisibility() && !e.closest('.solo-lectores') && [...e.childNodes].some((n) =>
+    n.nodeType === 3 && n.textContent.trim())).map((e) => e.textContent.trim())"""
+
+
+@pytest.mark.parametrize("ancho,alto", [(390, 844), (1440, 900)])
+def test_en_la_preparacion_no_hay_texto_en_pantalla_salvo_empezar_ya(sitio, ancho, alto):
+    contexto, pagina, errores = abrir_app(sitio, ancho=ancho, alto=alto)
+    try:
+        pagina.click("#empezar")
+        assert pagina.locator("#cuenta-atras").count() == 0
+        assert pagina.evaluate(TEXTO_PREPARACION) == ["Empezar ya"]  # ni número ni «Prepárate»
+        assert pagina.is_visible("#pausa") and pagina.is_visible("#parar")
+        # Para el lector de pantalla sí se anuncia como preparación.
+        assert "Preparación" in pagina.text_content("#preparacion .solo-lectores")
+        pagina.clock.run_for(200)
+        assert pagina.text_content("#estado").startswith("Preparación")
+        assert not errores
+    finally:
+        contexto.__exit__(None, None, None)
+
+
+def test_las_frases_de_la_preparacion_van_por_voz_a_su_hora_y_no_salen_en_pantalla(sitio):
+    contexto, pagina, errores = abrir_app(sitio, velocidad="lenta")
+    parar_reloj(pagina)
+    try:
+        inicio = empezar_y_marcar(pagina)
+        for _ in range(115):  # hasta 11,5 s: las tres frases y el anuncio del asalto 1
+            texto = pagina.evaluate("document.body.innerText").lower()
+            assert not any(f.lower() in texto for f in FRASES)
+            pagina.clock.run_for(100)
+        r = registro(pagina)
+        dichas = [(d["texto"], (d["t"] - inicio) / 1000, d["velocidad"]) for d in r["dichas"]]
+        assert [d[0] for d in dichas[:3]] == FRASES
+        for (_, segundo, _), esperado in zip(dichas, [0, 4, 7, 11.2]):
+            assert esperado <= segundo <= esperado + 0.25, dichas
+        assert len(dichas) == 4 and dichas[3][0] not in FRASES  # a los 10 s, el anuncio de siempre (tras la campana)
+        assert all(abs(d[2] - 0.9) < 1e-6 for d in dichas)  # a la velocidad de Ajustes («lenta»), igual que el anuncio
+        assert r["solapes"] == 0 and r["cortadas"] == []
+        assert not errores
+    finally:
+        contexto.__exit__(None, None, None)
+
+
+def test_con_una_voz_lenta_ninguna_frase_pisa_a_la_siguiente_ni_al_asalto(sitio):
+    contexto, pagina, errores = abrir_app(sitio)
+    parar_reloj(pagina)
+    try:
+        pagina.evaluate("window.duracionVoz = 4500")
+        inicio = empezar_y_marcar(pagina)
+        for _ in range(130):
+            pagina.clock.run_for(100)
+        r = registro(pagina)
+        dichas = [(d["texto"], (d["t"] - inicio) / 1000) for d in r["dichas"]]
+        # La segunda espera a que acabe la primera (4,5 s); la tercera ya no cabe antes de los 10 s y no se dice.
+        assert [d[0] for d in dichas[:2]] == FRASES[:2] and FRASES[2] not in [d[0] for d in dichas]
+        assert dichas[0][1] <= 0.25 and 4.5 <= dichas[1][1] <= 4.8, dichas
+        assert dichas[2][1] >= 10, dichas  # el anuncio del asalto, con todo ya callado
+        assert r["solapes"] == 0 and r["cortadas"] == []
+        assert not errores
+    finally:
+        contexto.__exit__(None, None, None)
+
+
+def test_empezar_ya_corta_la_voz_y_salta_al_asalto(sitio):
+    contexto, pagina, errores = abrir_app(sitio)
+    parar_reloj(pagina)
+    try:
+        pagina.evaluate("window.duracionVoz = 3000")
+        pagina.click("#empezar")
+        pagina.clock.run_for(1000)
+        pagina.click("#empezar-ya")
+        assert fase(pagina) == "asalto" and registro(pagina)["cortadas"] == ["Ponte los guantes"]
+        pagina.clock.run_for(12_000)
+        dichas = [d["texto"] for d in registro(pagina)["dichas"]]
+        assert dichas[0] == "Ponte los guantes" and not set(FRASES[1:]) & set(dichas)
+        assert registro(pagina)["solapes"] == 0 and not errores
+    finally:
+        contexto.__exit__(None, None, None)
+
+
+def test_la_pausa_calla_las_frases_y_al_reanudar_siguen_a_su_hora(sitio):
+    contexto, pagina, errores = abrir_app(sitio)
+    parar_reloj(pagina)
+    try:
+        pagina.evaluate("window.duracionVoz = 3000")
+        pagina.click("#empezar")
+        pagina.clock.run_for(1000)
+        pagina.click("#pausa")
+        assert registro(pagina)["cortadas"] == ["Ponte los guantes"]
+        pagina.clock.run_for(20_000)
+        assert len(registro(pagina)["dichas"]) == 1  # en pausa no se dice nada
+        pagina.click("#pausa")
+        pagina.clock.run_for(3200)  # hasta pasado el segundo 4 de la preparación
+        assert [d["texto"] for d in registro(pagina)["dichas"]] == FRASES[:2]
+        assert registro(pagina)["solapes"] == 0 and not errores
+    finally:
+        contexto.__exit__(None, None, None)
 
 
 def test_la_preparacion_no_tiene_ajuste_en_el_menu(app):
@@ -270,6 +412,10 @@ def test_parar_lleva_borde_blanco_solo_en_los_ultimos_10_s_del_asalto(sitio, anc
                 pagina.click("#pausa")
             vistas.setdefault(fase(pagina), set()).add(con_borde())
             pagina.clock.run_for(200)
+        # Que salga una reacción en 30 s depende del sorteo: la fase se pone a mano y se lee en el mismo momento.
+        vistas.setdefault("reaccion", set()).add(pagina.evaluate("""() => {
+          document.getElementById('pantalla').dataset.fase = 'reaccion';
+          return getComputedStyle(document.getElementById('parar')).boxShadow.includes('inset'); }"""))
         assert vistas.pop("preparacion") is False and vistas.pop("pausa en la preparación") is False
         assert set(vistas) == {"asalto", "reaccion", "final", "descanso", "pausa"}, vistas
         assert vistas.pop("final") == {True}

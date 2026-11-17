@@ -68,7 +68,7 @@ DIEZ = ["gancho_der_cuerpo", "uppercut_izq_cuerpo", "directo_cuerpo", "gancho_iz
 PROPIAS_DIEZ = [{"id": f"p-{i}", "ids": DIEZ[i:] + DIEZ[:i], "creada": "2026-11-01T10:00:00Z"} for i in range(3)]
 CON_DIEZ = {"version": 9, "combinacionesPropias": PROPIAS_DIEZ, "perfil": {
     "pistas": {"asa": True},
-    "sesion": {"tipo": "personalizada", "mezcla": "solo", "voz": "ambos",
+    "sesion": {"tipo": "personalizada", "mezcla": "solo", "voz": "ambos", "golpes_cuerpo": True,  # las 3 llevan golpes al cuerpo
                "personalizada": {"asaltos": 1, "duracion_asalto": 120, "descanso": 0}}}}
 MEDIR_DIEZ = """() => {
   const caja = (e) => e.getBoundingClientRect();

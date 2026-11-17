@@ -85,6 +85,25 @@ def test_con_ninguna_sale_exactamente_lo_de_antes(fijos, mezcla, propias):
     assert casos(crear) == fijos
 
 
+def test_con_golpes_al_cuerpo_encendido_sale_exactamente_lo_de_antes(fijos):
+    def crear(nivel, zurdo, rng, practicar):
+        return SorteoMezcla(nivel, {**_perfil(practicar), "golpes_cuerpo": True}, zurdo, rng, PROPIAS, "ninguna")
+    assert casos(crear) == fijos
+
+
+@pytest.mark.parametrize("nivel", (1, 2, 3))
+@pytest.mark.parametrize("zurdo", (False, True))
+def test_con_golpes_al_cuerpo_apagado_no_sale_ninguno_al_cuerpo(nivel, zurdo):
+    for semilla in range(5):
+        rng = random.Random(semilla)
+        s = SorteoMezcla(nivel, {**_perfil([]), "golpes_cuerpo": False}, zurdo, rng, PROPIAS, "bastante")
+        config = ConfigSesion(nivel=nivel, zurdo=zurdo, modo_reaccion=semilla % 2 == 1)
+        dichas = [e.ids for e in construir_guion(config, rng, s) if e.ids]
+        dichas += [[a.id for a in s.siguiente().acciones] for _ in range(100)]
+        dichas += [[a.id for a in c.acciones] for c in s.coletillas()]
+        assert dichas and not [ids for ids in dichas if any(i.endswith("_cuerpo") for i in ids)]
+
+
 def test_una_mezcla_sin_propias_del_nivel_sale_como_antes(fijos):
     def crear(nivel, zurdo, rng, practicar):  # solo hay propias del nivel 3, que no está en estos casos
         return SorteoMezcla(nivel, _perfil(practicar), zurdo, rng, [{"id": "p-a", "ids": ["jab"] * 8}], "bastante")

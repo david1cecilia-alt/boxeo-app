@@ -88,6 +88,22 @@ def test_sorteo_js_saca_lo_mismo_que_el_de_python(js, nivel):
         assert abs(p_js - p_py) <= TOLERANCIA_PROPORCION, f"nivel {nivel}, {nombre}: JS {p_js:.1%} vs Python {p_py:.1%}"
 
 
+@pytest.mark.parametrize("nivel", NIVELES)
+def test_sin_golpes_al_cuerpo_js_saca_lo_mismo_que_python(js, nivel):
+    perfil = {**cargar_perfil(), "golpes_cuerpo": False}
+    sin = js["sin_cuerpo"][str(nivel)]
+    sacadas = [tuple(ids) for ids in sin["sorteo"]]
+    python = SorteoBiblioteca(nivel, perfil=perfil, rng=random.Random(nivel))
+    permitidas = {tuple(a.id for a in c.acciones) for c in python.combos}
+    assert set(sacadas) == permitidas and not any(i.endswith("_cuerpo") for c in sacadas for i in c)
+    for i, c in enumerate(sacadas):
+        assert c not in sacadas[max(0, i - SIN_REPETIR):i], f"repetida en {i}"
+    assert sorted(map(tuple, sin["coletillas"])) == sorted(tuple(a.id for a in c.acciones) for c in python.coletillas())
+    mezcla = SorteoMezcla(nivel, perfil, rng=random.Random(nivel), propias=js["cuerpo_propias"], mezcla="solo")
+    assert sin["solo"]["mezcla"] == mezcla.mezcla == "ninguna"
+    assert set(sin["solo"]["sacadas"]) == {"biblioteca"}
+
+
 def _proporcion(muestra: list[list[Accion]], condicion) -> float:
     return sum(1 for acciones in muestra if condicion(acciones)) / len(muestra)
 

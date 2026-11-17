@@ -9,6 +9,9 @@ las propias del usuario (las del creador, que guarda el almacén del navegador).
   6 primeras están todos seguro).
 - Coletillas: las cortas (2-3 acciones) del nivel básico, para rellenar el final de un asalto
   donde ya no cabe una del nivel.
+- «Golpes al cuerpo» apagado (perfil "golpes_cuerpo" False): fuera toda combinación con un golpe al
+  cuerpo, de la biblioteca, de las coletillas y de las propias, salvo que se pida practicarlos («Practicar
+  más» con "cuerpo"), que manda. Sin la clave, o True, exactamente lo de antes.
 - Mezcla con las propias (SorteoMezcla): en cada sorteo, una moneda decide si sale una propia del
   nivel (PROBABILIDAD_PROPIAS) o una de la biblioteca. «Solo las mías»: todas las propias, sin
   mirar el nivel ni la cobertura.
@@ -115,6 +118,18 @@ def peso_practicar(acciones, practicar: list[dict]) -> float:
     return min(TOPE_PRACTICAR, FACTOR_PRACTICAR ** len(lleva))
 
 
+def lleva_cuerpo(combo) -> bool:
+    """Si la combinación lleva algún golpe al cuerpo (los ids *_cuerpo)."""
+    return any(a.objetivo == "cuerpo" for a in combo.acciones)
+
+
+def sin_cuerpo(perfil: dict) -> bool:
+    """Si el sorteo se salta las combinaciones con golpes al cuerpo: «Golpes al cuerpo» apagado
+    ("golpes_cuerpo" False; sin la clave cuenta como encendido) y sin pedir practicarlos en «Practicar más»."""
+    practicar = perfil.get("practicar") or []
+    return perfil.get("golpes_cuerpo", True) is False and not any(p.get("movimiento") == "cuerpo" for p in practicar)
+
+
 def numeros(combo: ComboBiblioteca) -> set[int]:
     return {a.numero for a in combo.acciones if a.numero}
 
@@ -202,14 +217,19 @@ class SorteoBiblioteca(SorteoGrupo):
                  rng: random.Random | None = None):
         self.nivel = nivel
         self.perfil = perfil if perfil is not None else cargar_perfil()
-        super().__init__([c for c in biblioteca() if c.nivel == nivel], self.perfil.get("practicar") or [],
+        self.sin_cuerpo = sin_cuerpo(self.perfil)
+        super().__init__(self._validas(c for c in biblioteca() if c.nivel == nivel), self.perfil.get("practicar") or [],
                          zurdo, rng or random.Random(), cobertura=True)
+
+    def _validas(self, combos) -> list:
+        """Las que se pueden sortear: todas o, con «Golpes al cuerpo» apagado, las que no llevan ninguno."""
+        return [c for c in combos if not (self.sin_cuerpo and lleva_cuerpo(c))]
 
     def coletillas(self) -> list[Combinacion]:
         """Todas las coletillas en un orden al azar ponderado por "Practicar más": la primera de la
         lista que cumpla una condición sale con la probabilidad de su peso entre las que la
         cumplen. No cambia lo que recuerda el sorteo (recientes ni golpes que faltan)."""
-        cortas = [c for c in biblioteca() if c.nivel == NIVEL_COLETILLA and es_corta(c)]
+        cortas = self._validas(c for c in biblioteca() if c.nivel == NIVEL_COLETILLA and es_corta(c))
         return [self._combinacion(c) for c in orden_ponderado(cortas, self.practicar, self.rng)]
 
 
@@ -236,6 +256,10 @@ class SorteoMezcla:
     con la misma moneda en cada puesto de la lista. Con «Solo las mías», solo las propias cortas, y
     se pueden repetir aunque se hayan dicho hace poco (`coletillas_repetibles`, ver
     elegir_siguiente): la biblioteca solo entra si no hay ninguna propia corta (y Entrenar lo avisa).
+
+    Con «Golpes al cuerpo» apagado (ver sin_cuerpo) las propias con algún golpe al cuerpo no cuentan: si con eso
+    no quedan bastantes, la mezcla efectiva es "ninguna" (sale la biblioteca, nunca una sesión vacía) y Entrenar
+    lo avisa.
     """
 
     def __init__(self, nivel: int, perfil: dict | None = None, zurdo: bool = False,
@@ -243,7 +267,7 @@ class SorteoMezcla:
                  mezcla: str = "ninguna"):
         self.rng = rng or random.Random()
         self.biblioteca = SorteoBiblioteca(nivel, perfil, zurdo, self.rng)
-        validas = propias_validas(propias)
+        validas = self.biblioteca._validas(propias_validas(propias))
         self.cortas = [p for p in validas if es_corta(p)]
         self.mezcla = mezcla_efectiva(mezcla, validas, nivel)
         self.coletillas_repetibles = coletillas_repetibles(self.mezcla, validas)

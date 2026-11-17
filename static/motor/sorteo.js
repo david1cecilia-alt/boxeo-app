@@ -9,6 +9,9 @@
 //   pesan PESO_CUERPO, sin filtrar.
 // - Coletillas: las cortas (2-3 acciones) del nivel básico, para rellenar el final de un asalto
 //   donde ya no cabe una del nivel.
+// - «Golpes al cuerpo» apagado (perfil `golpes_cuerpo` false): fuera toda combinación con un golpe al
+//   cuerpo, de la biblioteca, de las coletillas y de las propias, salvo que se pida practicarlos («Practicar
+//   más» con "cuerpo"), que manda. Sin la clave, o true, exactamente lo de antes.
 // - Mezcla con las propias (SorteoMezcla): en cada sorteo, una moneda decide si sale una propia del
 //   nivel (PROBABILIDAD_PROPIAS) o una de la biblioteca. «Solo las mías»: todas las propias, sin
 //   mirar el nivel ni la cobertura.
@@ -60,6 +63,15 @@ export function pesoPracticar(acciones, practicar) {
   const elegidos = new Set(practicar.map((p) => p.movimiento));
   const lleva = [...new Set(acciones.map(movimiento))].filter((m) => elegidos.has(m)).length;
   return Math.min(TOPE_PRACTICAR, FACTOR_PRACTICAR ** lleva);
+}
+
+// Si la combinación lleva algún golpe al cuerpo (los ids *_cuerpo).
+export const llevaCuerpo = (combo) => combo.acciones.some((a) => a.objetivo === "cuerpo");
+
+// Si el sorteo se salta las combinaciones con golpes al cuerpo: «Golpes al cuerpo» apagado (`golpes_cuerpo`
+// false; sin la clave cuenta como encendido) y sin pedir practicarlos en «Practicar más».
+export function sinCuerpo(perfil) {
+  return perfil?.golpes_cuerpo === false && !(perfil.practicar ?? []).some((p) => p?.movimiento === "cuerpo");
 }
 
 export const numeros = (combo) => new Set(combo.acciones.map((a) => a.numero).filter(Boolean));
@@ -173,17 +185,24 @@ export class SorteoGrupo {
 export class SorteoBiblioteca extends SorteoGrupo {
   constructor(nivel, { perfil = null, zurdo = false, azar }) {
     perfil ??= cargarPerfil();
-    super(biblioteca().filter((c) => c.nivel === nivel),
+    const quitar = sinCuerpo(perfil);
+    super(biblioteca().filter((c) => c.nivel === nivel && !(quitar && llevaCuerpo(c))),
       { practicar: perfil.practicar ?? [], zurdo, azar, cobertura: true });
     this.nivel = nivel;
     this.perfil = perfil;
+    this.sinCuerpo = quitar;
+  }
+
+  // Las que se pueden sortear: todas o, con «Golpes al cuerpo» apagado, las que no llevan ninguno.
+  validas(combos) {
+    return combos.filter((c) => !(this.sinCuerpo && llevaCuerpo(c)));
   }
 
   // Todas las coletillas en un orden al azar ponderado por "Practicar más": la primera de la lista
   // que cumpla una condición sale con la probabilidad de su peso entre las que la cumplen. No cambia
   // lo que recuerda el sorteo (recientes ni golpes que faltan).
   coletillas() {
-    const cortas = biblioteca().filter((c) => c.nivel === NIVEL_COLETILLA && esCorta(c));
+    const cortas = this.validas(biblioteca().filter((c) => c.nivel === NIVEL_COLETILLA && esCorta(c)));
     return ordenPonderado(cortas, this.practicar, this.azar).map((c) => this.combinacion(c));
   }
 }
@@ -201,6 +220,8 @@ export class SorteoBiblioteca extends SorteoGrupo {
 // la misma moneda en cada puesto de la lista. Con «Solo las mías», solo las propias cortas, y se
 // pueden repetir aunque se hayan dicho hace poco (coletillasRepetibles, ver elegirSiguiente): la
 // biblioteca solo entra si no hay ninguna propia corta (y Entrenar lo avisa).
+// Con «Golpes al cuerpo» apagado (ver sinCuerpo) las propias con algún golpe al cuerpo no cuentan: si con eso no
+// quedan bastantes, la mezcla efectiva es "ninguna" (sale la biblioteca, nunca una sesión vacía) y Entrenar lo avisa.
 // Con «Solo las mías» (la efectiva) y alguna propia de 2-3 acciones, las coletillas son solo propias
 // y se pueden repetir aunque estén entre las últimas dichas: mejor una propia repetida que una de la
 // biblioteca o el silencio. Con las otras mezclas, nunca.
@@ -210,7 +231,7 @@ export class SorteoMezcla {
   constructor(nivel, { perfil = null, zurdo = false, azar, propias = [], mezcla = "ninguna" }) {
     this.azar = azar;
     this.biblioteca = new SorteoBiblioteca(nivel, { perfil, zurdo, azar });
-    const validas = propiasValidas(propias);
+    const validas = this.biblioteca.validas(propiasValidas(propias));
     this.cortas = validas.filter(esCorta);
     this.mezcla = mezclaEfectiva(mezcla, validas, nivel);
     this.coletillasRepetibles = coletillasRepetibles(this.mezcla, validas);

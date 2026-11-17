@@ -33,6 +33,20 @@ for (const nivel of NIVELES) {
   sorteos[nivel] = { ortodoxo: sortear(nivel, false, 300 + nivel), zurdo: sortear(nivel, true, 300 + nivel) };
 }
 
+// «Golpes al cuerpo» apagado: sorteo y coletillas de cada nivel, y «Solo las mías» con todas las propias al cuerpo.
+const SIN_CUERPO = { ...cargarPerfil(), golpes_cuerpo: false };
+const CUERPO_PROPIAS = [["jab", "jab_cuerpo"], ["directo_cuerpo", "gancho_izq"], ["jab", "uppercut_der_cuerpo", "directo"]]
+  .map((ids, i) => ({ id: `p-c${i}`, ids }));
+const sinCuerpo = Object.fromEntries(NIVELES.map((nivel) => {
+  const s = new SorteoBiblioteca(nivel, { perfil: SIN_CUERPO, azar: crearAzar(500 + nivel) });
+  const m = new SorteoMezcla(nivel, { perfil: SIN_CUERPO, azar: crearAzar(600 + nivel), propias: CUERPO_PROPIAS, mezcla: "solo" });
+  return [nivel, {
+    sorteo: Array.from({ length: N }, () => s.siguiente().acciones.map((a) => a.id)),
+    coletillas: s.coletillas().map((c) => c.acciones.map((a) => a.id)),
+    solo: { mezcla: m.mezcla, sacadas: Array.from({ length: 50 }, () => m.siguiente().origen) },
+  }];
+}));
+
 // "Practicar más": sorteos de medio con varias elecciones y el peso de cada combinación. El último
 // trae el `cuanto` de los datos viejos (se ignora) y un movimiento repetido (cuenta una vez).
 const PRACTICAR = [
@@ -186,4 +200,4 @@ const senales = {
   segundos: Object.fromEntries(datos().presets.reacciones.map((r) => [r.texto, segundosHabla(r.texto, VELOCIDAD_SENAL)])),
 };
 
-writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, sorteos, senales, practicar, duplicadas, mezclas, guiones_mezcla: guionesMezcla, guiones_entrenar: guionesEntrenar, elecciones_coletillas: eleccionesColetillas, avisos, movimientos: movimientos(), cobertura }));
+writeFileSync(process.argv[2], JSON.stringify({ guiones, espejos, niveles, sorteos, senales, practicar, duplicadas, mezclas, guiones_mezcla: guionesMezcla, guiones_entrenar: guionesEntrenar, elecciones_coletillas: eleccionesColetillas, avisos, movimientos: movimientos(), cobertura, sin_cuerpo: sinCuerpo, cuerpo_propias: CUERPO_PROPIAS }));

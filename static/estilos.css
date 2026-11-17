@@ -66,7 +66,7 @@
   --aviso-fondo: #3d2e06;
   --velo: rgba(0, 0, 0, 0.7);
   --velo-ring: rgba(18, 18, 18, 0.72);
-  --velo-texto: rgba(18, 18, 18, 0.6); /* degradado local detrás de un texto sobre el ring borroso: 4,5:1 con --suave y --acento */
+  --velo-texto: rgb(var(--fondo-rgb) / 0.6); /* degradado local detrás de un texto sobre el ring borroso: 4,5:1 con --suave y --acento */
   --panel-cristal: rgba(26, 26, 26, 0.92);   /* panel del menú con desenfoque: el texto, 4,5:1 hasta con blanco detrás */
   --brillo-panel: rgba(255, 255, 255, 0.05); /* brillo sutil arriba del panel */
   --borde-panel: rgba(255, 255, 255, 0.08);

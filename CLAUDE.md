@@ -38,7 +38,7 @@
   reproductor; el guion del motor no cambia. Sin texto en pantalla: las frases (`FRASES_PREPARACION`) van solo por
   voz, en cola y solo si caben antes de los 10 s; una barra sin texto marca lo que falta. Fondo: el ring (imagen en el
   precache; encima, el vídeo de su orientación, `static/video/ring-{vertical,horizontal}.{webm,mp4}`, que no pasa por
-  la caché de `sw.js`: va directo a la red). En asalto y descanso, `ring-cenital-borroso.webp` (lo deriva
+  la caché de `sw.js`: va directo a la red). En el asalto (no en el descanso, que es verde), `ring-cenital-borroso.webp` (lo deriva
   `herramientas/convertir_imagenes.py` con Pillow, sin `filter: blur`); si un texto encima no llega al contraste, se
   aclara ese texto con un token (`--terciario`, `--acento-sobre-ring`) y, si ni así, una `text-shadow` suave; nunca un
   velo ni una banda (`tests/test_ring_sesion_navegador.py` lo mide con píxeles reales). Los tests que cronometran fases

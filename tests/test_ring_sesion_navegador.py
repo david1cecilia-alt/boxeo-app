@@ -1,4 +1,4 @@
-"""El ring borroso de fondo en los asaltos y los descansos, en Chromium headless (Playwright), a 390×844 y 1440×900.
+"""El ring borroso de fondo en los asaltos (el descanso, verde y sin ring), en Chromium headless (Playwright), a 390×844 y 1440×900.
 
 El contraste se mide con los píxeles reales: se hace una captura con los textos en transparente (se queda lo que
 haya detrás: el ring, la tarjeta, un degradado...) y, píxel a píxel dentro de la caja de cada línea de texto, se
@@ -137,19 +137,23 @@ def medir(pagina):
 
 @pytest.mark.parametrize("segundos,fase", MOMENTOS)
 @pytest.mark.parametrize("ancho,alto", TAMANOS)
-def test_sobre_el_ring_borroso_todo_el_texto_se_lee(sitio, ancho, alto, segundos, fase):
+def test_en_el_asalto_sobre_el_ring_y_en_el_descanso_todo_el_texto_se_lee(sitio, ancho, alto, segundos, fase):
     with abrir(sitio, VACIA, ancho, alto, barras=ancho > 800) as (pagina, errores):
         empezar(pagina)
         pagina.clock.run_for(segundos * 1000)
         assert pagina.evaluate("document.getElementById('pantalla').dataset.fase") == fase
-        assert "ring-cenital-borroso.webp" in fondo(pagina)
+        if fase == "asalto":
+            assert "ring-cenital-borroso.webp" in fondo(pagina)
+        else:  # el descanso, con su verde de siempre y sin ring
+            assert fondo(pagina) == "none"
+            assert pagina.evaluate("getComputedStyle(document.getElementById('pantalla')).backgroundColor") ==                 "rgb(11, 59, 52)"  # --fase-descanso
         medidas = medir(pagina)
         print(ancho, alto, segundos, fase, {k: round(v, 2) for k, v in medidas.items()})
         assert {"reloj", "asalto", "pastilla", "despues", "teclado"} <= medidas.keys(), medidas
         for nombre, _, minimo in TEXTOS:
             if nombre in medidas:
                 assert medidas[nombre] >= minimo, (nombre, medidas[nombre])
-        # El degradado de la leyenda no desborda la tarjeta (saldría una barra de desplazamiento).
+        # La tarjeta no se desborda (saldría una barra de desplazamiento).
         assert pagina.evaluate("""() => { const t = document.querySelector('.tarjeta-combo');
           return t.scrollWidth <= t.clientWidth && t.scrollHeight <= t.clientHeight + 1; }""")
         if segundos == 57:

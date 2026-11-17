@@ -476,9 +476,9 @@ body.entrenando #vista-entrenar { padding-top: 0; }
 #pantalla[data-fase="final"] { background: var(--fase-final); }
 #pantalla[data-fase="descanso"] { background: var(--fase-descanso); }
 #pantalla[data-fase="pausa"] { background: var(--fase-pausa); }
-/* Asalto y descanso: el ring borroso de fondo (desenfocado en el fichero, sin filter: blur) y sin velo. Los últimos
-   10 s («final»), la pausa y la reacción llevan su color liso de siempre; en el resumen #pantalla ya no se ve. */
-#pantalla:is([data-fase="asalto"], [data-fase="descanso"]) {
+/* Asalto: el ring borroso de fondo (desenfocado en el fichero, sin filter: blur) y sin velo. El descanso (verde), los
+   últimos 10 s («final»), la pausa y la reacción llevan su color liso de siempre; en el resumen #pantalla ya no se ve. */
+#pantalla[data-fase="asalto"] {
   background: var(--fase-asalto) url("imagenes/ring-cenital-borroso.webp") center / cover no-repeat;
 }
 /* Sobre el ring, en el asalto, el gris de «Después…» y de la leyenda y el rojo de «Asalto N/M» no llegan a 4,5:1
@@ -496,7 +496,7 @@ body.entrenando #vista-entrenar { padding-top: 0; }
 #pantalla .marca-agua { top: auto; right: auto; left: -20px; bottom: 150px; font-size: 190px; opacity: 0.04; }
 
 /* Preparación (10 s antes del asalto 1): el ring de fondo con un velo, la barra y «Empezar ya». En el
-   asalto y el descanso, el ring borroso (más arriba). El vídeo según la orientación (vertical u horizontal); sin vídeo, la imagen cuadrada. */
+   asalto, el ring borroso (más arriba). El vídeo según la orientación (vertical u horizontal); sin vídeo, la imagen cuadrada. */
 .fondo-ring, .preparacion { display: none; }
 #pantalla.preparando .fondo-ring { display: block; position: absolute; inset: 0; z-index: -1; overflow: hidden; }
 .fondo-ring :is(img, video) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }

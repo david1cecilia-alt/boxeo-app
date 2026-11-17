@@ -46,6 +46,9 @@ export function sesionPorDefecto() {
   return {
     voz: "nombres", ritmo: 3, tipo: "general", nivel: null, zurdo: null, reaccion: false,
     mezcla: "ninguna", // «Tus combinaciones»: una de MEZCLAS de motor/sorteo.js
+    // «Golpes al cuerpo» (Ajustes): opcional y apagado por defecto; lo que no sea true, apagado. No sube VERSION:
+    // los datos de antes no lo tienen y su ausencia vale (apagado).
+    golpes_cuerpo: false,
     personalizada: { ...PERSONALIZADA_POR_DEFECTO },
   };
 }
@@ -289,6 +292,7 @@ function completar(datos, avisos = [], { idsAvatares = idsAvataresPorDefecto } =
         ...sesion,
         tipo: TIPOS.includes(sesion.tipo) ? sesion.tipo : base.perfil.sesion.tipo,
         mezcla: MEZCLAS.includes(sesion.mezcla) ? sesion.mezcla : base.perfil.sesion.mezcla,
+        golpes_cuerpo: sesion.golpes_cuerpo === true,
         personalizada: { ...base.perfil.sesion.personalizada, ...perfil.sesion?.personalizada },
       },
       voz: { ...base.perfil.voz, ...perfil.voz },

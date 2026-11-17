@@ -792,6 +792,8 @@ html.menu-abierto #asa { visibility: hidden; }
 .menu-seccion .interruptor { justify-content: space-between; }
 .guardias { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .guardias label span { min-height: 56px; }
+/* «Qué te dicta la app» en Ajustes: el título, el interruptor «Golpes al cuerpo» y su ayuda, juntos. */
+.que-dicta { display: grid; gap: 8px; }
 /* «Practicar más» en el panel: un hueco por fila, bajos (el panel es estrecho a cualquier ancho). */
 .menu-seccion .huecos-practicar { grid-template-columns: minmax(0, 1fr); grid-auto-rows: 60px; gap: 8px; }
 .menu-seccion .hueco.lleno { align-content: center; padding: 4px 4px 4px 14px; }

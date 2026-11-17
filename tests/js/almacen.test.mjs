@@ -122,7 +122,7 @@ test("v3 → v4: nivel y zurdo salen de «Tus datos» y se conserva todo lo dem�
   // Amateur con nivel 2 y ritmo 5 no es la General: en la v9, Personalizada 3×3.
   assert.deepEqual(datos.perfil.sesion, {
     voz: "ambos", ritmo: 5, tipo: "personalizada", nivel: 2, zurdo: true, reaccion: false, mezcla: "ninguna",
-    personalizada: { asaltos: 3, duracion_asalto: 180, descanso: 60 },
+    golpes_cuerpo: false, personalizada: { asaltos: 3, duracion_asalto: 180, descanso: 60 },
   });
   // Historial, valoraciones y el resto del perfil, intactos; las notas y revisiones del entrenador,
   // y la guardia y el nivel de «Tus datos», se van en la v7.
@@ -434,10 +434,27 @@ test("guardar y releer la sesión: cada elección y la personalizada persisten",
   const almacen = crearAlmacen({ storage });
   const sesion = {
     voz: "numeros", ritmo: 4, tipo: "personalizada", nivel: 3, zurdo: true, reaccion: true, mezcla: "bastante",
-    personalizada: { asaltos: 4, duracion_asalto: 120, descanso: 45 },
+    golpes_cuerpo: true, personalizada: { asaltos: 4, duracion_asalto: 120, descanso: 45 },
   };
   almacen.guardarPerfil({ ...almacen.datos.perfil, sesion });
   assert.deepEqual(crearAlmacen({ storage }).datos.perfil.sesion, sesion);
+});
+
+test("«Golpes al cuerpo» (perfil.sesion.golpes_cuerpo): opcional, apagado por defecto y sin subir VERSION", () => {
+  assert.equal(sesionPorDefecto().golpes_cuerpo, false);
+  // Datos de antes, sin el campo: válidos, apagado y sin migrar.
+  const { golpes_cuerpo, ...sinCampo } = vacio().perfil.sesion;
+  const antes = { ...vacio(), perfil: { ...vacio().perfil, sesion: sinCampo } };
+  const { datos, migrado } = migrar(structuredClone(antes));
+  assert.equal(migrado, false);
+  assert.equal(datos.perfil.sesion.golpes_cuerpo, false);
+  // Lo que no sea true (escrito a mano), apagado.
+  for (const raro of ["si", 1, null]) {
+    const storage = almacenamiento();
+    const almacen = crearAlmacen({ storage });
+    almacen.guardarPerfil({ ...almacen.datos.perfil, sesion: { ...almacen.datos.perfil.sesion, golpes_cuerpo: raro } });
+    assert.equal(crearAlmacen({ storage }).datos.perfil.sesion.golpes_cuerpo, false, String(raro));
+  }
 });
 
 test("v1 → v2: el perfil gana «Mi estilo» sin elegir y conserva lo demás", () => {

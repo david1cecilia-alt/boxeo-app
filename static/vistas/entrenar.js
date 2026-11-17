@@ -91,7 +91,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar, avisar = 
     $("#resumen-grande").textContent = `${c.asaltos} × ${minutos(c.duracion_asalto)}`;
     $("#resumen-detalle").textContent = `descanso ${minutos(c.descanso)} · ${duracionAproximada(c)}`;
     // La mezcla con la que se sorteará de verdad (con «Solo las mías», el nivel no cuenta).
-    const { efectiva } = estadoMezcla(c.mezcla, almacen.datos.combinacionesPropias, c.nivel);
+    const { efectiva } = estadoMezcla(c.mezcla, almacen.datos.combinacionesPropias, c.nivel, c);
     $("#resumen-elecciones").innerHTML = eleccionesSesion({ ...c, mezcla: efectiva })
       .map((texto) => `<li>${esc(texto)}</li>`).join("");
     $("#nota-sesion").innerHTML = NOTA_SESION[c.tipo]

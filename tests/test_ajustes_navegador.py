@@ -377,7 +377,8 @@ def test_ajustes_trae_voz_velocidad_nombrar_y_guardia_y_nada_de_practicar(ajuste
     assert [i.get_attribute("value") for i in seccion.locator('input[name="voz"]').all()] == ["numeros", "nombres", "ambos"]
     assert [i.get_attribute("value") for i in seccion.locator('input[name="guardia"]').all()] == ["diestro", "zurdo"]
     assert pagina.locator("#identidad").count() == 1  # el hueco de nombre y avatar (R5)
-    texto = seccion.inner_text().lower()
+    # La ayuda de «Golpes al cuerpo» nombra «Practicar más» (pedirlos manda sobre el interruptor): no cuenta.
+    texto = seccion.inner_text().lower().replace(pagina.inner_text("#ayuda-cuerpo").lower(), "")
     for frase in ("practicar", "tus datos", "nivel", "asaltos"):
         assert frase not in texto, frase
     # En Entrenar ya no están Nombrar ni la guardia; la página de Ajustes y su engranaje, tampoco.
@@ -400,6 +401,25 @@ def test_nombrar_y_la_guardia_se_guardan_sin_cambiar_de_tipo(ajustes):
     assert pagina.is_checked('input[name="voz"][value="numeros"]') and pagina.is_checked('input[name="guardia"][value="zurdo"]')
     pagina.click('#menu-ajustes label:has(input[name="voz"][value="nombres"])')
     pagina.click('#menu-ajustes label:has(input[name="guardia"][value="diestro"])')
+
+
+def test_golpes_al_cuerpo_apagado_por_defecto_se_guarda_sin_cambiar_de_tipo(ajustes):
+    pagina = ajustes
+    _abrir_ajustes(pagina)
+    interruptor = pagina.locator("#menu-ajustes #golpes-cuerpo")
+    assert interruptor.get_attribute("role") == "switch" and not interruptor.is_checked()
+    assert pagina.inner_text("#menu-ajustes .que-dicta h3").lower() == "qué te dicta la app"
+    assert "«Practicar más» golpes al cuerpo, salen igual" in pagina.inner_text("#ayuda-cuerpo")
+    assert interruptor.get_attribute("aria-describedby") == "ayuda-cuerpo"
+    pagina.click("#menu-ajustes label:has(#golpes-cuerpo)")
+    sesion = json.loads(pagina.evaluate("localStorage.getItem('boxeo')"))["perfil"]["sesion"]
+    assert (sesion["golpes_cuerpo"], sesion["tipo"]) == (True, "general")
+    pagina.reload()
+    pagina.wait_for_selector("#voz-id", state="visible")
+    esperar_menu_quieto(pagina)
+    assert pagina.is_checked("#golpes-cuerpo")
+    pagina.click("#menu-ajustes label:has(#golpes-cuerpo)")  # apagado otra vez, para las demás pruebas
+    assert json.loads(pagina.evaluate("localStorage.getItem('boxeo')"))["perfil"]["sesion"]["golpes_cuerpo"] is False
 
 
 @pytest.mark.parametrize("de", ["#ajustes", "#ajustes/otra-cosa"])

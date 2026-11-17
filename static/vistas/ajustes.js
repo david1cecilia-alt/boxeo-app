@@ -1,5 +1,5 @@
 // Sección «Ajustes» del menú de Entrenar (#entrenar/menu/ajustes): la voz y su velocidad, «Nombrar
-// combinaciones», la guardia, y el nombre y el avatar o la foto (avatar.js). Valen para la General y la
+// combinaciones», «Qué te dicta la app» («Golpes al cuerpo», apagado por defecto), la guardia, y el nombre y el avatar o la foto (avatar.js). Valen para la General y la
 // Personalizada (y Prueba), así que tocarlas no cambia de tipo. Se guarda al cambiar cada campo, solo en
 // este navegador. La voz y su velocidad se aplican al momento (también a la línea «Voz: …» de Entrenar).
 import { NOMBRE_VELOCIDAD, opcionesVoz, preferencias, recordarSesion } from "../ajustes.js";
@@ -39,7 +39,7 @@ export function iniciarAjustes({ almacen, voz, alCambiar }) {
 
   function pintar() {
     const p = almacen.datos.perfil;
-    const { voz: modo, zurdo } = preferencias(p);
+    const { voz: modo, zurdo, golpes_cuerpo } = preferencias(p);
     const radios = (nombre, opciones, actual) => opciones.map(([valor, arriba, abajo]) =>
       `<label><input type="radio" name="${nombre}" value="${valor}" ${valor === actual ? "checked" : ""}>`
       + `<span><b>${esc(arriba)}</b>${esc(abajo)}</span></label>`).join("");
@@ -62,12 +62,19 @@ export function iniciarAjustes({ almacen, voz, alCambiar }) {
           <legend><span>Nombrar combinaciones</span></legend>
           ${radios("voz", MODOS_VOZ, modo)}
         </fieldset>
+        <div class="que-dicta">
+          <h3 id="t-dicta" class="titulo-campo">Qué te dicta la app</h3>
+          <label class="interruptor"><span>Golpes al cuerpo</span>
+            <input type="checkbox" role="switch" id="golpes-cuerpo" aria-describedby="ayuda-cuerpo" ${golpes_cuerpo ? "checked" : ""}></label>
+          <p class="nota" id="ayuda-cuerpo">Apagado, no salen combinaciones con golpes al cuerpo, ni de la biblioteca ni
+            tuyas. Si en tu Personalizada eliges «Practicar más» golpes al cuerpo, salen igual.</p>
+        </div>
         <fieldset class="niveles guardias">
           <legend><span>Guardia</span></legend>
           ${GUARDIAS.map(([valor, nombre, detalle]) => `<label><input type="radio" name="guardia" value="${valor}"
             ${(valor === "zurdo") === zurdo ? "checked" : ""}><span>${nombre}<small class="solo-lectores">: ${detalle}</small></span></label>`).join("")}
         </fieldset>
-        <p class="nota">La voz, Nombrar y la guardia valen para la General y para tu Personalizada.</p>
+        <p class="nota">La voz, Nombrar, los golpes al cuerpo y la guardia valen para la General y para tu Personalizada.</p>
         <div id="identidad"></div>
         <p class="nota">Todo se guarda solo en este dispositivo. <span id="guardado-ajustes"></span></p>
       </form>`;
@@ -109,6 +116,7 @@ export function iniciarAjustes({ almacen, voz, alCambiar }) {
     else if (name === "voz-velocidad") guardarVoz({ velocidad: value });
     else if (name === "voz") guardarSesion({ voz: value });
     else if (name === "guardia") guardarSesion({ zurdo: value === "zurdo" });
+    else if (e.target.id === "golpes-cuerpo") guardarSesion({ golpes_cuerpo: e.target.checked });
   });
   raiz.addEventListener("submit", (e) => e.preventDefault());
   raiz.addEventListener("click", (e) => {

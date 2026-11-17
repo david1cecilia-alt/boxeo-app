@@ -4,8 +4,8 @@ import { FIJO_GENERAL, PERSONALIZADA_POR_DEFECTO, TIPOS } from "./almacen.js";
 import { datos } from "./motor/datos.js";
 import { VELOCIDADES, VELOCIDAD_POR_DEFECTO } from "./motor/ritmo.js";
 import {
-  MEZCLAS, MIN_SOLO_PROPIAS, PROBABILIDAD_PROPIAS, SorteoMezcla, coletillasRepetibles, esCorta, mezclaEfectiva,
-  propiasValidas,
+  MEZCLAS, MIN_SOLO_PROPIAS, PROBABILIDAD_PROPIAS, SorteoMezcla, coletillasRepetibles, esCorta, llevaCuerpo,
+  mezclaEfectiva, propiasValidas, sinCuerpo,
 } from "./motor/sorteo.js";
 import { construirGuion, validarConfig } from "./motor/temporizador.js";
 
@@ -40,16 +40,25 @@ export const OPCIONES_MEZCLA = MEZCLAS.map((id) => ({
 // almacén y el nivel: cuántas se pueden sortear, la mezcla con la que se sorteará de verdad, si
 // «Solo las mías» se puede elegir (y por qué no), si el nivel cuenta y el aviso que toque. Sin
 // propias, el selector se desactiva (Entrenar pone el enlace al creador).
-export function estadoMezcla(mezcla, propias, nivel) {
+// Con «Golpes al cuerpo» apagado (`golpes_cuerpo` false y sin «cuerpo» en `practicar`) las propias con golpes al
+// cuerpo no se sortean: si por eso no se puede cumplir la mezcla, salen las de la biblioteca y se avisa.
+export function estadoMezcla(mezcla, propias, nivel, { golpes_cuerpo = true, practicar = [] } = {}) {
   const validas = propiasValidas(propias);
   const total = validas.length;
-  const efectiva = mezclaEfectiva(mezcla, validas, nivel);
+  const quitar = sinCuerpo({ golpes_cuerpo, practicar });
+  const sorteables = quitar ? validas.filter((p) => !llevaCuerpo(p)) : validas;
+  const efectiva = mezclaEfectiva(mezcla, sorteables, nivel);
+  const porElCuerpo = efectiva !== mezclaEfectiva(mezcla, validas, nivel);
   const motivoSolo = total > 0 && total < MIN_SOLO_PROPIAS
     ? `«Solo las mías» necesita al menos ${MIN_SOLO_PROPIAS} combinaciones (tienes ${total})`
       + (mezcla === "solo" ? ": de momento salen las de la biblioteca." : ".")
     : null;
   let aviso = null;
-  if (efectiva === "solo" && !validas.some(esCorta)) {
+  if (porElCuerpo) {
+    aviso = sorteables.length === 0
+      ? "Todas tus combinaciones llevan golpes al cuerpo y «Golpes al cuerpo» está apagado en Ajustes: salen las de la biblioteca."
+      : `Con «Golpes al cuerpo» apagado en Ajustes no se usan las tuyas que los llevan (${total - sorteables.length} de ${total}): salen las de la biblioteca.`;
+  } else if (efectiva === "solo" && !sorteables.some(esCorta)) {
     aviso = "Añade alguna de 2-3 acciones para que el final del asalto sea solo tuyo.";
   } else if (total > 0 && Object.hasOwn(PROBABILIDAD_PROPIAS, mezcla) && efectiva === "ninguna") {
     aviso = `No tienes combinaciones de nivel ${NOMBRE_NIVEL[nivel].toLowerCase()}: solo saldrán las de la biblioteca.`;
@@ -69,11 +78,13 @@ export function opcionesVoz(perfilUsuario) {
 // «Practicar más»: cuántos movimientos se pueden elegir a la vez. Con más, todo pesaría casi igual.
 export const MAX_PRACTICAR = 3;
 
-// Perfil para el sorteo: el de data/perfil.json con lo elegido en «Practicar más».
+// Perfil para el sorteo: el de data/perfil.json con lo elegido en «Practicar más» y «Golpes al cuerpo»
+// (`golpes_cuerpo`; sin él, el sorteo los deja como siempre).
 export function perfilSorteo(perfilUsuario) {
   const base = datos().perfil;
   const practicar = perfilUsuario?.practicar ?? [];
-  return practicar.length ? { ...base, practicar: practicar.map((p) => ({ ...p })) } : base;
+  const conPracticar = practicar.length ? { ...base, practicar: practicar.map((p) => ({ ...p })) } : base;
+  return typeof perfilUsuario?.golpes_cuerpo === "boolean" ? { ...conPracticar, golpes_cuerpo: perfilUsuario.golpes_cuerpo } : conPracticar;
 }
 
 // Elige (`elegir` true) o quita (false) un movimiento de «Practicar más», con un solo nivel. Devuelve
@@ -88,17 +99,20 @@ export function cambiarPracticar(practicar, movimiento, elegir) {
 // combinaciones»), las propias del almacén (`propias`, en ortodoxo; el zurdo, como la biblioteca).
 // Con «Ninguna», o una mezcla que no se puede cumplir, sale lo mismo que sin propias.
 // `config.practicar`, si llega (configSesion), manda sobre el del perfil: la General no lleva ninguno.
+// «Golpes al cuerpo»: `config.golpes_cuerpo` o, si no llega, el de Ajustes (perfil.sesion).
 export function nuevoGuion(config, perfilUsuario, azar, propias = []) {
   const practicar = config.practicar ?? perfilUsuario?.practicar;
+  const golpes_cuerpo = config.golpes_cuerpo ?? perfilUsuario?.sesion?.golpes_cuerpo;
   const sorteo = new SorteoMezcla(config.nivel, {
-    perfil: perfilSorteo({ practicar }), zurdo: config.zurdo, azar, propias, mezcla: config.mezcla ?? "ninguna",
+    perfil: perfilSorteo({ practicar, golpes_cuerpo }), zurdo: config.zurdo, azar, propias, mezcla: config.mezcla ?? "ninguna",
   });
   return construirGuion(config, azar, sorteo);
 }
 
 // Si el dictado puede repetir una coletilla reciente: lo mismo que decide el sorteo de nuevoGuion.
 export function repetirColetillas(config, propias = []) {
-  const validas = propiasValidas(propias);
+  const quitar = sinCuerpo({ golpes_cuerpo: config.golpes_cuerpo, practicar: config.practicar ?? [] });
+  const validas = propiasValidas(propias).filter((p) => !(quitar && llevaCuerpo(p)));
   return coletillasRepetibles(mezclaEfectiva(config.mezcla ?? "ninguna", validas, config.nivel), validas);
 }
 
@@ -138,6 +152,7 @@ export function preferencias(perfilUsuario, { prueba = conPrueba() } = {}) {
     ritmo: s.ritmo,
     reaccion: s.reaccion === true,
     mezcla: MEZCLAS.includes(s.mezcla) ? s.mezcla : "ninguna",
+    golpes_cuerpo: s.golpes_cuerpo === true,
     personalizada: { ...(personalizadaValida(s.personalizada) ? s.personalizada : PERSONALIZADA_POR_DEFECTO) },
   };
 }
@@ -151,7 +166,10 @@ export function preferencias(perfilUsuario, { prueba = conPrueba() } = {}) {
 export function configSesion(perfilUsuario, { prueba = conPrueba(), tipo } = {}) {
   const p = preferencias(perfilUsuario, { prueba });
   const elegido = tipo ?? p.tipo;
-  const comun = { tipo: elegido, zurdo: p.zurdo, voz: p.voz, pausa: null, velocidad: opcionesVoz(perfilUsuario).velocidad };
+  const comun = {
+    tipo: elegido, zurdo: p.zurdo, voz: p.voz, pausa: null, velocidad: opcionesVoz(perfilUsuario).velocidad,
+    golpes_cuerpo: p.golpes_cuerpo,
+  };
   if (elegido === "general") {
     const g = configGeneral();
     return {

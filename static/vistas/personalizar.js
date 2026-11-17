@@ -178,8 +178,9 @@ export function iniciarPersonalizar({ almacen, tipoElegido, alCambiar }) {
   // Estados de «Tus combinaciones» (y del nivel) con las propias de ahora y lo guardado. Los desactivados
   // lo están de verdad (disabled): el motivo va escrito debajo y en aria-describedby del grupo.
   function pintarMezcla() {
-    const { mezcla, nivel } = preferencias(almacen.datos.perfil);
-    const { total, motivoSolo, aviso, nivelCuenta } = estadoMezcla(mezcla, almacen.datos.combinacionesPropias, nivel);
+    const { mezcla, nivel, golpes_cuerpo } = preferencias(almacen.datos.perfil);
+    const { total, motivoSolo, aviso, nivelCuenta } = estadoMezcla(mezcla, almacen.datos.combinacionesPropias, nivel,
+      { golpes_cuerpo, practicar: almacen.datos.perfil.practicar });
     $("#mezclas", raiz).disabled = total === 0;
     $('input[name="mezcla"][value="solo"]', raiz).disabled = total > 0 && Boolean(motivoSolo);
     $("#niveles", raiz).disabled = !nivelCuenta;

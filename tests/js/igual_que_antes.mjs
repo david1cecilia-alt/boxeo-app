@@ -38,8 +38,14 @@ export const sorteoBiblioteca = (nivel, zurdo, azar, practicar) =>
 
 // Huella de cada caso. `crearSorteo(nivel, zurdo, azar, practicar)` da el sorteo de los dos
 // primeros bloques; `guionApp(config, azar)` el guion como lo pide la app.
+// La app, con «Golpes al cuerpo» encendido: así sale exactamente lo de antes del interruptor.
+const PERFIL_ENCENDIDO = () => {
+  const p = perfilPorDefecto();
+  return { ...p, sesion: { ...p.sesion, golpes_cuerpo: true } };
+};
+
 export function casos(crearSorteo = sorteoBiblioteca,
-  guionApp = (config, azar) => nuevoGuion(config, perfilPorDefecto(), azar)) {
+  guionApp = (config, azar) => nuevoGuion(config, PERFIL_ENCENDIDO(), azar)) {
   const resultado = {};
   for (const nivel of [1, 2, 3]) {
     for (const zurdo of [false, true]) {

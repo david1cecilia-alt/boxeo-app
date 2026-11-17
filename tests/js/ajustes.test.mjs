@@ -62,7 +62,7 @@ test("sin nada elegido en Entrenar: General, nivel y guardia de data/perfil.json
   const p = perfilPorDefecto();
   assert.deepEqual(preferencias(p), {
     tipo: "general", nivel: datos.perfil.nivel, zurdo: datos.perfil.guardia === "zurda", voz: "nombres", ritmo: 3,
-    reaccion: false, mezcla: "ninguna", personalizada: { asaltos: 3, duracion_asalto: 180, descanso: 60 },
+    reaccion: false, mezcla: "ninguna", golpes_cuerpo: false, personalizada: { asaltos: 3, duracion_asalto: 180, descanso: 60 },
   });
   // Lo que quede de «Tus datos» (datos escritos a mano) ya no cuenta: solo Entrenar.
   p.basicos = { ...p.basicos, nivel: "3", guardia: "zurda" };
@@ -73,7 +73,8 @@ test("sin nada elegido en Entrenar: General, nivel y guardia de data/perfil.json
 });
 
 test("cada elección de Entrenar se guarda y se lee igual al recargar", () => {
-  const eleccion = { tipo: "personalizada", nivel: 3, ritmo: 4, voz: "numeros", zurdo: true, reaccion: true, mezcla: "mucho" };
+  const eleccion = { tipo: "personalizada", nivel: 3, ritmo: 4, voz: "numeros", zurdo: true, reaccion: true, mezcla: "mucho",
+    golpes_cuerpo: true };
   for (const [campo, valor] of Object.entries(eleccion)) {
     const storage = almacenamiento();
     recordarSesion(crearAlmacen({ storage }), { [campo]: valor });
@@ -311,7 +312,7 @@ test("configSesion General: lo de D1 aunque la Personalizada guardada sea otra; 
   assert.deepEqual(c, {
     tipo: "general", asaltos: 3, duracion_asalto: 180, descanso: 60, nivel: datos.perfil.nivel, ritmo: 3,
     mezcla: "ninguna", modo_reaccion: false, practicar: [], zurdo: true, voz: "ambos", pausa: null,
-    velocidad: opcionesVoz({ voz: { velocidad: "lenta" } }).velocidad,
+    velocidad: opcionesVoz({ voz: { velocidad: "lenta" } }).velocidad, golpes_cuerpo: false,
   });
 });
 
@@ -379,4 +380,35 @@ test("duracionAproximada: la General son unos 11 min y Prueba, 1 min", () => {
   assert.equal(duracionAproximada(configGeneral()), "unos 11 min");
   assert.equal(duracionAproximada({ asaltos: 2, duracion_asalto: 30, descanso: 10 }), "1 min");
   assert.equal(duracionAproximada({ asaltos: 4, duracion_asalto: 120, descanso: 45 }), "unos 10 min");
+});
+
+test("«Golpes al cuerpo» apagado: el guion de la app (General y Personalizada) no dice ninguno al cuerpo", () => {
+  const p = perfilPorDefecto(); // apagado por defecto
+  const ids = (eventos) => eventos.filter((e) => e.ids).flatMap((e) => e.ids);
+  for (const nivel of [1, 2, 3]) {
+    for (let semilla = 0; semilla < 3; semilla++) {
+      const config = { ...configSesion(p, { prueba: false, tipo: "personalizada" }), nivel };
+      assert.equal(config.golpes_cuerpo, false);
+      assert.ok(!ids(nuevoGuion(config, p, crearAzar(semilla))).some((i) => i.endsWith("_cuerpo")), `nivel ${nivel}`);
+    }
+  }
+  // Pedir practicarlos manda: con «cuerpo» en «Practicar más» vuelven a salir.
+  const conCuerpo = { ...p, practicar: [{ movimiento: "cuerpo" }] };
+  const config = configSesion(conCuerpo, { prueba: false, tipo: "personalizada" });
+  assert.ok(ids(nuevoGuion(config, conCuerpo, crearAzar(1))).some((i) => i.endsWith("_cuerpo")));
+});
+
+test("estadoMezcla con «Golpes al cuerpo» apagado: si las tuyas llevan golpes al cuerpo, aviso y biblioteca", () => {
+  const alCuerpo = [["jab", "jab_cuerpo"], ["directo_cuerpo", "gancho_izq"], ["jab", "uppercut_der_cuerpo", "directo"]]
+    .map((ids, i) => ({ id: `p-c${i}`, ids }));
+  const apagado = { golpes_cuerpo: false, practicar: [] };
+  const todas = estadoMezcla("solo", alCuerpo, 1, apagado);
+  assert.equal(todas.efectiva, "ninguna");
+  assert.equal(todas.aviso,
+    "Todas tus combinaciones llevan golpes al cuerpo y «Golpes al cuerpo» está apagado en Ajustes: salen las de la biblioteca.");
+  const mezcladas = [...alCuerpo.slice(0, 2), { id: "p-x", ids: ["jab", "directo"] }];
+  assert.match(estadoMezcla("solo", mezcladas, 1, apagado).aviso, /que los llevan \(2 de 3\): salen las de la biblioteca\.$/);
+  // Encendido, o pidiendo practicarlos, no cambia nada.
+  assert.deepEqual(estadoMezcla("solo", alCuerpo, 1, { golpes_cuerpo: true }), estadoMezcla("solo", alCuerpo, 1));
+  assert.equal(estadoMezcla("solo", alCuerpo, 1, { golpes_cuerpo: false, practicar: [{ movimiento: "cuerpo" }] }).efectiva, "solo");
 });

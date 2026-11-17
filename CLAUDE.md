@@ -35,8 +35,13 @@
   (`#entrenar/menu…` o una ruta vieja que `rutaNueva()` lleva allí: la regla está copiada, la une un test). Se traga
   el toque o la tecla que la salta y al salir lanza `intro-fin` (`esperarIntro()` de `vistas/dom.js`).
 - Preparación: 10 s fijos antes del asalto 1 (`SEGUNDOS_PREPARACION` en `vistas/entrenar.js`), con su propio
-  reproductor; el guion del motor no cambia. Fondo: el ring (imagen en el precache; encima, en horizontal, el vídeo
-  `static/video/ring-horizontal.{webm,mp4}`, que no pasa por la caché de `sw.js`: va directo a la red; el vertical 9:16, comentado hasta que exista). Los tests que cronometran fases pulsan «Empezar ya».
+  reproductor; el guion del motor no cambia. Sin texto en pantalla: las frases (`FRASES_PREPARACION`) van solo por
+  voz, en cola y solo si caben antes de los 10 s; una barra sin texto marca lo que falta. Fondo: el ring (imagen en el
+  precache; encima, el vídeo de su orientación, `static/video/ring-{vertical,horizontal}.{webm,mp4}`, que no pasa por
+  la caché de `sw.js`: va directo a la red). En asalto y descanso, `ring-cenital-borroso.webp` (lo deriva
+  `herramientas/convertir_imagenes.py` con Pillow, sin `filter: blur`); si un texto encima no llega al contraste, un
+  degradado local detrás de él (`tests/test_ring_sesion_navegador.py` lo mide con píxeles reales), no un velo. Los
+  tests que cronometran fases pulsan «Empezar ya».
 - Recorte de la foto: `vistas/recorte.js` (diálogo fuera del menú) elige el cuadrado y `foto.js` lo codifica igual
   que siempre (`leerFoto` + `codificarFoto`): el almacén no cambia.
 - El asa del menú: en el móvil, abajo a la derecha encima de la barra (`--asa-abajo`); en el PC, al 42 % de alto.

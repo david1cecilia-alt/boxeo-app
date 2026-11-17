@@ -486,12 +486,19 @@ body.entrenando #vista-entrenar { padding-top: 0; }
    bajo las letras y que se funde por los bordes. En el descanso el texto es claro y no hace falta. */
 #pantalla[data-fase="asalto"] :is(#asalto, #despues:not(:empty), .leyenda) { position: relative; isolation: isolate; }
 #pantalla[data-fase="asalto"] :is(#asalto, #despues:not(:empty), .leyenda)::before {
-  /* 0,3em más arriba y abajo: Anton (en «Asalto N/M») pinta más alto que su interlineado de 0,98. */
-  content: ""; position: absolute; inset: calc(-0.3em - 8px) -28px; z-index: -1; pointer-events: none;
-  background: linear-gradient(90deg, transparent, var(--velo-texto) 28px, var(--velo-texto) calc(100% - 28px), transparent);
-  -webkit-mask-image: linear-gradient(transparent, #000 8px, #000 calc(100% - 8px), transparent);
-  mask-image: linear-gradient(transparent, #000 8px, #000 calc(100% - 8px), transparent);
+  /* Liso 0,3em más arriba y abajo (Anton, en «Asalto N/M», pinta más alto que su interlineado de 0,98) y, por fuera,
+     el fundido: --fundido arriba y abajo, --fundido-lado a los lados. */
+  --fundido: 14px; --fundido-lado: 32px;
+  content: ""; position: absolute; inset: calc(-0.3em - var(--fundido)) calc(-1 * var(--fundido-lado));
+  z-index: -1; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--velo-texto) var(--fundido-lado),
+    var(--velo-texto) calc(100% - var(--fundido-lado)), transparent);
+  -webkit-mask-image: linear-gradient(transparent, #000 var(--fundido), #000 calc(100% - var(--fundido)), transparent);
+  mask-image: linear-gradient(transparent, #000 var(--fundido), #000 calc(100% - var(--fundido)), transparent);
 }
+/* La leyenda va dentro de la tarjeta (18 px de relleno, 16 abajo): el fundido, más corto, no la desborda. Con
+   .tarjeta-combo, la misma especificidad que la regla de arriba (el :not(:empty) suma), y gana por ir después. */
+#pantalla[data-fase="asalto"] .tarjeta-combo #leyenda::before { --fundido: 6px; --fundido-lado: 14px; }
 #pantalla[data-fase="reaccion"] {
   background: var(--fase-reaccion); color: var(--fase-reaccion-texto);
   --foco: var(--fase-reaccion-texto); /* el foco claro no se vería sobre ámbar */

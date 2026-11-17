@@ -146,6 +146,9 @@ def test_sobre_el_ring_borroso_todo_el_texto_se_lee(sitio, ancho, alto, segundos
         for nombre, _, minimo in TEXTOS:
             if nombre in medidas:
                 assert medidas[nombre] >= minimo, (nombre, medidas[nombre])
+        # El degradado de la leyenda no desborda la tarjeta (saldría una barra de desplazamiento).
+        assert pagina.evaluate("""() => { const t = document.querySelector('.tarjeta-combo');
+          return t.scrollWidth <= t.clientWidth && t.scrollHeight <= t.clientHeight + 1; }""")
         if segundos == 57:
             assert pagina.inner_text("#despues").lower() == "último asalto"
         assert not errores

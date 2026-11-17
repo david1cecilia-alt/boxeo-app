@@ -1,7 +1,7 @@
 """La preparación de 10 s antes del asalto 1 (V2), en Chromium headless con el reloj de Playwright: sin texto en
-pantalla (las frases van solo por voz, a su hora y sin pisarse; una barra dice cuánto falta), «Empezar ya» (corta la
-voz), Pausa y Parar (sin guardar nada) y el fondo del ring (el vídeo de su orientación; la imagen con movimiento
-reducido o si falla). Los datos de prueba solo viven en el localStorage de este Chromium. Sin Playwright se salta en local.
+pantalla salvo la pastilla y «Empezar ya», pequeño y arriba (las frases van solo por voz, a su hora y sin pisarse),
+«Empezar ya» (corta la voz), Pausa y Parar (sin guardar nada) y el fondo del ring, claro y sin velo (el vídeo de su
+orientación; la imagen con movimiento reducido o si falla). Los datos de prueba solo viven en el localStorage de este Chromium. Sin Playwright se salta en local.
 """
 import importlib.util
 import json
@@ -77,7 +77,7 @@ def abrir_app(sitio, movimiento=True, ancho=390, alto=844, reaccion=False, veloc
 @pytest.fixture
 def app(sitio):
     contexto, pagina, errores = abrir_app(sitio)
-    parar_reloj(pagina)  # la barra y las fases, al décimo: el reloj solo avanza con run_for
+    parar_reloj(pagina)  # las fases, al décimo: el reloj solo avanza con run_for
     yield pagina
     assert not errores
     contexto.__exit__(None, None, None)
@@ -85,12 +85,6 @@ def app(sitio):
 
 def fase(pagina):
     return pagina.evaluate("document.getElementById('pantalla').dataset.fase")
-
-
-def barra(pagina):
-    """Lo lleno de la barra de la preparación, de 0 a 1."""
-    return pagina.evaluate("""() => { const b = document.querySelector('#barra-preparacion');
-      return b.firstElementChild.getBoundingClientRect().width / b.getBoundingClientRect().width; }""")
 
 
 def registro(pagina):
@@ -115,15 +109,13 @@ def sesiones(pagina):
 
 def test_al_empezar_sale_la_preparacion_de_10_s_y_luego_el_asalto_1(app):
     app.click("#empezar")
-    assert fase(app) == "preparacion" and barra(app) < 0.02
-    assert app.is_visible("#preparacion") and app.is_visible("#empezar-ya") and app.is_visible(".fondo-ring img")
-    assert app.is_visible("#barra-preparacion")
+    assert fase(app) == "preparacion"
+    assert app.is_visible("#empezar-ya") and app.is_visible(".fondo-ring img")
+    assert app.locator("#barra-preparacion").count() == 0  # sin barra de 0 a 10 s
     assert app.is_hidden("#tiempo") and app.is_hidden(".tarjeta-combo")
     assert app.text_content("#fase") == "Prepárate"  # la pastilla de arriba se queda
-    app.clock.run_for(5000)
-    assert 0.48 <= barra(app) <= 0.52
-    app.clock.run_for(4800)
-    assert fase(app) == "preparacion" and barra(app) >= 0.97
+    app.clock.run_for(9800)
+    assert fase(app) == "preparacion"
     app.clock.run_for(300)
     assert fase(app) == "asalto"
     assert app.is_hidden("#preparacion") and app.is_hidden(".fondo-ring")  # el ring nítido se va: queda el borroso
@@ -134,21 +126,20 @@ def test_empezar_ya_salta_al_asalto_1_al_momento(app):
     app.click("#empezar")
     app.clock.run_for(2000)
     app.click("#empezar-ya")
-    assert fase(app) == "asalto" and app.is_hidden("#preparacion")
+    assert fase(app) == "asalto" and app.is_hidden("#preparacion") and app.is_hidden("#empezar-ya")
     assert app.inner_text("#tiempo") == "0:30"
     app.clock.run_for(10_100)
     assert app.inner_text("#tiempo") == "0:20"  # el asalto no espera a los 10 s de la preparación
 
 
-def test_la_pausa_para_la_barra(app):
+def test_la_pausa_para_la_preparacion(app):
     app.click("#empezar")
     app.clock.run_for(3000)
     app.click("#pausa")
-    assert fase(app) == "pausa" and app.is_visible("#preparacion")
+    assert fase(app) == "pausa" and app.is_visible("#empezar-ya")
     app.clock.run_for(20_000)
-    assert 0.29 <= barra(app) <= 0.31
-    app.click("#pausa")
-    assert 0.29 <= barra(app) <= 0.31  # sigue donde se quedó
+    assert fase(app) == "pausa"
+    app.click("#pausa")  # sigue donde se quedó: le faltan 7 s
     app.clock.run_for(6500)
     assert fase(app) == "preparacion"
     app.clock.run_for(1500)  # el tic es cada 100 ms: margen de sobra
@@ -193,10 +184,10 @@ def test_en_la_preparacion_no_hay_texto_en_pantalla_salvo_empezar_ya(sitio, anch
     try:
         pagina.click("#empezar")
         assert pagina.locator("#cuenta-atras").count() == 0
-        assert pagina.evaluate(TEXTO_PREPARACION) == ["Empezar ya"]  # ni número ni «Prepárate»
+        assert pagina.evaluate(TEXTO_PREPARACION) == []  # en el centro, nada: ni número ni botón
         # En toda la pantalla, solo la pastilla y los tres botones (lo de .solo-lectores mide 1 px).
         assert sorted(pagina.evaluate(TEXTO_EN_PANTALLA)) == ["Empezar ya", "Parar", "Pausa", "Prepárate"]
-        assert not pagina.is_visible(".progreso") and pagina.is_visible("#barra-preparacion")
+        assert not pagina.is_visible(".progreso") and pagina.locator("#barra-preparacion").count() == 0
         # «Asalto 1/2» y el teclado siguen para el lector de pantalla, y la pastilla, a la derecha.
         assert pagina.locator("#asalto").get_attribute("aria-hidden") is None
         assert pagina.text_content("#asalto") == "Asalto 1/2" and "Teclado" in pagina.text_content(".atajos")
@@ -386,17 +377,59 @@ def test_el_ring_cubre_toda_la_pantalla(sitio, ancho, alto):
         contexto.__exit__(None, None, None)
 
 
+CAJAS_ARRIBA = """() => {
+  const caja = (s) => { const r = document.querySelector(s).getBoundingClientRect();
+    return { x: r.x, y: r.y, ancho: r.width, alto: r.height, centro_y: r.y + r.height / 2 }; };
+  const estilo = (s, p) => { const e = getComputedStyle(document.querySelector(s), p);
+    return { radio: e.borderTopLeftRadius, letra: e.fontFamily, tamano: e.fontSize, peso: e.fontWeight,
+             espaciado: e.letterSpacing, mayusculas: e.textTransform, fondo: e.backgroundColor, color: e.color }; };
+  const tok = (n) => { const d = document.createElement('i'); d.style.color = `var(--${n})`; document.body.append(d);
+    const c = getComputedStyle(d).color; d.remove(); return c; };
+  const toque = getComputedStyle(document.getElementById('empezar-ya'), '::after');
+  const b = document.getElementById('empezar-ya').getBoundingClientRect();
+  return { boton: caja('#empezar-ya'), pastilla: caja('#fase'), pausa: caja('#pausa'), pantalla: caja('#pantalla'),
+           eb: estilo('#empezar-ya'), ep: estilo('#fase'), cuero: tok('acento-relleno'), blanco: tok('sobre-acento'),
+           toque_alto: b.height - parseFloat(toque.top) - parseFloat(toque.bottom),
+           toque_ancho: b.width - parseFloat(toque.left) - parseFloat(toque.right),
+           velo: getComputedStyle(document.querySelector('.fondo-ring'), '::after').content,
+           centro: document.elementFromPoint(innerWidth / 2, innerHeight / 2).closest('button, p, span')?.id ?? null };
+}"""
+
+
+@pytest.mark.parametrize("ancho,alto", [(390, 844), (1440, 900)])
+def test_empezar_ya_va_arriba_junto_a_la_pastilla_y_el_ring_se_ve_sin_velo(sitio, ancho, alto):
+    contexto, pagina, errores = abrir_app(sitio, ancho=ancho, alto=alto)
+    try:
+        pagina.click("#empezar")
+        c = pagina.evaluate(CAJAS_ARRIBA)
+        boton, pastilla = c["boton"], c["pastilla"]
+        # En la misma fila, a la izquierda de la pastilla, arriba y lejos de Pausa.
+        assert abs(boton["centro_y"] - pastilla["centro_y"]) < 1 and boton["x"] + boton["ancho"] <= pastilla["x"]
+        assert boton["y"] < c["pantalla"]["alto"] * 0.15 and boton["y"] + boton["alto"] < c["pausa"]["y"]
+        # Misma altura, radio y letra que la pastilla; cuero con texto blanco.
+        assert boton["alto"] == pastilla["alto"]
+        mismo = ("radio", "letra", "tamano", "peso", "espaciado", "mayusculas")
+        assert {k: c["eb"][k] for k in mismo} == {k: c["ep"][k] for k in mismo}
+        assert c["eb"]["fondo"] == c["cuero"] and c["eb"]["color"] == c["blanco"]
+        assert c["toque_alto"] >= 44 and c["toque_ancho"] >= 44  # área de toque
+        # Nada en el centro y sin velo encima del ring.
+        assert c["centro"] is None and c["velo"] in ("none", "normal")
+        assert not errores
+    finally:
+        contexto.__exit__(None, None, None)
+
+
 ESTILO_PARAR = """() => { const e = getComputedStyle(document.getElementById('parar'));
   return { sombra: e.boxShadow, borde: e.borderColor, fondo: e.backgroundColor, contorno: e.outlineStyle }; }"""
 
 
 @pytest.mark.parametrize("ancho,alto", [(390, 844), (1440, 900)])
-def test_en_la_preparacion_el_foco_va_a_empezar_ya_y_parar_se_ve_como_en_el_asalto(sitio, ancho, alto):
+def test_en_la_preparacion_el_foco_no_va_a_empezar_ya_y_parar_se_ve_como_en_el_asalto(sitio, ancho, alto):
     contexto, pagina, errores = abrir_app(sitio, ancho=ancho, alto=alto)
     try:
         pagina.focus("#empezar")
         pagina.keyboard.press("Enter")  # con el teclado: el foco se ve (focus-visible)
-        assert pagina.evaluate("document.activeElement.id") == "empezar-ya"
+        assert pagina.evaluate("document.activeElement.id") == "pausa"  # no en «Empezar ya»
         en_preparacion = pagina.evaluate(ESTILO_PARAR)
         assert en_preparacion["sombra"] == "none" and en_preparacion["contorno"] == "none"
         pagina.click("#pausa")

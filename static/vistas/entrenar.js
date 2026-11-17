@@ -180,7 +180,7 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar, avisar = 
     anunciar(`Preparación: el asalto 1 empieza en ${SEGUNDOS_PREPARACION} segundos`); // en pantalla no hay texto
     pintarPausa();
     tic();
-    $("#empezar-ya").focus(); // lo primero que se quiere en la preparación; al saltarla, el foco pasa a Pausa
+    $("#pausa").focus(); // el botón de Empezar desaparece: el foco va a Pausa (no a «Empezar ya», que no se pulsa sin querer)
   }
 
   function lanzarPreparacion(e) {
@@ -257,10 +257,8 @@ export function iniciarEntrenar({ almacen, historial, voz, alTerminar, avisar = 
     $("#despues").textContent = despues();
   }
 
-  // La barra de la preparación: se llena de 0 a 10 s (en pausa se queda quieta).
+  // En la preparación solo cambian la fase y la pastilla (preparación o pausa).
   function ticPreparacion() {
-    const hecho = Math.min(1, Math.max(0, estado.reproductor.tiempo() / SEGUNDOS_PREPARACION));
-    $("#barra-preparacion b").style.width = `${(hecho * 100).toFixed(1)}%`;
     const fase = estado.reproductor.pausado ? "pausa" : "preparacion";
     $("#pantalla").dataset.fase = fase;
     $("#fase").textContent = TEXTO_FASE[fase];

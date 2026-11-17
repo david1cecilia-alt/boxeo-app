@@ -57,8 +57,6 @@ const TEXTO = [
   ["fase-final", "texto"], // número del golpe en los últimos 10 s (círculo invertido)
   ["fase-reaccion-texto", "fase-reaccion"], ["sobre-acento", "fondo"], // botón secundario en reacción
   ["aviso", "aviso-fondo"], ["ok", "ok-fondo"],
-  // Preparación: la cuenta atrás sobre el velo del ring, compuesto sobre el peor caso (blanco puro).
-  ["texto", "velo-ring"],
   // Historial y perfil
   ["sobre-acento", "acento-relleno"], // cifra destacada y tarjeta de estilo
   ["acento", "acento-tenue"], ["terciario", "superficie"], ["terciario", "secundario"], // RPE, gráfico

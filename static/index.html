@@ -60,7 +60,7 @@
       </form>
 
       <section id="pantalla" data-fase="asalto" hidden aria-label="Sesión en curso">
-        <!-- El ring nítido: fondo de la preparación (10 s antes del asalto 1), con un velo encima. Decorativo. En los
+        <!-- El ring nítido: fondo de la preparación (10 s antes del asalto 1), sin velo: se ve claro. Decorativo. En los
              asaltos y los descansos queda el ring borroso (fondo de #pantalla en estilos.css).
              El vídeo va encima de la imagen: entrenar.js lo reproduce una vez (se queda en el último fotograma), lo
              quita con prefers-reduced-motion y, si falla o no hay red, se ve la imagen. No pasa por la caché de
@@ -81,16 +81,15 @@
         <span id="marca-asalto" class="marca-agua" aria-hidden="true">R1</span>
         <div class="marcador">
           <span id="asalto" class="titular">Asalto 1/1</span>
+          <!-- «Empezar ya» salta la preparación: pequeño, a la izquierda de la pastilla (solo se ve preparando). -->
+          <button id="empezar-ya" type="button" class="empezar-ya">Empezar ya</button>
           <span id="fase" class="pastilla">Asalto</span>
         </div>
         <div id="progreso" class="progreso" aria-hidden="true"></div>
-        <!-- Preparación: 10 s fijos antes del asalto 1. Sin texto en pantalla: las frases van solo por voz y una barra
-             (sin texto) dice cuánto falta. «Empezar ya» la salta. -->
+        <!-- Preparación: 10 s fijos antes del asalto 1. Sin texto en pantalla: las frases van solo por voz y el ring se
+             ve claro, sin nada en el centro. -->
         <div class="preparacion" id="preparacion" hidden>
           <p class="solo-lectores">Preparación: 10 segundos antes del asalto 1</p>
-          <div id="barra-preparacion" class="barra-preparacion" aria-hidden="true"><b></b></div>
-          <button id="empezar-ya" type="button" class="boton principal empezar-ya">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>Empezar ya</button>
         </div>
         <div class="reloj">
           <div id="tiempo" role="timer" aria-live="off">0:00</div>

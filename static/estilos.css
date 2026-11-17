@@ -66,7 +66,6 @@
   --aviso: #ffe8a3;
   --aviso-fondo: #3d2e06;
   --velo: rgba(0, 0, 0, 0.7);
-  --velo-ring: rgba(18, 18, 18, 0.72);
   --panel-cristal: rgba(26, 26, 26, 0.92);   /* panel del menú con desenfoque: el texto, 4,5:1 hasta con blanco detrás */
   --brillo-panel: rgba(255, 255, 255, 0.05); /* brillo sutil arriba del panel */
   --borde-panel: rgba(255, 255, 255, 0.08);
@@ -495,31 +494,33 @@ body.entrenando #vista-entrenar { padding-top: 0; }
 #pantalla:not([data-fase="asalto"]) :is(.antetitulo, .acento, #despues, #anterior, .leyenda) { color: inherit; }
 #pantalla .marca-agua { top: auto; right: auto; left: -20px; bottom: 150px; font-size: 190px; opacity: 0.04; }
 
-/* Preparación (10 s antes del asalto 1): el ring de fondo con un velo, la barra y «Empezar ya». En el
-   asalto, el ring borroso (más arriba). El vídeo según la orientación (vertical u horizontal); sin vídeo, la imagen cuadrada. */
-.fondo-ring, .preparacion { display: none; }
+/* Preparación (10 s antes del asalto 1): el ring de fondo, claro y sin velo, y «Empezar ya» arriba, junto a la
+   pastilla. En el asalto, el ring borroso (más arriba). El vídeo según la orientación (vertical u horizontal); sin
+   vídeo, la imagen cuadrada. */
+.fondo-ring, .preparacion, .empezar-ya { display: none; }
 #pantalla.preparando .fondo-ring { display: block; position: absolute; inset: 0; z-index: -1; overflow: hidden; }
 .fondo-ring :is(img, video) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.fondo-ring::after { content: ""; position: absolute; inset: 0; background: var(--velo-ring); }
 #pantalla.preparando :is(.reloj, .tarjeta-combo, #anterior, .marca-agua) { display: none; }
-/* En pantalla, solo el ring, la pastilla de estado, la barra, «Empezar ya», Pausa y Parar. «Asalto 1/2» y el texto del
+/* En pantalla, solo el ring, la pastilla de estado, «Empezar ya», Pausa y Parar. «Asalto 1/2» y el texto del
    teclado salen de la vista pero no del lector de pantalla (como .solo-lectores); las barras de los asaltos
    (decorativas) se ocultan sin mover nada y la pastilla sigue a la derecha. */
 #pantalla.preparando :is(#asalto, .atajos) {
   position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
 }
-#pantalla.preparando .marcador { justify-content: flex-end; }
+#pantalla.preparando .marcador { justify-content: flex-end; gap: 10px; }
 #pantalla.preparando .progreso { visibility: hidden; }
-#pantalla.preparando .preparacion:not([hidden]) {
-  flex: 1; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 12px 0; text-align: center;
+/* Lo que queda en el centro (nada a la vista) ocupa el hueco y deja Pausa y Parar abajo. */
+#pantalla.preparando .preparacion:not([hidden]) { display: block; flex: 1; }
+/* «Empezar ya»: la misma forma y letra que la pastilla, en cuero con texto blanco. Mide 34 px como ella; el ::after
+   amplía el área de toque a 44 px sin mover nada. */
+#pantalla.preparando .empezar-ya {
+  position: relative; display: inline-flex; align-items: center; height: 34px; padding: 0 14px;
+  border: 1px solid transparent; border-radius: 17px; background: var(--acento-relleno); color: var(--sobre-acento);
+  font: inherit; font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  white-space: nowrap; cursor: pointer; transition: background-color 0.15s;
 }
-/* La barra de la preparación, encima de «Empezar ya»: se llena de 0 a 10 s. */
-.barra-preparacion { width: min(100%, 320px); height: 6px; margin-bottom: 8px; border-radius: 3px;
-  background: rgba(255, 255, 255, 0.16); overflow: hidden; }
-.barra-preparacion b { display: block; width: 0; height: 100%; background: var(--acento); }
-.empezar-ya { min-height: 56px; padding: 0 28px; gap: 10px; font-family: var(--letra-titular); font-weight: 400;
-  font-size: 22px; letter-spacing: 0.06em; text-transform: uppercase; }
-.empezar-ya svg { width: 20px; height: 20px; }
+.empezar-ya:hover { background: var(--acento-relleno-hover); }
+.empezar-ya::after { content: ""; position: absolute; inset: -5px -2px; }
 /* Con movimiento reducido, solo la imagen (entrenar.js además lo quita antes de que cargue nada). */
 @media (prefers-reduced-motion: reduce) { #video-ring { display: none; } }
 

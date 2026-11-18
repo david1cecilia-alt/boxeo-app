@@ -2,7 +2,7 @@
 // cada combinación. Cada variante prueba una forma distinta de mantener despierta la salida de audio, dictando
 // combinaciones reales de la biblioteca con el texto hablado de la app (voz.js y motor/acciones.js, los mismos).
 // No enlaza la app ni toca su almacén: lo que se marca va solo a sessionStorage. No va a la precache de sw.js.
-import { activarSonido, dejarDormir, mantenerDespierto } from "./sonido.js";
+import { DESPIERTO_FRECUENCIA } from "./sonido.js";
 import { crearVoz } from "./voz.js";
 import { cargarDatos } from "./motor/datos.js";
 import { biblioteca, textoHablado } from "./motor/acciones.js";
@@ -12,12 +12,12 @@ import { MARGEN_VOZ } from "./dictado.js";
 
 const DURACION = 60;            // segundos que dura cada prueba
 const ANTES_DEL_TIC = 0.3;      // el tic suena estos segundos antes de la combinación
-const TONO_ZUMBIDO = 170;       // Hz del tono de la variante 1
+const TONO_ZUMBIDO = DESPIERTO_FRECUENCIA; // Hz del tono de la variante 1: el de la app (sonido.js)
 const CLAVE = "boxeo.prueba-audio";
 
 const $ = (id) => document.getElementById(id);
 
-// ---------- Audio (un AudioContext propio; la variante 0 usa el de sonido.js, el de la app) ----------
+// ---------- Audio (un AudioContext propio) ----------
 let ctx = null;
 const sonando = new Set(); // lo que hay que parar al acabar la prueba: { parar() }
 
@@ -48,6 +48,18 @@ function ruidoRosa(muestras) {
   }
   for (let i = 0; i < muestras; i++) datos[i] /= maximo || 1;
   return datos;
+}
+
+// Un tono continuo a esa ganancia (la variante 0, la de antes de la app).
+function tonoContinuo(frecuencia, volumen) {
+  const c = contexto();
+  const osc = c.createOscillator();
+  const gan = c.createGain();
+  osc.frequency.value = frecuencia;
+  gan.gain.value = volumen;
+  osc.connect(gan).connect(c.destination);
+  osc.start();
+  sonando.add({ parar() { osc.stop(); gan.disconnect(); } });
 }
 
 // Variante 1: tono de 170 Hz o ruido rosa filtrado (100-400 Hz), continuo, al nivel del control.
@@ -185,13 +197,10 @@ function esperar(segundos) {
 // ---------- Variantes ----------
 const VARIANTES = [
   {
-    titulo: "Como ahora",
-    texto: "Zumbido de 40 Hz a 0,0005 (unos −66 dB), el de la app (sonido.js).",
-    empezar() {
-      activarSonido();
-      mantenerDespierto();
-      sonando.add({ parar: dejarDormir });
-    },
+    titulo: "Como antes",
+    texto: "Zumbido de 40 Hz a 0,0005 (unos −66 dB), el que llevaba la app. Ahora la app usa la 1 (tono de "
+      + `${DESPIERTO_FRECUENCIA} Hz a −50 dB).`,
+    empezar() { tonoContinuo(40, 0.0005); },
   },
   {
     titulo: "Zumbido más audible",
@@ -285,7 +294,6 @@ function escribirEstado(texto) {
 
 function activar() {
   contexto();
-  activarSonido();
   // Chrome de Android pide un gesto también para la voz: una frase vacía la desbloquea.
   speechSynthesis.speak(new SpeechSynthesisUtterance(""));
   $("estado-audio").textContent = `activado (AudioContext ${ctx.state}, ${ctx.sampleRate} Hz)`;

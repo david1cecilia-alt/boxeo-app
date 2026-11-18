@@ -52,7 +52,7 @@ def test_lo_marcado_va_solo_a_session_storage_y_al_resumen(pagina):
     pagina.click("#variante-3 [data-veredicto='No se corta']")
     assert pagina.get_attribute("#variante-3 [data-veredicto='No se corta']", "aria-pressed") == "true"
     assert "3. Calentar la voz: No se corta (hueco 4 s)" in pagina.input_value("#resumen")
-    assert "0. Como ahora: sin probar" in pagina.input_value("#resumen")
+    assert "0. Como antes: sin probar" in pagina.input_value("#resumen")
     assert "No se corta" in pagina.evaluate("sessionStorage.getItem('boxeo.prueba-audio')")
     assert pagina.evaluate("localStorage.length") == 0
     assert errores == []

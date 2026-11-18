@@ -8,12 +8,15 @@ export function activarSonido() {
   if (ctx.state === "suspended") ctx.resume();
 }
 
-// Mientras el asalto está en marcha suena un zumbido grave casi a cero (unos −66 dB, inaudible)
-// para que la salida de audio no se duerma en los huecos entre combinaciones: en Android, sobre
-// todo con Bluetooth, al despertar se comía la primera palabra. Ceros exactos no valen: Chrome
-// los detecta como silencio y suelta la salida igual.
-const DESPIERTO_FRECUENCIA = 40;
-const DESPIERTO_VOLUMEN = 0.0005;
+// Mientras el asalto está en marcha suena un zumbido muy bajo para que la salida de audio no se duerma
+// en los huecos entre combinaciones: en Android, sobre todo con cascos Bluetooth, al despertar se comía
+// el principio de cada combinación. Ceros exactos no valen: Chrome los detecta como silencio y suelta la
+// salida igual. Antes era un tono de 40 Hz a 0,0005 (unos −66 dB) y con cascos seguía cortándose: los
+// cascos o el códec lo quitaban como silencio. Con 170 Hz a −50 dB ya no se corta (variante 1 de la
+// página de prueba de audio con cascos, en Chrome de Android; el tic, calentar la voz y un <audio> no
+// bastaron).
+export const DESPIERTO_FRECUENCIA = 170;
+export const DESPIERTO_VOLUMEN = 10 ** (-50 / 20); // −50 dB ≈ 0,0032
 let despierto = null; // el oscilador que suena, o null
 
 export function mantenerDespierto() {
